@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.44 2002/02/07 10:18:11 simonmar Exp $
+# $Id: Makefile,v 1.45 2002/09/02 13:22:51 simonmar Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -31,10 +31,10 @@ boot ::
 
 ifeq "$(INSTALLING)" "1"
 ifeq "$(BIN_DIST)"   "1"
-HAPPYLIB=$$\"\"libdir/happy
+HAPPYLIB=$$\"\"libdir
 HAPPYBIN=$$\"\"libexecdir/$(HS_PROG)
 else
-HAPPYLIB=$(libdir)/happy
+HAPPYLIB=$(libdir)
 HAPPYBIN=$(libexecdir)/$(HS_PROG)
 endif # BIN_DIST
 else
