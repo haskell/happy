@@ -1,9 +1,9 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.42 2002/05/17 10:47:16 simonmar Exp $
+$Id: Main.lhs,v 1.43 2002/05/21 09:18:29 simonmar Exp $
 
 The main driver.
 
-(c) 1993-2001 Andy Gill, Simon Marlow
+(c) 1993-2002 Andy Gill, Simon Marlow
 -----------------------------------------------------------------------------
 
 > module Main (main) where
@@ -34,7 +34,6 @@ The main driver.
 # else
 > import PrelGHC (unsafeCoerce#)
 # endif
-> import IOExts
 #define sCC _scc_
 > coerceParser = unsafeCoerce#
 #else
@@ -308,7 +307,6 @@ The command line arguments.
 >		| OptMagicName String
 >
 >		| OptGhcTarget
->		| OptOldGhcTarget  -- imports GlaExts instead of GHC.Exts
 >		| OptArrayTarget
 >		| OptUseCoercions
 >		| OptDebugParser
@@ -327,8 +325,6 @@ The command line arguments.
 >	"Produce a debugging parser (only with -a)",
 >    Option ['g'] ["ghc"]    (NoArg OptGhcTarget)
 >	"Use GHC extensions",
->    Option [] ["old-ghc"] (NoArg OptOldGhcTarget)
->	"Use GHC (pre-5.03) extensions",
 >    Option ['i'] ["info"] (OptArg OptInfoFile "FILE")
 >	"Put detailed grammar info in FILE",
 >    Option ['m'] ["magic-name"] (ReqArg OptMagicName "NAME")
@@ -386,24 +382,31 @@ GHC version-dependent stuff in it.
 
 > optsToInject :: Target -> [CLIFlags] -> String
 > optsToInject _ cli 
->	| OptGhcTarget `elem` cli
->	|| OptOldGhcTarget `elem` cli = "{-# OPTIONS -fglasgow-exts -cpp #-}\n"
+>	| OptGhcTarget `elem` cli = "{-# OPTIONS -fglasgow-exts -cpp #-}\n"
 >	| otherwise               = ""
 
 > importsToInject :: Target -> [CLIFlags] -> String
 > importsToInject tgt cli = "\n" ++ 
 >  	concat [ "import "++s++"\n" 
->	       | s <- glaexts_import ++ array_import ++ debug_imports ]
+>	       | s <- array_import ++ debug_imports ]
+>	++ glaexts_import
 >   where
->	glaexts_import | OptGhcTarget `elem` cli    = ["GHC.Exts"]
->		       | OptOldGhcTarget `elem` cli = ["GlaExts"]
->		       | otherwise                  = []
+>	glaexts_import | OptGhcTarget `elem` cli    = import_glaexts
+>		       | otherwise                  = ""
 >
 >	array_import   | tgt == TargetArrayBased   = ["Array"]
 >		       | otherwise                 = []
 >
 >	debug_imports  | OptDebugParser `elem` cli = ["IO", "IOExts"]
 >		       | otherwise		   = []
+
+CPP is turned on for -fglasogw-exts, so we can use conditional compilation:
+
+> import_glaexts = "#if __GLASGOW_HASKELL__ >= 503\n\ 
+> 		   \import GHC.Exts\n\ 
+>		   \#else\n\ 
+>		   \import GlaExts\n\ 
+>		   \#endif\n"
 
 ------------------------------------------------------------------------------
 Extract various command-line options.
@@ -439,13 +442,13 @@ Extract various command-line options.
 
 > getCoerce target cli
 >	= if OptUseCoercions `elem` cli 
->	     then if OptGhcTarget `elem` cli || OptOldGhcTarget `elem` cli
+>	     then if OptGhcTarget `elem` cli
 >			then return True
 >			else dieHappy "-c/--coerce may only be used \ 
 >				      \in conjunction with -g/--ghc\n"
 >	     else return False
 
-> getGhc cli = return (OptGhcTarget `elem` cli || OptOldGhcTarget `elem` cli)
+> getGhc cli = return (OptGhcTarget `elem` cli)
 
 > getStrict cli = return (OptStrict `elem` cli)
 
@@ -453,7 +456,7 @@ Extract various command-line options.
 
 > copyright :: IO ()
 > copyright = putStr (unlines  [
->  "Happy Version " ++ version ++ " Copyright (c) 1993-1996 Andy Gill, Simon Marlow (c) 1997-2001 Simon Marlow","",
+>  "Happy Version " ++ version ++ " Copyright (c) 1993-1996 Andy Gill, Simon Marlow (c) 1997-2002 Simon Marlow","",
 >  "Happy is a Yacc for Haskell, and comes with ABSOLUTELY NO WARRANTY.",
 >  "This program is free software; you can redistribute it and/or modify",
 >  "it under the terms given in the file 'LICENSE' distributed with",
