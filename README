@@ -1,4 +1,4 @@
-This is Happy version 1.9, a parser generator for Haskell 98.
+This is Happy version 1.10, a parser generator for Haskell 98.
 
 WWW:	http://www.haskell.org/happy/
 
@@ -8,7 +8,7 @@ suite (see http://www.http://sourceware.cygnus.com/docbook-tools/)
 provides all the bits & pieces you need.  Alternatively, pre-formatted
 documentation is available from Happy's homepage (URL above).
 
-The directory 'examples' contains some example parsers that use Happy,
+The directory 'examples' contains some example parsers that use Happy.
 
 For information on copying this program, see the file LICENSE in this
 directory.

@@ -1,4 +1,11 @@
 -----------------------------------------------------------------------------
+Changes from version 1.9 to 1.10
+
+	* bugfixes, and minor performance improvements,
+
+	* most of the examples work again.
+
+-----------------------------------------------------------------------------
 Changes from version 1.8 to 1.9
 
 	* A grammar may now contain several entry points, allowing
