@@ -1,4 +1,4 @@
--- $Id: HappyTemplate-arrays,v 1.10 1999/06/30 14:14:33 simonmar Exp $
+-- $Id: HappyTemplate-arrays,v 1.11 1999/09/06 15:39:03 simonmar Exp $
 
 happyParse = happyNewToken 0 [] []
 
@@ -6,7 +6,7 @@ happyDoAction i tk st
 	= case (happyActionArr ! (st * happy_n_terms + i)) of
 		0  		-> happyFail i tk st
 		(-1) 		-> happyAccept
-		n | n < 0 	-> (happyReduceArr ! -(n + 1)) i tk st
+		n | n < 0 	-> (happyReduceArr ! (-(n + 1))) i tk st
 		n		-> happyShift (n - 1) i tk st
 
 -----------------------------------------------------------------------------
