@@ -1,4 +1,4 @@
--- $Id: HappyTemplate-ghc,v 1.6 1997/03/28 15:03:28 simonm Exp $
+-- $Id: HappyTemplate-ghc,v 1.7 1997/07/08 12:00:12 simonm Exp $
 
 {-
 	The stack is in the following order throughout the parse:
@@ -18,7 +18,7 @@ happyParse = happyNewToken action_0 [] []
 -- All this HappyState stuff is simply because we can't have recursive
 -- types in Haskell without an intervening data structure.
 
-data HappyState b c = HappyState
+newtype HappyState b c = HappyState
 	(Int# ->			-- token number
 	 Int# ->			-- token number (yes, again)
 	 b -> 				-- token semantic value
