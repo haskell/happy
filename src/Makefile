@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.46 2003/06/07 11:20:48 ross Exp $
+# $Id: Makefile,v 1.47 2004/05/21 06:38:13 mthomas Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -10,7 +10,14 @@ HC = $(WithHappyHc)
 
 HAPPY    = happy
 
-HS_PROG = happy.bin
+ifeq "$(TARGETPLATFORM)" "i386-unknown-mingw32"
+HS_PROG_EXT = .exe
+else
+HS_PROG_EXT = .bin
+endif
+
+HS_PROG = happy$(HS_PROG_EXT)
+
 EXCLUDED_SRCS = TestLexer.lhs IntSet.lhs
 
 SRC_HC_OPTS += -cpp -fglasgow-exts -package lang $(HappyHcOpts)
@@ -48,7 +55,9 @@ INPLACE_SCRIPT_PROG    = happy-inplace
 ifeq "$(INSTALLING)" "1"
 TOP_PWD 	:= $(prefix)
 SCRIPT_PROG 	=  $(INSTALLED_SCRIPT_PROG)
+ifneq "$(TARGETPLATFORM)" "i386-unknown-mingw32"
 LINK	 	=  happy
+endif
 else
 TOP_PWD 	:= $(FPTOOLS_TOP_ABS)
 SCRIPT_PROG 	=  $(INPLACE_SCRIPT_PROG)
