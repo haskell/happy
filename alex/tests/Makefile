@@ -5,7 +5,7 @@ include $(TOP)/mk/boilerplate.mk
 
 TESTS = simple.x
 
-ALEX=../src1/alex-inplace
+ALEX=../src/alex-inplace
 
 %.n.hs : %.x
 	$(ALEX) $(TEST_ALEX_OPTS) $< -o $@

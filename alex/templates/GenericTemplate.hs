@@ -110,7 +110,7 @@ type Sv t = (Posn,Char,String,Int,Accept t)
 
 --scan_token:: (StartCode,s) -> Posn -> Char -> String -> Maybe (Sv f)
 scan_token (IBOX(startcode),_) p c inp
- = scan_tkn p c inp ILIT(0) startcode Nothing
+ = scan_tkn p c c inp ILIT(0) startcode Nothing
 		-- the startcode is the initial state
 
 -- This function performs most of the work of `scan_token'.  It pushes
@@ -118,7 +118,7 @@ scan_token (IBOX(startcode),_) p c inp
 -- states it encountered.
 
 --scan_tkn:: Posn -> Char -> String -> Int -> SNum -> Maybe (Sv f) -> Maybe (Sv f)
-scan_tkn p c inp len (ILIT(-1)) stk = 
+scan_tkn _ _ _ _ _ (ILIT(-1)) stk = 
 #ifdef ALEX_DEBUG
 	(case stk of
 	  Nothing -> trace "error"
@@ -126,7 +126,8 @@ scan_tkn p c inp len (ILIT(-1)) stk =
 #endif
 	stk  	-- error or finished
 
-scan_tkn p c inp len s stk =
+scan_tkn p lc c inp len s stk =
+	  -- lc is the left-context char, c is the previous char
   case inp of
     [] -> 
 #ifdef ALEX_DEBUG
@@ -138,7 +139,7 @@ scan_tkn p c inp len s stk =
 #ifdef ALEX_DEBUG
 	trace ("State: " ++ show IBOX(s) ++ ", char: " ++ show c') $
 #endif
-	stk' `seq` scan_tkn p' c' inp' PLUS(len,ILIT(1)) s' stk'
+	stk' `seq` scan_tkn p' lc c' inp' PLUS(len,ILIT(1)) s' stk'
       	where
 		p' = move_pos p c'
 
@@ -163,11 +164,11 @@ scan_tkn p c inp len s stk =
 	check_ctx (Acc _ _ lctx rctx) = chk_lctx lctx && chk_rctx rctx
 		where
 		chk_lctx Nothing   = True
-		chk_lctx (Just st) = st!c
+		chk_lctx (Just st) = st ! lc
 
 		chk_rctx Nothing   = True
 		chk_rctx (Just (IBOX(sn))) = 
-			case scan_tkn p c inp ILIT(0) sn Nothing of
+			case scan_tkn p c c inp ILIT(0) sn Nothing of
 				Nothing -> False
 				Just _  -> True
 			-- TODO: there's no need to find the longest

@@ -29,8 +29,7 @@ import Data.Char
 	'<'		{ T _ (SpecialT '<') }
 	'>'		{ T _ (SpecialT '>') }
 	','		{ T _ (SpecialT ',') }
-	'/'		{ T _ (SpecialT '/') }
-	'\\'		{ T _ (SpecialT '\\') }
+	'$'		{ T _ (SpecialT '$') }
 	'|'		{ T _ (SpecialT '|') }
 	'*'		{ T _ (SpecialT '*') }
 	'+'		{ T _ (SpecialT '+') }
@@ -106,10 +105,17 @@ rhs	:: { Code }
 	| ';'	 			{ "" }
 
 context :: { Maybe CharSet, RExp, Maybe RExp }
-	: rexp 				{ (Nothing,$1,Nothing) }
-	| rexp '/' rexp 		{ (Nothing,$1,Just $3) }
-	| set '\\' rexp			{ (Just $1,$3,Nothing) }
-	| set '\\' rexp '/' rexp 	{ (Just $1,$3,Just $5) }
+	: left_ctx rexp right_ctx	{ (Just $1,$2,$3) }
+	| rexp right_ctx		{ (Nothing,$1,$2) }
+
+left_ctx :: { CharSet }
+	: '^'				{ charSetSingleton '\n' }
+	| set '^' 			{ $1 }
+
+right_ctx :: { Maybe RExp }
+	: '$'				{ Just (Ch (charSetSingleton '\n')) }
+	| '$' rexp			{ Just $2 }
+	| {- empty -}			{ Nothing }
 
 rexp	:: { RExp }
 	: alt '|' rexp 			{ $1 :| $3 }
