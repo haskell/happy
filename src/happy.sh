@@ -5,6 +5,6 @@
 #	HAPPYBIN
 
 case $* in
-*--template*) $HAPPYBIN $*;;
-*)            $HAPPYBIN --template $HAPPYLIB $*;;
+*--template*) $HAPPYBIN "$@";;
+*)            $HAPPYBIN --template $HAPPYLIB ${1+"$@"};;
 esac
