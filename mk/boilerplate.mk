@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------
-# $Id: boilerplate.mk,v 1.1 1997/03/28 15:02:30 simonm Exp $
+# $Id: boilerplate.mk,v 1.2 1998/08/27 14:17:36 simonm Exp $
 
 # Begin by slurping in the boilerplate from one level up.
 # Remember, TOP is the top level of the innermost level
@@ -21,6 +21,7 @@ TOP:=$(HAPPY_TOP)
 # augments or overrides previously set variables.
 # -----------------------------------------------------------------
 
+-include $(TOP)/mk/version.mk
 -include $(TOP)/mk/paths.mk
 -include $(TOP)/mk/opts.mk
 -include $(TOP)/mk/suffix.mk
