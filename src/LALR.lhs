@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: LALR.lhs,v 1.20 2001/04/27 10:10:23 simonmar Exp $
+$Id: LALR.lhs,v 1.21 2001/09/24 15:48:54 simonmar Exp $
 
 Generation of LALR parsing tables.
 
@@ -546,19 +546,26 @@ point rather than reducing.  Hence the use of LR'MustFail.
 >       res _ (LR'Accept) = LR'Accept
 >       res a@(LR'Shift s p) b@(LR'Reduce s' p') = res b a
 >       res a@(LR'Reduce s p) b@(LR'Shift s' p')
->               | p < p'    = b
->               | p > p'    = a
->               | otherwise = case (p,p') of
->                              (No,No) -> LR'Multiple [a,b] b
->                              (Prio c _,_) -> case c of
->                                             LeftAssoc  -> a
->                                             RightAssoc -> b
->                                             None       -> LR'MustFail
+>		= case (p,p') of
+>                      (No,_) -> LR'Multiple [a,b] b
+>                      (_,No) -> LR'Multiple [a,b] b
+>                      (Prio c i, Prio _ j)
+>               		| i < j     -> b
+>               		| j > i     -> a
+>			        | otherwise ->
+>				   case c of
+>                                     LeftAssoc  -> a
+>                                     RightAssoc -> b
+>                                     None       -> LR'MustFail
 >       res a@(LR'Reduce r p) b@(LR'Reduce r' p')
->               | p < p'    = b
->               | p > p'    = a
->		| r < r'    = LR'Multiple [a,b] a
->		| otherwise = LR'Multiple [a,b] b
+>		= case (p,p') of
+>                      (No,_) -> LR'Multiple [a,b] b
+>                      (_,No) -> LR'Multiple [a,b] b
+>                      (Prio c i, Prio _ j)
+>               		| i < j     -> b
+>               		| j > i     -> a
+>				| r < r'    -> LR'Multiple [a,b] a
+>				| otherwise -> LR'Multiple [a,b] b
 >       res _ _ = error "confict in resolve"
 
 -----------------------------------------------------------------------------

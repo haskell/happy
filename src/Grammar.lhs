@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Grammar.lhs,v 1.18 2001/04/27 10:10:23 simonmar Exp $
+$Id: Grammar.lhs,v 1.19 2001/09/24 15:48:54 simonmar Exp $
 
 The Grammar data type.
 
@@ -105,11 +105,6 @@ Here is our mid-section datatype
 >   No == No = True
 >   Prio _ i == Prio _ j = i == j
 >   _ == _ = False
-
-> instance Ord Priority where
->   No <= _ = True
->   Prio _ _ <= No = False
->   Prio _ i <= Prio _ j = i <= j
 
 > mkPrio :: Int -> Directive a -> Priority
 > mkPrio i (TokenNonassoc _) = Prio None i
