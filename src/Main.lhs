@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.13 1997/10/03 16:29:44 andre Exp $
+$Id: Main.lhs,v 1.14 1997/10/07 13:24:15 simonm Exp $
 
 The main driver.
 
@@ -278,7 +278,7 @@ This was a program hot-spot, but not any more.
 > deLitify :: String -> String
 > deLitify = deLit 
 >  where 
->       deLit ('>':' ':r)  = deLit1 r
+>       deLit ('>':' ':r)  = ' ' : deLit1 r
 >       deLit ('>':'\t':r)  = '\t' : deLit1 r
 >       deLit ('>':r)  = error "Error when de-litify-ing"
 >       deLit ('\n':r) = '\n' : deLit r

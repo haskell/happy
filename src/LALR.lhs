@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: LALR.lhs,v 1.9 1997/10/02 21:26:35 reid Exp $
+$Id: LALR.lhs,v 1.10 1997/10/07 13:24:11 simonm Exp $
 
 Generation of LALR parsing tables.
 
@@ -10,7 +10,7 @@ Hack:
   Haskell 1.2 doesn't allow T     in an export list if T is a type synonym.
   Haskell 1.3 doesn't allow T(..) in an export list if T is a type synonym.
 
-#if __HASKELL1__ >= 3
+#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
 # define SYN(t) t
 #else
 # define SYN(t) t(..)
