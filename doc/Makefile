@@ -1,16 +1,7 @@
-all: happy.ps happy.info
+#-----------------------------------------------------------------------------
+# $Id: Makefile,v 1.2 1997/12/16 12:40:56 simonm Exp $
 
-%.info : %.texinfo
-	makeinfo $< -o $*.info
+TOP=../..
+include $(TOP)/mk/boilerplate.mk
 
-%.ps : %.dvi
-	dvips $< -o $*.ps
-
-%.dvi : %.texinfo
-	tex $<
-
-clean:
-	rm -f *.aux *.cp *.fn *.ky *.log *.pg *.toc *.tp *.vr *~
-
-cleaner: clean
-	rm -f *.ps *.info *.dvi
+include $(TOP)/mk/target.mk
