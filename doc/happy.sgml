@@ -10,7 +10,7 @@
 <!-- Title information -->
 
 <title>Happy User Guide
-<author>Simon Marlow <tt/simonm@dcs.gla.ac.uk/
+<author>Simon Marlow <tt/simonmar@microsoft.com/
 <date>11 December 1997
 <abstract>
 This document describes Happy, the Haskell Parser Generator, version
@@ -47,7 +47,7 @@ existing grammar, without need for a rewrite.
 Happy is sufficiently powerful to parse Haskell itself - there's a
 freely available Haskell parser written using Happy which can be
 obtained from <url
-url="http://www.dcs.gla.ac.uk/~simonm/hsparse.tar.gz">.
+url="http://www.pms.informatik.uni-muenchen.de/mitarbeiter/panne/haskell_libs/hsparser.html">.
 
 Happy can currently generate three types of parser from a given grammar,
 the intention being that we can experiment with different kinds of
@@ -86,12 +86,12 @@ as GHC 0.29.
 <p>
 
 Any bugs found in Happy should be reported to me (Simon Marlow
-<htmlurl url="mailto:simonm@dcs.gla.ac.uk"
-name="simonm@dcs.gla.ac.uk">) including all the relevant information:
-- the compiler used to compile Happy, the command-line options used,
-your grammar file or a cut-down example showing the problem, and a
-description of what goes wrong.  A patch to fix the problem would also
-be greatly appreciated.
+<htmlurl url="mailto:simonmar@microsoft.com"
+name="simonmar@microsoft.com">) including all the relevant
+information: - the compiler used to compile Happy, the command-line
+options used, your grammar file or a cut-down example showing the
+problem, and a description of what goes wrong.  A patch to fix the
+problem would also be greatly appreciated.
 
 Requests for new features should also be sent to the above address,
 especially if accompanied by patches.  You never know, if I get
@@ -104,40 +104,46 @@ it :-)
 
 Previous versions of Happy were covered by the GNU general public
 license.  We're now distributing Happy with a less restrictive
-license:
+BSD-style license:
 
-Happy may be freely distributed in source or binary form, provided:
+<tscreen><verb>
+Copyright 1999, Simon Marlow and Andy Gill.  All rights reserved.
 
-<itemize>
-<item> Source distributions must retain the enclosed <tt/LICENSE/
-file, and copyright attributions on each source file.  
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-<item> Binary distributions must contain the <tt/LICENSE/ file either
-as part of the distribution or in accompanying electronic or printed
-material.
-</itemize>
-
-Aside from these restrictions, you can do what you like with Happy.
+- Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
+ 
+- Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+ 
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS "AS IS" AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDERS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+</verb></tscreen>
 
 <sect1> Obtaining Happy
 <label id="sec:obtaining">
 <p>
 
-The primary location of Happy is <url
-url="ftp://ftp.dcs.gla.ac.uk/pub/haskell/happy">.  The following sites
-mirror this directory:
+Happy's web page can be found at <url
+url="http://www.haskell.org/happy/">.  Happy source and binaries can
+be downloaded from there, or if you like you can go straight to the
+ftp site: <url url="ftp://haskell.org/pub/happy">.  There are several
+mirrors of these sites, but since they tend to move around a bit I
+won't mention them here.
 
-<itemize>
-<item> <url url="ftp://src.doc.ic.ac.uk/computing/programming/languages/haskell/happy">
-<item> <url url="ftp://cs.chalmers.se/pub/haskell/(somewhere)">
-<item> <url url="ftp://cs.yale.edu/pub/haskell/(somewhere)">
-</itemize>
-
-Happy is also distributed along with the Glasgow Haskell Compiler.  A
-World Wide Web page describing Happy can be found at <url
-url="http://www.dcs.gla.ac.uk/fp/software/happy.html">.
-
-<sect> Using Happy
+<sect> Using Happy-
 <label id="sec:using">
 <p>
 
