@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Parser.ly,v 1.14 2005/01/14 14:47:20 simonmar Exp $
+$Id: Parser.ly,v 1.15 2005/01/26 01:10:42 ross Exp $
 
 The parser.
 
@@ -37,7 +37,7 @@ The parser.
 >	"%%"		{ TokenKW      TokDoublePercent }
 >	"|"		{ TokenKW      TokBar }
 
-> %monad { P } { thenP } { returnP }
+> %monad { P }
 > %lexer { lexer } { TokenEOF }
 
 > %%
@@ -61,8 +61,8 @@ The parser.
 >	| prod				{ [$1] }
 
 > prod :: { ([String],String,Int,Maybe String) }
-> 	: ids prec code ";"		{% \s l -> returnP ($1,$3,l,$2) s l }
->	| ids prec code			{% \s l -> returnP ($1,$3,l,$2) s l }
+> 	: ids prec code ";"		{% lineP >>= \l -> return ($1,$3,l,$2) }
+>	| ids prec code			{% lineP >>= \l -> return ($1,$3,l,$2) }
 
 > prec :: { Maybe String }
 >       : spec_prec id			{ Just $2 }
@@ -109,5 +109,5 @@ The parser.
 
 > {
 > happyError :: P a
-> happyError s l = failP (show l ++ ": Parse error\n") s l
+> happyError = lineP >>= \l -> fail (show l ++ ": Parse error\n")
 > }

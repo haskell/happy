@@ -27,7 +27,7 @@ type HappyReduction m =
 	-> [HappyState (Token) (HappyStk HappyAbsSyn -> m HappyAbsSyn)] 
 	-> HappyStk HappyAbsSyn 
 	-> m HappyAbsSyn
-{- HAND-EDITED: Hugs doesn't like the types below...
+
 action_0,
  action_1,
  action_2,
@@ -132,7 +132,7 @@ happyReduce_1,
  happyReduce_35,
  happyReduce_36,
  happyReduce_37 :: () => HappyReduction (P)
--}
+
 action_0 (30) = happyShift action_3
 action_0 (4) = happyGoto action_4
 action_0 (16) = happyGoto action_2
@@ -441,7 +441,7 @@ happyReduction_9 (_ `HappyStk`
 	(HappyAbsSyn9  happy_var_2) `HappyStk`
 	(HappyAbsSyn15  happy_var_1) `HappyStk`
 	happyRest)
-	 = happyThen ( \s l -> returnP (happy_var_1,happy_var_3,l,happy_var_2) s l
+	 = happyThen ( lineP >>= \l -> return (happy_var_1,happy_var_3,l,happy_var_2)
 	) (\r -> happyReturn (HappyAbsSyn8 r))
 
 happyReduce_10 = happyMonadReduce 3 8 happyReduction_10
@@ -449,7 +449,7 @@ happyReduction_10 ((HappyTerminal (TokenInfo happy_var_3 TokCodeQuote)) `HappySt
 	(HappyAbsSyn9  happy_var_2) `HappyStk`
 	(HappyAbsSyn15  happy_var_1) `HappyStk`
 	happyRest)
-	 = happyThen ( \s l -> returnP (happy_var_1,happy_var_3,l,happy_var_2) s l
+	 = happyThen ( lineP >>= \l -> return (happy_var_1,happy_var_3,l,happy_var_2)
 	) (\r -> happyReturn (HappyAbsSyn8 r))
 
 happyReduce_11 = happySpecReduce_2 9 happyReduction_11
@@ -690,9 +690,9 @@ happyNewToken action sts stk
 happyError_ tk = happyError'
 
 happyThen :: () => P a -> (a -> P b) -> P b
-happyThen = (thenP)
+happyThen = (>>=)
 happyReturn :: () => a -> P a
-happyReturn = (returnP)
+happyReturn = (return)
 happyThen1 = happyThen
 happyReturn1 :: () => a -> P a
 happyReturn1 = happyReturn
@@ -705,10 +705,10 @@ ourParser = happySomeParser where
 happySeq = happyDontSeq
 
 happyError :: P a
-happyError s l = failP (show l ++ ": Parse error\n") s l
+happyError = lineP >>= \l -> fail (show l ++ ": Parse error\n")
 {-# LINE 1 "GenericTemplate.hs" #-}
-{-# LINE 1 "<eingebaut>" #-}
-{-# LINE 1 "<Kommandozeile>" #-}
+{-# LINE 1 "<built-in>" #-}
+{-# LINE 1 "<command line>" #-}
 {-# LINE 1 "GenericTemplate.hs" #-}
 -- Id: GenericTemplate.hs,v 1.26 2005/01/14 14:47:22 simonmar Exp 
 

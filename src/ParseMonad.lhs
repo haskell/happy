@@ -7,14 +7,15 @@ The parser monad.
 > module ParseMonad where
 
 > data ParseResult a = OkP a | FailP String
-> type P a = String -> Int -> ParseResult a
+> newtype P a = P (String -> Int -> ParseResult a)
+> runP (P f) = f
 
-> thenP :: P a -> (a -> P b) -> P b
-> m `thenP` k = \s l -> case m s l of { OkP a -> k a s l; FailP s -> FailP s }
+> lineP :: P Int
+> lineP = P $ \_ l -> OkP l
 
-> returnP :: a -> P a
-> returnP m _ _ = OkP m
-
-> failP :: String -> P a
-> failP s _ _ = FailP s
-
+> instance Monad P where
+>	return m = P $ \ _ _ -> OkP m
+>	m >>= k =  P $ \s l -> case runP m s l of
+>		OkP a -> runP (k a) s l
+>		FailP s -> FailP s
+>	fail s = P $ \ _ _ -> FailP s
