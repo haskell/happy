@@ -15,10 +15,12 @@ module DFA(scanner2dfa) where
 import Array
 import Char
 import Sort
-import Map
 import Alex
 import AbsSyn
 import NFA
+
+import Data.FiniteMap
+import Data.Maybe
 
 {- 			  Defined in the Scan Module
 
@@ -84,13 +86,14 @@ type StartCode = Int
 -- state of the partial DFA, until all possible state sets have been considered
 -- The final DFA is then constructed with a `mk_dfa'.
 
-scanner2dfa:: Scanner -> DFA Code
-scanner2dfa = nfa2dfa . scanner2nfa
+scanner2dfa:: Scanner -> [StartCode] -> DFA Code
+scanner2dfa scanner scs = nfa2dfa scs (scanner2nfa scanner scs)
 
-nfa2dfa:: NFA -> DFA Code
-nfa2dfa nfa = mk_dfa (nfa2pdfa pdfa [start_pdfa pdfa])
+nfa2dfa:: [StartCode] -> NFA -> DFA Code
+nfa2dfa scs nfa = mk_dfa (nfa2pdfa pdfa (start_pdfa pdfa))
 	where
-	pdfa = new_pdfa nfa
+	pdfa = new_pdfa n_starts nfa
+	n_starts = length scs  -- number of start states
 
 -- `nfa2pdfa' works by taking the next outstanding state set to be considered
 -- and and ignoring it if the state is already in the partial DFA, otherwise
@@ -115,7 +118,7 @@ nfa2pdfa pdfa (ss:umkd) =
 			ss'<-[[s'| (p,s')<-outs, p ch]],
 			not(null ss')]
 
-	rctx_sss = [mk_ss pdfa [s]| Acc _ _ _ _ (Just s)<-accs]
+	rctx_sss = [mk_ss pdfa [s]| Acc _ _ _ (Just s)<-accs]
 
 	accs = sort_accs [acc| s<-ss, acc<-nst_accs(nfa!s)]
 	outs =           [out| s<-ss, out<-nst_outs(nfa!s)]
@@ -131,8 +134,8 @@ dfa_alphabet = ['\0'..'\255']
 sort_accs:: [Accept a] -> [Accept a]
 sort_accs accs = foldr chk [] (msort le accs)
 	where
-	chk acc@(Acc _ _ [] Nothing Nothing) rst = [acc]
-	chk acc                          rst = acc:rst
+	chk acc@(Acc _ _ Nothing Nothing) rst = [acc]
+	chk acc                           rst = acc:rst
 
 	le (Acc{accPrio = n}) (Acc{accPrio=n'}) = n<=n'
 
@@ -151,27 +154,28 @@ sort_accs accs = foldr chk [] (msort le accs)
 -- state set for a given list of NFA states is calculated by taking the epsilon
 -- closure of all the states, sorting the result with duplicates eliminated.
 
-type PartDFA = (StateSet,NFA,Map StateSet PDS)
+type PartDFA = ([StateSet], NFA, FiniteMap StateSet PDS)
 --	in new_pdfa, mk_ss, add_pdfa, in_pdfa, start_pdfa, pdfa_nfa, mk_dfa
 
 type StateSet = [SNum]
 
 data PDS = PDS [Accept Code] [(Char,StateSet)]
 
-
-new_pdfa:: NFA -> PartDFA
-new_pdfa nfa = (msort (<=) (nst_cl(nfa!0)), nfa, empty (<))
+new_pdfa:: Int -> NFA -> PartDFA
+new_pdfa starts nfa 
+ = ([ msort (<=) (nst_cl(nfa!n)) | n <- [0..starts]], nfa, emptyFM)
+ -- starts is the number of start states
 
 mk_ss:: PartDFA -> [Int] -> StateSet
 mk_ss (_,nfa,_) l = nub' (<=) [s'| s<-l, s'<-nst_cl(nfa!s)]
 
 add_pdfa:: StateSet -> PDS -> PartDFA -> PartDFA
-add_pdfa ss pst (st,nfa,mp) = (st,nfa,ins ss pst mp)
+add_pdfa ss pst (st,nfa,mp) = (st, nfa, addToFM mp ss pst)
 
 in_pdfa:: StateSet -> PartDFA -> Bool
-in_pdfa ss (_,_,mp) = ss `elt` mp
+in_pdfa ss (_,_,mp) = ss `elemFM` mp
 
-start_pdfa:: PartDFA -> StateSet
+start_pdfa:: PartDFA -> [StateSet]
 start_pdfa (st,_,_) = st	
 
 pdfa_nfa:: PartDFA -> NFA
@@ -183,20 +187,21 @@ pdfa_nfa (_,nfa,_) = nfa
 -- NFA to the corresponding state in the DFA.
 
 mk_dfa:: PartDFA -> DFA Code
-mk_dfa pdfa@(st,_,mp) = listArray (0,card mp-1) (map cnv (rng mp))
+mk_dfa pdfa@(start_states,_,mp) 
+	= listArray (0, sizeFM mp-1) (map cnv (eltsFM mp))
 	where
 	cnv (PDS accs as) = mk_st (map cnv_acc accs) as'
 		where
-		as' = [(ch,app i_mp ss)| (ch,ss)<-as]
+		as' = [(ch, fromJust (lookupFM i_mp ss))| (ch,ss)<-as]
 
-		cnv_acc (Acc n act scs lctx rctx) =
-						Acc n act scs lctx rctx'
+		cnv_acc acc@Acc{accRightCtx = rctx} = acc{accRightCtx = rctx'}
 			where
 			rctx' =	case rctx of
 				  Nothing -> Nothing
-				  Just s -> Just(app i_mp (mk_ss pdfa [s]))
+				  Just s -> Just (fromJust (lookupFM i_mp (mk_ss pdfa [s])))
 
-	i_mp =  empty (map_lt mp) <+> (zip (st:dom(del st mp)) [0..])
+	i_mp =  listToFM (zip (start_states ++ 
+				keysFM (delListFromFM mp start_states)) [0..])
 
 
 -- `mk_st' constructs a state node from the list of accept values and a list of
@@ -222,7 +227,7 @@ mk_st accs as =
 	   then St clr accs (-1) (listArray ('0','0') [-1])
 	   else St clr accs df (listArray bds [arr!c| c<-range bds])
 	where
-	clr = not(null[()| Acc _ _ [] Nothing Nothing<-accs])
+	clr = not(null[()| Acc _ [] Nothing Nothing<-accs])
 
 	bds = if sz==0 then ('0','0') else bds0
 

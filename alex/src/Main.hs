@@ -15,8 +15,9 @@ to DFAs.
 Chris Dornan, Aug-95, 10-Jul-96, 29-Sep-97, 11-Apr-00
 ------------------------------------------------------------------------------}
 
-module Main where
+module Main (main) where
 
+import Info
 import Parser
 import Scan
 import CharSet
@@ -24,40 +25,92 @@ import System
 import Alex
 import AbsSyn
 import DFA
+import Util
+import qualified Alex
 
+import System.Console.GetOpt
 import Data.Char
 import Data.Array
 import Data.FiniteMap
 import System.IO
+import Control.Monad
+
+version = "2.0"
 
 -- `main' decodes the command line arguments and calls `alex'.  
 
 main:: IO ()
-main =	getArgs							>>= \args ->
-	check_flags args					>>
-	case args of
-	  [fn]     -> check_fn fn >>= \fn' -> alex fn fn'
-	  [fn,fn'] -> check_fn fn >>= \_   -> alex fn fn'
-	  _ -> usage
-	where
-	check_flags (('-':_):_) = usage
-	check_flags _ = return ()
+main =	do
+ args <- getArgs
+ case getOpt Permute argInfo args of
+    (cli,[file],[]) -> 
+	runAlex cli file
+    (cli,[],[]) | DumpVersion `elem` cli -> do
+	putStrLn copyright
+	exitWith ExitSuccess
+    (_,_,errors) -> do
+	prog <- getProgName
+        die (concat errors ++ usageInfo (usageHeader prog) argInfo)
 
-	usage = getProgName					>>= \prog ->
-		die (vrn_ln ++ usg_ln prog)
-	
-	vrn_ln = "Alex 2.0 by Chris Dornan and Simon Marlow\n\n"
+copyright = "Alex version " ++ version ++ ", (c) 2003 Chris Dornan and Simon Marlow\n"
 
-	usg_ln prog = "usage: " ++ prog ++ " <source_file> [<target_file>]\n"
+usageHeader prog = prog ++ " [OPTION...] file"
 
-	ext rbs = reverse ('s':'h':'.':rbs)
+runAlex cli file = do
+  basename <- case (reverse file) of
+		'x':'.':r -> return (reverse r)
+		_         -> die (file ++ ": filename must end in \'.x\'\n")
+  
+  o_file <- case [ f | OptOutputFile f <- cli ] of
+		[]  -> return (basename ++ ".hs")
+		[f] -> return f
+		_   -> dieAlex "multiple -o/--outfile options"
+  
+  prg <- readFile file
 
-	ext_msg = ": only the .x extension is recognised\n"
+  case unP (parse (lexer prg)) initialParserEnv of
+	Right (_,script) -> do
+		(put_info, finish_info) <- 
+		   case [ f | OptInfoFile f <- cli ] of
+			[]  -> return (\_ -> return (), return ())
+			[Nothing] -> infoStart file (basename ++ ".info")
+			[Just f]  -> infoStart file f
+			_   -> dieAlex "multiple -i/--info options"
 
-	check_fn fn = 
-		case reverse fn of
-		  'x':'.':rbs -> return (ext rbs)
-		  _           -> die (fn ++ ext_msg)
+		out_h <- openFile o_file WriteMode
+
+		let
+			(script', scs, sc_hdr) = encode_start_codes "" script
+
+			go n (DefScanner scr) = do
+				let dfa = scanner2dfa scr scs
+				    nm  = scannerName scr
+				put_info (infoDFA n nm dfa "")
+				hPutStr out_h (outputDFA n nm dfa "")
+			go n (DefCode code) =
+			  	hPutStr out_h code
+
+		zipWithM_ go [1..] script'
+		hPutStr out_h (sc_hdr "")
+		hClose out_h
+		finish_info
+
+	Left (Just (Alex.Pn _ line col),err) -> 
+		die (file ++ ":" ++ show line ++ ":" ++ show col
+				 ++ ": " ++ err ++ "\n")
+	Left (Nothing, err) ->
+		die (file ++ ": " ++ err ++ "\n")
+
+infoStart x_file info_file = do
+  h <- openFile info_file WriteMode
+  infoHeader h x_file
+  return (hPutStr h, hClose h)
+
+infoHeader h file = do
+  hPutStrLn h ("Info file produced by Alex version " ++ version ++ 
+		", from " ++ file)
+  hPutStrLn h hline
+  hPutStr h "\n"
 
 initialParserEnv :: (FiniteMap String CharSet, FiniteMap String RExp)
 initialParserEnv = (initSetEnv, initREEnv)
@@ -68,29 +121,32 @@ initSetEnv = listToFM [("white", charSet " \t\n\v\f\r"),
 				`charSetMinus` charSetSingleton '\n')]
 initREEnv = emptyFM
 
-alex:: String -> String -> IO ()
-alex src target =
-	readFile src						>>= \prg ->
-	case unP (parse (lexer prg)) initialParserEnv of
-	  Right (_,script) ->
-		writeFile target (foldr fmt (sc_hdr "") (zip [0..] script'))
-		where
-		(script', sc_hdr) = encode_start_codes ind script
-	  Left (Just (Pn _ line col),err) -> 
-		die (src ++ ":" ++ show line ++ ":" ++ show col
-				 ++ ": " ++ err ++ "\n")
-	  Left (Nothing, err) ->
-		die (src ++ ": " ++ err ++ "\n")
-	where
-	fmt (n, DefScanner scr)
-	  = outputDFA n (scannerName scr) (scanner2dfa scr)
-	fmt (n, DefCode code)
-	  = showString code
+-- -----------------------------------------------------------------------------
+-- Command-line flags
 
-	ind = ""
+data CLIFlags 
+  = OptDebug
+--TODO:
+--  | OptGhcTarget
+  | OptOutputFile FilePath
+  | OptInfoFile (Maybe FilePath)
+  | DumpVersion
+  deriving Eq
 
-die :: String -> IO a
-die s = hPutStr stderr s >> exitWith (ExitFailure 1)
+argInfo :: [OptDescr CLIFlags]
+argInfo  = [
+   Option ['d'] ["debug"] (NoArg OptDebug)
+	"Produce a debugging parser (only with -a)",
+-- TODO:
+--   Option ['g'] ["ghc"]    (NoArg OptGhcTarget)
+--	"Use GHC extensions",
+   Option ['o'] ["outfile"] (ReqArg OptOutputFile "FILE")
+	"Write the output to FILE (default: file.hs)",
+   Option ['i'] ["info"] (OptArg OptInfoFile "FILE")
+	"Put detailed grammar info in FILE",
+   Option ['v'] ["version"] (NoArg DumpVersion)
+      "Print out version info"
+  ]
 
 -- -----------------------------------------------------------------------------
 -- Printing the output
@@ -119,10 +175,9 @@ outputDFA n func_nm dfa
     outputAccs accs
 	= brack (interleave_shows (char ',') (map (paren.outputAcc) accs))
    
-    outputAcc (Acc prio act scs lctx rctx)
+    outputAcc (Acc prio act lctx rctx)
 	= str "Acc " . shows prio . space
 	. paren (str act) . space
-	. shows scs . space
 	. outputLCtx lctx . space
 	. shows rctx
 
@@ -138,15 +193,14 @@ outputDFA n func_nm dfa
 -- -----------------------------------------------------------------------------
 -- Utils
 
-str = showString
-char c = (c :)
+die :: String -> IO a
+die s = do 
+  hPutStr stderr s
+  exitWith (ExitFailure 1)
 
-paren s = char '(' . s . char ')'
-brack s = char '[' . s . char ']'
-
-interleave_shows s [] = id
-interleave_shows s xs = foldr1 (\a b -> a . s . b) xs
-
-space = char ' '
-nl = char '\n'
+dieAlex :: String -> IO a
+dieAlex s = do
+  prog <- getProgName
+  hPutStr stderr (prog ++ ": " ++ s)
+  exitWith (ExitFailure 1)
 

@@ -18,7 +18,11 @@ import DFS
 import Alex
 import AbsSyn
 import CharSet
+import Util
 
+import Control.Monad
+import Data.FiniteMap
+--import Debug.Trace
 
 -- Each state of a nondeterministic automaton contains a list of `Accept'
 -- values, a list of epsilon transitions (an epsilon transition represents a
@@ -32,17 +36,20 @@ import CharSet
 
 type NFA = Array SNum NState
 
-data NState = NSt [Accept Code] [SNum] [(CharSet,SNum)]
+data NState = NSt {
+ nst_accs :: [Accept Code],
+ nst_cl   :: [SNum],
+ nst_outs :: [(CharSet,SNum)]
+ }
 
-nst_accs:: NState -> [Accept Code]
-nst_accs (NSt accs _ _) = accs
+-- Debug stuff
+instance Show (Accept a) where
+  showsPrec _ (Acc p act lctx rctx) = shows p --TODO
 
-nst_cl:: NState -> [SNum]
-nst_cl (NSt _ es _) = es
-
-nst_outs:: NState -> [(CharSet,SNum)]
-nst_outs (NSt _ _ outs) = outs
-
+instance Show NState where
+  showsPrec _ (NSt accs cl outs) =
+    str "NSt " . shows accs . space . shows cl . space .
+	shows [ (charSetToArray c, s) | (c,s) <- outs ]
 
 {- 			     From the Scan Module
 
@@ -58,83 +65,107 @@ nst_outs (NSt _ _ outs) = outs
 -- consists of an alternative starting state within the DFA; if this `sub-dfa'
 -- turns up any accepting state when applied to the residual input then the
 -- trailing context is acceptable.
-
-data Accept a = Acc Int String a [StartCode] (Maybe CharSet) (Maybe SNum)
 -}
 
 
--- `scanner2nfa' takes a scanner (see the RExp module) and converts it to an
--- NFA.  It works by converting each of the regular expressions to a partial
--- NFA.  Partial NFAs differ from NFAs in being composable (see below).  These
--- partial NFAs are sequentially composed with accepting partial NFAs that
--- record all the details of the tokens being accepted, including its priority
--- (token definitions appearing earlier in the scanner take priority over later
--- ones), name and context specifications; see the `acc_nfa' below for more
--- details of accepting NFAs.  The list of partial NFAs are then composed with
--- the `bar_nfa' operator and converted to an NFA.
+-- `scanner2nfa' takes a scanner (see the AbsSyn module) and converts it to an
+-- NFA, using the NFA creation monad (see below).
+--
+-- We generate a start state for each startcode, with the same number
+-- as that startcode, and epsilon transitions from this state to each
+-- of the sub-NFAs for each of the tokens acceptable in that startcode.
 
-scanner2nfa:: Scanner -> NFA
-scanner2nfa Scanner{scannerTokens = toks}
-   = mk_nfa (foldr bar_nfa eps_nfa pnfas)
+scanner2nfa:: Scanner -> [StartCode] -> NFA
+scanner2nfa Scanner{scannerTokens = toks} startcodes
+   = runNFA $
+        do
+	  -- make a start state for each start code (these will be
+	  -- numbered from zero).
+	  start_states <- sequence (replicate (length startcodes) newState)
+	  
+	  -- construct the NFA for each token
+	  tok_states <- zipWithM do_token toks [0..]
+
+	  -- make an epsilon edge from each state state to each
+	  -- token that is acceptable in that state
+	  zipWithM_ (tok_transitions (zip toks tok_states)) 
+		startcodes start_states
+
 	where
-	pnfas = [mk_pnfa n re| (re, n)<-zip toks [0..]]
+	  do_token (RECtx scs lctx re rctx code) prio = do
+		b <- newState
+		e <- newState
+		rexp2nfa b e re
 
-	mk_pnfa n (RECtx scs lctx re rctx code) =
-		   		rexp2pnfa re `seq_nfa` acc_nfa rctx' mk_acc
-		where
-		mk_acc rctx'' = Acc n code (map snd scs) lctx' rctx''
+		rctx_e <- case rctx of
+				  Nothing -> return Nothing
+				  Just re -> do 
+					rctx_e <- newState
+		 			rexp2nfa e rctx_e re
+					accept rctx_e rctxt_accept
+					return (Just rctx_e)
 
-		rctx' =	case rctx of
-			  Nothing -> Nothing
-			  Just re -> Just(rexp2pnfa re)
+		let lctx' = case lctx of
+				  Nothing -> Nothing
+				  Just st -> Just st
 
-		lctx' = case lctx of
-			  Nothing -> Nothing
-			  Just st -> Just st
+		accept e (Acc prio code lctx' rctx_e)
+		return b
 
+	  tok_transitions toks_with_states start_code start_state = do
+		let states = [ s | (RECtx scs _ _ _ _, s) <- toks_with_states,
+			           null scs || start_code `elem` map snd scs ]
+		mapM_ (epsilonEdge start_state) states
 
+-- -----------------------------------------------------------------------------
+-- NFA creation from a regular expression
 
-{------------------------------------------------------------------------------
-				 Partial NFAs
-------------------------------------------------------------------------------}
+rexp2nfa :: SNum -> SNum -> RExp -> NFAM ()
+rexp2nfa b e Eps    = epsilonEdge b e
+rexp2nfa b e (Ch p) = charEdge b p e
+rexp2nfa b e (re1 :%% re2) = do
+  s <- newState
+  rexp2nfa b s re1
+  rexp2nfa s e re2
+rexp2nfa b e (re1 :| re2) = do
+  rexp2nfa b e re1
+  rexp2nfa b e re2
+rexp2nfa b e (Star re) = do
+  s <- newState
+  epsilonEdge b s
+  rexp2nfa s s re
+  epsilonEdge s e
+rexp2nfa b e (Plus re) = do
+  s1 <- newState
+  s2 <- newState
+  rexp2nfa s1 s2 re
+  epsilonEdge b s1
+  epsilonEdge s2 s1
+  epsilonEdge s2 e
+rexp2nfa b e (Ques re) = do
+  rexp2nfa b e re
+  epsilonEdge b e
 
+-- -----------------------------------------------------------------------------
+-- NFA creation monad.
 
+-- Partial credit to Thomas Hallgren for this code, as I adapted it from
+-- his "Lexing Haskell in Haskell" lexer generator.
 
-rexp2pnfa:: RExp -> PartNFA
-rexp2pnfa Eps = eps_nfa
-rexp2pnfa (Ch p) = ch_nfa p
-rexp2pnfa (re :%% re') = rexp2pnfa re `seq_nfa` rexp2pnfa re'
-rexp2pnfa (re :| re') = rexp2pnfa re `bar_nfa` rexp2pnfa re'
-rexp2pnfa (Star re) = star_nfa (rexp2pnfa re)
-rexp2pnfa (Plus re) = plus_nfa (rexp2pnfa re)
-rexp2pnfa (Ques re) = ques_nfa (rexp2pnfa re)
+type MapNFA = FiniteMap SNum NState
 
+newtype NFAM a = N {unN :: SNum -> MapNFA -> (SNum, MapNFA, a)}
 
--- `PartNFA' is a composable NFA.  It consists of a pair containing the size of
--- the automaton (i.e., the number of states used) and a function for
--- constructing the automaton.  The function takes the base of the automaton
--- (so that it will use the state numbers from the base up to base+size-1), the
--- exit state for the automaton and the remaining states to be appended to the
--- automaton, in reverse order; the function then returns all the states in the
--- automaton in reverse order.  By convention, every automaton should entered
--- throgh its base state.
+instance Monad NFAM where
+  return a = N $ \s n -> (s,n,a)
 
-type PartNFA = (Int, SNum->SNum->[NState]->[NState])
---	in mk_nfa, eps_nfa, acc_nfa, ch_nfa,
---	   seq_nfa, bar_nfa, star_nfa, plus_nfa, ques_nfa
+  m >>= k  = N $ \s n -> case unN m s n of
+				 (s,n,a) -> unN (k a) s n
 
-
--- `mk_nfa' converts a partial NFA to an NFA.  Apart from converting to an
--- array format it must close all the epsilon transitions, so that if there is
--- an epsilon transition from s1 to s2 and s2 to s3 then s3 must be listed in
--- the epsilon transitions of s1.  This is done by `e_close' which uses the
--- DFS function `t_close' for computing the transitive closure of a graph.
-
-mk_nfa:: PartNFA -> NFA
-mk_nfa (sz,f) = e_close ar
-	where
-	ar = listArray (0,sz) (reverse(err:f 0 sz []))
-	err = NSt [] [] []
+runNFA :: NFAM () -> NFA
+runNFA m = case unN m 0 emptyFM of
+		(s, nfa_map, ()) -> -- trace (show (fmToList nfa_map)) $ 
+				    e_close (array (0,s-1) (fmToList nfa_map))
 
 e_close:: Array Int NState -> NFA
 e_close ar = listArray bds
@@ -143,65 +174,37 @@ e_close ar = listArray bds
 	gr = t_close (hi+1,\v->nst_cl (ar!v))
 	bds@(_,hi) = bounds ar
 
+newState :: NFAM SNum
+newState = N $ \s n -> (s+1,n,s)
 
--- `acc_nfa' constructs a partial NFA that accepts a token.  It is essentially
--- an epsilon NFA with an accepting state.  It would be quite straightforward
--- except for the need to deal with trailing context.  Tokens with trailing
--- context are encoded by converting the trailing-context regular expression to
--- a partial NFA with a dummy accept state, placing it out of the way on the
--- end of the partial NFA under construction and making a note of its entry
--- state in the main accepting state.  Thus, if there is any trailing context,
--- the `acc_nfa' function will receive a partial NFA in its first argument and
--- it will pass the state number of the corresponding entry point to the
--- function in its second argument to get the accept value; if there is no
--- trailing context then it passes `Nothing' to the Accept-constructing
--- function.
+charEdge :: SNum -> CharSet -> SNum -> NFAM ()
+charEdge from charset to = N $ \s n -> (s, addEdge n from charset to, ())
+ where
+   addEdge n from charset to = 
+     case lookupFM n from of
+       Nothing -> 
+	   addToFM n from (NSt [] [] [(charset,to)])
+       Just (NSt acc eps trans) ->
+	   addToFM n from (NSt acc eps ((charset,to):trans))
 
-acc_nfa:: Maybe PartNFA -> (Maybe SNum->Accept Code) -> PartNFA
-acc_nfa Nothing mk_act = (1,\bse ex sts->NSt [mk_act Nothing] [ex] []:sts)
-acc_nfa (Just pnfa) mk_acc = (1+sz,g)
-	where
-	g bse ex sts = f (bse+1) (-1) (NSt [mk_acc(Just(bse+1))] [ex] []:sts)
+epsilonEdge :: SNum -> SNum -> NFAM ()
+epsilonEdge from to = N $ \s n -> (s, addEdge n from to, ())
+ where
+   addEdge n from to = 
+     case lookupFM n from of
+       Nothing 			-> addToFM n from (NSt [] [to] [])
+       Just (NSt acc eps trans) -> addToFM n from (NSt acc (to:eps) trans)
 
-	(sz,f) = pnfa `seq_nfa` acc_pnfa
+accept :: SNum -> Accept Code -> NFAM ()
+accept state new_acc = N $ \s n -> (s, addAccept n state, ())
+ where
+   addAccept n state = 
+     case lookupFM n state of
+       Nothing ->
+	   addToFM n state (NSt [new_acc] [] [])
+       Just (NSt acc eps trans) ->
+	   addToFM n state (NSt (new_acc:acc) eps trans)
 
-	acc_pnfa = (1,\bse ex sts->NSt [rctxt_accept] [] [] : sts)
 
 rctxt_accept :: Accept Code
-rctxt_accept = Acc 0 "trailing context accept" [] Nothing Nothing
-
--- The following functions compose NFAs according to the `RExp' operators.  The
--- construction are more compact than those given in the dragon book.
-
-eps_nfa:: PartNFA
-eps_nfa = (1,\bse ex sts->NSt [] [ex] []:sts)
-
-ch_nfa:: CharSet -> PartNFA
-ch_nfa st = (1,\bse ex sts->NSt [] [] [(st,ex)]:sts)
-
-seq_nfa:: PartNFA -> PartNFA -> PartNFA
-seq_nfa (sz,f) (sz',g) = (sz+sz',h)
-	where
-	h bse ex sts = g (bse+sz) ex (f bse (bse+sz) sts)
-
-bar_nfa:: PartNFA -> PartNFA -> PartNFA
-bar_nfa (sz,f) (sz',g) = (sz+sz'+1,h)
-	where
-	h bse ex sts = g (bse+sz+1) ex (f (bse+1) ex (alt_st:sts))
-		where
-		alt_st = NSt [] [bse+1,bse+sz+1] []
-
-star_nfa:: PartNFA -> PartNFA
-star_nfa (sz,f) = (sz+1,h)
-	where
-	h bse ex sts = f (bse+1) bse (NSt [] [ex,bse+1] []:sts)
-
-plus_nfa:: PartNFA -> PartNFA
-plus_nfa (sz,f) = (sz+1,h)
-	where
-	h bse ex sts = NSt [] [ex,bse] []:f bse (bse+sz) sts
-
-ques_nfa:: PartNFA -> PartNFA
-ques_nfa (sz,f) = (sz+1,h)
-	where
-	h bse ex sts = f (bse+1) ex (NSt [] [ex,bse+1] []:sts)
+rctxt_accept = Acc 0 "trailing context accept" Nothing Nothing

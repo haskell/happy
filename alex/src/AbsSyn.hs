@@ -200,8 +200,8 @@ bar_ar sc sc' inp = sc inp ++ sc' inp
 
 -- Map the available start codes onto [1..]
 
-encode_start_codes:: String -> Script -> (Script,ShowS)
-encode_start_codes ind defs = (defs', sc_hdr)
+encode_start_codes:: String -> Script -> (Script,[StartCode],ShowS)
+encode_start_codes ind defs = (defs', 0 : map snd name_code_pairs, sc_hdr)
 	where
 	defs' = map do_scanner defs
 		where do_scanner (DefCode c) = DefCode c

@@ -27,7 +27,7 @@ boot ::
 	fi 
 
 Scan.hs : Scan.x
-	../src1/alex Scan.x
+	../src/alex Scan.x
 
 ifeq "$(INSTALLING)" "1"
 ifeq "$(BIN_DIST)"   "1"

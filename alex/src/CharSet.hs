@@ -41,4 +41,4 @@ charSetRange c1 c2 x = x >= c1 && x <= c2
 
 charSetToArray :: CharSet -> Array Char Bool
 charSetToArray set = array (fst (head ass), fst (last ass)) ass
-  where ass = [(c,True) | c <- ['\0'..'\xff'], set c]
+  where ass = [(c,set c) | c <- ['\0'..'\xff']]

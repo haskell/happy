@@ -102,7 +102,7 @@ load_scan s_a dfa = load_gscan s_a' dfa'
 		| (x, St b accs s arr) <- Array.assocs dfa ]
 
 	mk_acc :: Accept (TokenAction t) -> Accept (GTokenAction () [t])
-	mk_acc (Acc p act scs lctx rctx) = (Acc p (mk_act act) scs lctx rctx)
+	mk_acc (Acc p act lctx rctx) = (Acc p (mk_act act) lctx rctx)
 
 	mk_act :: TokenAction t -> GTokenAction () [t]
 	mk_act f = \p _ inp len cont sc_s -> f p (take len inp):cont sc_s
@@ -168,7 +168,7 @@ gscan scr s inp = gscan' scr start_pos '\n' inp (0,s)
 gscan' scr@(dfa,s_a) p c inp sc_s =
 	case scan_token dfa sc_s p c inp of
 	  Nothing -> s_a p c inp sc_s
-	  Just (p',c',inp',len,Acc _ t_a _ _ _) ->
+	  Just (p',c',inp',len,Acc _ t_a _ _) ->
 				t_a p c inp len (gscan' scr p' c' inp') sc_s
 
 
@@ -198,8 +198,10 @@ applications.
 type Sv t = (Posn,Char,String,Int,Accept t)
 
 scan_token:: DFA f -> (StartCode,s) -> Posn -> Char -> String -> Maybe (Sv f)
-scan_token dfa sc_s p c inp =
-	case dropWhile (check_ctx dfa sc_s c) (scan_tkn dfa p c inp 0 0 []) of
+scan_token dfa (startcode,_) p c inp =
+	case dropWhile (check_ctx dfa c) 
+		(scan_tkn dfa p c inp 0 startcode []) of
+		-- the startcode is the initial state
 	  [] -> Nothing
 	  sv:_ -> Just sv
 
@@ -214,16 +216,12 @@ scan_token dfa sc_s p c inp =
 -- rarely used and it avoids well-known infidelities arrising from the more
 -- efficient method used by Lex and Flex.
 
-check_ctx:: DFA f -> (StartCode,s) -> Char -> Sv f -> Bool
-check_ctx dfa sc_s c (p',c',inp',_,acc) =
+check_ctx:: DFA f -> Char -> Sv f -> Bool
+check_ctx dfa c (p',c',inp',_,acc) =
 	case acc of
-	  Acc _ _ [] Nothing Nothing -> False
-	  Acc _ _ scs lctx rctx ->
-		chk_scs sc_s scs || chk_lctx lctx || chk_rctx p' c' inp' rctx
+	  Acc _ _ Nothing Nothing -> False
+	  Acc _ _ lctx rctx -> chk_lctx lctx || chk_rctx p' c' inp' rctx
 	where
-	chk_scs (sc,_) [] = False
-	chk_scs (sc,_) scs = sc `notElem` scs
-
 	chk_lctx Nothing = False
 	chk_lctx (Just st) = not(st c)
 
@@ -313,7 +311,6 @@ data State a = St Bool [Accept a] SNum (Array.Array Char SNum)
 data Accept a 
   = Acc { accPrio       :: Int,
 	  accAction     :: a,
-	  accStartCodes :: [StartCode],
 	  accLeftCtx    :: Maybe(Char->Bool),
 	  accRightCtx   :: Maybe SNum
     }
