@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.54 2004/09/08 10:05:31 paulcc Exp $
+$Id: Main.lhs,v 1.55 2004/10/23 21:20:40 desrt Exp $
 
 The main driver.
 
@@ -542,8 +542,8 @@ Extract various command-line options.
 >	= if OptUseCoercions `elem` cli 
 >	     then if OptGhcTarget `elem` cli
 >			then return True
->			else dieHappy "-c/--coerce may only be used \ 
->				      \in conjunction with -g/--ghc\n"
+>			else dieHappy ("-c/--coerce may only be used " ++
+>				       "in conjunction with -g/--ghc\n")
 >	     else return False
 
 > getGhc cli = return (OptGhcTarget `elem` cli)
