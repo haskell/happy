@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.38 2002/02/12 15:17:24 simonmar Exp $
+$Id: Main.lhs,v 1.39 2002/02/12 15:29:48 simonmar Exp $
 
 The main driver.
 
@@ -388,7 +388,7 @@ GHC version-dependent stuff in it.
 >  	concat [ "import "++s++"\n" 
 >	       | s <- glaexts_import ++ array_import ++ debug_imports ]
 >   where
->	glaexts_import | OptGhcTarget `elem` cli   = ["GHC.Base"]
+>	glaexts_import | OptGhcTarget `elem` cli   = ["GlaExts"]
 >		       | otherwise                 = []
 >
 >	array_import   | tgt == TargetArrayBased   = ["Array"]
