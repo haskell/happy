@@ -1,4 +1,4 @@
-.TH HAPPY 1 "04 August 1999" "Glasgow FP Suite" "Happy Parser Generator"
+.TH HAPPY 1 "2000-12-23" "Glasgow FP Suite" "Happy Parser Generator"
 .SH NAME
 happy \- the parser generator for Haskell
 
@@ -10,14 +10,18 @@ happy \- the parser generator for Haskell
 This manual page documents briefly the
 .BR happy 
 command.
+
 .PP
-This manual page was written for the Debian GNU/Linux distribution because
-the original program does not have a manual page. Instead, it has
-documentation in various other formats, including info and HTML; see below.
+This manual page was written for the Debian GNU/Linux distribution
+because the original program does not have a manual page.  Instead, it
+has documentation in various other formats, including DVI, Info and
+HTML; see below.
+
 .PP
 .B Happy
-is a parser generator system for Haskell. `HAPPY' is a dyslexic acronym for
-`A Yacc-like Haskell Parser generator'.
+is a parser generator system for Haskell.  `HAPPY' is a dyslexic
+acronym for `A Yacc-like Haskell Parser generator'.
+
 .PP
 There are two types of grammar files, 
 .IR file.y " and " file.ly ,
@@ -27,111 +31,129 @@ each code line must begin with `>').  The examples distributed with
 are all of the 
 .I .ly
 form.
+
 .PP
-Caveat: When using hbc (Chalmers Haskell) the command argument structure is
-slightly different. This is because the hbc run time system takes some flags
-as its own (for setting things like the heap size, etc). This problem can be
-circumvented by adding a single dash (`-') to your command line.  So when
-using a hbc generated version of Happy, the argument structure is:
-.br
+Caveat: When using 
+.I hbc 
+(Chalmers Haskell) the command argument structure is slightly
+different.  This is because the hbc run time system takes some flags
+as its own (for setting things like the heap size, etc).  This problem
+can be circumvented by adding a single dash (`-') to your command
+line.  So when using a hbc generated version of Happy, the argument
+structure is:
+
 .B happy \-
 [\fIOPTION\fR]... \fIfile\fR [\fIOPTION\fR]...
 
 .SH OPTIONS
-The programs follow the usual GNU command line syntax, with long options
-starting with two dashes (`-'). A summary of options are included below. For
-a complete description, see the other documentation.
+The programs follow the usual GNU command line syntax, with long
+options starting with two dashes (`--').  A summary of options is
+included below.  For a complete description, see the other
+documentation.
+
 .TP
-.B \-h, \-\-help
+.BR \-h ", " \-\-help
 Show summary of options.
 .TP
-.B \-v, \-\-version
+.BR \-v ", " \-\-version
 Print version information on standard output then exit successfully.
 .TP
-.B \-a, \-\-array
+.BR \-a ", " \-\-array
 Instructs Happy to generate a parser using an array-based shift reduce
-parser.  Currently this generates slower parsers for two reasons: standard
-Haskell arrays are surrounded by overloading and bounds-checking which makes
-lookup quite expensive, and secondly current compilers don't know how to
-generate static objects (i.e. they generate the code which builds the array
-at run-time).
+parser.  When used in conjunction with \fB\-g\fR, the arrays will be
+encoded as strings, resulting in faster parsers.  Without \fB\-g\fR,
+standard Haskell arrays will be used.
+
+.TP
+.BR \-g ", " \-\-ghc
+Instructs Happy to generate a parser that uses GHC-specific extensions
+to obtain faster code.
+
+.TP
+.BR \-c ", " \-\-coerce
+Use GHC's 
+.B unsafeCoerce#
+extension to generate smaller faster parsers.  One drawback is that
+some type safety is lost, which means that a parser generated with
+.B \-c
+may compile fine but crash at run-time.  Be sure to compile your
+grammar without
+.B \-c
+first to ensure it is type-correct.
+
+This option has quite a significant effect on the performance of the
+resulting parser, but remember that parsers generated this way can
+only be compiled by GHC\ 3.02 and above.
+
+This option may only be used in conjuction with
+.BR \-g .
+
+.TP
+.BR \-d ", " \-\-debug
+Generate a parser that will print debugging information to
+.I stderr
+at run-time, including all the shifts, reductions, state transitions
+and token inputs performed by the parser.
+
 .TP
 \fB\-i\fR [\fIFILE\fR], \fB\-\-info\fR[=\fIFILE\fR]
-Directs Happy to produce an info file containing detailed information about
-the grammar, parser states, parser actions, and conflicts.  Info files are
-vital during the debugging of grammars.  The filename argument is optional,
-and if omitted the info file will be written to 
+Directs Happy to produce an info file containing detailed information
+about the grammar, parser states, parser actions, and conflicts.  Info
+files are vital during the debugging of grammars.
+
+The filename argument is optional, and if omitted the info file will
+be written to
 .I FILE.info
 (where 
 .I FILE
 is the input file name with any extension removed).
+
 .TP
-.B \-c, \-\-coerce
-Use GHC's 
-.B unsafeCoerce#
-extension to generate smaller faster parsers. One drawback is that some type
-safety is lost, which means that a parser generated with 
-.B \-c
-may compile fine but crash at run-time.  Be sure to compile your grammar
-without
-.B \-c
-first to ensure it is type-correct.
-.br
-This option quite a significant effect on the performance of the resulting
-parser, but remember that parsers generated this way can only be compiled by
-GHC 3.02 and above.  This option may only be used in conjuction with
-.BR \-g .
-.TP
-.B \-g, \-\-ghc
-Instructs Happy to generate a parser
-that uses ghc-specific extensions to obtain faster code.  When
-compiling the resulting Haskell module, remember to add the
-declaration 
-.B import GlaExts
-to the module header (not available with
-.BR -a ).
+\fB\-o\fR \fIFILE\fR, \fB\-\-outfile=\fIFILE
+Specifies the destination of the generated parser module.  If omitted,
+the parser will be placed in
+.IR FILE.hs ", where " FILE
+is the name of the input file with any extension removed.
+
 .TP
 \fB\-m\fR \fINAME\fR, \fB\-\-magic-name=\fINAME
 Happy prefixes all the symbols it uses internally with either 
 .BR happy " or " Happy .
 To use a different string, for example if the use of 
 .B happy
-is conflicting with one of your own functions, specify the prefix using the
+is conflicting with one of your own functions, specify the prefix
+using the
 .B \-m
 option.
-.TP
-\fB\-o\fR \fIFILE\fR, \fB\-\-outfile=\fIFILE
-Specifies the destination of the generated parser module.  If omitted, the
-parser will be placed in 
-.IR FILE.hs ,
-where 
-.I FILE
-is the name of the input file with any extension removed.
+
 .TP
 \fB\-t\fR \fIDIR\fR, \fB\-\-template=\fIDIR
-Instructs Happy to use this directory when looking for template files: these
-files contain the static code that Happy includes in every generated parser.
-You shouldn't need to use this option if Happy is properly configured for
-your computer.
-.PP
-Note: only one of the options 
-.B \-g 
-and
-.B \-a
-may be given (or their long versions).  There is no array-based parser with
-ghc extensions yet, but this is planned for a future version.
+Instructs Happy to use this directory when looking for template files:
+these files contain the static code that Happy includes in every
+generated parser.  You shouldn't need to use this option if Happy is
+properly configured for your computer.
 
 .SH FILES
 .I @LIBDIR@
 
 .SH "SEE ALSO"
-.B @DOCDIR@
+.BR @DOCDIR@ ,
+the Happy homepage
+.UR http://haskell.org/happy/
+(http://haskell.org/happy/)
+.UE
 
 .SH COPYRIGHT
-Happy Version @VERSION@ Copyright (c) 1993-1996 Andy Gill, Simon Marlow; (c)
-1997-1998 Simon Marlow
+Happy Version @VERSION@ 
+
+Copyright (c) 1993-1996 Andy Gill, Simon Marlow; (c) 1997-2001 Simon
+Marlow
 
 .SH AUTHOR
 This manual page was written by Michael Weber
-<michael.weber@post.rwth-aachen.de>, for the Debian GNU/Linux system (but
-may be used by others). 
+<michaelw@debian.org>, for the Debian GNU/Linux system
+(but may be used by others).
+
+.\" Local variables:
+.\" mode: nroff
+.\" End:
