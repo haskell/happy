@@ -1,9 +1,9 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.48 2003/09/08 11:26:44 simonmar Exp $
+$Id: Main.lhs,v 1.49 2003/12/12 10:49:08 simonmar Exp $
 
 The main driver.
 
-(c) 1993-2002 Andy Gill, Simon Marlow
+(c) 1993-2003 Andy Gill, Simon Marlow
 -----------------------------------------------------------------------------
 
 > module Main (main) where
@@ -480,7 +480,7 @@ Extract various command-line options.
 
 > copyright :: String
 > copyright = unlines [
->  "Happy Version " ++ version ++ " Copyright (c) 1993-1996 Andy Gill, Simon Marlow (c) 1997-2002 Simon Marlow","",
+>  "Happy Version " ++ version ++ " Copyright (c) 1993-1996 Andy Gill, Simon Marlow (c) 1997-2003 Simon Marlow","",
 >  "Happy is a Yacc for Haskell, and comes with ABSOLUTELY NO WARRANTY.",
 >  "This program is free software; you can redistribute it and/or modify",
 >  "it under the terms given in the file 'LICENSE' distributed with",
