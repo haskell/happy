@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Lexer.lhs,v 1.2 1997/03/27 14:14:44 simonm Exp $
+$Id: Lexer.lhs,v 1.3 1997/03/27 17:22:46 simonm Exp $
 
 The lexer.
 
@@ -72,6 +72,8 @@ ToDo: proper text instance here, for use in parser error messages.
 > lexer :: (Token -> P a) -> P a
 > lexer cont "" = cont TokenEOF ""
 > lexer cont ('-':'-':r) = lexer cont (tail (dropWhile (/= '\n') r))
+> lexer cont ('{':'-':r) = \line -> lexNestedComment line 
+>				(\r -> lexer cont r) r line
 > lexer cont (c:rest) = nextLex cont c rest
 
 > nextLex :: (Token -> P a) -> Char -> P a
@@ -98,12 +100,9 @@ ToDo: proper text instance here, for use in parser error messages.
 >	     || c >= 'A' && c <= 'Z' -> lexId cont c
 >  	  | c `elem` "=/" -> cont (TokenInfo [c] TokSym)
 >	c       -> lexError ("lexical error before `" ++ c : "'")
->  where
 
 Percents come in two forms, in pairs, or 
 followed by a special identifier.
-
-ToDo: error messages for LexPercent.
 
 > lexPercent cont s = case s of
 > 	'%':rest -> cont (TokenKW TokDoublePercent) rest
@@ -117,7 +116,8 @@ ToDo: error messages for LexPercent.
 > 		cont (TokenKW TokSpecId_Monad) rest
 > 	'l':'e':'x':'e':'r':rest ->
 > 		cont (TokenKW TokSpecId_Lexer) rest
->	_ -> lexError "unrecognised directive" s
+>	_ -> lexError ("unrecognised directive: %" ++ 
+>				takeWhile (not.isSpace) s) s
 
 > lexColon cont (':':rest) = cont (TokenKW TokDoubleColon) rest
 > lexColon cont rest       = cont (TokenKW TokColon) rest
@@ -200,3 +200,12 @@ Utilities that read the rest of a token.
 > lexReadString []           fn = fn "" []
 
 > lexError err s l = failP (show l ++ ": " ++ err ++ "\n") s l
+
+> lexNestedComment l cont r = 
+>   case r of
+>	'-':'}':r -> cont r
+>	'{':'-':r -> \line -> lexNestedComment line 
+>			(\r -> lexNestedComment l cont r) r line
+>	'\n':r    -> \line -> lexNestedComment l cont r (line+1)
+>	c:r       -> lexNestedComment l cont r
+>	""	  -> \_ -> lexError "unterminated comment" r l
