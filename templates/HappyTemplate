@@ -1,4 +1,4 @@
--- $Id: HappyTemplate,v 1.1.1.1 1997/02/11 13:12:10 simonm Exp $
+-- $Id: HappyTemplate,v 1.3 1997/02/11 13:19:36 simonm Exp $
 
 {-
 	The stack is in the following order throughout the parse:
