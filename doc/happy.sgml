@@ -215,10 +215,10 @@ expect to receive a stream of tokens, each of which will match one of
 the given patterns (the definition of the <tt/Token/ datatype is given
 later).
 
-The <tt/$$/ symbol is a placeholder that represents the <em/value/
-of this token.  Normally the value of a token is the token itself, but
-by using the <tt/$$/ symbol you can specify some component of the
-token object to be the value.
+The <tt/&dollar;&dollar;/ symbol is a placeholder that represents the
+<em/value/ of this token.  Normally the value of a token is the token
+itself, but by using the <tt/&dollar;&dollar;/ symbol you can specify
+some component of the token object to be the value.
 
 Like yacc, we include <tt/%%/ here, for no real reason.
 
@@ -1207,8 +1207,8 @@ as a non-terminal and a terminal, or introduce an identifier which is
 declared as neither.
 
 To save writing lots of projection functions that map tokens to their
-components, you can include <tt/$$/ in your Haskell pattern. For
-example:
+components, you can include <tt/&dollar;&dollar;/ in your Haskell
+pattern. For example:
 
 <tscreen><verb>
 %token INT { TokenInt $$ }
@@ -1291,7 +1291,7 @@ Each right-hand side consists of zero or more symbols (terminals or
 non-terminals) and a Haskell expression enclosed in braces.  The
 expression represents the semantic value of the non-terminal, and may
 refer to the semantic values of the symbols in the right-hand side
-using the meta-variables <tt/$1 ... $n/.
+using the meta-variables <tt/&dollar;1 ... &dollar;n/.
 
 Remember that all the expressions for a production must have the same
 type.
