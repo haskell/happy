@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.4 1997/07/16 13:32:38 simonm Exp $
+$Id: Main.lhs,v 1.5 1997/08/25 12:35:48 simonm Exp $
 
 The main driver.
 
@@ -95,7 +95,8 @@ Mangle the syntax into something useful.
 >	    closures    = sCC "Closures" (precalcClosure0 gram_info)
 >           items  	= sCC "Items" (genLR0items gram_info closures)
 >	    lainfo@(spont,prop) = sCC "Prop" (propLookaheads gram_info items first)
->	    la 		= sCC "Calc" (calcLookaheads ((0,(0,0),eof):spont) prop)
+>	    la 		= sCC "Calc" (calcLookaheads (length items)
+>					((0,(0,0),[eof]):spont) prop)
 >	    items2	= sCC "Merge" (mergeLookaheadInfo la items)
 >           goto   	= sCC "Goto" (genGotoTable gram_info items)
 >           action 	= sCC "Action" (genActionTable gram_info first items2)
