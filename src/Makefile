@@ -1,5 +1,4 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.54 2005/01/18 11:17:42 simonmar Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -17,8 +16,6 @@ HS_PROG_EXT = .bin
 endif
 
 HS_PROG = happy$(HS_PROG_EXT)
-
-EXCLUDED_SRCS = TestLexer.lhs IntSet.lhs
 
 SRC_HC_OPTS += -cpp -fglasgow-exts $(HappyHcOpts)
 
