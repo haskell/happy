@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.23 1999/06/30 15:22:14 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.24 1999/10/05 15:29:47 simonmar Exp $
 
 The code generator.
 
@@ -690,7 +690,7 @@ Run Length Encode an array to cut down on code size.
 > rle_to_str [] _ = id
 > rle_to_str ((l,x):xs) comma = 
 >	if l > 20 then
->		  str "] ++ take " . shows l . str " (repeat " . shows x
+>		  str "] ++ take " . shows l . str " (repeat " . showsPrec 10 x
 >		. str ") ++ ["
 >		. rle_to_str xs False
 > 	 else
