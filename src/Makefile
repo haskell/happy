@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.24 1998/06/19 13:41:04 simonm Exp $
+# $Id: Makefile,v 1.25 1998/08/27 14:17:19 simonm Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -55,7 +55,7 @@ HAPPYLIB=$(FPTOOLS_TOP_ABS)/happy/templates
 HAPPYBIN=$(FPTOOLS_TOP_ABS)/happy/src/$(HS_PROG)
 endif
 
-SCRIPT_PROG=happy-$(HappyProjectVersion)
+SCRIPT_PROG=happy-$(ProjectVersion)
 SCRIPT_OBJS=happy.sh
 SCRIPT_LINK=happy
 INTERP=$(SHELL)
