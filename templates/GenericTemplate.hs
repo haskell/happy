@@ -1,4 +1,4 @@
--- $Id: GenericTemplate.hs,v 1.8 2000/12/03 16:21:51 simonmar Exp $
+-- $Id: GenericTemplate.hs,v 1.9 2000/12/16 16:31:13 simonmar Exp $
 
 #ifdef HAPPY_GHC
 #define ILIT(n) n#
@@ -199,7 +199,6 @@ happyDrop n CONS(_,t) = happyDrop MINUS(n,ILIT(1)) t
 -- Moving to a new state after a reduction
 
 #if defined(HAPPY_ARRAY)
--- subtract 4 from nt, because nonterminals start at 4 (see Grammar.hs)
 happyGoto nt j tk st = 
    DEBUG_TRACE(", goto state " ++ show IBOX(new_state) ++ "\n")
    happyDoAction j tk new_state
