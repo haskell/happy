@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.13 1998/02/02 15:22:19 simonm Exp $
+$Id: ProduceCode.lhs,v 1.14 1998/02/12 15:43:32 simonm Exp $
 
 The code generator.
 
@@ -490,8 +490,11 @@ outlaw them inside { }
 >            str " a -> (a -> "  . pty . 
 >	     str " b) -> " . pty . str " b\n" .
 >            str "happyThen = (" . str tn . str ")\n" .
->            str "happyReturn :: a -> " . pty . str " a\n" .
->            str "happyReturn = " . str rtn)
+>            str "happyReturn = " . 
+>	     (case lexer of
+>		 Nothing -> str "\\tks ->"
+>		 _       -> id)
+>		. str rtn)
 >	. str "\n"
 
 >    reduceArrElem n
