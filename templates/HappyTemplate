@@ -1,4 +1,4 @@
--- $Id: HappyTemplate,v 1.3 1997/02/11 13:19:36 simonm Exp $
+-- $Id: HappyTemplate,v 1.4 1997/03/27 14:14:56 simonm Exp $
 
 {-
 	The stack is in the following order throughout the parse:
@@ -35,9 +35,9 @@ happyAccept j tk st sts _                    = notHappyAtAll
 -----------------------------------------------------------------------------
 -- Shifting a token
 
-happyShift new_state (-1) tk@(ErrorTok i tk') st sts stk =
+happyShift new_state (-1) tk st sts stk@(HappyErrorToken i : _) =
 --     _trace "shifting the error token" $
-     new_state i i tk' (HappyState new_state) (st:sts) (HappyTerminal tk:stk)
+     new_state i i tk (HappyState new_state) (st:sts) stk
 
 happyShift new_state i tk st sts stk =
      happyNewToken new_state (st:sts) (HappyTerminal tk:stk)
@@ -101,13 +101,16 @@ happyFail  (-1) tk st' (st@(HappyState action):sts) stk =
 
 -- Enter error recovery: generate an error token,
 -- 			 save the old token and carry on.
+
+-- we push the error token on the stack in anticipation of a shift,
+-- and also because this is a convenient place to store the saved token.
+
 happyFail  i tk st@(HappyState action) sts stk =
 --	_trace "entering error recovery" $
-	action (-1) (-1) (ErrorTok i tk) st sts stk
+	action (-1) (-1) tk st sts (HappyErrorToken i : stk)
 
 -- Internal happy errors:
 
 notHappyAtAll = error "Internal Happy error\n"
 
 -- end of Happy Template.
-

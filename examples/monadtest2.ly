@@ -1,13 +1,10 @@
-This is a simple test for happy.
-
-First thing to declare is the name of your parser,
-and the type of the tokens the parser reads.
+-----------------------------------------------------------------------------
+Test for monadic Happy Parsers, Simon Marlow 1996.
 
 > %name calc
 > %tokentype { Token }
 
-The parser will be of type [Token] -> ?, where ? is determined by the
-production rules.  Now we declare all the possible tokens:
+> %monad { P } { thenP } { returnP }
 
 > %token 
 >	let		{ TokenLet }
@@ -22,62 +19,53 @@ production rules.  Now we declare all the possible tokens:
 >	'('		{ TokenOB }
 >	')'		{ TokenCB }
 
-The *new* system.
-
- %token 
-	let		( let )
-	in		( in )
-	int		( digit+ )
-	var		( {alpha}{alphanum}+ )
-	'='		( = )
-	'+'		( + )
-	'-'		( - )
-	'*'		( * )
-	'/'		( / )
-	'('		( \( )
-	')'		( \) )
- %whitespace		( {space}|{tab} )
- %newline		( {newline} )
-
-The left hand side are the names of the terminals or tokens,
-and the right hand side is how to pattern match them.
-
-Like yacc, we include %% here, for no real reason.
-
 > %%
 
-Now we have the production rules.
-
-> Exp :: { Exp }
-> Exp : let var '=' Exp in Exp	{ Let $2 $4 $6 }
+> Exp :: {Exp}
+>     : let var '=' Exp in Exp	{ Let $2 $4 $6 }
 >     | Exp1			{ Exp1 $1 }
 > 
-> Exp1 :: { Exp1 }
-> Exp1 : Exp1 '+' Term		{ Plus $1 $3 }
+> Exp1 :: {Exp1}
+>      : Exp1 '+' Term		{ Plus $1 $3 }
 >      | Exp1 '-' Term		{ Minus $1 $3 }
 >      | Term			{ Term $1 }
 > 
-> Term :: { Term }
-> Term : Term '*' Factor	{ Times $1 $3 }
+> Term :: {Term}
+>      : Term '*' Factor	{ Times $1 $3 }
 >      | Term '/' Factor	{ Div $1 $3 }
 >      | Factor			{ Factor $1 }
 > 
-> Factor :: { Factor }
-> Factor : int			{ Int $1 }
+
+> Factor :: {Factor}
+>        : int			{ Int $1 }
 > 	 | var			{ Var $1 }
 > 	 | '(' Exp ')'		{ Brack $2 }
 
-We are simply returning the parsed data structure !
-Now we need some extra code, to support this parser,
-and make in complete:
-
 > {
 
-All parsers must declair this function, 
-which is called when an error is detected.
-Note that currently we do no error recovery.
+-----------------------------------------------------------------------------
+The monad serves three purposes: 
 
-> happyError tks = error "Parse error"
+	* it passes the input string around
+	* it passes the current line number around
+	* it deals with success/failure.
+
+> data ParseResult a
+>	= ParseOk a
+>	| ParseFail String
+
+> type P a = String -> Int -> ParseResult a
+
+> thenP :: P a -> (a -> P b) -> P b
+> m `thenP` k = \s l -> 
+>	case m s l of
+>		ParseFail s -> ParseFail s
+>		ParseOk a -> k a s l
+
+> returnP :: a -> P a
+> returnP a = \s l -> ParseOk a
+
+-----------------------------------------------------------------------------
 
 Now we declare the datastructure that we are parsing.
 
@@ -100,6 +88,7 @@ The datastructure for the tokens...
 >	| TokenDiv
 >	| TokenOB
 >	| TokenCB
+>	| TokenEOF
 
 .. and a simple lexer that returns this datastructure.
 
@@ -126,11 +115,13 @@ The datastructure for the tokens...
 >	("in",rest)  -> TokenIn : lexer rest
 >	(var,rest)   -> TokenVar var : lexer rest
 
-To run the program, call this in gofer, or use some code
-to print it.
-
 > runCalc :: String -> Exp
-> runCalc = calc . lexer
+> runCalc s = calc (lexer s)
+
+> happyError = \tks i -> error (
+>	"Parse error in line " ++ show (i::Int) ++ "\n")
+
+-----------------------------------------------------------------------------
 
 Here we test our parser.
 
@@ -144,5 +135,4 @@ Here we test our parser.
 >	(Let "x" (Exp1 (Term (Factor (Int 2)))) (Exp1 (Term (Times (Factor (Var "x")) (Brack (Exp1 (Minus (Term (Factor (Var "x"))) (Factor (Int 2))))))))) -> appendChan stdout "Test works\n" abort done; 
 >	_ -> quit } ; _ -> quit } ; _ -> quit } ; _ -> quit }
 > quit = appendChan stdout "Test failed\n" abort done
-
 > }

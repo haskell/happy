@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: IntSet.lhs,v 1.1.1.1 1997/02/11 13:12:07 simonm Exp $
+$Id: IntSet.lhs,v 1.2 1997/03/27 14:14:41 simonm Exp $
 
 Efficient implementation of small integer sets.
 

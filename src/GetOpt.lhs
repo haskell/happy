@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: GetOpt.lhs,v 1.1.1.1 1997/02/11 13:12:07 simonm Exp $
+$Id: GetOpt.lhs,v 1.2 1997/03/27 14:14:37 simonm Exp $
 
 Routines for parsing command-line options.
 

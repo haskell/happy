@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Info.lhs,v 1.1.1.1 1997/02/11 13:12:07 simonm Exp $
+$Id: Info.lhs,v 1.2 1997/03/27 14:14:39 simonm Exp $
 
 Generating info files.
 
@@ -30,7 +30,8 @@ Produce a file of parser information, useful for debugging the parser.
 >	-> String
 
 > genInfoFile env items 
-> 	(GrammarInfo prods lookupProdNo lookupProdsOfName nonterms terms eof)
+> 	(GrammarInfo prods lookupProdNo lookupProdsOfName nonterms terms eof
+>		first_term)
 >	 action goto tokens conflictArray filename
 > 	= (showHeader
 >	. showConflicts
@@ -109,7 +110,7 @@ Produce a file of parser information, useful for debugging the parser.
 >   	= id
 >   showAction (t := act)
 >   	= str "\t"
->	. showJName 15 (Terminal t)
+>	. showJName 15 t
 >	. showAction' act
 >	. str "\n"
 
@@ -132,7 +133,7 @@ Produce a file of parser information, useful for debugging the parser.
 >   	= id
 >   showGoto (nt := Goto n)
 >   	= str "\t"
->	. showJName 15 (NonTerminal nt)
+>	. showJName 15 nt
 >	. str "goto state "
 >	. shows n
 >	. str "\n"
@@ -144,7 +145,7 @@ Produce a file of parser information, useful for debugging the parser.
 
 >   showTerminal (t,s)
 >   	= str "\t"
->	. showJName 15 (Terminal t)
+>	. showJName 15 t
 >	. str "{ " . str s . str " }"
 
 >   showNonTerminals
@@ -169,7 +170,7 @@ Produce a file of parser information, useful for debugging the parser.
 >	. str "\nNumber of states: " . shows (length items)
 >	. str "\n"
 
->   nameOf n    = env ! (nameToInt n)
+>   nameOf n    = env ! n
 >   showName    = str . nameOf
 >   showJName j = str . ljustify j . nameOf
 

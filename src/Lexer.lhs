@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Lexer.lhs,v 1.1.1.1 1997/02/11 13:12:08 simonm Exp $
+$Id: Lexer.lhs,v 1.2 1997/03/27 14:14:44 simonm Exp $
 
 The lexer.
 
@@ -71,6 +71,7 @@ ToDo: proper text instance here, for use in parser error messages.
 
 > lexer :: (Token -> P a) -> P a
 > lexer cont "" = cont TokenEOF ""
+> lexer cont ('-':'-':r) = lexer cont (tail (dropWhile (/= '\n') r))
 > lexer cont (c:rest) = nextLex cont c rest
 
 > nextLex :: (Token -> P a) -> Char -> P a
@@ -92,7 +93,7 @@ ToDo: proper text instance here, for use in parser error messages.
 >	'?'	-> cont (TokenKW TokQmark)
 >	'\\'	-> lexBackQ cont
 >  	c 	
->	  | isSpace c -> \r -> lexer cont r
+>	  | isSpace c -> lexer cont
 >	  |  c >= 'a' && c <= 'z' 
 >	     || c >= 'A' && c <= 'Z' -> lexId cont c
 >  	  | c `elem` "=/" -> cont (TokenInfo [c] TokSym)

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.1.1.1 1997/02/11 13:12:08 simonm Exp $
+$Id: Main.lhs,v 1.2 1997/03/27 14:14:44 simonm Exp $
 
 The main driver.
 
@@ -84,8 +84,9 @@ Mangle the syntax into something useful.
 >		Failed s -> die (unlines s ++ "\n");
 >		Succeeded g -> 
 
->	let gram@(Grammar gram_info dir term nonterm tys env 
->	        eof@(Terminal eof_no)) = g
+>	let gram@(Grammar gram_info dir term nonterm tys env eof) = g
+> 	    term_dir = [ (a,b) | (a,b) <- getTokenSpec dir, a >= first_term]
+>	    first_term = getFirstTerm gram_info
 >       in
 
 
@@ -97,7 +98,8 @@ Mangle the syntax into something useful.
 
 
 >       let first  	= sCC "First" (mkFirst gram_info)
->           items  	= sCC "Items" (genLR0items gram_info)
+>	    closures    = sCC "Closures" (precalcClosure0 gram_info)
+>           items  	= sCC "Items" (genLR0items gram_info closures)
 >	    lainfo@(spont,prop) = sCC "Prop" (propLookaheads gram_info items first)
 >	    la 		= sCC "Calc" (calcLookaheads ((0,(0,0),eof):spont) prop)
 >	    items2	= sCC "Merge" (mergeLookaheadInfo la items)
@@ -135,7 +137,7 @@ Print out the info file.
 >			gram_info
 >			action
 >			goto
->			[ (a,b) | (Terminal a,b) <- getTokenSpec dir]
+>			term_dir
 >			conflictArray
 >			fl_name
 >	in
@@ -164,7 +166,7 @@ and generate the code.
 >                       action
 >                       goto
 >                       (getLexer dir)
->                       [ (a,b) | (Terminal a,b) <- getTokenSpec dir]
+>                       term_dir
 >                       (getTokenType dir)
 >			tys
 >			(getParserName dir)
@@ -195,7 +197,7 @@ Successfully Finished.
 
 >	}}
 
-%-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 
 > die :: String -> IO a
 > die s = hPutStr stderr s >> exitWith (ExitFailure 1)
@@ -212,7 +214,7 @@ Successfully Finished.
 > optDump cli pass io =
 > 	optIO (elem pass cli) io
 
-%------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 
 The constArgs list is a hack to pass command line arguments to the
 program when developing in gofer.
@@ -227,7 +229,7 @@ program when developing in gofer.
 
 #endif
 
-%------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 
 > possDelit :: String -> String -> IO (String,String)
 > possDelit ('y':'l':'.':nm) fl = return (deLitify fl,reverse nm)
@@ -252,7 +254,7 @@ This was a program hot-spot, but not any more.
 >       deLit2 (c:r)    = deLit2 r
 >       deLit2 []       = []
 
-%------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 
 The command line arguments.
 
@@ -262,6 +264,7 @@ The command line arguments.
 > argFns "-lr0"         = flag DumpLR0
 > argFns "-action"      = flag DumpAction
 > argFns "-goto"        = flag DumpGoto
+> argFns "-1.3"         = flag Opt1_3
 > argFns "i"            = flagWithOptArg OptInfoFile
 > argFns "-info"        = flagWithOptArg OptInfoFile
 > argFns "-template"    = flagWithArg OptTemplate
@@ -291,6 +294,7 @@ The command line arguments.
 >		| OptInfoFile (Maybe String)
 >		| OptTemplate String
 >		| OptMagicName String
+>		| Opt1_3
 >
 >		| OptGhcTarget
 >		| OptArrayTarget
@@ -298,7 +302,7 @@ The command line arguments.
 >		| OptOutputFile String
 >  deriving (Eq{-,Text-})
 
-%-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 How would we like our code to be generated?
 
 > optToTarget OptGhcTarget 	= Just TargetGhc
@@ -347,7 +351,7 @@ Extract various command-line options.
 >		_          -> dieHappy "multiple --magic-name options\n"
 
 
-%------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 
 > copyright :: IO ()
 > copyright = putStr (unlines  [
@@ -363,7 +367,7 @@ Extract various command-line options.
 >   "syntax: happy [-v] [--outfile] [--info [file]]",
 >   "              [-g | --ghc] [-a | --array] [-o [file]] file\n" ]
 
-%-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 
 #ifndef __GLASGOW_HASKELL__
 

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: First.lhs,v 1.1.1.1 1997/02/11 13:12:06 simonm Exp $
+$Id: First.lhs,v 1.2 1997/03/27 14:14:35 simonm Exp $
 
 Implementation of FIRST
 
@@ -23,7 +23,7 @@ Implementation of FIRST
 >                    if incEmpty h'
 >                    then filterSet (not. isEmpty) h' `union` b
 >                    else h')
->        (singletonSet Epsilon)
+>        (singletonSet epsilonTok)
 
 Does the Set include the $\epsilon$ symbol ?
 
@@ -38,20 +38,23 @@ Does the Set include the $\epsilon$ symbol ?
 >                               Nothing -> singletonSet h
 >                               Just ix -> ix)
 >   where
->       env = mkClosure (==) (getNext prod) 
+>       env = mkClosure (==) (getNext first_term prodNo prodsOfName)
 >               [ (name,emptySet) | name <- getNonTerminals prod ]
+>	first_term 	= getFirstTerm prod
+>	prodNo 		= lookupProdNo prod
+>	prodsOfName 	= lookupProdsOfName prod
 
-> getNext :: GrammarInfo -> [(Name,Set Name)] -> [(Name,Set Name)]
-> getNext g env = [ (nm, next fn nm) | (nm,_) <- env ]
+> getNext first_term prodNo prodsOfName env = 
+>		[ (nm, next nm) | (nm,_) <- env ]
 >    where 
->    	fn t@(Terminal _) = singletonSet t
+>    	fn t | t == -1 || t >= first_term = singletonSet t
 >    	fn x = case assocMaybe env x of
 >           	        Just t -> t
 >                       Nothing -> error "attempted FIRST(e) :-("
 
-> 	next :: (Name -> Set Name) -> Name -> Set Name
-> 	next f name@(NonTerminal _) = 
+> 	next :: Name -> Set Name
+> 	next t | t >= first_term = singletonSet t
+> 	next n = 
 >       	unionManySets 
->               	[ joinSymSets f (snd3 (lookupProdNo g rl)) | 
->				rl <- lookupProdsOfName g name ]
-> 	next _   name  = singletonSet name  
+>               	[ joinSymSets fn (snd3 (prodNo rl)) | 
+>				rl <- prodsOfName n ]

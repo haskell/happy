@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.1.1.1 1997/02/11 13:12:09 simonm Exp $
+$Id: ProduceCode.lhs,v 1.2 1997/03/27 14:14:49 simonm Exp $
 
 The code generator.
 
@@ -32,7 +32,8 @@ Produce the complete output file.
 >		-> String
 
 > produceParser
-> 	(GrammarInfo prods lookupProd lookupProdNos nonterms terms eof) 
+> 	(GrammarInfo prods lookupProd lookupProdNos nonterms terms eof 
+>		first_term) 
 >	 action goto lexer token_rep token_type nt_types
 > 	 name monad module_header module_trailer target = (
 >	 
@@ -63,7 +64,8 @@ data HappyAbsSyn a t1 .. tn
 >    produceAbsSynDecl
 >	= str "data HappyAbsSyn "
 >	. str (unwords [ "t" ++ show n | n := Nothing <- assocs nt_types ])
->	. str "\n\t= HappyTerminal " . str token_type . str "\n"
+>	. str "\n\t= HappyTerminal " . str token_type
+>	. str "\n\t| HappyErrorToken Int\n"
 >	. interleave "\n" 
 >         [ str "\t| " . 
 >             makeAbsSynCon n . 
@@ -86,26 +88,20 @@ based parsers -- types aren't as important there).
 >    produceTypes | target == TargetArrayBased = id
 
 >     | all maybeToBool (elems nt_types) =
->     let (Just res_type) = nt_types ! 1
->	  token = brack token_type
->     in
 >       str "type HappyReduction = \n\t"
 >     . str "   "
 >     . intMaybeHash
 >     . str " \n\t-> " . token
 >     . str "\n\t-> HappyState "
 >     . token
->     . str " ([HappyAbsSyn] -> "
->     . mkMonadTy (str res_type) . str ")\n\t"
->     . (case lexer of
->	  Nothing -> str "-> [" . token . str "] \n\t"
->	  Just _ -> id)
+>     . str " ([HappyAbsSyn] -> " . tokens . result
+>     . str ")\n\t"
 >     . str "-> [HappyState "
 >     . token
->     . str " ([HappyAbsSyn] -> "
->     . mkMonadTy (str res_type)
+>     . str " ([HappyAbsSyn] -> " . tokens . result
 >     . str ")] \n\t-> [HappyAbsSyn] \n\t-> "
->     . mkMonadTy (str res_type)
+>     . tokens
+>     . result
 >     . str "\n\n"
 >     . interleave' ",\n " 
 >             [ mkActionName i | (i,action) <- zip [ 0 :: Int .. ] 
@@ -125,6 +121,13 @@ based parsers -- types aren't as important there).
 >		= case target of
 >			TargetGhc -> str "Int#"
 >			_	  -> str "Int"
+>	      token = brack token_type
+>	      tokens = 
+>     		case lexer of
+>	  		Nothing -> str "[" . token . str "] -> "
+>	  		Just _ -> id
+>	      result = mkMonadTy (str res_type)
+> 	      (Just res_type) = nt_types ! 1
 
 %-----------------------------------------------------------------------------
 Next, the reduction functions.   Each one has the following form:
@@ -144,7 +147,7 @@ where n is the non-terminal number, and m is the rule number.
 >    produceReductions =
 > 	interleave "\n\n" (zipWith produceReduction (tail prods) [ 1 .. ])
 
->    produceReduction (NonTerminal nt, toks, sem) i
+>    produceReduction (nt, toks, sem) i
 
 >     | isMonadProd sem
 >	= mkReductionHdr (showInt lt) 
@@ -192,14 +195,14 @@ where n is the non-terminal number, and m is the rule number.
 >		tokPatterns = reverse (zipWith tokPattern [1 :: Int ..] toks)
 > 
 >		tokPattern n _ | n `notElem` vars_used = str "_"
->		tokPattern n (Terminal t)    
->			= str "(HappyTerminal " 
->			. mkHappyTerminalVar n t
->			. str ")"
->             	tokPattern n (NonTerminal t) 
+>             	tokPattern n t | t >= 0 && t < first_term
 >	      		= str "("
 >			. makeAbsSynCon t . str "  "
 >			. mkHappyVar n
+>			. str ")"
+>		tokPattern n t
+>			= str "(HappyTerminal " 
+>			. mkHappyTerminalVar n t
 >			. str ")"
 > 
 >		(code,vars_used) = expandVars sem
@@ -246,7 +249,7 @@ The token conversion function.
 >		    . str " (HappyState action)")
 >	     . str " sts stk"
 >	  eofError = str " (error \"reading EOF!\")"
->	  eofTok = showInt (tokIndex (nameToInt eof))
+>	  eofTok = showInt (tokIndex eof)
 >	
 >	  doAction = case target of
 >	    TargetArrayBased -> str "happyDoAction i tk action"
@@ -310,9 +313,7 @@ detected in a different state now.
 >	. mkActionName state
 >	. str " _ = "
 >	. mkAction default_act
->	. str "\n"
->	. possibleTcHackForGhc
->	. str "\n"
+>	. str "\n\n"
 >
 >	where gotos = goto ! state
 >	
@@ -336,10 +337,6 @@ detected in a different state now.
 >		. ('(' :) . showInt t
 >		. str ") = "
 >		
->             possibleTcHackForGhc = case target of
->		TargetGhc -> mkActionName state . str " 0# = error \"\"\n"
->		_         -> id
->
 > 	      default_act = getDefault (elems acts)
 
 action array indexed by (terminal * last_state) + state
@@ -442,7 +439,9 @@ outlaw them inside { }
 >	. str "\n"
 >	. str "happyReturn = "
 >	. (case monad of
->	    Nothing -> str "\\a -> a"
+>	    Nothing -> case lexer of
+>			  Nothing -> str "\\a tks -> a"
+>			  _       -> str "\\a -> a"
 >	    Just (_,_,rtn) -> str rtn)
 >	. str "\n"
 

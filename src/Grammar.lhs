@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Grammar.lhs,v 1.1.1.1 1997/02/11 13:12:07 simonm Exp $
+$Id: Grammar.lhs,v 1.2 1997/03/27 14:14:38 simonm Exp $
 
 The Grammar data type.
 
@@ -9,8 +9,7 @@ The Grammar data type.
 Here is our mid-section datatype
 
 > module Grammar (
-> 	Name(..), 
-> 	isEmpty, isNT, isT, nameToMaybeInt, nameToInt, 
+> 	Name(..), isEmpty, 
 >	
 >	Production(..),  Productions(..), Terminals(..), NonTerminals(..),
 >	Grammar(..), mangler, fixDir, getTerm, checkRules, 
@@ -19,46 +18,24 @@ Here is our mid-section datatype
 >	
 >	GrammarInfo(..),
 >	getProds, lookupProdNo, lookupProdsOfName, getNonTerminals,
->	getTerminals, getEOF, getNames, mkProdInfo,
+>	getTerminals, getEOF, getNames, mkProdInfo, getFirstTerm,
 
->	errorName, errorTok, startName, startTok, eofName
+>	errorName, errorTok, startName, startTok, eofName, epsilonTok
 >	) where
 
 > import GenUtils
 > import AbsSyn
 
-Change this into the most useful, depending on what
-you want Simon.
+epsilon		= -2
+error		= -1
+%start 		= 0
+non-terminals 	= 1..n
+terminals 	= n..m
+%eof 		= m
 
-> data Name
->       = Terminal    Int
->       | NonTerminal Int
->       | Epsilon
->  deriving(Eq,Ord)
+> type Name = Int
 
-> isEmpty Epsilon = True
-> isEmpty _       = False
-
-> isNT (NonTerminal _) = True
-> isNT _               = False
-
-> isT (Terminal _) = True
-> isT _            = False
-
-> nameToMaybeInt :: Name -> Maybe Int
-> nameToMaybeInt (Terminal n)    = Just n
-> nameToMaybeInt (NonTerminal n) = Just n
-> nameToMaybeInt _	         = Nothing
-
-> nameToInt :: Name -> Int
-> nameToInt (Terminal n)    = n
-> nameToInt (NonTerminal n) = n
-> nameToInt _ = error "nameToInt"
-
-> instance Text Name where
->       showsPrec _ (Terminal i)    = showString "T." . shows i 
->       showsPrec _ (NonTerminal i) = showString "NT." . shows i
->       showsPrec _ Epsilon         = showString "e"
+> isEmpty n    = n == epsilonTok
 
 > type Production = (Name,[Name],String)
 > type Productions = Array Int Production
@@ -93,8 +70,9 @@ you want Simon.
 > eofName   = "%eof"			
 > errorName = "error"			-- Token -1
 
-> startTok = NonTerminal 0
-> errorTok = Terminal (-1)
+> startTok   = 0
+> errorTok   = (-1)
+> epsilonTok = (-2)
 
 %-----------------------------------------------------------------------------
 The Mangler.
@@ -128,12 +106,11 @@ This bit is a real mess, mainly because of the error mesasge support.
 
 >	let
 >       term     = concat (map getTerm dirs) ++ [eofName]
->	nonterm  = startName : nts
->       nonterm' = take l_nt (map NonTerminal  [0::Int..])
->       term'    = take l_t  (map Terminal     [l_nt..]  )
->       env      = (Terminal (-1), errorName) :
->		   zip (nonterm'++term') (nonterm ++ term)
->	l_nt     = length nonterm
+>       nonterm' = [0..l_nt]
+>       term'    = [l_nt+1..l_nt+l_t]
+>       env      = (errorTok, errorName) :
+>		   zip (nonterm'++term') (startName : nts ++ term)
+>	l_nt     = length nts
 >	l_t      = length term
 
 >       mapToName str = 
@@ -157,15 +134,15 @@ This bit is a real mess, mainly because of the error mesasge support.
 >	foldr (mightFails transRule) (Succeeded []) rules  `thenE` \rules' ->
 
 >	let
->	tys   = listArray (1, l_nt-1) [ ty | (nm,_,ty) <- rules ]
+>	tys   = listArray (1, l_nt) [ ty | (nm,_,ty) <- rules ]
 
 >	env_array :: Array Int String
->	env_array = array (-1, l_nt + l_t -1) 
-> 		(map (\(a,b) -> nameToInt a := b) env)
+>	env_array = array (-1, l_nt + l_t) 
+> 		(map (\(a,b) -> a := b) env)
 
 >	rules'' = mkProdInfo
->		  ((NonTerminal 0, [NonTerminal 1], "no code") : concat rules')
->		  nonterm' (errorTok : term')
+>		  ((startTok, [1], "no code") : concat rules')
+>		  nonterm' (errorTok : term') (head term')
 
 >	in
 
@@ -174,7 +151,6 @@ This bit is a real mess, mainly because of the error mesasge support.
 
 >	Succeeded (Grammar rules'' dirs' term' nonterm' tys 
 >		env_array (last term' {- EOF -}))
->  
 
 For combining actions with possible error messages.
 
@@ -270,19 +246,22 @@ we are generating a parser for.
 >	[Name]			-- NonTerminals
 >	[Name]			-- Terminals
 >	Name			-- eof terminal
+>	Name			-- first terminal
 
-> getProds          (GrammarInfo a _ _ _ _ _) = a
-> lookupProdNo 	    (GrammarInfo _ b _ _ _ _) = b
-> lookupProdsOfName (GrammarInfo _ _ c _ _ _) = c
-> getNonTerminals   (GrammarInfo _ _ _ c _ _) = c
-> getTerminals      (GrammarInfo _ _ _ _ c _) = c
-> getEOF	    (GrammarInfo _ _ _ _ _ c) = c
+
+> getProds          (GrammarInfo x _ _ _ _ _ _) = x
+> lookupProdNo 	    (GrammarInfo _ x _ _ _ _ _) = x
+> lookupProdsOfName (GrammarInfo _ _ x _ _ _ _) = x
+> getNonTerminals   (GrammarInfo _ _ _ x _ _ _) = x
+> getTerminals      (GrammarInfo _ _ _ _ x _ _) = x
+> getEOF	    (GrammarInfo _ _ _ _ _ x _) = x
+> getFirstTerm	    (GrammarInfo _ _ _ _ _ _ x) = x
 
 > getNames :: GrammarInfo -> [Name]
-> getNames          (GrammarInfo _ _ _ c d _) = c ++ d
+> getNames          (GrammarInfo _ _ _ c d _ _) = c ++ d
 
-> mkProdInfo :: [Production] -> [Name] -> [Name] -> GrammarInfo
-> mkProdInfo prod nonterm term =
+> mkProdInfo :: [Production] -> [Name] -> [Name] -> Int -> GrammarInfo
+> mkProdInfo prod nonterm term first_term =
 >	GrammarInfo
 >		prod
 >		(arr !)
@@ -290,13 +269,14 @@ we are generating a parser for.
 >		nonterm
 >		term
 >		eof
+>		first_term
 >     where
 >	eof = last term
 >	arr = listArray (0,length prod-1) prod
 >	ass = combinePairs [ (a,no) | ((a,_,_),no) <- zip prod [0::Int..] ]
 >	arr' = array (0,(length ass-1))
->		[ nameToInt n := num | (n,num) <- ass ]
+>		[ n := num | (n,num) <- ass ]
 >	fn' :: Name -> [Int]
->	fn' x | isNT x = arr' ! (nameToInt x)
+>	fn' x | x >= 0 && x < first_term = arr' ! x
 >	fn' _ = error "looking up production failure"
 
