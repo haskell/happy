@@ -418,7 +418,7 @@ Exp1  : Exp1 '+' Term           { \p -> $1 p + $3 p }
       | Term                    { $1 }
 
 Term  : Term '*' Factor         { \p -> $1 p * $3 p }
-      | Term '/' Factor         { \p -> $1 p / $3 p }
+      | Term '/' Factor         { \p -> $1 p `div` $3 p }
       | Factor                  { $1 }
 
 Factor			  
@@ -426,7 +426,7 @@ Factor
       | var                     { \p -> case lookup $1 p of
 	                                    Nothing -> error "no var"
 					    Just i  -> i }
-      | '(' Exp ')'             { \p -> $2 }
+      | '(' Exp ')'             { $2 }
 </verb> </tscreen>
 
 The value of each production is a function from an environment
@@ -483,7 +483,7 @@ Parsing sequences of zero or more elements requires a trivial change
 to the above pattern:
 
 <tscreen> <verb>
-prods : {- empty -}           { [$1] }
+prods : {- empty -}           { [] }
       | prods prod            { $2 : $1 }
 </verb> </tscreen>
 
@@ -524,6 +524,7 @@ the statements may be empty:
 <tscreen> <verb>
 stmts : stmts ';' stmt          { $3 : $1 }
       | stmts ';'               { $1 }
+      | stmt			{ [$1] }
       | {- empty -}		{ [] }
 </verb> </tscreen>
 
