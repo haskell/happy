@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.25 1999/10/07 15:17:39 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.26 1999/10/08 12:02:34 simonmar Exp $
 
 The code generator.
 
@@ -167,7 +167,7 @@ based parsers -- types aren't as important there).
 >     . intMaybeHash
 >     . str " -> HappyReduction\n\n"
 >     . interleave' ",\n " 
->             [ mkReductionFun i | 
+>             [ mkReduceFun i | 
 >                     (i,action) <- zip [ 1 :: Int .. ]
 >                                       (tail prods) ]
 >     . str " :: HappyReduction\n\n" 
@@ -212,7 +212,6 @@ where n is the non-terminal number, and m is the rule number.
 >	. tokLets
 >	. str code'
 >       . defaultCase
->	. char '}'
 
 >     | specReduceFun lt
 >	= mkReductionHdr (shows lt) "happySpecReduce_" id
@@ -223,10 +222,9 @@ where n is the non-terminal number, and m is the rule number.
 >	. (if coerce || null toks || null vars_used then
 >		  id
 >	   else
->		  str ";\n  reduction " 
+>		  nl . reductionFun . strspace
 > 		. interleave " " (map str (take (length toks) (repeat "_")))
 >		. str " = notHappyAtAll ")
->	. char '}'
 
 >     | otherwise
 > 	= mkReductionHdr (showInt lt) "happyReduce "  id
@@ -236,20 +234,23 @@ where n is the non-terminal number, and m is the rule number.
 >	. this_absSynCon . str "\n\t\t " . brack' (str code') 
 >	. str " : happyRest"
 >	. defaultCase
->	. char '}'
 
 >       where 
 >		isMonadProd = case sem of ('%' : code) -> True
 >			 		  _            -> False
 > 
 >		mkReductionHdr lt s arg = 
->			mkReductionFun i . str " = "
+>			mkReduceFun i . str " = "
 >			. str s . lt . strspace . showInt nt . arg
->			. str " reduction where {\n  reduction\n\t"
+>			. strspace . reductionFun . nl 
+>			. reductionFun . strspace
 > 
+>		reductionFun = str "happyReduction_" . shows i
+>
 >		defaultCase = if not (null toks)
->              			then str ";\n  reduction _ = notHappyAtAll "
->              			else id
+>              			  then nl . reductionFun
+>				   . str " _ = notHappyAtAll "
+>              			  else id
 > 
 >		tokPatterns 
 >		 | coerce = reverse (map mkDummyVar [1 .. length toks])
@@ -659,7 +660,7 @@ Misc.
 
 > mkAbsSynCon fx t    	= str "HappyAbsSyn"   . shows (fx ! t)
 > mkHappyVar n     	= str "happy_var_"    . shows n
-> mkReductionFun n 	= str "happyReduce_"  . shows n
+> mkReduceFun n 	= str "happyReduce_"  . shows n
 > mkDummyVar n		= str "happy_x_"      . shows n
 
 > mkHappyIn n 		= str "happyIn"  . shows (n :: Int)
