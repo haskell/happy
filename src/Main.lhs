@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.53 2004/09/02 13:08:15 simonmar Exp $
+$Id: Main.lhs,v 1.54 2004/09/08 10:05:31 paulcc Exp $
 
 The main driver.
 
@@ -99,7 +99,6 @@ Mangle the syntax into something useful.
 >			  })  = g
 >       in
 
-
 #ifdef DEBUG
 
 >       optPrint cli DumpMangle (putStr (show gram)) >>
@@ -134,7 +133,10 @@ Mangle the syntax into something useful.
 
 Report any unused rules and terminals
 
->	let (unused_rules, unused_terminals) = find_redundancies g action
+>	let reduction_filter | OptGLR `elem` cli = any_reduction
+>	                     | otherwise         = first_reduction
+>	    (unused_rules, unused_terminals) 
+>	                          = find_redundancies reduction_filter g action
 >	in
 >	optIO (not (null unused_rules))
 >	   (hPutStrLn stderr ("unused rules: " ++ show (length unused_rules))) >>
@@ -306,8 +308,9 @@ Successfully Finished.
 -----------------------------------------------------------------------------
 Find unused rules and tokens
 
-> find_redundancies :: Grammar -> ActionTable -> ([Int], [String])
-> find_redundancies g action_table = 
+> find_redundancies 
+>        :: (LRAction -> [Int]) -> Grammar -> ActionTable -> ([Int], [String])
+> find_redundancies extract_reductions g action_table = 
 >	(unused_rules, map (env !) unused_terminals)
 >    where
 >	Grammar { terminals = terms,
@@ -320,16 +323,28 @@ Find unused rules and tokens
 >	actions		 = concat (map assocs (elems action_table))
 >	start_rules	 = [ 0 .. (length starts - 1) ]
 >	used_rules       = start_rules ++
->			   nub [ r | (_,LR'Reduce{-'-} r _) <- actions ]
+>			   nub [ r | (_,a) <- actions, r <- extract_reductions a ]
 >	used_tokens      = errorTok : eof : 
 >			       nub [ t | (t,a) <- actions, is_shift a ]
 >	n_prods		 = length productions
 >	unused_terminals = filter (`notElem` used_tokens) terms
 >	unused_rules     = filter (`notElem` used_rules ) [0..n_prods-1]
 
-> is_shift (LR'Shift _ _) = True
-> is_shift (LR'Multiple _ (LR'Shift _ _)) = True
-> is_shift _ = False
+> is_shift (LR'Shift _ _)             = True
+> is_shift (LR'Multiple _ LR'Shift{}) = True
+> is_shift _                          = False
+
+---
+selects what counts as a reduction when calculating used/unused
+
+> any_reduction :: LRAction -> [Int]
+> any_reduction (LR'Reduce r _)    = [r] 
+> any_reduction (LR'Multiple as a) = concatMap any_reduction (a : as)
+> any_reduction _                  = []
+
+> first_reduction (LR'Reduce r _)   = [r] 
+> first_reduction (LR'Multiple _ a) = first_reduction a   -- eg R/R conflict
+> first_reduction _                 = []
 
 ------------------------------------------------------------------------------
 
