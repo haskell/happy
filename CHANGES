@@ -1,4 +1,9 @@
 -----------------------------------------------------------------------------
+Changes from version 1.10 to 1.11
+
+	* bugfix to templates for GHC on 64-bit platforms.
+
+-----------------------------------------------------------------------------
 Changes from version 1.9 to 1.10
 
 	* bugfixes, and minor performance improvements,
