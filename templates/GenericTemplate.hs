@@ -1,10 +1,12 @@
--- $Id: GenericTemplate.hs,v 1.3 1999/10/08 16:10:59 simonmar Exp $
+-- $Id: GenericTemplate.hs,v 1.4 1999/10/11 17:13:57 simonmar Exp $
 
 #ifdef HAPPY_GHC
 #define ILIT(n) n#
 #define IBOX(n) (I# (n))
 #define FAST_INT Int#
 #define LT(n,m) (n <# m)
+#define GTE(n,m) (n >=# m)
+#define EQ(n,m) (n ==# m)
 #define PLUS(n,m) (n +# m)
 #define MINUS(n,m) (n -# m)
 #define TIMES(n,m) (n *# m)
@@ -15,6 +17,8 @@
 #define IBOX(n) (n)
 #define FAST_INT Int
 #define LT(n,m) (n < m)
+#define GTE(n,m) (n >= m)
+#define EQ(n,m) (n == m)
 #define PLUS(n,m) (n + m)
 #define MINUS(n,m) (n - m)
 #define TIMES(n,m) (n * m)
@@ -96,8 +100,13 @@ happyDoAction i tk st
 						 ++ "\n")
 				     happyShift new_state i tk st
 				     where new_state = MINUS(n,ILIT(1))
-   where IBOX(n_terms) = happy_n_terms
- 	 action = indexShortOffAddr happyActionArr (PLUS(TIMES(st,n_terms),i))
+   where off    = indexShortOffAddr happyActOffsets st
+	 off_i  = PLUS(off,i)
+	 check  = if GTE(off_i,ILIT(0)) 
+			then EQ(indexShortOffAddr happyCheck off_i, i)
+			else False
+ 	 action | check     = indexShortOffAddr happyTable off_i
+		| otherwise = indexShortOffAddr happyDefActions st
 
 #ifdef HAPPY_GHC
 indexShortOffAddr (A# arr) off =
@@ -198,9 +207,10 @@ happyDrop n CONS(_,t) = happyDrop MINUS(n,ILIT(1)) t
 happyGoto nt j tk st = 
    DEBUG_TRACE(", goto state " ++ show IBOX(new_state) ++ "\n")
    happyDoAction j tk new_state
-   where new_state = indexShortOffAddr happyGotoArr 
-				PLUS(TIMES(st,n_nonterms),MINUS(nt,ILIT(4)))
-	 IBOX(n_nonterms) = happy_n_nonterms
+   where i      = MINUS(nt,ILIT(4))
+	 off    = indexShortOffAddr happyGotoOffsets st
+	 off_i  = PLUS(off,i)
+ 	 new_state = indexShortOffAddr happyTable off_i
 #else
 happyGoto action j tk st = action j j tk (HappyState action)
 #endif
@@ -245,8 +255,11 @@ happyTcHack x y = y
 
 #if defined(HAPPY_ARRAY)
 {-# NOINLINE happyDoAction #-}
-{-# NOINLINE happyActionArr #-}
-{-# NOINLINE happyGotoArr #-}
+{-# NOINLINE happyTable #-}
+{-# NOINLINE happyCheck #-}
+{-# NOINLINE happyActOffsets #-}
+{-# NOINLINE happyGotoOffsets #-}
+{-# NOINLINE happyDefActions #-}
 #endif
 {-# NOINLINE happyShift #-}
 {-# NOINLINE happySpecReduce_0 #-}
