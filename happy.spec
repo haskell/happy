@@ -12,7 +12,7 @@ Source:         http://haskell.org/happy/dist/%{version}/happy-%{version}-src.ta
 Packager:       Sven Panne <sven.panne@aedion.de>
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Prefix:         %{_prefix}
-BuildRequires:  ghc, docbk31, jade, jadetex, dvips
+BuildRequires:  ghc, docbk31
 Summary:        The LALR(1) Parser Generator for Haskell
 
 %description

@@ -3,7 +3,7 @@ This is Happy version 1.14, a parser generator for Haskell 98.
 WWW:	http://www.haskell.org/happy/
 
 Complete documentation can be found in the directory 'doc', in
-SGML/DocBook format.  To format the documentation, the DocBook-Tools
+DocBook XML format.  To format the documentation, the DocBook-Tools
 suite (see http://www.http://sourceware.cygnus.com/docbook-tools/)
 provides all the bits & pieces you need.  Alternatively, pre-formatted
 documentation is available from Happy's homepage (URL above).
