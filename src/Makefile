@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.39 2001/08/08 13:21:04 qrczak Exp $
+# $Id: Makefile,v 1.40 2001/08/09 20:43:53 qrczak Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -34,7 +34,7 @@ SRC_HC_OPTS += -cpp -fglasgow-exts -package lang $(HappyHcOpts)
 Parser_HC_OPTS      = -Onot
 Grammar_HC_OPTS     = -H8m
 LALR_HC_OPTS        = -H12m
-ProduceCode_HC_OPTS = -H14m
+ProduceCode_HC_OPTS = -H16m
 Main_HC_OPTS        = -H10m
 Version_HC_OPTS	    = -DHAPPY_VERSION=$(ProjectVersion)
 
