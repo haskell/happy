@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.22 1999/05/21 08:57:26 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.23 1999/06/30 15:22:14 simonmar Exp $
 
 The code generator.
 
@@ -564,16 +564,20 @@ outlaw them inside { }
 >		  Nothing -> str "\\a tks -> a"
 >		  _       -> str "\\a -> a")
 >	  Just (ty,tn,rtn) ->
->            let pty = str ty in
->            str "happyThen :: " . pty .
->            str " a -> (a -> "  . pty . 
->	     str " b) -> " . pty . str " b\n" .
->            str "happyThen = (" . str tn . str ")\n" .
->            str "happyReturn = " . 
->	     (case lexer of
->		 Nothing -> str "\\tks ->"
->		 _       -> id)
->		. str rtn)
+>	     case lexer of
+>		Nothing ->
+>		   str "happyThen m k tks = (" . str tn 
+>		 . str ") m (\\a -> k a tks)\n"
+>		 . str "happyReturn = \\a tks -> " . brack rtn
+>		 . str " a\n"
+>		_ ->
+>                  let pty = str ty in
+>                  str "happyThen :: " . pty
+>                . str " a -> (a -> "  . pty
+>	         . str " b) -> " . pty . str " b\n"
+>                . str "happyThen = " . brack tn . char '\n'
+>                . str "happyReturn = " . brack rtn
+>	)
 >	. str "\n"
 
 >    reduceArrElem n
