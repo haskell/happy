@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.43 2001/01/06 05:34:52 qrczak Exp $
+$Id: ProduceCode.lhs,v 1.44 2001/01/15 11:03:18 simonmar Exp $
 
 The code generator.
 
@@ -429,16 +429,12 @@ the left hand side of '@'.
 Action Tables.
 
 Here we do a bit of trickery and replace the normal default action
-(failure) for each state with a reduction under the following
-circumstances:
-
-i)  there is at least one reduction action in this state.
-ii) if there is more than one reduction action, they reduce using the same rule.
-
-If these conditions hold, then the reduction becomes the default
-action.  This should make the code smaller without affecting the
-speed.  It changes the sematics for errors, however; errors could be
-detected in a different state now.
+(failure) for each state with at least one reduction action.  For each
+such state, we pick one reduction action to be the default action.
+This should make the code smaller without affecting the speed.  It
+changes the sematics for errors, however; errors could be detected in
+a different state now (but they'll still be detected at the same point
+in the token stream).
 
 Further notes on default cases:
 
@@ -464,6 +460,8 @@ we should make reduce_212 the default reduction here.  So the rules become:
    * if there is a production 
 	error -> reduce_n
      then make reduce_n the default action.
+   * if there is a non-reduce action for the error token, the default action
+     for this state must be "fail".
    * otherwise pick the most popular reduction in this state for the default.
    * if there are no reduce actions in this state, then the default
      action remains 'enter error recovery'.
@@ -754,17 +752,28 @@ vars used in this piece of code.
 
 > mkActionName i		= str "action_" . shows i
 
+See notes under "Action Tables" above for some subtleties in this function.
+
 > getDefault actions =
->   case [ act | (errorTok, act@(LR'Reduce{-'-} _ _)) <- actions ] of
->	(act:_) -> act	-- use error reduction if there is one.
->	[] ->
->	    case reduces of
->		 [] -> LR'Fail
->		 (act:_) -> act	-- pick the first one we see for now
+>   -- pick out the action for the error token, if any
+>   case [ act | (errorTok, act) <- actions ] of
 >
->   where reduces = [ act | (_,act@(LR'Reduce{-'-} _ _)) <- actions ]
->   		    ++ [ act | (_,(LR'Multiple{-'-} _ 
->					act@(LR'Reduce{-'-} _ _))) <- actions ]
+>	-- use error reduction as the default action, if there is one.
+>	act@(LR'Reduce _ _) : _ 		-> act
+>	act@(LR'Multiple _ (LR'Reduce _ _)) : _ -> act
+>
+>	-- if the error token is shifted or otherwise, don't generate
+>	--  a default action.  This is *important*!
+>	(_ : _) -> LR'Fail
+>
+>	-- no error actions, pick a reduce to be the default.
+>	[]      -> case reduces of
+>		      [] -> LR'Fail
+>		      (act:_) -> act	-- pick the first one we see for now
+>
+>   where reduces 
+>	    =  [ act | (_,act@(LR'Reduce _ _)) <- actions ]
+>   	    ++ [ act | (_,(LR'Multiple _ act@(LR'Reduce _ _))) <- actions ]
 
 -----------------------------------------------------------------------------
 -- Generate packed parsing tables.
