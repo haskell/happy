@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Lexer.lhs,v 1.13 1999/07/14 19:33:56 panne Exp $
+$Id: Lexer.lhs,v 1.14 1999/08/04 11:04:43 simonmar Exp $
 
 The lexer.
 
@@ -62,8 +62,7 @@ ToDo: proper text instance here, for use in parser error messages.
 
 > lexer :: (Token -> P a) -> P a
 > lexer cont "" = cont TokenEOF ""
-> lexer cont ('-':'-':r) = \line -> lexer cont (tail (dropWhile (/= '\n') r))
->				(line + 1)
+> lexer cont ('-':'-':r) = lexer cont (dropWhile (/= '\n') r)
 > lexer cont ('{':'-':r) = \line -> lexNestedComment line 
 >				(\r -> lexer cont r) r line
 > lexer cont (c:rest) = nextLex cont c rest
