@@ -54,7 +54,7 @@ mkIS :: [Int] -> IntSet
 mkIS ints = IntSet (foldr addIS [] ints)
 
 intsIS  :: IntSet -> [Int]
-intsIS (IntSet is) = map toInt is
+intsIS (IntSet is) = map (fromIntegral . toInteger) is
 
 addIS :: Int -> [WordRep] -> [WordRep]
 addIS i [] = addIS i [0]
