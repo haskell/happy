@@ -89,7 +89,7 @@ alex cli file basename script = do
 	 (maybe_header, scanner, maybe_footer) = script
  	 (scanner', scs, sc_hdr) = encode_start_codes "" scanner
  
-   hPutStr out_h (optsToInject target)
+   hPutStr out_h (optsToInject target cli)
    case maybe_header of
 	Nothing   -> return ()
 	Just code -> hPutStr out_h code
@@ -115,13 +115,13 @@ alex cli file basename script = do
    hClose out_h
    finish_info
 
-optsToInject :: Target -> String
-optsToInject target 
+optsToInject :: Target -> [CLIFlags] -> String
+optsToInject target cli
    | GhcTarget <- target = "{-# OPTIONS -fglasgow-exts -cpp #-}\n"
-   | otherwise           = ""
+   | otherwise		 = "{-# OPTIONS -cpp #-}\n"
 
 importsToInject :: Target -> [CLIFlags] -> String
-importsToInject tgt cli = debug_imports ++ glaexts_import
+importsToInject tgt cli = always_imports ++ debug_imports ++ glaexts_import
   where
 	glaexts_import | OptGhcTarget `elem` cli    = import_glaexts
 		       | otherwise                  = ""
@@ -130,6 +130,12 @@ importsToInject tgt cli = debug_imports ++ glaexts_import
 		       | otherwise		   = ""
 
 -- CPP is turned on for -fglasogw-exts, so we can use conditional compilation:
+
+always_imports = "#if __GLASGOW_HASKELL__ >= 503\n\ 
+		   \import Data.Array\n\ 
+		   \#else\n\ 
+		   \import Array\n\ 
+		   \#endif\n"
 
 import_glaexts = "#if __GLASGOW_HASKELL__ >= 503\n\ 
 		   \import GHC.Exts\n\ 
