@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.32 2000/07/11 10:07:13 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.33 2000/07/11 14:54:15 simonmar Exp $
 
 The code generator.
 
@@ -782,8 +782,8 @@ vars used in this piece of code.
 >  where 
 >
 >	 (table,check,act_offs,goto_offs,max_off) 
->		 = runST (genTables (length actions) n_terminals
->				 mAX_TABLE_SIZE sorted_actions)
+>		 = runST (genTables (length actions) 
+>				n_terminals n_nonterminals sorted_actions)
 >	 
 >	 def_actions = map (\(_,_,def,_,_,_) -> def) actions
 >
@@ -804,10 +804,10 @@ vars used in this piece of code.
 >		       acts'' = mkActVals acts' default_act
 >		 ]
 >
->	 -- adjust terminals by non_terminals-2, so they start at zero
->	 --  (see ARRAY_NOTES)
+>	 -- adjust terminals by -(n_nonterminals+2), so they start at zero
+>	 --  (see ARRAY_NOTES)  (n_nonterminals includes %start)
 >	 adjust token | token == errorTok = 0
->		      | otherwise         = token - n_nonterminals - 2
+>		      | otherwise         = token - (n_nonterminals + 2)
 >
 >	 mkActVals assocs default_act = 
 >		 [ (adjust token, actionVal act) 
@@ -826,19 +826,16 @@ vars used in this piece of code.
 >		 let goto_vals = mkGotoVals (assocs goto_arr)
 >		 ]
 >
->	 -- adjust nonterminals by -4, so they start at zero
+>	 -- adjust nonterminals by -firstNT, so they start at zero
 >	 --  (see ARRAY_NOTES)
 >	 mkGotoVals assocs =
->		 [ (token-4, i) | (token, Goto i) <- assocs ]
+>		 [ (token-firstNT, i) | (token, Goto i) <- assocs ]
 >
 >	 sorted_actions = reverse (sortBy cmp_state (actions++gotos))
 >	 cmp_state (_,_,_,width1,tally1,_) (_,_,_,width2,tally2,_)
 >		 | width1 < width2  = LT
 >		 | width1 == width2 = compare tally1 tally2
 >		 | otherwise = GT
->
->	 n_states = length actions - 1
->	 mAX_TABLE_SIZE = n_states * n_terminals
 
 > data ActionOrGoto = ActionEntry | GotoEntry
 > type TableEntry = (ActionOrGoto,
@@ -851,7 +848,7 @@ vars used in this piece of code.
 > genTables
 >	 :: Int				-- number of actions
 >	 -> Int				-- number of terminals
->	 -> Int				-- max table size (states * terminals)
+>	 -> Int				-- number of nonterminals
 >	 -> [TableEntry]			-- entries for the table
 >	 -> ST s (UArray Int Int,	-- table
 >		  UArray Int Int,	-- check
@@ -860,13 +857,14 @@ vars used in this piece of code.
 >		  Int 	   		-- highest offset in table
 >	    )
 >
-> genTables n_actions n_terminals max_table_size entries = do
+> genTables n_actions n_terminals n_nonterminals entries = do
 >
->   table      <- fillNewArray (0, max_table_size) 0
->   check      <- fillNewArray (0, max_table_size) (-1)
+>   table      <- fillNewArray (0, mAX_TABLE_SIZE) 0
+>   check      <- fillNewArray (0, mAX_TABLE_SIZE) (-1)
 >   act_offs   <- fillNewArray (0, n_actions) 0
 >   goto_offs  <- fillNewArray (0, n_actions) 0
->   off_arr    <- fillNewArray (-n_terminals, max_table_size) 0
+>   off_arr    <- fillNewArray (negate (max n_terminals n_nonterminals), 
+>				  mAX_TABLE_SIZE) 0
 >
 >   max_off <- genTables' table check act_offs goto_offs off_arr entries
 >
@@ -875,6 +873,10 @@ vars used in this piece of code.
 >   act_offs'  <- freeze act_offs
 >   goto_offs' <- freeze goto_offs
 >   return (table',check',act_offs',goto_offs',max_off+1)
+
+>   where
+>	 n_states = n_actions - 1
+>	 mAX_TABLE_SIZE = n_states * n_terminals
 
 
 > genTables' table check act_offs goto_offs off_arr entries
