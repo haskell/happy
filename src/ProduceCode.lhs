@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.18 1999/03/27 12:47:04 sof Exp $
+$Id: ProduceCode.lhs,v 1.19 1999/05/14 13:31:46 simonm Exp $
 
 The code generator.
 
@@ -74,25 +74,61 @@ data HappyAbsSyn a t1 .. tn
 
 >    produceAbsSynDecl 
 
-If we're using coercions, no need for an abstract syntax type at all:
+If we're using coercions, we need to generate the injections etc.
 
->     | coerce = id
+	type HappyAbsSyn ti tj tk ... = ()
+
+(where ti, tj, tk are type variables for the non-terminals which don't
+ have type signatures).
+
+	happyIn<n> :: ti -> HappyAbsSyn ti tj tk ...
+	happyIn<n> x = unsafeCoerce# x
+	{-# INLINE happyIn<n> #-}
+
+	happyOut<n> :: HappyAbsSyn ti tj tk ... -> tn
+	happyOut<n> x = unsafeCoerce# x
+	{-# INLINE happyOut<n> #-}
+
+>     | coerce 
+>	= let
+>	      happy_item = str "HappyAbsSyn " . str_tyvars
+>	      bhappy_item = brack' happy_item
+>
+>	      inject n ty
+>		= mkHappyIn n . str " :: " . type_param n ty
+>		. str " -> " . bhappy_item . char '\n'
+>		. mkHappyIn n . str " x = unsafeCoerce# x\n"
+>		. str "{-# INLINE " . mkHappyIn n . str " #-}"
+>
+>	      extract n ty
+>		= mkHappyOut n . str " :: " . bhappy_item
+>		. str " -> " . type_param n ty . char '\n'
+>		. mkHappyOut n . str " x = unsafeCoerce# x\n"
+>		. str "{-# INLINE " . mkHappyOut n . str " #-}"
+>	  in
+>	    str "type " . happy_item . str " = ()\n"
+>	  . interleave "\n" 
+>	    [ inject n ty . nl . extract n ty | (n,ty) <- assocs nt_types ]
+>	  -- token injector
+>	  . str "happyInTok :: " . str token_type . str " -> " . bhappy_item
+>	  . str "\nhappyInTok x = unsafeCoerce# x\n{-# INLINE happyInTok #-}\n"
+>	  -- token extractor
+>	  . str "happyOutTok :: " . bhappy_item . str " -> " . str token_type
+>	  . str "\nhappyOutTok x = unsafeCoerce# x\n{-# INLINE happyOutTok #-}\n"
 
 Otherwise, output the declaration in full...
 
 >     | otherwise
->	= str "data HappyAbsSyn "
->	. str (unwords [ "t" ++ show n | (n, Nothing) <- assocs nt_types ])
+>	= str "data HappyAbsSyn " . str_tyvars
 >	. str "\n\t= HappyTerminal " . str token_type
 >	. str "\n\t| HappyErrorToken Int\n"
 >	. interleave "\n" 
->         [ str "\t| " . 
->             makeAbsSynCon n . 
->             (case ty of 
->                 Nothing -> showString " t" . shows n
->                 Just t  -> brack t)
+>         [ str "\t| " . makeAbsSynCon n . strspace . type_param n ty
 >         | (n, ty) <- assocs nt_types, 
 >	    (nt_types_index ! n) == n]
+
+>     where all_tyvars = [ 't':show n | (n, Nothing) <- assocs nt_types ]
+>	    str_tyvars = str (unwords all_tyvars)
 
 %-----------------------------------------------------------------------------
 Type declarations of the form:
@@ -177,7 +213,7 @@ where n is the non-terminal number, and m is the rule number.
 >	. char '(' . interleave " :\n\t" tokPatterns
 >	. str "happyRest)\n\t = "
 >	. tokLets
->	. typed_code
+>	. str code'
 >       . defaultCase
 >	. char '}'
 
@@ -185,7 +221,8 @@ where n is the non-terminal number, and m is the rule number.
 >	= mkReductionHdr (shows lt) "happySpecReduce_" id
 >	. interleave "\n\t" tokPatterns
 >	. str " =  "
->	. this_absSynCon . str "\n\t\t " . brack' typed_code
+>	. tokLets
+>	. this_absSynCon . str "\n\t\t " . brack' (str code')
 >	. (if coerce || null toks || null vars_used then
 >		  id
 >	   else
@@ -199,7 +236,8 @@ where n is the non-terminal number, and m is the rule number.
 >	. char '(' . interleave " :\n\t" tokPatterns
 >	. str "happyRest)\n\t = "
 >	. tokLets
->	. this_absSynCon . str "\n\t\t " . brack' typed_code . str " : happyRest"
+>	. this_absSynCon . str "\n\t\t " . brack' (str code') 
+>	. str " : happyRest"
 >	. defaultCase
 >	. char '}'
 
@@ -210,20 +248,14 @@ where n is the non-terminal number, and m is the rule number.
 >		mkReductionHdr lt s arg = 
 >			mkReductionFun i . str " = "
 >			. str s . lt . strspace . showInt nt . arg
->			. strspace
->			. reduction
->			. str " where {\n  reduction\n\t"
+>			. str " reduction where {\n  reduction\n\t"
 > 
->		reduction | coerce = str "(unsafeCoerce# reduction)"
->			  | otherwise = str "reduction"
->
 >		defaultCase = if not (null toks)
 >              			then str ";\n  reduction _ = notHappyAtAll "
 >              			else id
 > 
 >		tokPatterns 
->		 | coerce && (isMonadProd || not (specReduceFun lt)) = 
->			reverse (map mkDummyVar [1 .. length toks])
+>		 | coerce = reverse (map mkDummyVar [1 .. length toks])
 >		 | otherwise = reverse (zipWith tokPattern [1..] toks)
 > 
 >		tokPattern n _ | n `notElem` vars_used = char '_'
@@ -241,16 +273,19 @@ where n is the non-terminal number, and m is the rule number.
 >				   . char ')'
 >		
 >		tokLets 
->		   | coerce && not (null toks) = 
->		          str "let {\n\t" 
->			. interleave "; \n\t"
->				[ tokPattern n t . str " = " . 
->				  str "(unsafeCoerce# " .
->				  mkDummyVar n  . char ')'
->				| (n,t) <- zip [1..] toks ]
->			. str "} in\n\t\t"
->
+>		   | coerce && not (null lines) = str "let {\n\t" 
+>				   		. interleave "; \n\t" lines
+>				   		. str "} in\n\t\t"
 >		   | otherwise = id
+>
+>		   where lines = [ tokPattern n t . str " = " . 
+>				   extract t . strspace .
+>				   mkDummyVar n
+>				 | (n,t) <- zip [1..] toks,
+>				   n `elem` vars_used ]
+>
+>		extract t | t >= startTok && t < fst_term = mkHappyOut t
+>			  | otherwise			  = str "happyOutTok"
 >
 >		(code,vars_used) = expandVars sem
 >
@@ -262,23 +297,9 @@ where n is the non-terminal number, and m is the rule number.
 >		has_ty = isJust maybe_ty
 >		(Just ty) = maybe_ty
 >
->		item_ty 
->		    | isMonadProd = mkMonadTy (str ty)
->		    | otherwise   = str ty
->
->		-- add a type signature if we're using coercions
->		typed_code
->		   | coerce = 
->			if has_ty then brack code' . str " :: " . item_ty
->				  else error ("Missing type signature for `" ++
->					      names ! nt ++ "'")
->		   | otherwise = str code'
-> 
 >		lt = length toks
 
->		this_absSynCon | coerce = if isMonadProd then 
->						str "unsafeCoerce#"
->					  else id
+>		this_absSynCon | coerce    = mkHappyIn nt
 >			       | otherwise = makeAbsSynCon nt
 
 %-----------------------------------------------------------------------------
@@ -626,6 +647,13 @@ Misc.
 > mkHappyVar n     	= str "happy_var_"    . shows n
 > mkReductionFun n 	= str "happyReduce_"  . shows n
 > mkDummyVar n		= str "happy_x_"      . shows n
+
+> mkHappyIn n 		= str "happyIn"  . shows (n :: Int)
+> mkHappyOut n 		= str "happyOut" . shows (n :: Int)
+
+> type_param :: Int -> Maybe String -> ShowS
+> type_param n Nothing   = char 't' . shows (n :: Int)
+> type_param n (Just ty) = brack ty
 
 > specReduceFun 	= (<= (3 :: Int))
 
