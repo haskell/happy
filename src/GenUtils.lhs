@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: GenUtils.lhs,v 1.9 1999/03/11 17:15:57 simonm Exp $
+$Id: GenUtils.lhs,v 1.10 2001/08/30 06:56:50 qrczak Exp $
 
 Some General Utilities, including sorts, etc.
 This is realy just an extended prelude.
@@ -165,7 +165,7 @@ Gofer-like stuff:
 Now some utilties involving arrays.  Here is a version of @elem@ that
 uses partial application to optimise lookup.
 
-> arrElem :: (Ix a) => [a] -> a -> Bool
+> arrElem :: (Ix a, Ord a) => [a] -> a -> Bool
 > arrElem obj = \x -> inRange size x && arr ! x 
 >   where
 >       obj' = sort obj
