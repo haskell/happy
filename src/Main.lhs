@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.30 2000/12/16 16:13:19 simonmar Exp $
+$Id: Main.lhs,v 1.31 2000/12/20 15:23:56 simonmar Exp $
 
 The main driver.
 
@@ -76,7 +76,7 @@ Parse, using bootstrapping parser.
 
 Mangle the syntax into something useful.
 
->	case sCC "Mangler" (mangler abssyn) of {
+>	case sCC "Mangler" (mangler fl_name abssyn) of {
 >		Failed s -> die (unlines s ++ "\n");
 >		Succeeded g -> 
 

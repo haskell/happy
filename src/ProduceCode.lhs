@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.41 2000/12/19 15:00:31 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.42 2000/12/20 15:23:56 simonmar Exp $
 
 The code generator.
 
@@ -249,7 +249,7 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 > 	interleave "\n\n" 
 >	   (zipWith produceReduction (drop n_starts prods) [ n_starts .. ])
 
->    produceReduction (nt, toks, sem, _) i
+>    produceReduction (nt, toks, (code,vars_used), _) i
 
 >     | isMonadProd
 >	= mkReductionHdr (showInt lt) "happyMonadReduce "
@@ -284,8 +284,8 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >	. defaultCase
 
 >       where 
->		isMonadProd = case sem of ('%' : code) -> True
->			 		  _            -> False
+>		isMonadProd = case code of ('%' : code) -> True
+>			 		   _            -> False
 > 
 >		-- adjust the nonterminal number for the array-based parser
 >		-- so that nonterminals start at zero.
@@ -337,8 +337,6 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >
 >		extract t | t >= firstStartTok && t < fst_term = mkHappyOut t
 >			  | otherwise			  = str "happyOutTok"
->
->		(code,vars_used) = expandVars sem
 >
 >		code' 
 >		    | isMonadProd = tail code  -- drop the '%'
@@ -396,16 +394,14 @@ The token conversion function.
 >	    _   -> str "action i i tk (HappyState action)"
 > 
 >	  doToken (i,tok) 
->		= str (removeDollorDollor tok)
+>		= str (removeDollarDollar tok)
 >		. str " -> cont " 
 >		. showInt (tokIndex i)
 
 Use a variable rather than '_' to replace '$$', so we can use it on
 the left hand side of '@'.
 
->	  removeDollorDollor xs = case mapDollarDollar xs of
->				   Nothing -> xs
->				   Just fn -> fn "happy_dollar_dollar"
+>	  removeDollarDollar xs = mapDollarDollar xs "happy_dollar_dollar"
 
 >    mkHappyTerminalVar :: Int -> Int -> String -> String
 >    mkHappyTerminalVar i t = 
@@ -415,7 +411,7 @@ the left hand side of '@'.
 >     where
 >	  tok_str_fn = case lookup t token_rep of
 >		      Nothing -> Nothing
->		      Just str -> mapDollarDollar str
+>		      Just str -> Just (mapDollarDollar str)
 >	  pat = mkHappyVar i
 
 >    tokIndex 
@@ -731,18 +727,6 @@ MonadStuff:
 -----------------------------------------------------------------------------
 Replace all the $n variables with happy_vars, and return a list of all the
 vars used in this piece of code.
-
->    expandVars :: String -> (String,[Int])
->    expandVars [] = ("",[])
->    expandVars ('$':r) 
->    	   | isDigit (head r) = ("happy_var_" ++ num ++ code, read num : vars)
->    	   | otherwise = error ("Illegal attribute: $" ++ [head r] ++ "\n")
->    	where
->    	   (num,rest)  = span isDigit r
->    	   (code,vars) = expandVars rest
->    expandVars (c:r) = (c:code,vars)
->    	where
->	(code,vars) = expandVars r
 
 > actionVal :: LRAction -> Int
 > actionVal (LR'Shift  state _)	= state + 1
@@ -1071,16 +1055,24 @@ vars used in this piece of code.
 > maybestr (Just s)	= str s
 > maybestr _		= id
 
-> mapDollarDollar :: String -> Maybe (String -> String)
-> mapDollarDollar "" = Nothing
-> mapDollarDollar ('$':'$':r) = -- only map first instance
->    case mapDollarDollar r of
->	  Just fn -> error "more that one $$ in pattern"
->	  Nothing -> Just (\ s -> s ++ r)
-> mapDollarDollar (c:r) =
->    case mapDollarDollar r of
->	  Just fn -> Just (\ s -> c : fn s)
->	  Nothing -> Nothing
+Replace $$ with an arbitrary string, being careful to avoid ".." and '.'.
+
+> mapDollarDollar :: String -> String -> String
+> mapDollarDollar code repl = go code
+>   where go code =
+>           case code of
+>		[] -> []
+>	
+>		'"'  :r    -> case reads code :: [(String,String)] of
+>				 []      -> '"' : go r
+>				 (s,r):_ -> show s ++ go r
+>		a:'\'' :r | isAlphaNum a -> '\'' : go r
+>		'\'' :r    -> case reads code :: [(Char,String)] of
+>				 []      -> '\'' : go r
+>				 (c,r):_ -> show c ++ go r
+>		'\\':'$':r -> '$' : go r
+>		'$':'$':r  -> repl ++ r
+>		c:r  -> c : go r
 
 > brack s = str ('(' : s) . char ')'
 > brack' s = char '(' . s . char ')'

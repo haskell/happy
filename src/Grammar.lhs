@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Grammar.lhs,v 1.16 2000/12/03 16:53:53 simonmar Exp $
+$Id: Grammar.lhs,v 1.17 2000/12/20 15:23:56 simonmar Exp $
 
 The Grammar data type.
 
@@ -24,6 +24,7 @@ Here is our mid-section datatype
 > import AbsSyn
 
 > import Array
+> import Char
 
 #ifdef DEBUG
 
@@ -33,7 +34,7 @@ Here is our mid-section datatype
 
 > type Name = Int
 
-> type Production = (Name,[Name],String,Priority)
+> type Production = (Name,[Name],(String,[Int]),Priority)
 
 > data Grammar 
 >       = Grammar {
@@ -167,17 +168,31 @@ This bit is a real mess, mainly because of the error message support.
 >				Failed e -> Failed e
 >				Succeeded b -> Succeeded b
 
-> {- m `parE` k 
+> m `parE` k 
 > 	= case m of
 >		Failed e    -> case k (error "parE") of
 >				Failed e' -> Failed (e ++ e')
->				Succeeded b -> Failed e
+>				Succeeded _ -> Failed e
 >		Succeeded a -> case k a of
 >				Failed e -> Failed e
->				Succeeded b -> Succeeded b -}
+>				Succeeded b -> Succeeded b
 
-> mangler :: AbsSyn -> MaybeErr Grammar [String]
-> mangler (AbsSyn hd dirs rules tl) = 
+> parEs [] = Succeeded []
+> parEs (x:xs) = x `parE` \x' ->
+>		 parEs xs `parE` \xs' ->
+>		 Succeeded (x':xs')
+
+> failMap :: (b -> c) -> MaybeErr a [b] -> MaybeErr a [c]
+> failMap f e = case e of
+>   		  Succeeded a -> Succeeded a
+>		  Failed s -> Failed (map f s)
+
+
+> mangler :: FilePath -> AbsSyn -> MaybeErr Grammar [String]
+> mangler file (AbsSyn hd dirs rules tl) = 
+
+>	  -- add filename to all error messages
+>	failMap (\s -> file ++ ": " ++ s) $
 
 >	checkRules ([n | (n,_,_) <- rules]) "" [] `thenE` \nonterm_strs  ->
 
@@ -198,8 +213,11 @@ This bit is a real mess, mainly because of the error message support.
 >       nonterm_names  = [ first_nt .. last_nt ]
 >       terminal_names = [ first_t .. last_t ]
 
->	starts	    = getParserNames dirs
->	start_strs  = map (\n -> startName++'_':show n) [1..n_starts :: Int]
+>	starts	    = case getParserNames dirs of
+>			[] -> [TokenName "happyParse" Nothing]
+>			ns -> ns
+>
+>	start_strs  = [ startName++'_':p  | (TokenName p _) <- starts ]
 
 Build up a mapping from name values to strings.
 
@@ -225,12 +243,11 @@ Start symbols...
 >	lookupStart (TokenName s (Just n)) = mapToName n
 >	in
 
->	foldr (mightFails lookupStart) (Succeeded []) starts
->					`thenE` \ start_toks ->
+>	parEs (map lookupStart starts)	`thenE` \ start_toks ->
 
 >	let
 >	parser_names = [ s | TokenName s _ <- starts ]
->	start_prods = zipWith (\nm tok -> (nm, [tok], "no code", No))
+>	start_prods = zipWith (\nm tok -> (nm, [tok], ("no code",[]), No))
 >			 start_names start_toks
 
 Deal with priorities...
@@ -251,14 +268,16 @@ Deal with priorities...
 Translate the rules from string to name-based.
 
 > 	transRule (nt, prods, ty)
->   	  = mapToName nt				       `thenE` \nt' ->
->	    foldr (mightFails transProds) (Succeeded []) prods `thenE` \prods ->
->	    foldr (mightFails (finishRule nt')) (Succeeded []) prods
+>   	  = mapToName nt `thenE` \nt' ->
+>	    parEs (map (finishRule nt') prods)
 >
->	finishRule nt (lhs,code,prec)
->	  = case mkPrec lhs prec of
+>	finishRule nt (lhs,code,line,prec)
+>	  = failMap (addLine line) $
+>	    checkCode (length lhs) code `parE`  \code' ->
+>	    parEs (map mapToName lhs) 	`thenE`  \lhs' ->
+>	    case mkPrec lhs' prec of
 >		Left s  -> Failed ["Undeclared precedence token: " ++ s]
->		Right p -> Succeeded (nt, lhs, code, p)
+>		Right p -> Succeeded (nt, lhs', code', p)
 >
 >       mkPrec :: [Name] -> Maybe String -> Either String Priority
 >       mkPrec lhs prio =
@@ -271,15 +290,9 @@ Translate the rules from string to name-based.
 >               Just s -> case lookup s prioByString of
 >                           Nothing -> Left s
 >                           Just p -> Right p
-
-> 	transProds (lhs, code, line, prec)
->   	  = case foldr (mightFails mapToName) (Succeeded []) lhs of
->   		Succeeded lhs' -> Succeeded (lhs', code, prec)
->		Failed s -> Failed (map (("line " ++ show line ++ ": ") ++) s)
-
 >	in
 
->	foldr (mightFails transRule) (Succeeded []) rules  `thenE` \rules' ->
+>	parEs (map transRule rules) `thenE` \rules' ->
 
 >	let
 >	tys = listArray' (first_nt, last_nt) [ ty | (nm,_,ty) <- rules ]
@@ -293,8 +306,7 @@ Get the token specs in terms of Names.
 >	let 
 >	fixTokenSpec (a,b) = mapToName a `thenE` \a -> Succeeded (a,b)
 >	in
->       foldr (mightFails fixTokenSpec) (Succeeded []) (getTokenSpec dirs)
->						`thenE` \tokspec ->
+>       parEs (map fixTokenSpec (getTokenSpec dirs)) `thenE` \tokspec ->
 
 >	let
 >	   ass = combinePairs [ (a,no)
@@ -332,18 +344,8 @@ Get the token specs in terms of Names.
 
 For combining actions with possible error messages.
 
-> mightFails 
-> 	:: (a -> MaybeErr b [c]) -> a
-> 	-> MaybeErr [b] [c] 
->	-> MaybeErr [b] [c]
-
-> mightFails f a b
-> 	= combine (f a) b
->	where 
->		combine (Succeeded a) (Succeeded b)	= Succeeded (a:b)
-> 		combine (Succeeded a) (Failed sb)	= Failed sb
-> 		combine (Failed sa) (Succeeded b)	= Failed sa
-> 		combine (Failed sa) (Failed sb) 	= Failed (sa ++ sb)
+> addLine :: Int -> String -> String
+> addLine l s = show l ++ ": " ++ s
 
 > getTerm (TokenSpec stuff) = map fst stuff
 > getTerm _                 = []
@@ -357,6 +359,39 @@ So is this.
 >       | otherwise = checkRules rest name (name : nonterms)
 
 > checkRules [] _ nonterms = Succeeded (reverse nonterms)
+
+-----------------------------------------------------------------------------
+-- Check for every $i that i is <= the arity of the rule.
+
+-- At the same time, we collect a list of the variables actually used in this
+-- code, which is used by the backend.
+
+> checkCode :: Int -> String -> MaybeErr (String, [Int]) [String]
+> checkCode arity code = go code "" []
+>   where go code acc used =
+>           case code of
+>		[] -> Succeeded (reverse acc, used)
+>	
+>		'"'  :r    -> case reads code :: [(String,String)] of
+>				 []      -> go r ('"':acc) used
+>				 (s,r):_ -> go r (reverse (show s) ++ acc) used
+>		a:'\'' :r | isAlphaNum a -> go r ('\'':a:acc) used
+>		'\'' :r    -> case reads code :: [(Char,String)] of
+>				 []      -> go r ('\'':acc) used
+>				 (c,r):_ -> go r (reverse (show c) ++ acc) used
+>		'\\':'$':r -> go r ('$':acc) used
+>		'$':r@(i:_) | isDigit i -> 
+>			case reads r :: [(Int,String)] of
+>			  (j,r):_ -> 
+>			     if j > arity 
+>			   	  then Failed [ '$': show j ++ " out of range" ] 
+>				 	`parE` \_ -> go r acc used
+>			   	  else go r (reverse (mkHappyVar j) ++ acc) 
+>					 (j : used)
+>			  
+>		c:r  -> go r (c:acc) used
+
+> mkHappyVar n 	= "happy_var_" ++ show n
 
 -----------------------------------------------------------------------------
 -- Internal Reduction Datatypes
