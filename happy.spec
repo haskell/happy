@@ -5,7 +5,7 @@ Version:      1.7
 Release:      1
 Copyright:    BSD w/o adv. clause
 Group:        Development/Languages/Haskell
-Packager:     Sven.Panne@informatik.uni-muenchen.de
+Packager:     Sven.Panne@BetaResearch.de
 URL:          http://www.dcs.gla.ac.uk/fp/software/happy.html
 Source:       ftp://ftp.dcs.gla.ac.uk:/pub/haskell/happy/happy-1.7-src.tar.gz 
 Requires:     haskell
