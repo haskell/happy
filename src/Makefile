@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.21 1998/02/02 12:42:52 simonm Exp $
+# $Id: Makefile,v 1.22 1998/02/12 14:42:48 simonm Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -10,8 +10,6 @@ INSTALLING=0
 HC = $(WithHappyHc)
 
 HAPPY    = happy -1.2
-
-MKDEPENDHS      := $(FPTOOLS_TOP)/ghc/driver/ghc
 
 HS_PROG = happy.bin
 HS_SRCS = \
