@@ -1,7 +1,7 @@
 {
 module Parser (parse, P(..)) where
-import Alex
 import AbsSyn
+import Alex ( Posn(..) )
 import CharSet
 
 import Data.FiniteMap

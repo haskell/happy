@@ -15,7 +15,6 @@ module DFA(scanner2dfa) where
 import Array
 import Char
 import Sort
-import Alex
 import AbsSyn
 import NFA
 

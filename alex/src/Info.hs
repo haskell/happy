@@ -6,7 +6,6 @@
 
 module Info (infoDFA) where
 
-import Alex
 import AbsSyn
 import Util
 

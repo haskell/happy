@@ -15,7 +15,6 @@ module NFA where
 
 import Array
 import DFS
-import Alex
 import AbsSyn
 import CharSet
 import Util

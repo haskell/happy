@@ -14,7 +14,7 @@
 module Scan(lexer) where
 
 import Alex
-import AbsSyn
+import AbsSyn hiding (DFA,State(..),StartCode,Accept(..))
 
 import qualified Array
 import Data.Char

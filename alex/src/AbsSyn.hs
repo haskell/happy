@@ -16,14 +16,17 @@ module AbsSyn (
   Scanner(..),
   RECtx(..),
   RExp(..),
+  DFA, SNum, StartCode, State(..), Accept(..),
   encode_start_codes
   ) where
 
 import CharSet
-import Alex 		( Posn(..), StartCode )
-import Data.FiniteMap
+import Alex 		( Posn(..) )
 import Sort
-import Maybe
+
+import Data.FiniteMap
+import Data.Maybe
+import qualified Data.Array as Array
 
 infixl 4 :|
 infixl 5 :%%
@@ -97,6 +100,24 @@ showStarts scs = shows scs
 
 showRCtx Nothing = id
 showRCtx (Just r) = ('\\':) . shows r
+
+-- -----------------------------------------------------------------------------
+-- DFAs
+
+type DFA a = Array.Array SNum (State a)
+
+type SNum = Int
+
+data State a = St Bool [Accept a] SNum (Array.Array Char SNum)
+
+data Accept a 
+  = Acc { accPrio       :: Int,
+	  accAction     :: a,
+	  accLeftCtx    :: Maybe(Char->Bool),
+	  accRightCtx   :: Maybe SNum
+    }
+
+type StartCode = Int
 
 -- -----------------------------------------------------------------------------
 -- Regular expressions

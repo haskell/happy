@@ -22,7 +22,6 @@ import Parser
 import Scan
 import CharSet
 import System
-import Alex
 import AbsSyn
 import DFA
 import Util
