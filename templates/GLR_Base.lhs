@@ -1,5 +1,5 @@
 {- GLR_Base.lhs 
-   $Id: GLR_Base.lhs,v 1.1 2004/08/11 15:39:32 paulcc Exp $
+   $Id: GLR_Base.lhs,v 1.2 2004/09/07 15:53:47 paulcc Exp $
 -} 
 
 Basic defs required for compiling the data portion of the parser
@@ -7,7 +7,7 @@ Basic defs required for compiling the data portion of the parser
 ---
 We're creating Int-indexed graphs
 
->type ForestId  = Int
+>type ForestId  = (Int,Int,GSymbol)
 
 
 ---
@@ -33,6 +33,8 @@ A Branch holds the semantic result plus node ids of children
 > = Branch {b_sem :: GSem, b_nodes :: [ForestId]}
 >   deriving Show
 
+>instance Eq Branch where
+>	b1 == b2 = b_nodes b1 == b_nodes b2
 
 
 
@@ -46,12 +48,13 @@ Tree decode unpacks the forest into a list of results
  - see documentation for further information
 
 >class TreeDecode a where
->	decode_b :: (ForestId -> (GSymbol,[Branch])) -> Branch -> [a]
+>	decode_b :: (ForestId -> [Branch]) -> Branch -> [a]
 
->decode :: TreeDecode a => (ForestId -> (GSymbol,[Branch])) -> Int -> [a]
->decode f i = case f i of 
->               (HappyTok t, []) -> decode_b f (Branch (SemTok t) [])
->               (s,          bs) -> [ d | b <- bs, d <- decode_b f b ]
+>decode :: TreeDecode a => (ForestId -> [Branch]) -> ForestId -> [a]
+>decode f i@(_,_,HappyTok t) 
+>  = decode_b f (Branch (SemTok t) [])
+>decode f i
+>  = [ d | b <- f i, d <- decode_b f b ]
 
 >instance TreeDecode Token where
 >	decode_b f (Branch (SemTok t) []) = [t]

@@ -15,6 +15,8 @@
 >	  ParseOK r f -> do 
 >			    putStrLn $ "Ok " ++ show r ++ "\n" 
 >						++ unlines (map show f)
+>			    writeFile "out" $ unlines (map show f)
+>			    -- putStrLn $ show (decode (forest_lookup f) r ::[Int])
 >	  ParseEOF f  -> do 
 >			    putStrLn $ "Premature end of input:\n" 
 >						++ unlines (map show f)

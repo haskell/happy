@@ -21,5 +21,4 @@
 >			    putStrLn $ "Error: " ++ show ts
 
 > forest_lookup f i 
->  = case lookup i f of
->	Just (FNode _ _ s bs) -> (s,bs)
+>  = fromJust $ lookup i f 

@@ -1,0 +1,14 @@
+
+Test case for packing
+
+Grammar allows different (asymmetric) routes for category C; the height-
+ordering heuristic won't work in this case.
+
+
+---
+
+"make run" to run the test case.
+
+For Hugs, load up Hugs.lhs - it doesn't produce graphs, and has easy entry 
+point "test :: String -> IO ()
+

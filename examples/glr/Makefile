@@ -5,5 +5,8 @@ all :
 clean : 
 	make loop CMD=clean
 
+DIRS = expr-eval expr-tree nlp hidden-leftrec highly-ambiguous bio-eg \
+	packing
+
 loop :
-	for d in expr-eval expr-tree nlp bio-eg; do (cd $$d && make ${CMD}); done
+	for d in ${DIRS}; do (cd $$d && make ${CMD}); done

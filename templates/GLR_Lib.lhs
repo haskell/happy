@@ -2,15 +2,20 @@
 
 {-
    GLR_Lib.lhs
-   $Id: GLR_Lib.lhs,v 1.2 2004/08/13 16:22:59 paulcc Exp $
+   $Id: GLR_Lib.lhs,v 1.3 2004/09/07 15:53:48 paulcc Exp $
 -}
 
-Parser driver for the GLR parser.
-
-(c) University of Durham, Ben Medlock 2001
-        -- initial code, for structure parsing
-(c) University of Durham, Paul Callaghan 2004
-        -- extension to semantic rules, and various optimisations
+> {-
+> Parser driver for the GLR parser.
+> 
+> (c) University of Durham, Ben Medlock 2001
+>         -- initial code, for structure parsing
+> (c) University of Durham, Paul Callaghan 2004
+>         -- extension to semantic rules
+>         -- shifting to chart data structure
+>         -- supporting hidden left recursion
+>         -- many optimisations
+> -}
 
 {- supplied by Happy 
 <> module XYZ ( 
@@ -23,12 +28,13 @@ Parser driver for the GLR parser.
 >           , LabelDecode(..)		-- only for label decode
 
 >	-- standard exports
->           , GLRResult(..)
 >           , Tokens
->           , ForestNode(..)
+>           , GLRResult(..)
 >           , NodeMap
->           , Branch(..)
+>           , RootNode
+>           , ForestId
 >           , GSymbol(..)
+>           , Branch(..)
 >           , GSem(..)
 >           )
 >  where
@@ -82,35 +88,12 @@ Parser driver for the GLR parser.
 %----------------------------------------------------------------------------
 Main data types
 
-A forest is a bag of nodes, effectively providing a reference-counted
-mapping from a forest index (an Int) to a node. A forest node contains
-a start position, and end position, a branch label (a non-terminal) and
-a list of branches which have been matched at that position and under that
-non-terminal. 
+A forest is a map of `spans' to branches, where a span is a start position,
+and end position, and a grammatical category for that interval. Branches
+are lists of conjunctions of symbols which can be matched in that span.
+Note that tokens are stored as part of the spans.
 
->type Forest       = BagMap ForestNode
->data ForestNode   = FNode !Int !Int !GSymbol ![Branch] deriving (Show)
-
----
-Equality and Ordering on ForestNodes
- - A node is fully determined by the category, the span, and the children
-   it spans - so we have to check all of these when doing the packing
- - There's no specific Equality on Branches - it is all done here, manually
-
->instance Eq ForestNode where
->	FNode x1 x2 xs xbs == FNode y1 y2 ys ybs 
->	 = x1 == y1 && x2 == y2 && xs == ys 
->	   && map b_nodes xbs == map b_nodes ybs
-
->instance Ord ForestNode where
->	FNode x1 x2 xs xbs `compare` FNode y1 y2 ys ybs 
->	 = case x1 `compare` y1 of
->	     EQ -> case x2 `compare` y2 of 
->	             EQ -> case xs `compare` ys of
->	                     EQ -> map b_nodes xbs `compare` map b_nodes ybs
->	                     ne -> ne
->	             ne -> ne
->	     ne -> ne
+>type Forest       = FiniteMap ForestId [Branch]
 
 
 ---
@@ -118,7 +101,7 @@ End result of parsing:
  - successful parse with rooted forest
  - else syntax error or premature eof
 
->type NodeMap = [(ForestId, ForestNode)]
+>type NodeMap = [(ForestId, [Branch])]
 >type RootNode = ForestId
 >type Tokens = [[(Int, GSymbol)]]	-- list of ambiguous lexemes
 
@@ -139,101 +122,156 @@ Forest to simplified output
 >	rs@(_:_) -> error $ "multiple roots in forest, = " ++ show rs
 >						++ unlines (map show ns_map)
 >   where
->	ns_map = assocs f 
->	roots = [ r | (r, FNode 0 sz sym _) <- ns_map
+>	ns_map = fmToList f 
+>	roots = [ r | (r@(0,sz,sym),_) <- ns_map
 >	            , sz == length
 >	            , sym == top_symbol ]
->	-- children = concat [ concatMap b_nodes bs 
->      --                   | FNode _ _ _ bs <- map snd ns_map ]
->	-- roots = [ n | n <- map fst ns_map, n `notElem` children ]
 
 
 %----------------------------------------------------------------------------
 
 >glr_parse :: [[UserDefTok]] -> GLRResult
 >glr_parse toks 
-> = case runST initSM [0..] (tp toks) of
->    (f,Left ts )   -> ParseError ts (assocs f) 
+> = case runST emptyFM [0..] (tp toks) of
+>    (f,Left ts)   -> ParseError ts (fmToList f) 
 >						-- Error within sentence
->    (f,Right ss )  -> forestResult (length toks) f
+>    (f,Right ss)  -> forestResult (length toks) f
 >						-- Either good parse or EOF
 >   where
 >	tp tss = doActions [initTS 0] 
 >	       $ zipWith (\i ts -> [(i, t) | t <- ts]) [0..] 
->             $ map (map HappyTok) tss ++ [[HappyEOF]]
+>              $ [ [ HappyTok {-j-} t | (j,t) <- zip [0..] ts ] | ts <- tss ]
+>                ++ [[HappyEOF]]
 
 ---
 
->type PM a = ST (BagMap ForestNode) [Int] a
+>type PM a = ST Forest [Int] a
+>type FStack = TStack ForestId
 
->doActions :: [TStack Int] -> Tokens -> PM (Either Tokens [TStack Int])
+
+---
+main function
+
+>doActions :: [FStack] -> Tokens -> PM (Either Tokens [FStack])
 
 >doActions ss [] 		-- no more tokens (this is ok)
 > = return (Right ss)		-- return the stacks (may be empty)
 
 >doActions stks (tok:toks)
 > = do
->	stkss <- sequence [ reduceAll tok_form stks >>= shiftAll tok_form
->                        | tok_form <- tok ]
+>	stkss <- sequence [ do
+>                             stks' <- reduceAll [] tok_form stks 
+>                             shiftAll tok_form stks'
+>                         | tok_form <- tok ]
 >	case merge $ concat stkss of 		-- did this token kill stacks?
 >	  [] -> case toks of
 >		  []  -> return $ Right []	   -- ok if no more tokens
 >		  _:_ -> return $ Left (tok:toks)  -- not ok if some input left
 >	  ss -> doActions ss toks
 
->reduceAll :: (Int, GSymbol) -> [TStack Int] -> PM [(TStack Int, Int)]
->reduceAll tok [] = return []
->reduceAll itok@(i,tok) (stk:stks)
-> = case action (top stk) tok of
->    Accept	  -> reduceAll itok stks
->    Error	  -> -- trace ("Clash @ " ++ show (itok, top stk) ++ "\n")
->	             -- DISCARDS current stack - can't continue 
->                   -- should really do GC in BagMap for discarded items
->	             reduceAll itok stks
+>reduceAll 
+> :: [GSymbol] -> (Int, GSymbol) -> [FStack] -> PM [(FStack, Int)]
+>reduceAll _ tok [] = return []
+>reduceAll cyclic_names itok@(i,tok) (stk:stks)
+> = case action this_state tok of
+>    Accept       -> reduceAll [] itok stks
+>    Error        -> -- trace ("Clash @ " ++ show (itok, top stk) ++ "\n")
+>                    -- DISCARDS current stack - can't continue 
+>                    reduceAll [] itok stks
 >    Shift st rs -> do { ss <- redAll rs ; return $ (stk,st):ss } 
 >    Reduce rs   -> redAll rs
 > where 
->  redAll rs = do 
->		   let reds = concatMap (reduce stk) rs 
->		   stks' <- foldM (pack i) stks reds
->		   reduceAll itok stks' 
->  reduce stk (m,n,bf) = [ (bf fids,stk',m) | (fids,stk') <- pop n stk ]
+>  this_state = top stk
+>  redAll rs 
+>   = do 
+>	let reds = [ (bf fids,stk',m) 
+>	           | (m,n,bf) <- rs
+>	           , not (n == 0 && m `elem` cyclic_names)  -- remove done ones
+>	           , (fids,stk') <- pop n stk
+>	           ]
+>	           -- WARNING: incomplete if more than one Empty in a prod(!)
+>	           -- WARNING: can avoid by splitting emps/non-emps
+>	stks' <- foldM (pack i) stks reds	
+>	  -- can reduce the build/unbuild here...
+>	let new_cyclic = [ m | (m,0,_) <- rs
+>	                     , UEQ(this_state, goto this_state m)
+>	                     , m `notElem` cyclic_names ]
+>	reduceAll (cyclic_names ++ new_cyclic) itok stks' 
 
-
->shiftAll :: (Int, GSymbol) -> [(TStack Int, Int)] -> PM [TStack Int]
+>shiftAll :: (Int, GSymbol) -> [(FStack, Int)] -> PM [FStack]
 >shiftAll tok [] = return []
 >shiftAll (j,tok) stks
 > = do	
 >	let end = j + 1 
->	fid   <- addNode (FNode j end tok [])
->	stks' <- sequence [ do { nid <- getID ; return (push fid st nid end stk) }
+>	let key = (j,end,tok)
+>	newNode key
+>	stks' <- sequence [ do { nid <- getID ; return (push key st nid end stk) }
 >	                  | (stk,IBOX(st)) <- stks ]
 >	return $ merge stks'
 
 >pack 
-> :: Int -> [TStack Int] -> (Branch, TStack Int, GSymbol) -> PM [TStack Int]
+> :: Int -> [FStack] -> (Branch, FStack, GSymbol) -> PM [FStack]
 >-- {-## __A 2 __S LU(LLL)m __P $wpack 2 ##-};
 
 >pack e_i stks (fids,stk,m)
 > = do
 >	nid <- getID
+>	let s_i = endpoint stk
 >	let st = goto (top stk) m
->	case fnd (\s -> UEQ(top s,st) && popF s == stk) stks of
->	 Nothing     -> do let s_i = endpoint stk
->			   fid <- addNode (FNode s_i e_i m [fids])
->			   return $ insertStack (push fid st nid e_i stk) stks
->	 Just (s,ss) -> do let oid = head (vals s)
->			   FNode s_i _ _ ch <- chgS (decElem oid)
->			   fid <- addNode $ FNode s_i e_i m (fids:ch)
->		    	   return $ insertStack (push fid st nid e_i stk) ss
+>	if ULT(st, ILIT(0)) then return stks else
+>	 case fnd (\s -> UEQ(top s,st) && popF s == stk) stks of
+>	  Nothing     -- new stack in set
+>	              -> do -- let s_i = endpoint stk???
+>                           let key = (s_i,e_i,m)
+>                           addBranch key fids 
+>                           return $ insertStack (push key st nid e_i stk) stks
 
->addNode :: ForestNode -> PM ForestId
->addNode = chgS . addElem
+>         Just (s,ss) -- pack into an existing stack
+>                     -> do let oid = head (vals s)
+>                           --let key = (s_i,e_i,m)
+>                           let key = oid
+>                           addBranch key fids
+>                           return $ insertStack (push key st nid e_i stk) ss
+
+
+---
+record an entry
+ - expected: "i" will contain a token
+
+>newNode :: ForestId -> PM ()
+>newNode i
+> = chgS $ \f -> ((), addToFM f i [])
+
+---
+add a new branch
+ - due to packing, we check to see if a branch is already there
+ - if so, we avoid memory use
+ - TODO (pcc): try to measure if this is worth doing.
+
+>addBranch :: ForestId -> Branch -> PM ()
+>addBranch i b 
+> = do
+>	f <- useS id
+>	case lookupFM f i of 
+>	  Nothing               -> chgS $ \f -> ((), addToFM f i [b])
+>	  Just bs | b `elem` bs -> return ()
+>	          | otherwise   -> chgS $ \f -> ((), addToFM f i (b:bs))
+
+---
+only for use with nodes that exist
+
+>getBranches ::  ForestId -> PM [Branch]
+>getBranches i 
+> = useS $ \s -> lookupWithDefaultFM s no_such_node i
+>   where
+>	no_such_node = error $ "No such node in Forest: " ++ show i
+
 
 
 %----------------------------------------------------------------------------
 Monad
 TODO (pcc): combine the s/i, or use the modern libraries - might be faster?
+            but some other things are much, much, much more expensive! 
 
 >data ST s i a = MkST (s -> i -> (a,s,i))
 
@@ -261,91 +299,6 @@ TODO (pcc): combine the s/i, or use the modern libraries - might be faster?
 >getID :: ST s [Int] Int
 >getID = MkST $ \s (i:is) -> (i,s,is)
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Structure and operations for BagMap data type.
-  (c) University of Durham, Ben Medlock - 2001
-
-
-<> module BagMap ( BagMap
-<>		, initSM
-<>		, addElem
-<>		, decElem 
-<>		, indices
-<>		, assocs
-<>		, fnd )
-<> where
-
-
-%-----------------------------------------------------------------------------
-A BagMap is an injective functional relation.
-
-Thus, the following properties hold:
-- each element in the BagMap must occur only once 
-  (as it would do in a normal Set) 
-- each mapping must be unique 
-  (no two elements can be mapped to by the same value)
- 
-These two properties must be upheld under all operations.
-
-This implies the necessity to be able to apply an equality function
-to both indices and elements.
-
-See "A Tool for GLR Parsing in Haskell" (Ben Medlock, 2002) for more info.
-
-
-%-----------------------------------------------------------------------------
-
->data BagMap a = SM ![Int]	                -- list of unused indices
->		     !(FiniteMap a Element)    	-- the relation
-
->data Element 
-> = EL !Int    -- key assigned
->      !Int    -- reference count
->   deriving Show
-
-%-----------------------------------------------------------------------------
-Show instance
-
->instance Show a => Show (BagMap a) where
-> show (SM _ rel)
->  = show [ (i,v) | (v, EL i _) <- fmToList rel ]
-
-
-%-----------------------------------------------------------------------------
-Main operations
-
->initSM :: BagMap a
->initSM = SM [0..] emptyFM
-
->{-# SPECIALIZE addElem :: ForestNode -> Forest -> (Int, Forest) #-}
->addElem :: Ord a => a -> BagMap a -> (Int,BagMap a)
->addElem e sm@(SM is@(i:it) rel) 
-> = case lookupFM rel e of
->	Nothing       -> (i, SM it $ addToFM rel e (EL i 1))
->	Just (EL k j) -> (k, SM is $ addToFM rel e (EL k (j + 1)))
- 
----
-deletion of an item with an index
- - if the item has ref count 1, delete it entirely from the map
- - otherwise, decrement the count and return the map entry
-
->decElem :: Ord a => Int -> BagMap a -> (a,BagMap a)
->decElem i (SM is rel)
-> = case {-# SCC "decElem_find" #-}
->        foldFM (\v (EL k r) t -> if k == i then (v,r) else t) not_found rel of
->     (v,0) -> error $ "Zero ref count in map at: " ++ show i
->     (v,1) -> v <> SM (i:is) (delFromFM rel v)
->     (v,n) -> v <> SM is     (addToFM rel v (EL i (n-1)))
->   where
->	not_found = error $ "Not found in map:" ++ show i
-
->assocs :: Show a => BagMap a -> [(Int,a)]
->assocs (SM _ rel) = [ (i,v) | (v, EL i _) <- fmToList rel ]
-
-<> raw_map :: BagMap a -> [(Int,a)]
-<> raw_map (SM _ rel) = fmToList rel 
 
 
 %-----------------------------------------------------------------------------
@@ -376,47 +329,54 @@ TODO: put somewhere
 <>		, popF
 <>		, top
 <>		, vals
-<>		, height
 <>		, merge )
 <> where
 
 
 >data TStack a 
 > = TS { top      :: FAST_INT		-- state
->      , height   :: !Int	 	-- height
 >      , ts_id    :: FAST_INT		-- ID
 >      , endpoint :: !Int		-- end position of items in this stack
+>      , stoup    :: !(Maybe a)		-- temp holding place, for left rec.
 >      , ts_tail  :: ![(a,TStack a)]	-- [(element on arc , child)] 
 >      }
 
 >instance Show a => Show (TStack a) where
-> show ts = "St" ++ show (IBOX(top ts)) ++ show (ts_tail ts)
+> show ts = "St" ++ show (IBOX(top ts), stoup ts) ++ show (ts_tail ts)
 
 ---
 id uniquely identifies a stack
 
->instance Show a => Eq (TStack a) where
-> x == y = UEQ(ts_id x, ts_id y)
+>instance Eq (TStack a) where
+>      s1 == s2 = UEQ(ts_id s1, ts_id s2)
+
+<>instance Ord (TStack a) where
+<>      s1 `compare` s2 = IBOX(ts_id s1) `compare` IBOX(ts_id s2)
  
 ---
-for ordering stack lists by height, ordering the tallest one first
+Nothing special done for insertion, but check this against frequent merging
+on problem cases.
 
 >insertStack :: TStack a -> [TStack a] -> [TStack a]
->insertStack = insertBy tallestFirst
-
->tallestFirst :: TStack a -> TStack a -> Ordering
->tallestFirst x y = compare (height y) (height x)		-- note the reverse!
+>insertStack = (:)
 
 ---
 
 >initTS :: Int -> TStack a
->initTS IBOX(id) = TS ILIT(0) 1 id 0 []
+>initTS IBOX(id) = TS ILIT(0) id 0 Nothing []
 
->push :: a -> FAST_INT -> Int -> Int -> TStack a -> TStack a
->push x st IBOX(id) end stk = TS st (height stk + 1) id end [(x,stk)] 
+>--push :: a -> FAST_INT -> Int -> Int -> TStack a -> TStack a
+>push x@(s_i,e_i,m) st IBOX(id) end stk 
+> = TS st id end stoup [(x,stk)] 
+>   where
+>       stoup | s_i == e_i && UEQ(st, goto st m) = Just x	
+>             | otherwise                        = Nothing
+>	-- only fill stoup for cyclic states that don't consume input
 
 >pop :: Int -> TStack a -> [([a],TStack a)] 
 >pop 0 ts = [([],ts)]
+>pop 1 st@TS{stoup=Just x}
+> = pop 1 st{stoup=Nothing} ++ [ ([x],st) ] 
 >pop n ts = [ (xs ++ [x] , stk')
 >	    | (x,stk) <- ts_tail ts
 >	    , let rec = pop (n-1) stk
@@ -428,12 +388,19 @@ for ordering stack lists by height, ordering the tallest one first
 >vals :: TStack a -> [a]
 >vals ts = fst $ unzip $ ts_tail ts
 
->merge :: Show a => [TStack a] -> [TStack a]
+>--merge :: Show a => [TStack a] -> [TStack a]
 >merge stks
-> = [ TS st h id end ch
+> = [ TS st id end ss ch
 >   | IBOX(st) <- nub (map (\s -> IBOX(top s)) stks)
 >   , let ch  = concat  [ x | TS st2 _ _ _ x <- stks, UEQ(st,st2) ]
->	  h   = maximum [ x | TS st2 x _ _ _ <- stks, UEQ(st,st2) ] 
->	  (IBOX(id),end) = head [ (IBOX(i),e) | TS st2 _ i e _ <- stks, UEQ(st,st2) ]
+>	  ss  = mkss    [ s | TS st2 _ _ s _ <- stks, UEQ(st,st2) ]
+>	  (IBOX(id),end) = head [ (IBOX(i),e) | TS st2 i e _ _ <- stks, UEQ(st,st2) ]
+>	  -- reuse of id is ok, since merge discards old stacks
 >   ]	-- poss merge these, if multi pass is a cost (see profile!)
+>   where
+>        mkss s = case nub [ x | Just x <- s ] of
+>                   []  -> Nothing
+>                   [x] -> Just x
+>                   xs  -> error $ unlines $ ("Stoup merge: " ++ show xs) : map show stks
+
 

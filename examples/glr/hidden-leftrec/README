@@ -1,0 +1,29 @@
+
+Example of hidden left recursion
+
+The key point is that it has rules of form (X -> A X z), where A may match
+the empty string. The original GLR algorithm will loop on such productions, 
+since the reduction (A -> empty) is always possible. 
+
+The grammar is based on the one in Rekers[1], pointed out to me by Joost 
+Visser. 
+	Q -> A Q i | +
+	A -> 
+
+I have made it a bit more complex, adding a second layer of hidden recursion 
+and allowing jumps from the second layer to the first. 
+
+
+---
+
+"make run" to run the test case.
+
+For Hugs, load up Hugs.lhs - it doesn't produce graphs, and has easy entry 
+point "test :: String -> IO ()
+
+Don't forget to look at the graphs!
+
+---
+
+[1] J. Rekers, "Parser Generation for Interactive Environments", PhD thesis,
+	University of Amsterdam 1992.

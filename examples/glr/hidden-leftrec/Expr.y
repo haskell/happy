@@ -1,7 +1,6 @@
 {
 -- only list imports here
 import Char
-import Tree 
 }
 
 %tokentype { Token }
@@ -9,22 +8,16 @@ import Tree
 %lexer { lexer } { TokenEOF }
 
 %token
-	'*' 	{ Sym '*' }
 	'+' 	{ Sym '+' }
-	'-' 	{ Sym '-' }
-	'(' 	{ Sym '(' }
-	')' 	{ Sym ')' }
 	i 	{ AnInt $$ }
 
 %%
 
-E :: {Tree ForestId Int}
- : E '+' E	{ Plus  $1 $3 }
- | E '*' E	{ Times $1 $3 }
- | E '-' E     	{ Minus $1 $3 }
- | '(' E ')'    { Pars  $2 } 
- | i            { Const $1 }
-
+R : Q {}
+Q : B Q i {} | S {} 
+S : A S i {} | '+' {} | Q i {}
+B : {}
+A : {}
 
 
 {
@@ -32,7 +25,7 @@ E :: {Tree ForestId Int}
 data Token
 	= TokenEOF
 	| Sym Char
-	| AnInt {getInt :: Int}
+	| AnInt Int
   deriving (Show,Eq, Ord)
 
 

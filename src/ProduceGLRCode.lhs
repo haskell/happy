@@ -6,7 +6,7 @@ This module is designed as an extension to the Haskell parser generator Happy.
 (c) University of Durham, Paul Callaghan 2004
 	-- extension to semantic rules, and various optimisations
 
-$Id: ProduceGLRCode.lhs,v 1.3 2004/08/13 16:22:59 paulcc Exp $
+$Id: ProduceGLRCode.lhs,v 1.4 2004/09/07 15:53:46 paulcc Exp $
 
 %-----------------------------------------------------------------------------
 
@@ -133,6 +133,9 @@ the driver and data strs (large template).
 >	       , moduleHdr
 >	       , tomitaStr
 >      	       , userInfo
+>      	       , let position = 2 + length (moduleHdr ++ tomitaStr ++ userInfo)
+>      	         in "{-# LINE " ++ show position 
+>		                  ++ show (basename ++ "Data.hs") ++ "#-}"
 >      	       , mkGSymbols g 
 >      	       , sem_def
 >      	       , mkSemObjects options sem_info
@@ -197,11 +200,9 @@ that will be used for them in the GLR parser.
 >	| (i,tok) <- token_specs g ]	-- Tokens (terminals)
 >    ++ [(eof_term g,"HappyEOF")]	-- EOF symbol (internal terminal)
 >  where
->   mkMatch tok = unwords $ replace "$$" "_" (words tok)
-
-> replace :: String -> String -> [String] -> [String]
-> replace thisStr withStr inHere
->  = map (\wrd -> if wrd == thisStr then withStr else wrd) inHere
+>   mkMatch tok = case mapDollarDollar tok of 
+>                   Nothing -> tok
+>                   Just fn -> fn "_"
 
 > toGSym gsMap i 
 >  = case lookup i gsMap of
@@ -269,10 +270,11 @@ Do the same with the Happy goto table.
 
 > writeGotoTbl :: GotoTable -> [(Int,String)] -> GhcExts -> String
 > writeGotoTbl goTbl gsMap exts
->  = unlines [ mkLines ] 
+>  = concat $ mkLines ++ [errorLine]
 >  where
 >   name    = "goto"
->   mkLines = concat $ map mkState (assocs goTbl)
+>   errorLine = "goto _ _ = " ++ show_st exts (negate 1) 
+>   mkLines = map mkState (assocs goTbl) 
 >
 >   mkState (i,arr) 
 >    = unlines $ filter (/="") $ map (mkLine i) (assocs arr)
@@ -297,12 +299,28 @@ Create the 'GSymbol' ADT for the symbols in the grammar
 >	     , tok	
 >	     , unlines [ " | " ++ prefix ++ sym ++ " " | sym <- syms ] 
 >	     , der ]
+>    -- ++ eq_inst
+>    -- ++ ord_inst
 >  where
 >   dec  = "data GSymbol"
 >   eof  = " = HappyEOF" 
->   tok  = " | HappyTok " ++ token_type g ++ " "
+>   tok  = " | HappyTok {-!Int-} (" ++ token_type g ++ ")"
 >   der  = "   deriving (Show,Eq,Ord)"
 >   syms = [ token_names g ! i | i <- user_non_terminals g ]
+
+NOTES: 
+Was considering avoiding use of Eq/Ord over tokens, but this then means
+hand-coding the Eq/Ord classes since we're over-riding the usual order
+except in one case. 
+
+maybe possible to form a union and do some juggling, but this isn't that
+easy, eg input type of "action". 
+
+plus, issues about how token info gets into TreeDecode sem values - which
+might be tricky to arrange.
+<>   eq_inst = "instance Eq GSymbol where" 
+<>           : "\tHappyTok i _ == HappyTok j _ = i == j" 
+<>           : [ "\ti == j = fromEnum i == fromEnum j" 
 
 
 
@@ -321,8 +339,10 @@ Creating a type for storing semantic rules
  - also collects information on code structure and constructor names, for
    use in later stages.
 
-> mkGSemType :: Options -> Grammar 
->            -> (String, [(String, String, [Int], [((Int,Int), ([(Int,String)],String), [Int])])])
+> type SemInfo 
+>  = [(String, String, [Int], [((Int,Int), ([(Int,String)],String), [Int])])]
+
+> mkGSemType :: Options -> Grammar -> (String, SemInfo)
 > mkGSemType (TreeDecode,_,_) g 
 >  = (def, map snd syms)
 >  where
@@ -384,21 +404,25 @@ Creating a type for storing semantic rules
 >          					-- find unique types
 >          , let c_name = "Sem_" ++ show i
 >          , let code_info = [ j_code | (that, j_code) <- info, this == that ]
->          , let prod_info = [ ((i,k), ([],code), js) 
+>          , let prod_info = [ ((i,k), code, js) 
 >	                     | (k,code) <- zip [0..] (nub $ map snd code_info)
 >	                     , let js = [ j | (j,code2) <- code_info
 >                                           , code == code2 ]
+
 >                            ]
 >	     -- collect specific info about productions with this type
 >          ]
 
->   info = [ ((var_mask,i_ty), (j,code))
+>   info = [ ((var_mask,i_ty), (j,(ts_pats,code)))
 >          | i <- user_non_terminals g
 >          , let i_ty = typeOf i
 >          , j <- lookupProdsOfName g i  -- all prod numbers
->          , let (_,_,(code,dollar_vars),_) = lookupProdNo g j
+>          , let (_,ts,(code,dollar_vars),_) = lookupProdNo g j
 >          , let var_mask = map (\x -> x - 1) $ reverse dollar_vars
 >              -- have to reverse, since Happy-LR expects reverse stacked vars
+>	   , let ts_pats = [ (k,c) | k <- reverse dollar_vars
+>	                           , (t,c) <- token_specs g
+>	                           , ts !! (k - 1) == t ]
 >          ]
 
 >   typeOf n = case types g ! n of
@@ -411,21 +435,25 @@ Creates the appropriate semantic values.
  - for label-decode, these are the code, but abstracted over the child indices
  - for tree-decode, these are the code abstracted over the children's values
 
-> -- mkSemObjects :: info -> String 
+> mkSemObjects :: Options -> SemInfo -> String 
 > mkSemObjects (LabelDecode,filter_opt,_) sem_info
 >  = unlines 
 >  $ [ mkSemFn_Name ij ++ " ns@(" ++ pat ++ "happy_rest) = " 
 >	++ " Branch (" ++ c_name ++ " (" ++ code ++ ")) " ++ nodes filter_opt
 >    | (ty, c_name, mask, prod_info) <- sem_info
->    , (ij, (_,code), ps) <- prod_info 
+>    , (ij, (pats,code), ps) <- prod_info 
 >    , let pat | null mask = ""
->              | otherwise = concatMap (\v -> mkHappyVar (v+1) ":")
+>              | otherwise = concatMap (\v -> mk_tok_binder pats (v+1) ++ ":")
 >                                      [0..maximum mask]
+
 >    , let nodes NoFiltering  = "ns"
 >          nodes UseFiltering = "(" ++ foldr (\l -> mkHappyVar (l+1) . showChar ':') "[])" mask
 >    ]
 >    ++ 
 >    sem_placeholders sem_info
+>    where
+>	mk_tok_binder pats v 
+>	 = mk_binder (\s -> "(_,_,HappyTok (" ++ s ++ "))") pats v ""
 
 TODO: FILTERING: should really GC the dropped ones!
 
@@ -437,7 +465,7 @@ TODO: FILTERING: should really GC the dropped ones!
 >      ++ nodes filter_opt
 >    | (ty, c_name, mask, prod_info) <- sem_info
 >    , (ij, (pats,code), _) <- prod_info 
->    , let sem = foldr (\v t -> mk_binder pats (v + 1) ++ t) code mask
+>    , let sem = foldr (\v t -> mk_lambda pats (v + 1) "" ++ t) code mask
 >    , let pat | null mask = ""
 >              | otherwise = concatMap (\v -> mkHappyVar (v+1) ":")
 >                                      [0..maximum mask]
@@ -446,14 +474,16 @@ TODO: FILTERING: should really GC the dropped ones!
 >    ] 
 >    ++ 
 >    sem_placeholders sem_info
->    where 
->	mk_binder pats v
->	 = (\s -> "\\(" ++ s ++ ") -> ")
->        $ case lookup v pats of
->	      Nothing -> "happy_var_" ++ show v
->	      Just p  -> case mapDollarDollar p of 
->	                   Nothing -> p
->	                   Just fn -> fn ("happy_var_" ++ show v)
+
+> mk_lambda pats v
+>  = (\s -> "\\(" ++ s ++ ") -> ") . mk_binder id pats v
+
+> mk_binder wrap pats v
+>  = case lookup v pats of
+>	Nothing -> mkHappyVar v 
+>	Just p  -> case mapDollarDollar p of 
+>	              Nothing -> wrap . showString p
+>	              Just fn -> wrap . fn . mkHappyVar v 
 
 
 > mkSemFn_Name (i,j) = "semfn_" ++ show i ++ "_" ++ show j
@@ -487,14 +517,15 @@ only unpacked when needed. Using classes here to manage the unpacking.
 >	 : [ "\tdecode_b f (Branch (" ++ c_name ++ " s) (" ++ var_pat ++ ")) = "
 >                  ++ cross_prod "[s]" (nodes filter_opt)
 >	   | (c_name, vs) <- cs_vs 
->	   , let vars = [ "b_" ++ show n | n <- [0 .. end_var filter_opt vs] ]
+>	   , let vars = [ "b_" ++ show n | n <- var_range filter_opt vs ]
 >	   , let var_pat = foldr (\l r -> l ++ ":" ++ r) "_" vars
 >	   , let nodes NoFiltering  = [ vars !! n | n <- vs ]
 >	         nodes UseFiltering = vars 
 >	   ]
 
->	end_var NoFiltering  vs = maximum vs
->	end_var UseFiltering vs = length vs - 1
+>	var_range _            [] = []
+>	var_range NoFiltering  vs = [0 .. maximum vs ]
+>	var_range UseFiltering vs = [0 .. length vs - 1]
 
 >	cross_prod s [] = s
 >	cross_prod s (a:as) 

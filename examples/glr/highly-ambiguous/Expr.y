@@ -1,7 +1,6 @@
 {
 -- only list imports here
 import Char
-import Tree 
 }
 
 %tokentype { Token }
@@ -9,30 +8,26 @@ import Tree
 %lexer { lexer } { TokenEOF }
 
 %token
-	'*' 	{ Sym '*' }
-	'+' 	{ Sym '+' }
-	'-' 	{ Sym '-' }
-	'(' 	{ Sym '(' }
-	')' 	{ Sym ')' }
-	i 	{ AnInt $$ }
+	'b' 	{ Sym _ }
 
 %%
+-- grammar taken from
+--	"Generalised LR Parsing in Haskell"
+--	Joao Fernandes, Joao Saraiva, and Joost Visser
+--	Universidade do Minho, Braga, Portugal 
+--	submitted to AFP'04 summer school
+--	(Original source of grammar not identified by them)
 
-E :: {Tree ForestId Int}
- : E '+' E	{ Plus  $1 $3 }
- | E '*' E	{ Times $1 $3 }
- | E '-' E     	{ Minus $1 $3 }
- | '(' E ')'    { Pars  $2 } 
- | i            { Const $1 }
-
-
+S : T {}
+T : A 'b' {} | T T T {}
+A : T 'b' A A A {} | T T 'b' {} | {}
 
 {
 
 data Token
 	= TokenEOF
 	| Sym Char
-	| AnInt {getInt :: Int}
+	| AnInt Int
   deriving (Show,Eq, Ord)
 
 

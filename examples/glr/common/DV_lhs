@@ -13,18 +13,18 @@
  show_gsymbol (HappyTok x) = show x
  show_gsymbol t            = show t
 
- g2n (n, FNode s e x [])
+ g2n (n@(s,e,x), [])
   = mk_rhombus id (show_gsymbol x ++ show (s,e)) []
   where
    id = show n
 
- g2n (n, FNode s e x [Branch _ bs])
+ g2n (n@(s,e,x), [Branch _ bs])
   = mk_box id (show_gsymbol x ++ show (s,e)) 
   $ [ DaVinciTypes.R (NodeId $ show j) | j <- bs ]
   where
    id = show n
 
- g2n (n, FNode s e x bss)
+ g2n (n@(s,e,x), bss)
   = mk_circle id (show_gsymbol x ++ show (s,e)) 
   $ [ mk_box (id ++ "." ++ show i) (show_gsymbol x ++ show (s,e))
                 [ DaVinciTypes.R (NodeId $ show j)

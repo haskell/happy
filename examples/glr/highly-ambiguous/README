@@ -1,0 +1,26 @@
+
+Example of a highly ambiguous grammar
+
+It is a grammar taken from [1], although it is an example from the literature
+(the draft paper didn't mention which source). 
+
+There is an explosion of possibilities because many parse stacks need to be 
+kept active. Inputs of sizes above 15 will get very expensive to parse, with
+the current parser driver; but this seems no worse (if not better) than other 
+implementations that produce a packed forest.
+
+
+---
+
+"make run" to run the test case.
+
+For Hugs, load up Hugs.lhs - it doesn't produce graphs, and has easy entry 
+point "test :: String -> IO ()
+
+---
+
+[1]   "Generalised LR Parsing in Haskell"
+      Joao Fernandes, Joao Saraiva, and Joost Visser
+      Universidade do Minho, Braga, Portugal
+      submitted to AFP'04 summer school
+

@@ -20,6 +20,7 @@
 >						++ unlines (map show f)
 >	  ParseError ts f -> do 
 >			    putStrLn $ "Error: " ++ show ts
+>			    putStrLn $ "Error: " ++ unlines (map show f)
 
-> forest_lookup f i 
+> forest_lookup f i@(_,_,s)
 >  = fromJust $ lookup i f 

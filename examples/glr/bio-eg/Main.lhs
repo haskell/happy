@@ -29,28 +29,29 @@
 >			    toDV f_ 
 >			    --writeFile "full" (unlines $ map show f)
 
-> forest_lookup f i 
+> forest_lookup f i@(_,_,s)
 >  = case lookup i f of
->	Just (FNode _ _ s bs) -> (s,bs)
+>	Just bs -> (s,bs)
 
 ---
 remove intergenic things, to make graph small enough for drawing
  -- (prefer to do this with filtering in parser...)
 
 > filter_noise f
->  = [ (i, FNode s_i e_i l $ map filter_branch bs) 
->    | (i, FNode s_i e_i l bs) <- f, not_igs i ]
+>  = [ (i, map filter_branch bs) 
+>    | (i@(s_i,e_i,l), bs) <- f, not_igs i ]
 >    where
->	igs = listToFM [ (i,False) | (i, FNode _ _ G_Intergenic_noise _) <- f ]
+>	igs = listToFM [ (i,False) | i@(_,_,G_Intergenic_noise) <- map fst f ]
 >	not_igs = lookupWithDefaultFM igs True 
 >	filter_branch (Branch s ns) = Branch s [ n | n <- ns, not_igs n ]
 
+> trim_graph :: NodeMap -> RootNode -> NodeMap
 > trim_graph f r
 >  = [ (i,n) | (i,n) <- f, lookupWithDefaultFM wanted False i ]
 >    where
 >	table = listToFM f
 >	wanted = snd $ runState (follow r) emptyFM
->	follow :: Int -> State (FiniteMap Int Bool) ()
+>	follow :: ForestId -> State (FiniteMap ForestId Bool) ()
 >	follow i = do
 >	             visited <- get 
 >	             if lookupWithDefaultFM visited False i
@@ -59,7 +60,7 @@ remove intergenic things, to make graph small enough for drawing
 >	                      case lookupFM table i of 
 >	                        Nothing 
 >	                          -> error $ "bad node: " ++ show i
->	                        Just n@(FNode _ _ _ bs) 
+>	                        Just bs
 >	                          -> do
 >	                                modify (\s -> addToFM s i True)
 >	                                mapM_ follow $ concatMap b_nodes bs
