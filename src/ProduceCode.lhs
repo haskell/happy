@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.55 2001/12/05 15:02:55 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.56 2002/02/16 18:49:13 sof Exp $
 
 The code generator.
 
@@ -17,7 +17,17 @@ The code generator.
 > import ST
 > import List
 
-#if __GLASGOW_HASKELL__ > 408
+#if __GLASGOW_HASKELL__ >= 503
+
+> import Array              ( Array )
+> import Data.Array.ST      ( STUArray )
+> import Data.Array.Unboxed ( UArray )
+> import Data.Array.MArray
+> import Data.Array.IArray 
+> 
+> marray_indices a = Data.Array.MArray.indices a
+
+#elif __GLASGOW_HASKELL__ > 408
 
 > import MArray
 > import IArray

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.39 2002/02/12 15:29:48 simonmar Exp $
+$Id: Main.lhs,v 1.40 2002/02/16 18:49:12 sof Exp $
 
 The main driver.
 
@@ -30,7 +30,11 @@ The main driver.
 > import List( nub )
 
 #if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 400
+# if __GLASGOW_HASKELL__ >= 503
+> import GHC.Prim ( unsafeCoerce# )
+# else
 > import PrelGHC (unsafeCoerce#)
+# endif
 > import IOExts
 #define sCC _scc_
 > coerceParser = unsafeCoerce#
