@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: LALR.lhs,v 1.25 2004/09/10 06:52:36 paulcc Exp $
+$Id: LALR.lhs,v 1.26 2005/01/14 14:47:17 simonmar Exp $
 
 Generation of LALR parsing tables.
 
@@ -272,10 +272,17 @@ calcLookaheads pass.
 
 >     (s,p) = unzip (zipWith propLASet sets [0..])
 
->     propLASet (set,goto) i = (concat s, (i, concat p))
+>     propLASet (set,goto) i = (start_spont ++ concat s, (i, concat p))
 >	where
 
 >	  (s,p) = unzip (map propLAItem (setToList set))
+
+>	  -- spontaneous EOF lookaheads for each start state & rule...
+>	  start_info = starts gram	
+>	  start_spont	= [ (start, (start,0), 
+>			     singletonSet (startLookahead gram partial))
+>			  | (start, (_,_,_,partial)) <- 
+>				zip [ 0 .. length start_info - 1] start_info]
 
 >	  propLAItem item@(rule,dot) = (spontaneous, propagated)
 >	    where
@@ -300,6 +307,14 @@ calcLookaheads pass.
 >				  Nothing -> error "propagated"
 >				  Just k  -> [(item, k, (rule, dot+1))])
 >			| (rule,dot,ts) <- j, dummyTok `elem` (setToList ts) ]
+
+The lookahead for a start rule depends on whether it was declared
+with %name or %partial: a %name parser is assumed to parse the whole
+input, ending with EOF, whereas a %partial parser may parse only a
+part of the input: it accepts when the error token is found.
+
+> startLookahead :: Grammar -> Bool -> Name
+> startLookahead gram partial = if partial then errorTok else eof_term gram
 
 -----------------------------------------------------------------------------
 Calculate lookaheads
@@ -484,7 +499,6 @@ Generate the action table
 >   where
 >	Grammar { first_term = fst_term,
 >		  terminals = terms,
->		  eof_term = eof,
 >		  starts = starts,
 >       	  priorities = prios } = g
 
@@ -508,7 +522,9 @@ Generate the action table
 >                                       Nothing -> [ (t,LR'Shift j{-'-} No) ]
 >                                       Just p  -> [ (t,LR'Shift j{-'-} p) ]
 >               Nothing
->		   | isStartRule rule -> [ (eof,LR'Accept{-'-}) ]
+>		   | isStartRule rule
+>		   -> let (_,_,_,partial) = starts !! rule in
+>		      [ (startLookahead g partial, LR'Accept{-'-}) ]
 >                  | otherwise   
 >		   -> case lookupProdNo g rule of
 >                          (_,_,_,p) -> zip la (repeat (LR'Reduce rule p))

@@ -2884,6 +2884,32 @@ any projection function.</para>
 	must all specify explicit non-terminals.</para>
       </sect2>
 
+      <sect2 id="sec-partial-parsers">
+	<title>Partial Parsers</title>
+
+<programlisting>
+%partial &lt;Haskell identifier&gt; [ &lt;non-terminal&gt; ]
+...
+</programlisting>
+	<indexterm>
+	  <primary><literal>%partial</literal></primary>
+	</indexterm>
+
+	<para>The <literal>%partial</literal> directive can be used instead of
+	  <literal>%name</literal>.  It indicates that the generated parser
+	  should be able to parse an initial portion of the input.  In
+	  contrast, a parser specified with <literal>%name</literal> will only
+	  parse the entire input.</para>
+
+	<para>A parser specified with <literal>%partial</literal> will stop
+	  parsing and return a result as soon as there exists a complete parse,
+	  and no more of the input can be parsed.  It does this by accepting
+	  the parse if it is followed by the <literal>error</literal> token,
+	  rather than insisting that the parse is followed by the
+	  end of the token stream (or the <literal>eof</literal> token in the
+	  case of a <literal>%lexer</literal> parser).</para>
+      </sect2>
+
       <sect2 id="sec-monad-decl">
 	<title>Monad Directive</title>
 

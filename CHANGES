@@ -5,6 +5,8 @@ Changes from version 1.14 to 1.15
 	* the list of tokens passed to happyError now includes the current
           token (not %lexer).
 	* added support for ambiguous grammars via Generalized LR parsing
+	* added %partial to indicate a parser that can return a result
+	  before EOF is reached.
 
 -----------------------------------------------------------------------------
 Changes from version 1.13 to 1.14

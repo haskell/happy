@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: AbsSyn.lhs,v 1.11 2004/12/13 12:19:39 simonmar Exp $
+$Id: AbsSyn.lhs,v 1.12 2005/01/14 14:47:16 simonmar Exp $
 
 Abstract syntax for grammar files.
 
@@ -36,7 +36,7 @@ generate some error messages.
 > data Directive a
 >       = TokenType     String              	-- %tokentype
 >       | TokenSpec     [(a,String)]         	-- %token
->       | TokenName     String (Maybe String)  	-- %name
+>       | TokenName     String (Maybe String) Bool -- %name/%partial (True <=> %partial)
 >       | TokenLexer    String String        	-- %lexer
 >       | TokenImportedIdentity					-- %importedidentity
 >	| TokenMonad    String String String String -- %monad
@@ -57,7 +57,7 @@ generate some error messages.
 >		[]  -> error "no token type given"
 >		_   -> error "multiple token types"
 
-> getParserNames ds = [ t | t@(TokenName _ _) <- ds ]
+> getParserNames ds = [ t | t@(TokenName _ _ _) <- ds ]
 
 > getLexer ds 
 > 	= case [ (a,b) | (TokenLexer a b) <- ds ] of

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Grammar.lhs,v 1.23 2004/12/13 12:19:39 simonmar Exp $
+$Id: Grammar.lhs,v 1.24 2005/01/14 14:47:16 simonmar Exp $
 
 The Grammar data type.
 
@@ -25,6 +25,7 @@ Here is our mid-section datatype
 
 > import Array
 > import Char
+> import List
 
 #ifdef DEBUG
 
@@ -44,7 +45,7 @@ Here is our mid-section datatype
 >               token_specs 	  :: [(Name,String)],
 >               terminals 	  :: [Name],
 >               non_terminals 	  :: [Name],
->		starts		  :: [(String,Name,Name)],
+>		starts		  :: [(String,Name,Name,Bool)],
 >		types 		  :: Array Int (Maybe String),
 >               token_names 	  :: Array Int String,
 >		first_nonterm	  :: Name,
@@ -52,7 +53,7 @@ Here is our mid-section datatype
 >               eof_term	  :: Name,
 >               priorities        :: [(Name,Priority)],
 >		token_type	  :: String,
->		imported_identity		  :: Bool,
+>		imported_identity :: Bool,
 >		monad		  :: (Bool,String,String,String,String),
 >		lexer		  :: Maybe (String,String),
 >               expect            :: Maybe Int
@@ -211,10 +212,10 @@ This bit is a real mess, mainly because of the error message support.
 >       terminal_names = [ first_t .. last_t ]
 
 >	starts	    = case getParserNames dirs of
->			[] -> [TokenName "happyParse" Nothing]
+>			[] -> [TokenName "happyParse" Nothing False]
 >			ns -> ns
 >
->	start_strs  = [ startName++'_':p  | (TokenName p _) <- starts ]
+>	start_strs  = [ startName++'_':p  | (TokenName p _ _) <- starts ]
 
 Build up a mapping from name values to strings.
 
@@ -236,14 +237,15 @@ Build up a mapping from name values to strings.
 Start symbols...
 
 >		-- default start token is the first non-terminal in the grammar
->	lookupStart (TokenName s Nothing)  = Succeeded first_nt
->	lookupStart (TokenName s (Just n)) = mapToName n
+>	lookupStart (TokenName s Nothing  _) = Succeeded first_nt
+>	lookupStart (TokenName s (Just n) _) = mapToName n
 >	in
 
 >	parEs (map lookupStart starts)	`thenE` \ start_toks ->
 
 >	let
->	parser_names = [ s | TokenName s _ <- starts ]
+>	parser_names   = [ s | TokenName s _ _ <- starts ]
+>	start_partials = [ b | TokenName _ _ b <- starts ]
 >	start_prods = zipWith (\nm tok -> (nm, [tok], ("no code",[]), No))
 >			 start_names start_toks
 
@@ -331,7 +333,8 @@ Get the token specs in terms of Names.
 >               terminals	  = errorTok : terminal_names,
 >               non_terminals	  = start_names ++ nonterm_names,
 >				  	-- INCLUDES the %start tokens
->		starts		  = zip3 parser_names start_names start_toks,
+>		starts		  = zip4 parser_names start_names start_toks
+>					start_partials,
 >		types		  = tys,
 >               token_names	  = env_array,
 >		first_nonterm	  = first_nt,

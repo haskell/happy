@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Lexer.lhs,v 1.21 2004/12/13 12:19:39 simonmar Exp $
+$Id: Lexer.lhs,v 1.22 2005/01/14 14:47:18 simonmar Exp $
 
 The lexer.
 
@@ -41,6 +41,7 @@ The lexer.
 >       | TokSpecId_TokenType   -- %tokentype
 >       | TokSpecId_Token       -- %token
 >       | TokSpecId_Name        -- %name
+>       | TokSpecId_Partial     -- %partial
 >       | TokSpecId_Lexer       -- %lexer
 >       | TokSpecId_ImportedIdentity -- %importedidentity
 >       | TokSpecId_Monad       -- %monad
@@ -104,6 +105,8 @@ followed by a special identifier.
 > 		cont (TokenKW TokSpecId_Token) rest
 > 	'n':'a':'m':'e':rest ->
 > 		cont (TokenKW TokSpecId_Name) rest
+> 	'p':'a':'r':'t':'i':'a':'l':rest ->
+> 		cont (TokenKW TokSpecId_Partial) rest
 > 	'i':'m':'p':'o':'r':'t':'e':'d':'i':'d':'e':'n':'t':'i':'t':'y':rest ->
 > 		cont (TokenKW TokSpecId_ImportedIdentity) rest
 > 	'm':'o':'n':'a':'d':rest ->

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Info.lhs,v 1.13 2004/10/28 00:32:06 paulcc Exp $
+$Id: Info.lhs,v 1.14 2005/01/14 14:47:17 simonmar Exp $
 
 Generating info files.
 
@@ -187,8 +187,8 @@ Produce a file of parser information, useful for debugging the parser.
 >   	= str "\t"
 >	. showJName 15 nt
 >	. (if (length nt_rules == 1)
->		then str "rule  "
->		else str "rules ")
+>		then str " rule  "
+>		else str " rules ")
 >	. foldr1 (\a b -> a . str ", " . b) nt_rules
 >	where nt_rules = map shows (lookupProdNos nt)
 

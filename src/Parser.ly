@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Parser.ly,v 1.13 2004/12/13 12:19:41 simonmar Exp $
+$Id: Parser.ly,v 1.14 2005/01/14 14:47:20 simonmar Exp $
 
 The parser.
 
@@ -20,6 +20,7 @@ The parser.
 >	spec_tokentype	{ TokenKW      TokSpecId_TokenType }
 >	spec_token	{ TokenKW      TokSpecId_Token }
 >	spec_name	{ TokenKW      TokSpecId_Name }
+>	spec_partial	{ TokenKW      TokSpecId_Partial }
 >	spec_lexer	{ TokenKW      TokSpecId_Lexer }
 >	spec_imported_identity	{ TokenKW      TokSpecId_ImportedIdentity }
 >	spec_monad	{ TokenKW      TokSpecId_Monad }
@@ -74,7 +75,8 @@ The parser.
 > tokInfo :: { Directive String } 
 >	: spec_tokentype code		{ TokenType $2 }
 >	| spec_token tokenSpecs		{ TokenSpec $2 }
->	| spec_name id optStart		{ TokenName $2 $3 }
+>	| spec_name id optStart		{ TokenName $2 $3 False }
+>	| spec_partial id optStart	{ TokenName $2 $3 True  }
 >	| spec_imported_identity	{ TokenImportedIdentity }
 >	| spec_lexer code code		{ TokenLexer $2 $3 }
 >	| spec_monad code		{ TokenMonad "()" $2 ">>=" "return" }

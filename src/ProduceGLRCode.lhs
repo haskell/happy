@@ -6,7 +6,7 @@ This module is designed as an extension to the Haskell parser generator Happy.
 (c) University of Durham, Paul Callaghan 2004
 	-- extension to semantic rules, and various optimisations
 
-$Id: ProduceGLRCode.lhs,v 1.14 2004/12/13 12:19:42 simonmar Exp $
+$Id: ProduceGLRCode.lhs,v 1.15 2005/01/14 14:47:21 simonmar Exp $
 
 %-----------------------------------------------------------------------------
 
@@ -103,7 +103,7 @@ Main exported function
 >  = do
 >     let basename  = takeWhile (/='.') outfilename
 >     let tbls  = (action,goto)
->     (parseName,_,_) <- case starts g of
+>     (parseName,_,_,_) <- case starts g of
 >                          [s] -> return s
 >                          s:_ -> do 
 >                                    putStrLn "GLR-Happy doesn't support multiple start points (yet)"
@@ -218,7 +218,7 @@ the driver and data strs (large template).
 >	       , "top_symbol = " ++ prefix ++ start_prod
 >	       , unlines post
 >	       ]
->   start_prod = token_names g ! (let (_,_,i) = head $ starts g in i)
+>   start_prod = token_names g ! (let (_,_,i,_) = head $ starts g in i)
 >   use_filtering = case options of (_, UseFiltering,_) -> True
 >                                   _                   -> False
 
@@ -694,7 +694,7 @@ remove Happy-generated start symbols.
 >  = non_terminals g \\ start_productions g
 
 > start_productions :: Grammar -> [Name]
-> start_productions g = [ s | (_,s,_) <- starts g ]
+> start_productions g = [ s | (_,s,_,_) <- starts g ]
 
 
 ---

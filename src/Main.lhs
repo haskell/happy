@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.55 2004/10/23 21:20:40 desrt Exp $
+$Id: Main.lhs,v 1.56 2005/01/14 14:47:18 simonmar Exp $
 
 The main driver.
 
@@ -22,7 +22,6 @@ GLR amendments (c) University of Durham, Ben Medlock 2001
 > import Info (genInfoFile)
 > import Target (Target(..))
 > import GetOpt
-> import Set
 > import Monad ( liftM )
 > import System
 > import Char
@@ -93,15 +92,9 @@ Mangle the syntax into something useful.
 >		Failed s -> die (unlines s ++ "\n");
 >		Succeeded g -> 
 
->	let gram@(Grammar { token_specs = token_specs
->			  , starts = starts
->			  , eof_term = eof
->			  })  = g
->       in
-
 #ifdef DEBUG
 
->       optPrint cli DumpMangle (putStr (show gram)) >>
+>       optPrint cli DumpMangle (putStr (show g)) >>
 
 #endif
 
@@ -110,11 +103,7 @@ Mangle the syntax into something useful.
 >	    closures    = sCC "Closures" (precalcClosure0 g)
 >           sets  	= sCC "LR0 Sets" (genLR0items g closures)
 >	    lainfo@(spont,prop) = sCC "Prop" (propLookaheads g sets first)
->		-- spontaneous EOF lookaheads for each start state & rule...
->	    start_spont	= [ (start, (start,0), singletonSet eof) 
->			  | start <- [ 0 .. length starts - 1] ]
->	    la 		= sCC "Calc" (calcLookaheads (length sets)
->					(start_spont ++ spont) prop)
+>	    la 		= sCC "Calc" (calcLookaheads (length sets) spont prop)
 >	    items2	= sCC "Merge" (mergeLookaheadInfo la sets)
 >           goto   	= sCC "Goto" (genGotoTable g sets)
 >           action 	= sCC "Action" (genActionTable g first items2)
@@ -145,7 +134,7 @@ Report any unused rules and terminals
 
 Report any conflicts in the grammar.
 
->       (case expect gram of
+>       (case expect g of
 >          Just n | n == sr && rr == 0 -> return ()
 >          Just n | rr > 0 -> 
 >                  die ("The grammar has reduce/reduce conflicts.\n" ++
@@ -175,7 +164,7 @@ Print out the info file.
 >			g
 >			action
 >			goto
->			token_specs
+>			(token_specs g)
 >			conflictArray
 >			fl_name
 >			unused_rules

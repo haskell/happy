@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.65 2004/12/13 12:19:41 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.66 2005/01/14 14:47:20 simonmar Exp $
 
 The code generator.
 
@@ -760,7 +760,7 @@ MonadStuff:
 >    produceEntries
 >	= interleave "\n\n" (map produceEntry (zip starts [0..]))
 
->    produceEntry ((name, start_nonterm, accept_nonterm), no)
+>    produceEntry ((name, start_nonterm, accept_nonterm, _partial), no)
 >	= str name 
 >	. maybe_tks
 >	. str " = "

@@ -1,4 +1,4 @@
--- $Id: GenericTemplate.hs,v 1.25 2004/12/03 09:55:33 simonmar Exp $
+-- $Id: GenericTemplate.hs,v 1.26 2005/01/14 14:47:22 simonmar Exp $
 
 #ifdef HAPPY_GHC
 #define ILIT(n) n#
@@ -77,9 +77,13 @@ happyParse start_state = happyNewToken start_state notHappyAtAll notHappyAtAll
 -----------------------------------------------------------------------------
 -- Accepting the parse
 
-happyAccept j tk st sts (HappyStk ans _) = IF_GHC(happyTcHack j 
-				                  IF_ARRAYS(happyTcHack st))
-					   (happyReturn1 ans)
+-- If the current token is ERROR_TOK, it means we've just accepted a partial
+-- parse (a %partial parser).  We must ignore the saved token on the top of
+-- the stack in this case.
+happyAccept ERROR_TOK tk st sts (_ `HappyStk` ans `HappyStk` _) =
+	happyReturn1 ans
+happyAccept j tk st sts (HappyStk ans _) = 
+	IF_GHC(happyTcHack j IF_ARRAYS(happyTcHack st)) (happyReturn1 ans)
 
 -----------------------------------------------------------------------------
 -- Arrays only: do the next action
