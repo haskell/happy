@@ -1,10 +1,10 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.3 1997/10/03 16:27:46 andre Exp $
+# $Id: Makefile,v 1.4 1997/10/07 15:01:31 simonm Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
 
-SUBDIRS = src # ToDo: doc templates
+SUBDIRS = src templates # ToDo: doc
 
 include $(TOP)/mk/target.mk
 
