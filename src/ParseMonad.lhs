@@ -1,9 +1,9 @@
 -----------------------------------------------------------------------------
-$Id: ParseMonad.lhs,v 1.3 2000/12/03 16:53:53 simonmar Exp $
+$Id: ParseMonad.lhs,v 1.4 2001/04/27 10:10:23 simonmar Exp $
 
 The parser monad.
 
-(c) 2000 Simon Marlow
+(c) 2001 Simon Marlow
 -----------------------------------------------------------------------------
 
 > module ParseMonad where

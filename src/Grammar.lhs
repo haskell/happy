@@ -1,9 +1,9 @@
 -----------------------------------------------------------------------------
-$Id: Grammar.lhs,v 1.17 2000/12/20 15:23:56 simonmar Exp $
+$Id: Grammar.lhs,v 1.18 2001/04/27 10:10:23 simonmar Exp $
 
 The Grammar data type.
 
-(c) 1993-2000 Andy Gill, Simon Marlow
+(c) 1993-2001 Andy Gill, Simon Marlow
 -----------------------------------------------------------------------------
 
 Here is our mid-section datatype

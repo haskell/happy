@@ -1,9 +1,9 @@
 -----------------------------------------------------------------------------
-$Id: AbsSyn.lhs,v 1.8 2000/12/03 16:53:53 simonmar Exp $
+$Id: AbsSyn.lhs,v 1.9 2001/04/27 10:10:23 simonmar Exp $
 
 Abstract syntax for grammar files.
 
-(c) 1993-2000 Andy Gill, Simon Marlow
+(c) 1993-2001 Andy Gill, Simon Marlow
 -----------------------------------------------------------------------------
 
 Here is the abstract syntax of the language we parse.
