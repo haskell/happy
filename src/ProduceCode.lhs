@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.17 1999/03/12 16:07:49 simonm Exp $
+$Id: ProduceCode.lhs,v 1.18 1999/03/27 12:47:04 sof Exp $
 
 The code generator.
 
@@ -238,7 +238,7 @@ where n is the non-terminal number, and m is the rule number.
 >				then mkHappyTerminalVar n t
 >				else str "(HappyTerminal " 
 >				   . mkHappyTerminalVar n t
->				   . char '}'
+>				   . char ')'
 >		
 >		tokLets 
 >		   | coerce && not (null toks) = 
