@@ -1,4 +1,4 @@
--- $Id: HappyTemplate-1_2,v 1.1 1997/09/01 09:35:47 simonm Exp $
+-- $Id: HappyTemplate-1_2,v 1.2 1997/12/04 15:07:22 simonm Exp $
 
 {-
 	The stack is in the following order throughout the parse:
@@ -84,8 +84,10 @@ happyReduce k i fn (-1) tk _ (st@(HappyState action):sts) stk
 happyReduce k i fn j tk st sts stk = action i j tk st' sts' (fn stk)
        where sts'@(st'@(HappyState action):_) = drop (k::Int) (st:sts)
 
-happyMonadReduce k i c fn (-1) tk _ (st@(HappyState action):sts) stk
-     = action (-1) (-1) tk st sts stk
+happyMonadReduce k i c fn (-1) tk _ sts stk
+      = case sts of
+	     (st@(HappyState action):sts) -> action (-1) (-1) tk st sts stk
+	     [] -> happyError
 happyMonadReduce k i c fn j tk st sts stk =
 	happyThen (fn stk) (\r -> action i j tk st' sts' (c r : stk'))
        where sts'@(st'@(HappyState action):_) = drop (k::Int) (st:sts)
