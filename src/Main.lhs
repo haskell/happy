@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.41 2002/05/16 15:30:45 simonmar Exp $
+$Id: Main.lhs,v 1.42 2002/05/17 10:47:16 simonmar Exp $
 
 The main driver.
 
@@ -21,7 +21,6 @@ The main driver.
 > import Target (Target(..))
 > import GetOpt
 > import Set
-> import Maybe (isJust)
 
 > import System
 > import Char
@@ -387,7 +386,8 @@ GHC version-dependent stuff in it.
 
 > optsToInject :: Target -> [CLIFlags] -> String
 > optsToInject _ cli 
->	| OptGhcTarget `elem` cli = "{-# OPTIONS -fglasgow-exts -cpp #-}\n"
+>	| OptGhcTarget `elem` cli
+>	|| OptOldGhcTarget `elem` cli = "{-# OPTIONS -fglasgow-exts -cpp #-}\n"
 >	| otherwise               = ""
 
 > importsToInject :: Target -> [CLIFlags] -> String
@@ -439,13 +439,13 @@ Extract various command-line options.
 
 > getCoerce target cli
 >	= if OptUseCoercions `elem` cli 
->	     then if OptGhcTarget `elem` cli
+>	     then if OptGhcTarget `elem` cli || OptOldGhcTarget `elem` cli
 >			then return True
 >			else dieHappy "-c/--coerce may only be used \ 
 >				      \in conjunction with -g/--ghc\n"
 >	     else return False
 
-> getGhc cli = return (OptGhcTarget `elem` cli)
+> getGhc cli = return (OptGhcTarget `elem` cli || OptOldGhcTarget `elem` cli)
 
 > getStrict cli = return (OptStrict `elem` cli)
 
