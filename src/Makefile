@@ -1,15 +1,10 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.9 1997/09/08 09:26:49 simonm Exp $
+# $Id: Makefile,v 1.10 1997/09/08 12:40:33 simonm Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
 
 HAPPY    = happy-new
-
-# must compile with GHC 2.xx
-ifeq ($(Ghc2_0),NO)
-HC       = ../../ghc/driver/ghc
-endif
 
 MKDEPENDHS      := $(HC)
 
