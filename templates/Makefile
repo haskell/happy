@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.8 2001/02/17 17:29:16 sebc Exp $
+# $Id: Makefile,v 1.9 2001/05/08 08:28:40 simonmar Exp $
 
-TOP = ../..
+TOP = ..
 include $(TOP)/mk/boilerplate.mk
 
 TEMPLATES = \
