@@ -1,0 +1,37 @@
+		       Alex: A Lexical Analyser Generator
+
+			       Version 1.2
+
+			   20th November, 2002
+
+Alex is a Lex-like package for generating Haskell scanners.  For
+complete documentation, see the doc directory.
+
+This version is the first phase of integration with Happy, the Haskell
+parser generator.  There is no difference in the code base, but the
+Makefiles try to bring it in line with fptools.  If you have any
+questions or comments about the new build system, email:
+
+Isaac Jones,
+ijones@syntaxpolice.org
+
+Alex is now covered by a BSD-Style licence; see the licence file in the `doc'
+directory for details.
+
+Version 1.1 in April 2000 made some minor changes to bring it into
+line with Haskell 98.
+
+The sources are in the the `src' directory and the documentation in the `doc'
+directory; the examples given in the documentation have been placed in the
+`examples'.
+
+The source code in the `src' and `examples' directories is intended for
+a Haskell 98 compiler: it has been tested with Hugs 98 (February 2000) and
+GHC 4.06.
+
+Please report any bugs or comments to the email addresses given below.
+
+Share and enjoy,
+
+Chris Dornan:  cdornan@arm.com
+Isaac Jones:   ijones@syntaxpolice.org
