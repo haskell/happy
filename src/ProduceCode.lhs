@@ -1,9 +1,9 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.47 2001/01/17 17:57:53 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.48 2001/02/09 22:26:49 simonmar Exp $
 
 The code generator.
 
-(c) 1993-2000 Andy Gill, Simon Marlow
+(c) 1993-2001 Andy Gill, Simon Marlow
 -----------------------------------------------------------------------------
 
 > module ProduceCode (produceParser, str, interleave, interleave') where
@@ -15,7 +15,6 @@ The code generator.
 > import Maybe 			( isJust, isNothing )
 > import Char
 > import ST
-> import IOExts
 > import List
 
 #if __GLASGOW_HASKELL__ > 408
@@ -722,7 +721,7 @@ MonadStuff:
 >		     then str "\\x -> happyReturn (happyOut" 
 >			. shows accept_nonterm . str " x)"
 >		     else str "\\x -> case x of {HappyAbsSyn" 
->		        . shows accept_nonterm 
+>		        . shows (nt_types_index ! accept_nonterm)
 >		        . str " z -> happyReturn z; _other -> notHappyAtAll }"
 >		 )
 >     where
