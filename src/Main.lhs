@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.10 1997/10/02 21:26:36 reid Exp $
+$Id: Main.lhs,v 1.11 1997/10/03 15:15:40 simonm Exp $
 
 The main driver.
 
@@ -403,6 +403,8 @@ Extract various command-line options.
 >   "syntax: happy [-v] [-o | --outfile <file>] [--info [<file>]]",
 >   "		   [-1.2] [--template <dir>]",
 >   "              [-g | --ghc] [-a | --array] <file>\n" ]
+
+> template_dir = "/usr/local/lib/happy"
 
 -----------------------------------------------------------------------------
 
