@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Set.lhs,v 1.3 1997/07/16 13:32:39 simonm Exp $
+$Id: Set.lhs,v 1.4 1997/08/25 12:30:18 simonm Exp $
 
 A set ADT.
 
@@ -12,7 +12,7 @@ License.
 > module Set (
 >        Set,
 >        mkSet, setToList, emptySet, singletonSet,
->        union, unionManySets,
+>        union, union_Int, unionManySets,
 >        elementOf, isEmptySet,
 >        sizeOfSet, mapSet, concatSet, concatMapSet, filterSet,
 >	 subtractSet
@@ -83,6 +83,18 @@ This is where we order the list and remove duplicates.
 
 > union :: (Ord a) => Set a -> Set a -> Set a
 > union a b = merge_with_nuke (<) (==) a b
+
+> merge_with_nuke_Int []     ys      = ys
+> merge_with_nuke_Int xs     []      = xs
+> merge_with_nuke_Int (x:xs) (y:ys)
+>        | x < y     = x : merge_with_nuke_Int xs (y:ys)
+>	 | x == y    = x : merge_with_nuke_Int xs ys
+>        | otherwise = y : merge_with_nuke_Int (x:xs) ys
+
+- tmp: poor man's specialisation
+
+> union_Int :: Set Int -> Set Int -> Set Int
+> union_Int a b = merge_with_nuke_Int a b
 
 -- and, union of a whole list of sets:
 
