@@ -3,6 +3,10 @@ The Happy License
 
 Copyright 2001, Simon Marlow and Andy Gill.  All rights reserved.
 
+Extensions to implement Tomita's Generalized LR parsing:
+  Copyright 2004, University of Durham, Paul Callaghan and Ben Medlock.
+  All rights reserved.
+
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 

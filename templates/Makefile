@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.11 2002/09/24 14:26:04 sof Exp $
+# $Id: Makefile,v 1.12 2004/08/11 15:39:32 paulcc Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -14,8 +14,12 @@ TEMPLATES = \
 	HappyTemplate-arrays-debug \
 	HappyTemplate-arrays-ghc-debug \
 	HappyTemplate-arrays-coerce-debug \
+	GLR_Base \
+	GLR_Lib \
+	GLR_Lib-ghc \
 
 GENERIC_TEMPLATE = GenericTemplate.hs
+GLR_TEMPLATE = GLR_Lib.lhs
 
 INSTALL_DATAS = $(TEMPLATES)
 
@@ -59,6 +63,15 @@ HappyTemplate-arrays-ghc-debug.hspp : $(GENERIC_TEMPLATE)
 
 HappyTemplate-arrays-coerce-debug.hspp : $(GENERIC_TEMPLATE)
 	$(CPP_IT) $@ -DHAPPY_GHC -DHAPPY_ARRAY -DHAPPY_COERCE -DHAPPY_DEBUG $(GENERIC_TEMPLATE)
+
+GLR_Base.hspp : GLR_Base.lhs
+	$(CPP_IT) $@ GLR_Base.lhs
+
+GLR_Lib.hspp : $(GLR_TEMPLATE)
+	$(CPP_IT) $@ $(GLR_TEMPLATE)
+
+GLR_Lib-ghc.hspp : $(GLR_TEMPLATE)
+	$(CPP_IT) $@ -DHAPPY_GHC $(GLR_TEMPLATE)
 
 # hack to turn cpp-style '# 27 "GenericTemplate.hs"' into 
 # '{-# LINE 27 "GenericTemplate.hs" #-}'.

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.59 2002/10/24 15:11:25 sof Exp $
+$Id: ProduceCode.lhs,v 1.60 2004/08/11 15:39:31 paulcc Exp $
 
 The code generator.
 
@@ -11,6 +11,7 @@ The code generator.
 > import Version		( version )
 > import Grammar
 > import Target			( Target(..) )
+> import GenUtils		( mapDollarDollar )
 
 > import Maybe 			( isJust, isNothing )
 > import Char
@@ -1123,25 +1124,6 @@ slot is free or not.
 
 > maybestr (Just s)	= str s
 > maybestr _		= id
-
-Replace $$ with an arbitrary string, being careful to avoid ".." and '.'.
-
-> mapDollarDollar :: String -> Maybe (String -> String)
-> mapDollarDollar code = go code ""
->   where go code acc =
->           case code of
->		[] -> Nothing
->	
->		'"'  :r    -> case reads code :: [(String,String)] of
->				 []      -> go r ('"':acc)
->				 (s,r):_ -> go r (reverse (show s) ++ acc)
->		a:'\'' :r | isAlphaNum a -> go r ('\'':a:acc)
->		'\'' :r    -> case reads code :: [(Char,String)] of
->				 []      -> go r ('\'':acc)
->				 (c,r):_ -> go r (reverse (show c) ++ acc)
->		'\\':'$':r -> go r ('$':acc)
->		'$':'$':r  -> Just (\repl -> reverse acc ++ repl ++ r)
->		c:r  -> go r (c:acc)
 
 > brack s = str ('(' : s) . char ')'
 > brack' s = char '(' . s . char ')'

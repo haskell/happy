@@ -1,0 +1,75 @@
+ import DaVinciTypes hiding (Edge(..) , Node(..))
+ import qualified DaVinciTypes (Edge(..) , Node(..))
+
+--
+
+ toDV :: NodeMap -> IO ()
+ toDV nodes
+  = writeFile "out.daVinci" (show $ map g2n nodes)
+
+
+--
+
+ show_gsymbol (HappyTok x) = show x
+ show_gsymbol t            = show t
+
+ g2n (n, FNode s e x [])
+  = mk_rhombus id (show_gsymbol x ++ show (s,e)) []
+  where
+   id = show n
+
+ g2n (n, FNode s e x [Branch _ bs])
+  = mk_box id (show_gsymbol x ++ show (s,e)) 
+  $ [ DaVinciTypes.R (NodeId $ show j) | j <- bs ]
+  where
+   id = show n
+
+ g2n (n, FNode s e x bss)
+  = mk_circle id (show_gsymbol x ++ show (s,e)) 
+  $ [ mk_box (id ++ "." ++ show i) (show_gsymbol x ++ show (s,e))
+                [ DaVinciTypes.R (NodeId $ show j)
+                | j <- js ]
+    | (i,Branch _ js) <- zip [0..] bss ]
+  where
+   id = show n
+
+---
+
+ mk_box = mk_node box_t
+ mk_circle = mk_node circle_t
+ mk_plain = mk_node text_t
+ mk_rhombus = mk_node rhombus_t
+
+ mk_node :: Attribute -> String -> String -> [DaVinciTypes.Node] 
+					   -> DaVinciTypes.Node
+ mk_node a id nm ts
+  = DaVinciTypes.N (NodeId id) (Type "") [a,text nm]
+  $ [ (mk_edge id n) t | (n,t) <- zip [1..] ts ]
+
+ mk_edge id child_no t@(DaVinciTypes.R (NodeId id2))
+  = DaVinciTypes.E (EdgeId eId) (Type "") [] t
+  where
+   eId = concat [id,":",id2,"(",show child_no,")"]
+ 
+ mk_edge id child_no t@(DaVinciTypes.N (NodeId id2) _ _ _)
+  = DaVinciTypes.E (EdgeId eId) (Type "") [] t
+  where
+   eId = concat [id,":",id2,"(",show child_no,")"]
+
+---
+
+ nodeStyle = A "_GO"
+
+ box_t, circle_t, ellipse_t, rhombus_t, text_t, icon_t :: Attribute
+ box_t = nodeStyle "box"
+ circle_t = nodeStyle "circle"
+ ellipse_t = nodeStyle "ellipse"
+ rhombus_t = nodeStyle "rhombus"
+ text_t = nodeStyle "text"
+ icon_t = nodeStyle "icon"
+
+ text :: String -> Attribute
+ text = A "OBJECT"
+
+
+

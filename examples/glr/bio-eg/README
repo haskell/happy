@@ -1,0 +1,20 @@
+
+A more complex example - looking for patterns in DNA sequences.
+
+This example derived from undergraduate project work by Julia Fischer
+at the University of Durham. Some of the grammar is based on the ones
+developed by Siu-wai Leung, Chris Mellish, and Dave Robertson at the
+University of Edinburgh.  (Contact Paul Callaghan for details, and
+see the accompanying paper.)
+
+Files 1-600.dna and 1-1200.dna contain 600 (1200) bases from the sequence
+for E. coli. The first sequence parses in a few minutes, the second takes
+a bit longer. 
+
+There are issues about how to efficiently skip over "noise" in the data.
+This would make the parser faster. 
+
+Use "make run" to parse the 1-600.dna sequence
+
+
+

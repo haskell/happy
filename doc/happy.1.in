@@ -138,6 +138,20 @@ these files contain the static code that Happy includes in every
 generated parser.  You shouldn't need to use this option if Happy is
 properly configured for your computer.
 
+.TP
+\fB\-l\fR, \fB\-\-glr\fI
+Instructs Happy to output a GLR parser instead of an LALR(1) parser.
+
+.TP
+\fB\-k\fR, \fB\-\-decode\fI
+Causes the GLR parser to generate code for decoding the parse forest to
+a list of semantic results (requires \fB\--ghc\fR).
+
+.TP
+\fB\-f\fR, \fB\-\-filter\fI
+Causes the GLR parser to filter out nodes which aren't required for 
+the semantic results (an experimental optimisation, requires \fB\--ghc\fR).
+
 .SH FILES
 .I @LIBDIR@
 

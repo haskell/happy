@@ -1,9 +1,10 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.50 2004/05/28 20:17:54 mthomas Exp $
+$Id: Main.lhs,v 1.51 2004/08/11 15:39:30 paulcc Exp $
 
 The main driver.
 
 (c) 1993-2003 Andy Gill, Simon Marlow
+GLR amendments (c) University of Durham, Ben Medlock 2001
 -----------------------------------------------------------------------------
 
 > module Main (main) where
@@ -17,6 +18,7 @@ The main driver.
 > import LALR
 > import Version
 > import ProduceCode (produceParser)
+> import ProduceGLRCode 
 > import Info (genInfoFile)
 > import Target (Target(..))
 > import GetOpt
@@ -44,6 +46,7 @@ The main driver.
 > sCC _ x = x
 > coerceParser = id
 #endif
+
 
 > main = 
 
@@ -167,7 +170,7 @@ Print out the info file.
 >		Just s  -> writeFile s info
 >		Nothing -> return ())			>>
 
-Now, lets get on with generating the parser.  Firstly, find out what kind
+Now, let's get on with generating the parser.  Firstly, find out what kind
 of code we should generate, and where it should go:
 
 >	getTarget cli					>>= \target ->
@@ -176,12 +179,6 @@ of code we should generate, and where it should go:
 >	getCoerce target cli				>>= \opt_coerce ->
 >	getStrict cli					>>= \opt_strict ->
 >	getGhc cli					>>= \opt_ghc ->
->	let 
->	    template = template_file template' target cli opt_coerce in
-
-Read in the template file for this target:
-
->       readFile template				>>= \ templ ->
 
 Add any special options or imports required by the parsing machinery.
 
@@ -191,6 +188,42 @@ Add any special options or imports required by the parsing machinery.
 >			++ importsToInject target cli
 >		     )
 >	in
+
+
+%---------------------------------------
+Branch off to GLR parser production
+
+>	let glr_decode | OptGLR_Decode `elem` cli = TreeDecode
+>	               | otherwise                = LabelDecode
+>	    filtering  | OptGLR_Filter `elem` cli = UseFiltering
+>	               | otherwise                = NoFiltering
+>	    ghc_exts   | OptGhcTarget `elem` cli  = UseGhcExts 
+>						    (importsToInject target cli)
+>						    (optsToInject target cli)
+>	               | otherwise                = NoGhcExts
+>	in
+>	if OptGLR `elem` cli 
+>	then produceGLRParser outfilename   -- specified output file name 
+>			      template'     -- template files directory
+>			      action	    -- action table (:: ActionTable)
+>			      goto 	    -- goto table (:: GotoTable)
+>			      header 	    -- header from grammar spec
+>			      tl	    -- trailer from grammar spec
+>			      (glr_decode,filtering,ghc_exts)
+>			                    -- controls decoding code-gen
+>			      g		    -- grammar object
+>	else 
+
+
+%---------------------------------------
+Resume normal (ie, non-GLR) processing
+
+>	let 
+>	    template = template_file template' target cli opt_coerce in
+
+Read in the template file for this target:
+
+>       readFile template				>>= \ templ ->
 
 and generate the code.
 
@@ -328,8 +361,10 @@ The command line arguments.
 >		| OptUseCoercions
 >		| OptDebugParser
 >		| OptStrict
->		
 >		| OptOutputFile String
+>		| OptGLR
+>		| OptGLR_Decode
+>		| OptGLR_Filter
 >  deriving Eq
 
 > argInfo :: [OptDescr CLIFlags]
@@ -352,6 +387,12 @@ The command line arguments.
 >	"generate an array-based parser",
 >    Option ['d'] ["debug"] (NoArg OptDebugParser)
 >	"produce a debugging parser (only with -a)",
+>    Option ['l'] ["glr"] (NoArg OptGLR)
+>	"Generate a GLR parser for ambiguous grammars",
+>    Option ['k'] ["decode"] (NoArg OptGLR_Decode)
+>	"Generate simple decoding code for GLR result",
+>    Option ['f'] ["filter"] (NoArg OptGLR_Filter)
+>	"Filter the GLR parse forest with respect to semantic usage",
 >    Option ['?'] ["help"] (NoArg DumpHelp)
 >	"display this help and exit",
 >    Option ['V','v'] ["version"] (NoArg DumpVersion)   -- ToDo: -v is deprecated
@@ -419,7 +460,7 @@ GHC version-dependent stuff in it.
 >	debug_imports  | OptDebugParser `elem` cli = import_debug
 >		       | otherwise		   = []
 
-CPP is turned on for -fglasogw-exts, so we can use conditional compilation:
+CPP is turned on for -fglasgow-exts, so we can use conditional compilation:
 
 > import_glaexts = "#if __GLASGOW_HASKELL__ >= 503\n\ 
 > 		   \import GHC.Exts\n\ 

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: GenUtils.lhs,v 1.10 2001/08/30 06:56:50 qrczak Exp $
+$Id: GenUtils.lhs,v 1.11 2004/08/11 15:39:30 paulcc Exp $
 
 Some General Utilities, including sorts, etc.
 This is realy just an extended prelude.
@@ -29,9 +29,11 @@ All the code below is understood to be in the public domain.
 >	--trace,		-- re-export it 
 >	fst3,
 >	snd3,
->	thd3
+>	thd3,
+>	mapDollarDollar
 >        ) where
 
+> import Char  (isAlphaNum)
 > import List
 > import Ix    ( Ix(..) )
 > import Array ( Array, listArray, array, (!) )
@@ -122,7 +124,7 @@ Gofer-like stuff:
 
 > fst3 (a,_,_) = a
 > snd3 (_,a,_) = a
-> thd3 (_,a,_) = a
+> thd3 (_,_,a) = a
 
 > cjustify, ljustify, rjustify :: Int -> String -> String
 > cjustify n s = space halfm ++ s ++ space (m - halfm)
@@ -192,3 +194,25 @@ will give a very efficent variation of the fib function.
 > listArray' (low,up) elems = 
 >	if length elems /= up-low+1 then error "wibble" else
 >	listArray (low,up) elems
+
+
+
+Replace $$ with an arbitrary string, being careful to avoid ".." and '.'.
+
+> mapDollarDollar :: String -> Maybe (String -> String)
+> mapDollarDollar code = go code ""
+>   where go code acc =
+>           case code of
+>		[] -> Nothing
+>	
+>		'"'  :r    -> case reads code :: [(String,String)] of
+>				 []      -> go r ('"':acc)
+>				 (s,r):_ -> go r (reverse (show s) ++ acc)
+>		a:'\'' :r | isAlphaNum a -> go r ('\'':a:acc)
+>		'\'' :r    -> case reads code :: [(Char,String)] of
+>				 []      -> go r ('\'':acc)
+>				 (c,r):_ -> go r (reverse (show c) ++ acc)
+>		'\\':'$':r -> go r ('$':acc)
+>		'$':'$':r  -> Just (\repl -> reverse acc ++ repl ++ r)
+>		c:r  -> go r (c:acc)
+

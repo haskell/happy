@@ -1,0 +1,11 @@
+
+Example of arithmetic expression parsing, but producing a labelled
+forest. 
+
+Note use of polymorphic type in the labels. See the code more more 
+discussion.
+
+"make run" to run the test case.
+
+For Hugs, load up Hugs.lhs - it is a simplified version of Main, with entry
+point "test :: String -> IO ()"

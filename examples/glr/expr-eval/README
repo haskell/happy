@@ -1,0 +1,8 @@
+
+Example of arithmetic expression parsing, with decoding of semantic
+values (ie it gives a list of possible results of computation).
+
+"make run" to run the test case.
+
+For Hugs, load up Hugs.lhs - it doesn't produce graphs, and has easy entry 
+point "test :: String -> IO ()

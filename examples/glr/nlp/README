@@ -1,0 +1,19 @@
+
+Obligatory NL ambiguity example.
+
+The grammar is small and simple, but exhibits prepositional phrase attachment
+ambiguity.
+
+Example: "the man saw the race with a telescope"
+Can be bracketed as the following
+ (a) "the man saw (the race with a telescope)"
+ (b) "(the man saw the race) with a telescope"
+
+Note: the "lexicon" contains some ambiguous words too - see if you can extend
+the grammar so this comes into play.
+
+
+"make run" to run the test case.
+
+For Hugs, load up Hugs.lhs - it is a simplified version, with entry point 
+"test :: String -> IO ()"
