@@ -6,7 +6,7 @@ This module is designed as an extension to the Haskell parser generator Happy.
 (c) University of Durham, Paul Callaghan 2004
 	-- extension to semantic rules, and various optimisations
 
-$Id: ProduceGLRCode.lhs,v 1.4 2004/09/07 15:53:46 paulcc Exp $
+$Id: ProduceGLRCode.lhs,v 1.5 2004/09/10 06:39:55 paulcc Exp $
 
 %-----------------------------------------------------------------------------
 
@@ -132,16 +132,16 @@ the driver and data strs (large template).
 >	       , "module " ++ data_mod ++ " where"
 >	       , moduleHdr
 >	       , tomitaStr
->      	       , userInfo
->      	       , let position = 2 + length (moduleHdr ++ tomitaStr ++ userInfo)
->      	         in "{-# LINE " ++ show position 
->		                  ++ show (basename ++ "Data.hs") ++ "#-}"
->      	       , mkGSymbols g 
->      	       , sem_def
->      	       , mkSemObjects options sem_info
->      	       , mkDecodeUtils options sem_info
->      	       -- , unlines $ map show sem_info
->	       , typeForToks 
+>	       , userInfo
+>	       , let beginning = moduleHdr ++ tomitaStr ++ userInfo
+>	             position = 2 + length (lines beginning)
+>	         in "{-# LINE " ++ show position ++ " "
+>	       , mkGSymbols g 
+>	       , sem_def
+>	       , mkSemObjects options sem_info
+>	       , mkDecodeUtils options sem_info
+>	       -- , unlines $ map show sem_info
+>	 , typeForToks 
 >	       , tables ]
 >   typeForToks = unlines [ "type UserDefTok = " ++ token_type g ]
 >   moduleHdr
