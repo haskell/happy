@@ -1,4 +1,4 @@
--- $Id: GenericTemplate.hs,v 1.1 1999/10/07 15:17:41 simonmar Exp $
+-- $Id: GenericTemplate.hs,v 1.2 1999/10/08 12:00:36 simonmar Exp $
 
 #ifdef HAPPY_GHC
 #define ILIT(n) n#
@@ -59,6 +59,15 @@ data Happy_IntList = HappyNil | HappyCons FAST_INT Happy_IntList
 #define HAPPY_FINAL_ABSSYN(x) (case (x) of {HappyAbsSyn4 z -> z })
 #endif
 
+#if defined(HAPPY_DEBUG)
+#define DEBUG_TRACE(s)    (happyTrace (s)) $
+happyTrace string expr = unsafePerformIO $ do
+    hPutStr stderr string
+    return expr
+#else
+#define DEBUG_TRACE(s)    {- nothing -}
+#endif
+
 -----------------------------------------------------------------------------
 -- starting the parse
 
@@ -70,11 +79,23 @@ happyParse = happyNewToken ACTION_0 NIL []
 #if defined(HAPPY_ARRAY)
 
 happyDoAction i tk st
-	= case ({-trace (show action ++ "," ++ show st ++ "," ++ show i)-} action) of
-		ILIT(0)		  -> happyFail i tk st
-		ILIT(-1) 	  -> happyAccept i tk st
-		n | LT(n,ILIT(0)) -> (happyReduceArr ! IBOX(NEGATE(PLUS(n,ILIT(1))))) i tk st
-		n		  -> happyShift MINUS(n,ILIT(1)) i tk st
+	= DEBUG_TRACE("state: " ++ show IBOX(st) ++ 
+		      ",\ttoken: " ++ show IBOX(i) ++
+		      ",\taction: ")
+	  case action of
+		ILIT(0)		  -> DEBUG_TRACE("fail.\n")
+				     happyFail i tk st
+		ILIT(-1) 	  -> DEBUG_TRACE("accept.\n")
+				     happyAccept i tk st
+		n | LT(n,ILIT(0)) -> DEBUG_TRACE("reduce (rule " ++ show rule
+						 ++ ")")
+				     (happyReduceArr ! rule) i tk st
+				     where rule = IBOX(NEGATE(PLUS(n,ILIT(1))))
+		n		  -> DEBUG_TRACE("shift, enter state "
+						 ++ show IBOX(new_state)
+						 ++ "\n")
+				     happyShift new_state i tk st
+				     where new_state = MINUS(n,ILIT(1))
    where IBOX(n_terms) = happy_n_terms
  	 action = indexShortOffAddr happyActionArr (PLUS(TIMES(st,n_terms),i))
 
@@ -174,10 +195,12 @@ happyDrop n CONS(_,t) = happyDrop MINUS(n,ILIT(1)) t
 
 #if defined(HAPPY_ARRAY)
 -- subtract 4 from nt, because nonterminals start at 4 (see Grammar.hs)
-happyGoto nt j tk st = happyDoAction j tk new_state
-	where new_state = indexShortOffAddr happyGotoArr 
+happyGoto nt j tk st = 
+   DEBUG_TRACE(", goto state " ++ show IBOX(new_state) ++ "\n")
+   happyDoAction j tk new_state
+   where new_state = indexShortOffAddr happyGotoArr 
 				PLUS(TIMES(st,n_nonterms),MINUS(nt,ILIT(4)))
-	      IBOX(n_nonterms) = happy_n_nonterms
+	 IBOX(n_nonterms) = happy_n_nonterms
 #else
 happyGoto action j tk st = action j j tk (HappyState action)
 #endif
