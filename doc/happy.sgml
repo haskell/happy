@@ -501,7 +501,7 @@ To parse this kind of sequence we use a production like this:
 
 <tscreen> <verb>
 stmts : stmt                   { [$1] }
-      | stmts ';' stmt         { $2 : $1 }
+      | stmts ';' stmt         { $3 : $1 }
 </verb> </tscreen>
 
 If the <tt/;/ is to be a <em/terminator/ rather than a separator
