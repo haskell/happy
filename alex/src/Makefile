@@ -26,6 +26,9 @@ boot ::
 		(cd $(FPTOOLS_TOP)/ghc/driver && $(MAKE) boot); \
 	fi 
 
+Scan.hs : Scan.x
+	../src1/alex Scan.x
+
 ifeq "$(INSTALLING)" "1"
 ifeq "$(BIN_DIST)"   "1"
 ALEXLIB=$$\"\"libdir/alex

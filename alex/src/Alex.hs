@@ -25,9 +25,8 @@ Chris Dornan, Aug-95, 10-Jul-96, 29-Sep-97
 
 module Alex where
 
-import Array
-
-
+import qualified Array
+import Array ((!))
 
 {------------------------------------------------------------------------------
 				Token Positions
@@ -75,8 +74,6 @@ move_pos (Pn a l c) _    = Pn (a+1)  l     (c+1)
 -- remaining stream of tokens, usually the empty list or an end-of-file token
 -- if the empty string is passed, an error token otherwise.
 
-type Actions t = ([(String,TokenAction t)], StopAction t)
-
 type TokenAction t = Posn -> String -> t
 
 type StopAction t = Posn -> String -> [t]
@@ -90,19 +87,24 @@ type StopAction t = Posn -> String -> [t]
 -- is used to resolve leading context specifications); @scan'@ can be used to
 -- override these defaults.
 
-load_scan:: Actions t -> DFADump -> Scan t
+load_scan:: StopAction t -> DFA (TokenAction t) -> Scan t
 scan:: Scan t -> String -> [t]
 scan':: Scan t -> Posn -> Char -> String -> [t]
-
 
 -- `Scan' is an straightforward construction on `GScan'.
 
 type Scan t = GScan () [t]
 
-load_scan (al,s_a) dmp = load_gscan (al',s_a') dmp
+load_scan s_a dfa = load_gscan s_a' dfa'
 	where
-	al' = [(nm,mk_act f)|(nm,f)<-al]
+	dfa' = Array.array (Array.bounds dfa)
+		[ (x, St b (map mk_acc accs) s arr) 
+		| (x, St b accs s arr) <- Array.assocs dfa ]
 
+	mk_acc :: Accept (TokenAction t) -> Accept (GTokenAction () [t])
+	mk_acc (Acc p act scs lctx rctx) = (Acc p (mk_act act) scs lctx rctx)
+
+	mk_act :: TokenAction t -> GTokenAction () [t]
 	mk_act f = \p _ inp len cont sc_s -> f p (take len inp):cont sc_s
 
 	s_a' p _ inp _ = s_a p inp
@@ -141,8 +143,6 @@ scan' scr p c inp = gscan' scr p c inp (0,())
 
 type GScan s r = (DFA (GTokenAction s r), GStopAction s r)
 
-type GActions s r = ([(String, GTokenAction s r)], GStopAction s r)
-
 type GTokenAction s r = 
 	Posn -> Char -> String -> Int ->
 		((StartCode,s)->r) -> (StartCode,s) -> r
@@ -157,20 +157,18 @@ type GStopAction s r = Posn -> Char -> String -> (StartCode,s) -> r
 -- @start_pos@ (see above) and sets the last character read to new-line and the
 -- start code to 0; @gscan'@ can be used to override these defaults.
 
-load_gscan:: GActions s r -> DFADump -> GScan s r
+load_gscan:: GStopAction s r -> DFA (GTokenAction s r) -> GScan s r
 gscan:: GScan s r -> s -> String -> r
 gscan':: GScan s r -> Posn -> Char -> String -> (StartCode,s) -> r
 
-load_gscan (al,s_a) dmp = (load_dfa al df dmp,s_a)
-	where
-	df = \_ _ _ _ cont s -> cont s
+load_gscan s_a dfa = (dfa,s_a)
 
 gscan scr s inp = gscan' scr start_pos '\n' inp (0,s)
 
 gscan' scr@(dfa,s_a) p c inp sc_s =
 	case scan_token dfa sc_s p c inp of
 	  Nothing -> s_a p c inp sc_s
-	  Just (p',c',inp',len,Acc _ _ t_a _ _ _) ->
+	  Just (p',c',inp',len,Acc _ t_a _ _ _) ->
 				t_a p c inp len (gscan' scr p' c' inp') sc_s
 
 
@@ -219,8 +217,8 @@ scan_token dfa sc_s p c inp =
 check_ctx:: DFA f -> (StartCode,s) -> Char -> Sv f -> Bool
 check_ctx dfa sc_s c (p',c',inp',_,acc) =
 	case acc of
-	  Acc _ _ _ [] Nothing Nothing -> False
-	  Acc _ _ _ scs lctx rctx ->
+	  Acc _ _ [] Nothing Nothing -> False
+	  Acc _ _ scs lctx rctx ->
 		chk_scs sc_s scs || chk_lctx lctx || chk_rctx p' c' inp' rctx
 	where
 	chk_scs (sc,_) [] = False
@@ -247,7 +245,9 @@ scan_tkn dfa p c inp len s stk =
 		  c':inp' -> scan_tkn dfa p' c' inp' (len+1) s' stk'
 			where
 			p' = move_pos p c'
-			s' = if inRange (bounds out) c' then out!c' else df
+			s' = if Array.inRange (Array.bounds out) c' 
+				then out!c'
+				else df
 	   else stk
 	where
 	stk' =	if clr then svs else svs ++ stk
@@ -304,76 +304,18 @@ scan_tkn dfa p c inp len s stk =
 -- turns up any accepting state when applied to the residual input then the
 -- trailing context is acceptable (see `scan_token' above).
 
-type DFA a = Array SNum (State a)
+type DFA a = Array.Array SNum (State a)
 
 type SNum = Int
 
-data State a = St Bool [Accept a] SNum (Array Char SNum)
+data State a = St Bool [Accept a] SNum (Array.Array Char SNum)
 
-data Accept a = Acc Int String a [StartCode] (Maybe(Char->Bool)) (Maybe SNum)
+data Accept a 
+  = Acc { accPrio       :: Int,
+	  accAction     :: a,
+	  accStartCodes :: [StartCode],
+	  accLeftCtx    :: Maybe(Char->Bool),
+	  accRightCtx   :: Maybe SNum
+    }
 
 type StartCode = Int
-
-
--- `DFADump' is the format used to encode DFAs by lx.  `dump_dfa' will encode
--- the DFA (ignoring any action functions), `recover_dfa' will recover it again
--- and `load_dfa' will additionally combine the action functions specified in
--- an association list.
-
-type DFADump = [(Bool,[AcceptDump],SNum,ArrDump Int)]
-
-type AcceptDump  = (Int,String,[StartCode],Maybe(ArrDump Bool),Maybe SNum)
-
-type ArrDump a = ((Char,Char),[(Char,a)])
-
-
-dump_dfa:: DFA a -> DFADump
-dump_dfa dfa = map dp_st (elems dfa)
-	where
-	dp_st (St cl accs df out) = (cl,map dp_acc accs,df,dp_out df out)
-
-	dp_acc (Acc n nm _ scs lctx rctx) =
-				(n,nm,scs,dp_lctx lctx,rctx)
-
-	dp_lctx Nothing = Nothing
-	dp_lctx (Just st) =
-		case as of
-		  [] -> Just (('1','0'),[])
-		  _  -> Just ((fst(head as),fst(last as)),as)
-		where
-		as = [(c,True)| c<-dfa_alphabet, st c]
-
-	dp_out df ar = (bounds ar,[(c,n)| (c,n)<-assocs ar, n/=df])
-
-load_dfa:: [(String,f)] -> f -> DFADump -> DFA f
-load_dfa al df dmp = fmap f (recover_dfa dmp)
-	where
-	f (St clr accs dflt ar) = St clr (map g accs) dflt ar
-
-	g (Acc n nm _ scs lctx rctx) = Acc n nm t_a scs lctx rctx
-		where
-		t_a =	case dropWhile (\(nm',_)->nm/=nm') al of
-			  []        -> df
-			  (_,t_a):_ -> t_a
-
-recover_dfa:: DFADump -> DFA ()
-recover_dfa l = listArray bds [rc_st cl accs df out| (cl,accs,df,out)<-l]
-	where
-	bds = (0,length l-1)
-
-	rc_st cl accs df out = St cl (rc_accs accs) df (rc_arr df out)
-	
-	rc_accs accs = map rc_acc accs
-
-	rc_acc (n,nm,scs,lctx,rctx) =
-			Acc n nm () scs (rc_lctx lctx) rctx
-
-	rc_lctx Nothing = Nothing
-	rc_lctx (Just ad) = Just (tst(rc_arr False ad))
-		where
-		tst arr c = if inRange (bounds arr) c then arr!c else False
-
-	rc_arr df (bs,as) = listArray bs [df|_<-range bs] // [(c,y)|(c,y)<-as]
-
-dfa_alphabet:: [Char]
-dfa_alphabet = ['\0'..'\255']

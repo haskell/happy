@@ -17,10 +17,8 @@ import Char
 import Sort
 import Map
 import Alex
-import RExp
+import AbsSyn
 import NFA
-
-
 
 {- 			  Defined in the Scan Module
 
@@ -86,10 +84,10 @@ type StartCode = Int
 -- state of the partial DFA, until all possible state sets have been considered
 -- The final DFA is then constructed with a `mk_dfa'.
 
-scanner2dfa:: Scanner -> DFA ()
+scanner2dfa:: Scanner -> DFA Code
 scanner2dfa = nfa2dfa . scanner2nfa
 
-nfa2dfa:: NFA -> DFA ()
+nfa2dfa:: NFA -> DFA Code
 nfa2dfa nfa = mk_dfa (nfa2pdfa pdfa [start_pdfa pdfa])
 	where
 	pdfa = new_pdfa nfa
@@ -117,12 +115,15 @@ nfa2pdfa pdfa (ss:umkd) =
 			ss'<-[[s'| (p,s')<-outs, p ch]],
 			not(null ss')]
 
-	rctx_sss = [mk_ss pdfa [s]| Acc _ _ _ _ _ (Just s)<-accs]
+	rctx_sss = [mk_ss pdfa [s]| Acc _ _ _ _ (Just s)<-accs]
 
 	accs = sort_accs [acc| s<-ss, acc<-nst_accs(nfa!s)]
 	outs =           [out| s<-ss, out<-nst_outs(nfa!s)]
 
 	nfa = pdfa_nfa pdfa
+
+dfa_alphabet:: [Char]
+dfa_alphabet = ['\0'..'\255']
 
 -- `sort_accs' sorts a list of accept values into decending order of priority,
 -- eliminating any elements that follow an unconditional accept value.
@@ -130,10 +131,10 @@ nfa2pdfa pdfa (ss:umkd) =
 sort_accs:: [Accept a] -> [Accept a]
 sort_accs accs = foldr chk [] (msort le accs)
 	where
-	chk acc@(Acc _ _ _ [] Nothing Nothing) rst = [acc]
+	chk acc@(Acc _ _ [] Nothing Nothing) rst = [acc]
 	chk acc                          rst = acc:rst
 
-	le (Acc n _ _ _ _ _) (Acc n' _ _ _ _ _) = n<=n'
+	le (Acc{accPrio = n}) (Acc{accPrio=n'}) = n<=n'
 
 
 
@@ -153,9 +154,9 @@ sort_accs accs = foldr chk [] (msort le accs)
 type PartDFA = (StateSet,NFA,Map StateSet PDS)
 --	in new_pdfa, mk_ss, add_pdfa, in_pdfa, start_pdfa, pdfa_nfa, mk_dfa
 
-type StateSet = [Int]
+type StateSet = [SNum]
 
-data PDS = PDS [Accept ()] [(Char,StateSet)]
+data PDS = PDS [Accept Code] [(Char,StateSet)]
 
 
 new_pdfa:: NFA -> PartDFA
@@ -181,15 +182,15 @@ pdfa_nfa (_,nfa,_) = nfa
 -- way the trailing context references have to be converted from a state in the
 -- NFA to the corresponding state in the DFA.
 
-mk_dfa:: PartDFA -> DFA ()
+mk_dfa:: PartDFA -> DFA Code
 mk_dfa pdfa@(st,_,mp) = listArray (0,card mp-1) (map cnv (rng mp))
 	where
 	cnv (PDS accs as) = mk_st (map cnv_acc accs) as'
 		where
 		as' = [(ch,app i_mp ss)| (ch,ss)<-as]
 
-		cnv_acc (Acc n act _ scs lctx rctx) =
-						Acc n act () scs lctx rctx'
+		cnv_acc (Acc n act scs lctx rctx) =
+						Acc n act scs lctx rctx'
 			where
 			rctx' =	case rctx of
 				  Nothing -> Nothing
@@ -215,24 +216,25 @@ mk_dfa pdfa@(st,_,mp) = listArray (0,card mp-1) (map cnv (rng mp))
 -- Note that empty arrays are avoided as they can cause severe problems for
 -- some popular Haskell compilers.
 
-mk_st:: [Accept ()] -> [(Char,Int)] -> State ()
+mk_st:: [Accept Code] -> [(Char,Int)] -> State Code
 mk_st accs as =
 	if null as
 	   then St clr accs (-1) (listArray ('0','0') [-1])
 	   else St clr accs df (listArray bds [arr!c| c<-range bds])
 	where
-	clr = not(null[()| Acc _ _ _ [] Nothing Nothing<-accs])
+	clr = not(null[()| Acc _ _ [] Nothing Nothing<-accs])
 
 	bds = if sz==0 then ('0','0') else bds0
 
-	(sz,df,bds0) = if sz1<sz2 then (sz1,df1,bds1) else (sz1,df2,bds2)
+	(sz,df,bds0) | sz1 < sz2 = (sz1,df1,bds1)
+		     | otherwise = (sz2,df2,bds2)
 
 	(sz1,df1,bds1) = mk_bds(arr!chr 0)
 	(sz2,df2,bds2) = mk_bds(arr!chr 255)
 
-	mk_bds df = (t-b+1,df,(chr b,chr (255-t)))
+	mk_bds df = (t-b, df, (chr b, chr (255-t)))
 		where
-		b = length(takeWhile id [arr!chr c==df| c<-[0..255]])
-		t = length(takeWhile id [arr!chr c==df| c<-[255,254..0]])
+		b = length (takeWhile id [arr!c==df| c<-['\0'..'\xff']])
+		t = length (takeWhile id [arr!c==df| c<-['\xff','\xfe'..'\0']])
 
-	arr = listArray (chr 0,chr 255) (take 256 (repeat (-1))) // as
+	arr = listArray ('\0','\xff') (take 256 (repeat (-1))) // as

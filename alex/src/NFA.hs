@@ -16,7 +16,8 @@ module NFA where
 import Array
 import DFS
 import Alex
-import RExp
+import AbsSyn
+import CharSet
 
 
 -- Each state of a nondeterministic automaton contains a list of `Accept'
@@ -31,15 +32,15 @@ import RExp
 
 type NFA = Array SNum NState
 
-data NState = NSt [Accept ()] [SNum] [(Char->Bool,SNum)]
+data NState = NSt [Accept Code] [SNum] [(CharSet,SNum)]
 
-nst_accs:: NState -> [Accept ()]
+nst_accs:: NState -> [Accept Code]
 nst_accs (NSt accs _ _) = accs
 
 nst_cl:: NState -> [SNum]
 nst_cl (NSt _ es _) = es
 
-nst_outs:: NState -> [(Char->Bool,SNum)]
+nst_outs:: NState -> [(CharSet,SNum)]
 nst_outs (NSt _ _ outs) = outs
 
 
@@ -58,7 +59,7 @@ nst_outs (NSt _ _ outs) = outs
 -- turns up any accepting state when applied to the residual input then the
 -- trailing context is acceptable.
 
-data Accept a = Acc Int String a [StartCode] (Maybe(Char->Bool)) (Maybe SNum)
+data Accept a = Acc Int String a [StartCode] (Maybe CharSet) (Maybe SNum)
 -}
 
 
@@ -73,14 +74,15 @@ data Accept a = Acc Int String a [StartCode] (Maybe(Char->Bool)) (Maybe SNum)
 -- the `bar_nfa' operator and converted to an NFA.
 
 scanner2nfa:: Scanner -> NFA
-scanner2nfa scr = mk_nfa (foldr bar_nfa eps_nfa pnfas)
+scanner2nfa Scanner{scannerTokens = toks}
+   = mk_nfa (foldr bar_nfa eps_nfa pnfas)
 	where
-	pnfas = [mk_pnfa n tk re| ((tk,re), n)<-zip scr [0..]]
+	pnfas = [mk_pnfa n re| (re, n)<-zip toks [0..]]
 
-	mk_pnfa n tk (RECtx scs lctx re rctx) =
+	mk_pnfa n (RECtx scs lctx re rctx code) =
 		   		rexp2pnfa re `seq_nfa` acc_nfa rctx' mk_acc
 		where
-		mk_acc rctx'' = Acc n tk () (map snd scs) lctx' rctx''
+		mk_acc rctx'' = Acc n code (map snd scs) lctx' rctx''
 
 		rctx' =	case rctx of
 			  Nothing -> Nothing
@@ -155,7 +157,7 @@ e_close ar = listArray bds
 -- trailing context then it passes `Nothing' to the Accept-constructing
 -- function.
 
-acc_nfa:: Maybe PartNFA -> (Maybe SNum->Accept ()) -> PartNFA
+acc_nfa:: Maybe PartNFA -> (Maybe SNum->Accept Code) -> PartNFA
 acc_nfa Nothing mk_act = (1,\bse ex sts->NSt [mk_act Nothing] [ex] []:sts)
 acc_nfa (Just pnfa) mk_acc = (1+sz,g)
 	where
@@ -163,9 +165,10 @@ acc_nfa (Just pnfa) mk_acc = (1+sz,g)
 
 	(sz,f) = pnfa `seq_nfa` acc_pnfa
 
-	acc_pnfa =
-	      (1,\bse ex sts->NSt [Acc 0 "" () [] Nothing Nothing] [] []:sts)
+	acc_pnfa = (1,\bse ex sts->NSt [rctxt_accept] [] [] : sts)
 
+rctxt_accept :: Accept Code
+rctxt_accept = Acc 0 "trailing context accept" [] Nothing Nothing
 
 -- The following functions compose NFAs according to the `RExp' operators.  The
 -- construction are more compact than those given in the dragon book.
@@ -173,7 +176,7 @@ acc_nfa (Just pnfa) mk_acc = (1+sz,g)
 eps_nfa:: PartNFA
 eps_nfa = (1,\bse ex sts->NSt [] [ex] []:sts)
 
-ch_nfa:: Set -> PartNFA
+ch_nfa:: CharSet -> PartNFA
 ch_nfa st = (1,\bse ex sts->NSt [] [] [(st,ex)]:sts)
 
 seq_nfa:: PartNFA -> PartNFA -> PartNFA
