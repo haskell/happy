@@ -1687,25 +1687,42 @@ happy [ <emphasis>options</emphasis> ] <emphasis>filename</emphasis> [ <emphasis
       </varlistentry>
 
       <varlistentry>
-	<term> <literal>-o &lt;filename&gt; |
-	--outfile=&lt;filename&gt;</literal> </term>
+	<term> <literal>-o <replaceable>filename</replaceable> |
+	--outfile=<replaceable>filename</replaceable></literal> </term>
 	<listitem>
 	  <para>Specifies the destination of the generated parser
           module.  If omitted, the parser will be placed in
-          <literal>&lt;file&gt;.hs</literal>, where <literal>&lt;file&gt;</literal> is
-          the name of the input file with any extension
-          removed.</para>
+          <literal><replaceable>file</replaceable>.hs</literal>, where
+          <replaceable>file</replaceable> is the name of the input
+          file with any extension removed.</para>
 	</listitem>
       </varlistentry>
 
       <varlistentry>
-	<term> <literal>-m &lt;name&gt; | --magic-name=&lt;name&gt;</literal> </term>
+	<term> <literal>-m <replaceable>name</replaceable> | --magic-name=<replaceable>name</replaceable></literal> </term>
 	<listitem>
 	  <para> <application>Happy</application> prefixes all the symbols it uses internally
           with either <literal>happy</literal> or <literal>Happy</literal>.  To use a
           different string, for example if the use of <literal>happy</literal>
           is conflicting with one of your own functions, specify the
           prefix using the <literal>-m</literal> option.</para>
+	</listitem>
+      </varlistentry>
+
+      <varlistentry>
+	<term> <literal>-s | --strict</literal> </term>
+	<listitem>
+	  <para>NOTE: the <option>--strict</option> option is
+	  experimental and may cause unpredictable results.</para>
+
+	  <para>This option causes the right hand side of each
+	  production (the semantic value) to be evaluated eagerly at
+	  the moment the production is reduced.  If the lazy behaviour
+	  is not required, then using this option will improve
+	  performance and may reduce space leaks.  Note that the
+	  parser as a whole is never lazy - the whole input will
+	  always be consumed before any input is produced, regardless
+	  of the setting of the <option>--strict</option> flag.</para>
 	</listitem>
       </varlistentry>
 
@@ -1718,8 +1735,8 @@ happy [ <emphasis>options</emphasis> ] <emphasis>filename</emphasis> [ <emphasis
       </varlistentry>
 
       <varlistentry>
-	<term> <literal>-t &lt;directory&gt; | --template
-&lt;directory&gt;</literal> </term> 
+	<term> <literal>-t <replaceable>directory</replaceable> | --template
+<replaceable>directory</replaceable></literal> </term> 
 	<listitem>
 	  <indexterm>
 	    <primary>template files</primary>
