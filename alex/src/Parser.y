@@ -162,7 +162,7 @@ set0	:: { CharSet }
 
 sets	:: { [CharSet] }
 	: set sets			{ $1 : $2 }
-	| set				{ [$1] }
+	| {- empty -}			{ [] }
 
 smac	:: { (Posn,String) }
  	: '.'				{ (tokPosn $1, ".") }
