@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.27 1999/05/14 14:26:16 simonm Exp $
+# $Id: Makefile,v 1.28 1999/07/14 19:33:57 panne Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -32,8 +32,14 @@ Main.lhs
 
 SRC_HC_OPTS += -cpp -fglasgow-exts $(HappyHcOpts)
 
-Parser_HC_OPTS = -Onot
-SRC_HAPPY_OPTS += -g
+Parser_HC_OPTS      = -H8m -Onot
+Grammar_HC_OPTS     = -H8m
+LALR_HC_OPTS        = -H12m
+ProduceCode_HC_OPTS = -H14m
+Main_HC_OPTS        = -H10m
+
+# This is not a good idea for a source distribution
+# SRC_HAPPY_OPTS += -g
 
 boot ::
 	if [ -d $(FPTOOLS_TOP)/ghc ]; then \

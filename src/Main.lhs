@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.20 1999/03/12 16:07:48 simonm Exp $
+$Id: Main.lhs,v 1.21 1999/07/14 19:33:56 panne Exp $
 
 The main driver.
 
@@ -30,13 +30,13 @@ The main driver.
 > import Array( Array, assocs, elems, (!) )
 > import List( nub )
 
-#ifdef __GLASGOW_HASKELL__
+#if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 400
 > import PrelGHC (unsafeCoerce#)
 > import IOExts
 #define sCC _scc_
 > coerceParser = unsafeCoerce#
 #else
-> sCC = id
+> sCC _ x = x
 > coerceParser = id
 #endif
 
