@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.15 1997/10/07 13:33:04 simonm Exp $
+$Id: Main.lhs,v 1.16 1998/01/08 17:37:18 simonm Exp $
 
 The main driver.
 
@@ -394,10 +394,8 @@ Extract various command-line options.
 >  "Happy Version " ++ version ++ " Copyright (c) Andy Gill, Simon Marlow 1993-1997","",
 >  "Happy is a Yacc for Haskell, and comes with ABSOLUTELY NO WARRANTY.",
 >  "This program is free software; you can redistribute it and/or modify",
->  "it under the terms of Version 2 of the GNU General Public License",
->  "as published by the Free Software Foundation.","",
->  "Look at the file README distributed with the source for details.\n"])
-
+>  "it under the terms given in the file 'LICENSE' distributed with",
+>  "the Happy sources.\n"])
 
 > syntax = unlines [
 >   "syntax: happy [-v] [-o | --outfile <file>] [--info [<file>]]",
