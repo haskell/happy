@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.34 2000/07/12 16:21:44 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.35 2000/07/13 08:54:10 simonmar Exp $
 
 The code generator.
 
@@ -647,8 +647,8 @@ outlaw them inside { }
 >            str "happyThen = \\m k -> k m\n"
 >	   . str "happyReturn = "
 >          . (case lexer of 
->		  Nothing -> str "\\a tks -> a"
->		  _       -> str "\\a -> a")
+>		  Nothing -> str "\\a tks -> a\n"
+>		  _       -> str "\\a -> a\n")
 >          . str "happyThen1 = happyThen\n"
 >	   . str "happyReturn1 = happyReturn\n"
 >	  Just (ty,tn,rtn) ->
@@ -666,7 +666,7 @@ outlaw them inside { }
 >                . str " a -> (a -> "  . pty
 >	         . str " b) -> " . pty . str " b\n"
 >                . str "happyThen = " . brack tn . char '\n'
->                . str "happyReturn = " . brack rtn
+>                . str "happyReturn = " . brack rtn . nl
 >            	 . str "happyThen1 = happyThen\n"
 >	     	 . str "happyReturn1 = happyReturn\n"
 >	)
