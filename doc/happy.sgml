@@ -2370,6 +2370,47 @@ exp     : atom op exp
 
       </sect2>
     </sect1>
+
+    <sect1 id="sec-happy-ghci">
+      <title>Using Happy with <application>GHCi</application></title>
+      
+      <para><application>GHCi</application>'s compilation manager
+      doesn't understand Happy grammars, but with some creative use of
+      macros and makefiles we can give the impression that
+      <application>GHCi</application> is invoking Happy
+      automatically:</para>
+
+      <itemizedlist>
+	<listitem>
+	  <para>Create a simple makefile, called
+	  <filename>Makefile_happysrcs</filename>:</para>
+
+<programlisting>HAPPY = happy
+HAPPY_OPTS = 
+
+all: MyParser.y
+
+%.hs: %.y
+	$(HAPPY) $(HAPPY_OPTS) $< -o $@</programlisting>
+	</listitem>
+
+	<listitem>
+	  <para>Create a macro in GHCi to replace the
+          <literal>:reload</literal> command, like so (type this all
+          on one line):</para>
+
+<programlisting>:def rh (\_ -> System.system "make -f Makefile_happysrcs"
+   >>= \rr -> case rr of { System.ExitSuccess -> return ":reload" ; 
+                           _ -> return "" })</programlisting>
+	</listitem>
+
+	<listitem>
+	  <para>Use <literal>:myreload</literal>
+	  (<literal>:my</literal> will do) instead of
+	  <literal>:reload</literal> (<literal>:r</literal>).</para>
+	</listitem>
+      </itemizedlist>
+    </sect1>
   </chapter>
 
   &the-index
