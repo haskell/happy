@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.26 1999/03/11 17:16:01 simonm Exp $
+# $Id: Makefile,v 1.27 1999/05/14 14:26:16 simonm Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -74,18 +74,19 @@ install ::
 
 check ::
 	./happy Test.ly
-	-diff Test.hs Test.hs-CMP
-	$(HC) Test.hs -o happy_test
+	$(HC) -fglasgow-exts Test.hs -o happy_test
 	./happy_test
 	-rm -f ./happy_test
 	./happy -g Test.ly
-	-diff Test.hs Test.hs-CMP-g
 	$(HC) -fglasgow-exts Test.hs -o happy_test
 	./happy_test
 	-rm -f ./happy_test
 	./happy -a Test.ly
-	-diff Test.hs Test.hs-CMP-a
-	$(HC) Test.hs -o happy_test
+	$(HC) -fglasgow-exts Test.hs -o happy_test
+	./happy_test
+	-rm -f ./happy_test
+	./happy -g -c Test.ly
+	$(HC) -fglasgow-exts Test.hs -o happy_test
 	./happy_test
 	-rm -f ./happy_test
 

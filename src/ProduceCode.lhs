@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.19 1999/05/14 13:31:46 simonm Exp $
+$Id: ProduceCode.lhs,v 1.20 1999/05/14 14:26:16 simonm Exp $
 
 The code generator.
 
@@ -479,8 +479,8 @@ action array indexed by (terminal * last_state) + state
 
 >    produceActionArray
 >   	= str "happyActionArr :: Array Int Int\n"
->	. str "happyActionArr = listArray (-1,"
->		. shows (n_terminals * n_states)
+>	. str "happyActionArr = listArray (2,"
+>		. shows (n_terminals * n_states + 2)
 >		. str ") (["
 >	. rle_to_str (rle_list (concat 
 >		(map actionArrElems (elems action)))) False
@@ -492,7 +492,7 @@ action array indexed by (terminal * last_state) + state
 >    n_nonterminals = length nonterms - 1 -- lose one for %start
 >
 >    actionArrElems actions = map actionVal (e : drop (n_nonterminals + 1) line)
->	where (e:line) = elems actions
+>	where (e:d:line) = elems actions
 
 >    produceGotoArray
 >   	= str "happyGotoArr :: Array Int Int\n"

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Grammar.lhs,v 1.11 1999/03/11 17:15:57 simonm Exp $
+$Id: Grammar.lhs,v 1.12 1999/05/14 14:26:15 simonm Exp $
 
 The Grammar data type.
 
@@ -33,6 +33,10 @@ dummy		= 2
 non-terminals 	= 4..n
 terminals 	= n..m
 %eof 		= m
+
+These numbers are deeply magical, change at your own risk.  Several
+other places rely on these being arranged as they are, including
+ProduceCode.lhs and the various HappyTemplates.
 
 > type Name = Int
 
