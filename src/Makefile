@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.30 1999/10/07 15:26:29 simonmar Exp $
+# $Id: Makefile,v 1.31 1999/11/24 10:40:26 simonmar Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -31,11 +31,12 @@ Main.lhs
 
 SRC_HC_OPTS += -cpp -fglasgow-exts $(HappyHcOpts)
 
-Parser_HC_OPTS      = -H8m -Onot
+Parser_HC_OPTS      = -Onot
 Grammar_HC_OPTS     = -H8m
 LALR_HC_OPTS        = -H12m
 ProduceCode_HC_OPTS = -H14m
 Main_HC_OPTS        = -H10m
+Version_HC_OPTS	    = -DHAPPY_VERSION=$(ProjectVersion)
 
 # This is not a good idea for a source distribution
 # SRC_HAPPY_OPTS += -g
@@ -93,27 +94,41 @@ endif
 
 check ::
 	./happy-inplace Test.ly
-	$(HC) -fglasgow-exts Test.hs -o happy_test
+	$(HC) Test.hs -o happy_test
 	./happy_test
 	-rm -f ./happy_test
 	./happy-inplace -g Test.ly
-	$(HC) -fglasgow-exts Test.hs -o happy_test
+	$(HC) Test.hs -o happy_test
 	./happy_test
 	-rm -f ./happy_test
 	./happy-inplace -a Test.ly
-	$(HC) -fglasgow-exts Test.hs -o happy_test
+	$(HC) Test.hs -o happy_test
 	./happy_test
 	-rm -f ./happy_test
-	./happy-inplace -g -c Test.ly
-	$(HC) -fglasgow-exts Test.hs -o happy_test
+	./happy-inplace -gc Test.ly
+	$(HC) Test.hs -o happy_test
 	./happy_test
 	-rm -f ./happy_test
-	./happy-inplace -a -g Test.ly
-	$(HC) -fglasgow-exts Test.hs -o happy_test
+	./happy-inplace -ag Test.ly
+	$(HC) Test.hs -o happy_test
 	./happy_test
 	-rm -f ./happy_test
-	./happy-inplace -a -g -c Test.ly
-	$(HC) -fglasgow-exts Test.hs -o happy_test
+	./happy-inplace -agc Test.ly
+	$(HC) Test.hs -o happy_test
+	./happy_test
+	-rm -f ./happy_test
+
+check-todo::
+	./happy-inplace -ad Test.ly
+	$(HC) Test.hs -o happy_test
+	./happy_test
+	-rm -f ./happy_test
+	./happy-inplace -agd Test.ly
+	$(HC) Test.hs -o happy_test
+	./happy_test
+	-rm -f ./happy_test
+	./happy-inplace -agcd Test.ly
+	$(HC) Test.hs -o happy_test
 	./happy_test
 	-rm -f ./happy_test
 
