@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: LALR.lhs,v 1.6 1997/09/09 16:31:45 simonm Exp $
+$Id: LALR.lhs,v 1.7 1997/09/23 14:59:03 simonm Exp $
 
 Generation of LALR parsing tables.
 
@@ -66,33 +66,22 @@ using a memo table so that no work is repeated.
 >		Just c  -> c
 >  where
 >
+>	info' = map (\(n,rules) -> (n,map (\rule -> (rule,0)) rules)) info
+>	info = mkClosure (==) (\f -> map (follow f) f)
+>			(map (\nt -> (nt,lookupProdsOfName g nt)) nts)
+
+>	follow f (nt,rules) = (nt, foldr union rules (map (followNT f) rules))
+
+>	followNT f rule = 
+>		case findRule g rule 0 of
+>			Just nt	| nt >= 0 && nt < first_term ->
+>				case lookup nt f of
+>					Just rs -> rs
+>					Nothing -> error "followNT"
+>			_ -> []
+
 >	nts = getNonTerminals g
 >	first_term = getFirstTerm g
->
->	(info,_) = foldr (\n (h,c) -> follow h n []) ([],[]) nts
->	info' = map (\(n,rules) -> (n,map (\rule -> (rule,0)) rules)) info
->
->	follow h n loop
->		| n `elem` loop = (h,[])
->		| otherwise =
->	    case lookup n h of
->		Nothing ->  let rules = lookupProdsOfName g n 
->			        (h',c) = follows h rules [] (n:loop)
->		            in
->		            ((n,c) : h', c)
->		Just c  -> (h, c)
-> 
->	follows h [] rs loop = (h, rs)
->	follows h (rule:rules) rs' loop = 
->           case findRule g rule 0 of 
->           	(Just nt) | nt >= 0 && nt < first_term ->
->			let (h',c) = follow h nt loop
->			    rs'' = filter (`notElem` rs') (rule:c) ++ rs'
->			in
->			follows h' rules rs'' loop
->		_ -> follows h rules (if rule `elem` rs' 
->					then rs' 
->					else rule:rs') loop
 
 > closure0 :: GrammarInfo -> (Name -> RuleList) -> Set Lr0Item -> Set Lr0Item
 > closure0 g closureOfNT set = mkSet (foldr addRules emptySet set)
