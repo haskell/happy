@@ -1772,10 +1772,26 @@ close : '}'                  { () }
 	     </listitem>
 	   </varlistentry>
 	   <varlistentry>
-	     <term>monad directive, parser name directive</term>
+	     <term>monad directive</term>
 	     <listitem>
 	       <para>
-	       These have no effect at present. 
+	       There is some support for monadic parsers.
+	       The "tree decoding" mode 
+	       (see <xref linkend="sec-glr-semantics-tree">) can use the
+	       information given in the <literal>%monad</literal> 
+	       declaration to monadify the decoding process. 
+	       This is explained in more detail at
+	       <xref linkend="sec-glr-semantics-tree-monad">.
+	       </para>
+	     </listitem>
+	   </varlistentry>
+	   <varlistentry>
+	     <term>parser name directive</term>
+	     <listitem>
+	       <para>
+	       This has no effect at present. It will probably remain this 
+	       way: if you want to control names, you could use qualified 
+	       import.
 	       </para>
 	     </listitem>
 	   </varlistentry>
@@ -2099,6 +2115,42 @@ close : '}'                  { () }
 	is also extracted, using the patterns supplied by the user
 	when declaring the tokens.
         </para>
+      </sect2>
+
+      <sect2 id="sec-glr-semantics-tree-monad">
+        <title>Monadic tree decoding</title>
+        <para>
+	You can use the <literal>%monad</literal> directive in the 
+	tree-decode mode. 
+	Essentially, the decoding process now creates a list of monadic 
+	values, using the monad type declared in the directive. 
+	The default handling of the semantic functions is to apply the
+	relevant <literal>return</literal> function to the value being
+	returned. You can over-ride this using the <literal>{% ... }</literal>
+	convention. The declared <literal>(>>=)</literal> function is
+	used to assemble the computations.
+	</para>
+	<para>
+	Note that no attempt is made to share the results of monadic 
+	computations from sub-trees. (You could possibly do this by 
+	supplying a memoising lookup function for the decoding process.)
+	Hence, the usual behaviour is that decoding produces whole 
+	monadic computations, each part of which is computed afresh
+	(in depth-first order) when the whole is computed.
+	Hence you should take care to initialise any relevant state 
+	before computing the results from multiple solutions. 
+	</para>
+	<para>
+	This facility is experimental, and we welcome comments or 
+	observations on the approach taken!
+	An example is provided (<literal>examples/glr/expr-monad</literal>).
+	It is the standard example of arithmetic expressions, except that
+	the <literal>IO</literal> monad is used, and a user exception is
+	thrown when the second argument to addition is an odd number.
+	Running this example will show a zero (from the exception handler)
+	instead of the expected number amongst the results from the other
+	parses.
+	</para>
       </sect2>
     </sect1>
 
