@@ -1,4 +1,4 @@
--- $Id: HappyTemplate-arrays,v 1.4 1997/03/27 14:14:57 simonm Exp $
+-- $Id: HappyTemplate-arrays,v 1.5 1997/03/27 14:35:51 simonm Exp $
 
 happyParse = happyNewToken 0 [] []
 
@@ -18,9 +18,9 @@ happyAccept sts _                    = notHappyAtAll
 -----------------------------------------------------------------------------
 -- Shifting a token
 
-happyShift new_state (-1) tk@(ErrorTok i tk') st sts stk =
+happyShift new_state (-1) tk st sts (HappyErrorToken i : stk) =
 --     _trace "shifting the error token" $
-     happyDoAction i tk' new_state (st:sts) (HappyTerminal tk:stk)
+     happyDoAction i tk new_state (st:sts) stk
 
 happyShift new_state i tk st sts stk =
      happyNewToken new_state (st:sts) (HappyTerminal tk:stk)
@@ -65,7 +65,7 @@ happyFail  (-1) tk st' (st:sts) stk =
 --                       save the old token and carry on.
 happyFail  i tk st sts stk =
 --      _trace "entering error recovery" $
-        happyDoAction (-1) (ErrorTok i tk) st sts stk
+        happyDoAction (-1) tk st sts (HappyErrorToken i : stk)
 
 -- Internal happy errors:
 
