@@ -1,11 +1,12 @@
--- parser produced by Happy Version 1.6
-
+-- parser produced by Happy Version 1.7
 
 module Parser (ourParser,AbsSyn) where
 import ParseMonad
 import GenUtils
 import AbsSyn
 import Lexer
+import Array
+import Int
 
 #ifdef __GLASGOW_HASKELL__
 import GlaExts
@@ -299,48 +300,47 @@ action_47 _ = happyReduce_9
 
 action_48 _ = happyReduce_5
 
-happyReduce_1 = happyReduce 5 4 reduction where {
-  reduction
-	((HappyAbsSyn15  happy_var_5) :
+happyReduce_1 = happyReduce 5 4 happyReduction_1
+happyReduction_1 ((HappyAbsSyn15  happy_var_5) :
 	(HappyAbsSyn5  happy_var_4) :
 	_ :
 	(HappyAbsSyn9  happy_var_2) :
 	(HappyAbsSyn15  happy_var_1) :
 	happyRest)
 	 = HappyAbsSyn4
-		 (AbsSyn happy_var_1 (reverse happy_var_2) (reverse happy_var_4) happy_var_5) : happyRest;
-  reduction _ = notHappyAtAll }
+		 (AbsSyn happy_var_1 (reverse happy_var_2) (reverse happy_var_4) happy_var_5
+	) : happyRest
+happyReduction_1 _ = notHappyAtAll 
 
-happyReduce_2 = happySpecReduce_2 5 reduction where {
-  reduction
-	(HappyAbsSyn6  happy_var_2)
+happyReduce_2 = happySpecReduce_2 5 happyReduction_2
+happyReduction_2 (HappyAbsSyn6  happy_var_2)
 	(HappyAbsSyn5  happy_var_1)
 	 =  HappyAbsSyn5
-		 (happy_var_2 : happy_var_1);
-  reduction _ _  = notHappyAtAll }
+		 (happy_var_2 : happy_var_1
+	)
+happyReduction_2 _ _  = notHappyAtAll 
 
-happyReduce_3 = happySpecReduce_1 5 reduction where {
-  reduction
-	(HappyAbsSyn6  happy_var_1)
+happyReduce_3 = happySpecReduce_1 5 happyReduction_3
+happyReduction_3 (HappyAbsSyn6  happy_var_1)
 	 =  HappyAbsSyn5
-		 ([happy_var_1]);
-  reduction _  = notHappyAtAll }
+		 ([happy_var_1]
+	)
+happyReduction_3 _  = notHappyAtAll 
 
-happyReduce_4 = happyReduce 5 6 reduction where {
-  reduction
-	((HappyAbsSyn7  happy_var_5) :
+happyReduce_4 = happyReduce 5 6 happyReduction_4
+happyReduction_4 ((HappyAbsSyn7  happy_var_5) :
 	_ :
 	(HappyAbsSyn14  happy_var_3) :
 	_ :
 	(HappyAbsSyn14  happy_var_1) :
 	happyRest)
 	 = HappyAbsSyn6
-		 ((happy_var_1,happy_var_5,Just happy_var_3)) : happyRest;
-  reduction _ = notHappyAtAll }
+		 ((happy_var_1,happy_var_5,Just happy_var_3)
+	) : happyRest
+happyReduction_4 _ = notHappyAtAll 
 
-happyReduce_5 = happyReduce 6 6 reduction where {
-  reduction
-	((HappyAbsSyn7  happy_var_6) :
+happyReduce_5 = happyReduce 6 6 happyReduction_5
+happyReduction_5 ((HappyAbsSyn7  happy_var_6) :
 	_ :
 	_ :
 	(HappyAbsSyn14  happy_var_3) :
@@ -348,179 +348,180 @@ happyReduce_5 = happyReduce 6 6 reduction where {
 	(HappyAbsSyn14  happy_var_1) :
 	happyRest)
 	 = HappyAbsSyn6
-		 ((happy_var_1,happy_var_6,Just happy_var_3)) : happyRest;
-  reduction _ = notHappyAtAll }
+		 ((happy_var_1,happy_var_6,Just happy_var_3)
+	) : happyRest
+happyReduction_5 _ = notHappyAtAll 
 
-happyReduce_6 = happySpecReduce_3 6 reduction where {
-  reduction
-	(HappyAbsSyn7  happy_var_3)
+happyReduce_6 = happySpecReduce_3 6 happyReduction_6
+happyReduction_6 (HappyAbsSyn7  happy_var_3)
 	_
 	(HappyAbsSyn14  happy_var_1)
 	 =  HappyAbsSyn6
-		 ((happy_var_1,happy_var_3,Nothing));
-  reduction _ _ _  = notHappyAtAll }
+		 ((happy_var_1,happy_var_3,Nothing)
+	)
+happyReduction_6 _ _ _  = notHappyAtAll 
 
-happyReduce_7 = happySpecReduce_3 7 reduction where {
-  reduction
-	(HappyAbsSyn7  happy_var_3)
+happyReduce_7 = happySpecReduce_3 7 happyReduction_7
+happyReduction_7 (HappyAbsSyn7  happy_var_3)
 	_
 	(HappyAbsSyn8  happy_var_1)
 	 =  HappyAbsSyn7
-		 (happy_var_1 : happy_var_3);
-  reduction _ _ _  = notHappyAtAll }
+		 (happy_var_1 : happy_var_3
+	)
+happyReduction_7 _ _ _  = notHappyAtAll 
 
-happyReduce_8 = happySpecReduce_1 7 reduction where {
-  reduction
-	(HappyAbsSyn8  happy_var_1)
+happyReduce_8 = happySpecReduce_1 7 happyReduction_8
+happyReduction_8 (HappyAbsSyn8  happy_var_1)
 	 =  HappyAbsSyn7
-		 ([happy_var_1]);
-  reduction _  = notHappyAtAll }
+		 ([happy_var_1]
+	)
+happyReduction_8 _  = notHappyAtAll 
 
-happyReduce_9 = happyMonadReduce 3 8 HappyAbsSyn8 reduction where {
-  reduction
-	(_ :
+happyReduce_9 = happyMonadReduce 3 8 happyReduction_9
+happyReduction_9 (_ :
 	(HappyAbsSyn14  happy_var_2) :
 	(HappyAbsSyn13  happy_var_1) :
 	happyRest)
-	 =  \s l -> returnP (happy_var_1,happy_var_2,l) s l;
-  reduction _ = notHappyAtAll }
+	 = happyThen ( \s l -> returnP (happy_var_1,happy_var_2,l) s l
+	) (\r -> happyReturn (HappyAbsSyn8 r))
+happyReduction_9 _ = notHappyAtAll 
 
-happyReduce_10 = happyMonadReduce 2 8 HappyAbsSyn8 reduction where {
-  reduction
-	((HappyAbsSyn14  happy_var_2) :
+happyReduce_10 = happyMonadReduce 2 8 happyReduction_10
+happyReduction_10 ((HappyAbsSyn14  happy_var_2) :
 	(HappyAbsSyn13  happy_var_1) :
 	happyRest)
-	 =  \s l -> returnP (happy_var_1,happy_var_2,l) s l;
-  reduction _ = notHappyAtAll }
+	 = happyThen ( \s l -> returnP (happy_var_1,happy_var_2,l) s l
+	) (\r -> happyReturn (HappyAbsSyn8 r))
+happyReduction_10 _ = notHappyAtAll 
 
-happyReduce_11 = happySpecReduce_2 9 reduction where {
-  reduction
-	(HappyAbsSyn10  happy_var_2)
+happyReduce_11 = happySpecReduce_2 9 happyReduction_11
+happyReduction_11 (HappyAbsSyn10  happy_var_2)
 	(HappyAbsSyn9  happy_var_1)
 	 =  HappyAbsSyn9
-		 (happy_var_2 : happy_var_1);
-  reduction _ _  = notHappyAtAll }
+		 (happy_var_2 : happy_var_1
+	)
+happyReduction_11 _ _  = notHappyAtAll 
 
-happyReduce_12 = happySpecReduce_1 9 reduction where {
-  reduction
-	(HappyAbsSyn10  happy_var_1)
+happyReduce_12 = happySpecReduce_1 9 happyReduction_12
+happyReduction_12 (HappyAbsSyn10  happy_var_1)
 	 =  HappyAbsSyn9
-		 ([happy_var_1]);
-  reduction _  = notHappyAtAll }
+		 ([happy_var_1]
+	)
+happyReduction_12 _  = notHappyAtAll 
 
-happyReduce_13 = happySpecReduce_2 10 reduction where {
-  reduction
+happyReduce_13 = happySpecReduce_2 10 happyReduction_13
+happyReduction_13 (HappyAbsSyn14  happy_var_2)
+	_
+	 =  HappyAbsSyn10
+		 (TokenType happy_var_2
+	)
+happyReduction_13 _ _  = notHappyAtAll 
+
+happyReduce_14 = happySpecReduce_2 10 happyReduction_14
+happyReduction_14 (HappyAbsSyn11  happy_var_2)
+	_
+	 =  HappyAbsSyn10
+		 (TokenSpec happy_var_2
+	)
+happyReduction_14 _ _  = notHappyAtAll 
+
+happyReduce_15 = happySpecReduce_2 10 happyReduction_15
+happyReduction_15 (HappyAbsSyn14  happy_var_2)
+	_
+	 =  HappyAbsSyn10
+		 (TokenName happy_var_2
+	)
+happyReduction_15 _ _  = notHappyAtAll 
+
+happyReduce_16 = happySpecReduce_3 10 happyReduction_16
+happyReduction_16 (HappyAbsSyn14  happy_var_3)
 	(HappyAbsSyn14  happy_var_2)
 	_
 	 =  HappyAbsSyn10
-		 (TokenType happy_var_2);
-  reduction _ _  = notHappyAtAll }
+		 (TokenLexer happy_var_2 happy_var_3
+	)
+happyReduction_16 _ _ _  = notHappyAtAll 
 
-happyReduce_14 = happySpecReduce_2 10 reduction where {
-  reduction
-	(HappyAbsSyn11  happy_var_2)
+happyReduce_17 = happySpecReduce_2 10 happyReduction_17
+happyReduction_17 (HappyAbsSyn14  happy_var_2)
 	_
 	 =  HappyAbsSyn10
-		 (TokenSpec happy_var_2);
-  reduction _ _  = notHappyAtAll }
+		 (TokenMonad happy_var_2 ">>=" "return"
+	)
+happyReduction_17 _ _  = notHappyAtAll 
 
-happyReduce_15 = happySpecReduce_2 10 reduction where {
-  reduction
-	(HappyAbsSyn14  happy_var_2)
-	_
-	 =  HappyAbsSyn10
-		 (TokenName happy_var_2);
-  reduction _ _  = notHappyAtAll }
-
-happyReduce_16 = happySpecReduce_3 10 reduction where {
-  reduction
-	(HappyAbsSyn14  happy_var_3)
-	(HappyAbsSyn14  happy_var_2)
-	_
-	 =  HappyAbsSyn10
-		 (TokenLexer happy_var_2 happy_var_3);
-  reduction _ _ _  = notHappyAtAll }
-
-happyReduce_17 = happySpecReduce_2 10 reduction where {
-  reduction
-	(HappyAbsSyn14  happy_var_2)
-	_
-	 =  HappyAbsSyn10
-		 (TokenMonad happy_var_2 ">>=" "return");
-  reduction _ _  = notHappyAtAll }
-
-happyReduce_18 = happyReduce 4 10 reduction where {
-  reduction
-	((HappyAbsSyn14  happy_var_4) :
+happyReduce_18 = happyReduce 4 10 happyReduction_18
+happyReduction_18 ((HappyAbsSyn14  happy_var_4) :
 	(HappyAbsSyn14  happy_var_3) :
 	(HappyAbsSyn14  happy_var_2) :
 	_ :
 	happyRest)
 	 = HappyAbsSyn10
-		 (TokenMonad happy_var_2 happy_var_3 happy_var_4) : happyRest;
-  reduction _ = notHappyAtAll }
+		 (TokenMonad happy_var_2 happy_var_3 happy_var_4
+	) : happyRest
+happyReduction_18 _ = notHappyAtAll 
 
-happyReduce_19 = happySpecReduce_2 11 reduction where {
-  reduction
-	(HappyAbsSyn11  happy_var_2)
+happyReduce_19 = happySpecReduce_2 11 happyReduction_19
+happyReduction_19 (HappyAbsSyn11  happy_var_2)
 	(HappyAbsSyn12  happy_var_1)
 	 =  HappyAbsSyn11
-		 (happy_var_1:happy_var_2);
-  reduction _ _  = notHappyAtAll }
+		 (happy_var_1:happy_var_2
+	)
+happyReduction_19 _ _  = notHappyAtAll 
 
-happyReduce_20 = happySpecReduce_1 11 reduction where {
-  reduction
-	(HappyAbsSyn12  happy_var_1)
+happyReduce_20 = happySpecReduce_1 11 happyReduction_20
+happyReduction_20 (HappyAbsSyn12  happy_var_1)
 	 =  HappyAbsSyn11
-		 ([happy_var_1]);
-  reduction _  = notHappyAtAll }
+		 ([happy_var_1]
+	)
+happyReduction_20 _  = notHappyAtAll 
 
-happyReduce_21 = happySpecReduce_2 12 reduction where {
-  reduction
-	(HappyAbsSyn14  happy_var_2)
+happyReduce_21 = happySpecReduce_2 12 happyReduction_21
+happyReduction_21 (HappyAbsSyn14  happy_var_2)
 	(HappyAbsSyn14  happy_var_1)
 	 =  HappyAbsSyn12
-		 ((happy_var_1,happy_var_2));
-  reduction _ _  = notHappyAtAll }
+		 ((happy_var_1,happy_var_2)
+	)
+happyReduction_21 _ _  = notHappyAtAll 
 
-happyReduce_22 = happySpecReduce_2 13 reduction where {
-  reduction
-	(HappyAbsSyn13  happy_var_2)
+happyReduce_22 = happySpecReduce_2 13 happyReduction_22
+happyReduction_22 (HappyAbsSyn13  happy_var_2)
 	(HappyAbsSyn14  happy_var_1)
 	 =  HappyAbsSyn13
-		 (happy_var_1 : happy_var_2);
-  reduction _ _  = notHappyAtAll }
+		 (happy_var_1 : happy_var_2
+	)
+happyReduction_22 _ _  = notHappyAtAll 
 
-happyReduce_23 = happySpecReduce_0 13 reduction where {
-  reduction
-	 =  HappyAbsSyn13
-		 ([])}
+happyReduce_23 = happySpecReduce_0 13 happyReduction_23
+happyReduction_23  =  HappyAbsSyn13
+		 ([]
+	)
 
-happyReduce_24 = happySpecReduce_1 14 reduction where {
-  reduction
-	(HappyTerminal (TokenInfo happy_var_1 TokId))
+happyReduce_24 = happySpecReduce_1 14 happyReduction_24
+happyReduction_24 (HappyTerminal (TokenInfo happy_var_1 TokId))
 	 =  HappyAbsSyn14
-		 (happy_var_1);
-  reduction _  = notHappyAtAll }
+		 (happy_var_1
+	)
+happyReduction_24 _  = notHappyAtAll 
 
-happyReduce_25 = happySpecReduce_1 15 reduction where {
-  reduction
-	(HappyAbsSyn14  happy_var_1)
+happyReduce_25 = happySpecReduce_1 15 happyReduction_25
+happyReduction_25 (HappyAbsSyn14  happy_var_1)
 	 =  HappyAbsSyn15
-		 (Just happy_var_1);
-  reduction _  = notHappyAtAll }
+		 (Just happy_var_1
+	)
+happyReduction_25 _  = notHappyAtAll 
 
-happyReduce_26 = happySpecReduce_0 15 reduction where {
-  reduction
-	 =  HappyAbsSyn15
-		 (Nothing)}
+happyReduce_26 = happySpecReduce_0 15 happyReduction_26
+happyReduction_26  =  HappyAbsSyn15
+		 (Nothing
+	)
 
-happyReduce_27 = happySpecReduce_1 16 reduction where {
-  reduction
-	(HappyTerminal (TokenInfo happy_var_1 TokCodeQuote))
+happyReduce_27 = happySpecReduce_1 16 happyReduction_27
+happyReduction_27 (HappyTerminal (TokenInfo happy_var_1 TokCodeQuote))
 	 =  HappyAbsSyn14
-		 (happy_var_1);
-  reduction _  = notHappyAtAll }
+		 (happy_var_1
+	)
+happyReduction_27 _  = notHappyAtAll 
 
 happyNewToken action sts stk
 	= lexer(\tk -> 
@@ -546,138 +547,213 @@ happyThen = (thenP)
 happyReturn = (returnP)
 ourParser = happyParse
 
-
-
 happyError :: P a
-happyError s l = failP (show l ++ ": Parse error\n") s l
+happyError s l = failP (show l ++ ": Parse error\n") s l{-# LINE 1 "GenericTemplate.hs" -}
+{-# LINE 1 "GenericTemplate.hs" -}
+-- $Id: Parser.hs,v 1.12 1999/12/06 12:27:18 panne Exp $
 
--- $Id: Parser.hs,v 1.11 1999/07/14 19:33:57 panne Exp $
+{-# LINE 15 "GenericTemplate.hs" -}
 
-{-
-	The stack is in the following order throughout the parse:
 
-	i	current token number
-	j	another copy of this to avoid messing with the stack
-	tk	current token semantic value
-	st	current state
-	sts	state stack
-	stk	semantic stack
--}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 -----------------------------------------------------------------------------
+-- starting the parse
 
 happyParse = happyNewToken action_0 [] []
 
--- All this HappyState stuff is simply because we can't have recursive
--- types in Haskell without an intervening data structure.
+-----------------------------------------------------------------------------
+-- Arrays only: do the next action
+
+{-# LINE 123 "GenericTemplate.hs" -}
+
+
+-----------------------------------------------------------------------------
+-- HappyState data type (not arrays)
+
+
 
 newtype HappyState b c = HappyState
-        (Int ->                         -- token number
-         Int ->                         -- token number (yes, again)
+        (Int ->                    -- token number
+         Int ->                    -- token number (yes, again)
          b ->                           -- token semantic value
          HappyState b c ->              -- current state
          [HappyState b c] ->            -- state stack
          c)
 
+
+
 -----------------------------------------------------------------------------
 -- Accepting the parse
 
-happyAccept j tk st sts [ HappyAbsSyn4 ans ] = happyReturn ans
-happyAccept j tk st sts _                    = notHappyAtAll
+happyAccept j tk st sts [ ans ] = happyReturn (case (ans) of {HappyAbsSyn4 z -> z })
+happyAccept j tk st sts _       = 
+
+				  notHappyAtAll
 
 -----------------------------------------------------------------------------
 -- Shifting a token
 
-happyShift new_state 1 tk st sts stk@(HappyErrorToken i : _) =
---     _trace "shifting the error token" $
-     new_state i i tk (HappyState new_state) (st:sts) stk
+happyShift new_state (1) tk st sts stk@(x : _) =
+     let i = (case x of { HappyErrorToken (i) -> i }) in
+--     trace "shifting the error token" $
+     new_state i i tk (HappyState (new_state)) ((st):(sts)) (stk)
 
 happyShift new_state i tk st sts stk =
-     happyNewToken new_state (st:sts) (HappyTerminal tk:stk)
-
------------------------------------------------------------------------------
--- Reducing
+     happyNewToken new_state ((st):(sts)) ((HappyTerminal (tk)):stk)
 
 -- happyReduce is specialised for the common cases.
 
--- don't allow reductions when we're in error recovery, because this can
--- lead to an infinite loop.
+happySpecReduce_0 i fn (1) tk st sts stk
+     = happyFail (1) tk st sts stk
+happySpecReduce_0 nt fn j tk st@((HappyState (action))) sts stk
+     = action nt j tk st ((st):(sts)) (fn : stk)
 
-happySpecReduce_0 i fn 1 tk st sts stk
-     = happyFail 1 tk st sts stk 
-happySpecReduce_0 i fn j tk st@(HappyState action) sts stk
-     = action i j tk st (st:sts) (fn : stk)
-
-happySpecReduce_1 i fn 1 tk st sts stk
-     = happyFail 1 tk st sts stk 
-happySpecReduce_1 i fn j tk _ sts@(st@(HappyState action):_) (v1:stk')
-     = action i j tk st sts (fn v1 : stk')
+happySpecReduce_1 i fn (1) tk st sts stk
+     = happyFail (1) tk st sts stk
+happySpecReduce_1 nt fn j tk _ sts@(((st@(HappyState (action))):(_))) (v1:stk')
+     = action nt j tk st sts (fn v1 : stk')
 happySpecReduce_1 _ _ _ _ _ _ _
      = notHappyAtAll
 
-happySpecReduce_2 i fn 1 tk st sts stk
-     = happyFail 1 tk st sts stk 
-happySpecReduce_2 i fn j tk _ (_:sts@(st@(HappyState action):_)) (v1:v2:stk')
-     = action i j tk st sts (fn v1 v2 : stk')
+happySpecReduce_2 i fn (1) tk st sts stk
+     = happyFail (1) tk st sts stk
+happySpecReduce_2 nt fn j tk _ ((_):(sts@(((st@(HappyState (action))):(_))))) (v1:v2:stk')
+     = action nt j tk st sts (fn v1 v2 : stk')
 happySpecReduce_2 _ _ _ _ _ _ _
      = notHappyAtAll
 
-happySpecReduce_3 i fn 1 tk st sts stk
-     = happyFail 1 tk st sts stk 
-happySpecReduce_3 i fn j tk _ (_:_:sts@(st@(HappyState action):_)) 
-	(v1:v2:v3:stk')
-     = action i j tk st sts (fn v1 v2 v3 : stk')
+happySpecReduce_3 i fn (1) tk st sts stk
+     = happyFail (1) tk st sts stk
+happySpecReduce_3 nt fn j tk _ ((_):(((_):(sts@(((st@(HappyState (action))):(_))))))) (v1:v2:v3:stk')
+     = action nt j tk st sts (fn v1 v2 v3 : stk')
 happySpecReduce_3 _ _ _ _ _ _ _
      = notHappyAtAll
 
-happyReduce k i fn 1 tk st sts stk
-     = happyFail 1 tk st sts stk 
-happyReduce k i fn j tk st sts stk = action i j tk st' sts' (fn stk)
-       where sts'@(st'@(HappyState action):_) = drop (k::Int) (st:sts)
+happyRedcue k i fn (1) tk st sts stk
+     = happyFail (1) tk st sts stk
+happyReduce k nt fn j tk st sts stk = action nt j tk st1 sts1 (fn stk)
+       where sts1@(((st1@(HappyState (action))):(_))) = happyDrop k ((st):(sts))
 
-happyMonadReduce k i c fn 1 tk st sts stk
-     = happyFail 1 tk st sts stk 
-happyMonadReduce k i c fn j tk st sts stk =
-	happyThen (fn stk) (\r -> action i j tk st' sts' (c r : stk'))
-       where sts'@(st'@(HappyState action):_) = drop (k::Int) (st:sts)
-	     stk' = drop (k::Int) stk
+happyMonadReduce k nt fn (1) tk st sts stk
+     = happyFail (1) tk st sts stk
+happyMonadReduce k nt fn j tk st sts stk =
+        happyThen (fn stk) (\r -> action nt j tk st1 sts1 (r : drop_stk))
+       where sts1@(((st1@(HappyState (action))):(_))) = happyDrop k ((st):(sts))
+             drop_stk = drop (k) stk
+
+happyDrop (0) l = l
+happyDrop n ((_):(t)) = happyDrop (n - (1)) t
 
 -----------------------------------------------------------------------------
 -- Moving to a new state after a reduction
 
+{-# LINE 214 "GenericTemplate.hs" -}
+
 happyGoto action j tk st = action j j tk (HappyState action)
 
------------------------------------------------------------------------------
--- Error recovery (1 is the error token)
 
--- fail if we are in recovery and no more states to discard
-happyFail  1 tk st' [] stk = 
+-----------------------------------------------------------------------------
+-- Error recovery ((1) is the error token)
+
+-- parse error if we are in recovery and we fail again
+happyFail  (1) tk old_st [] stk =
 --	trace "failing" $ 
     	happyError
 
 -- discard a state
-happyFail  1 tk st' (st@(HappyState action):sts) (saved_tok : _ : stk) =
+happyFail  (1) tk old_st (((HappyState (action))):(sts)) 
+						(saved_tok : _ : stk) =
 --	trace ("discarding state, depth " ++ show (length stk))  $
-	action 1 1 tk st sts (saved_tok:stk)
+	action (1) (1) tk (HappyState (action)) sts ((saved_tok:stk))
 
 -- Enter error recovery: generate an error token,
--- 			 save the old token and carry on.
-
--- we push the error token on the stack in anticipation of a shift,
--- and also because this is a convenient place to store the saved token.
-
-happyFail  i tk st@(HappyState action) sts stk =
---	_trace "entering error recovery" $
-	action 1 1 tk st sts (HappyErrorToken i : stk)
+--                       save the old token and carry on.
+happyFail  i tk (HappyState (action)) sts stk =
+--      trace "entering error recovery" $
+	action (1) (1) tk (HappyState (action)) sts ( (HappyErrorToken (i)) : stk)
 
 -- Internal happy errors:
 
 notHappyAtAll = error "Internal Happy error\n"
 
 -----------------------------------------------------------------------------
+-- Hack to get the typechecker to accept our action functions
+
+
+
+
+
+
+
+-----------------------------------------------------------------------------
 -- Don't inline any functions from the template.  GHC has a nasty habit
 -- of deciding to inline happyGoto everywhere, which increases the size of
 -- the generated parser quite a bit.
+
+
+
+
+
+
+
+
 
 {-# NOINLINE happyShift #-}
 {-# NOINLINE happySpecReduce_0 #-}
