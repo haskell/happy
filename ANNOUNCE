@@ -1,31 +1,21 @@
-                        Happy 1.5
+                        Happy 1.6
              The LALR(1) Parser Generator for Haskell
 
 This is the nth public release of our parser generator system for
 Haskell, called Happy (a dyslexic acronym for 'A Yacc-like Haskell
 Parser generator').  
 
-What's new in Happy 1.5 (vs. Happy 0.9)
+What's new in Happy 1.6 (vs. Happy 1.5)
 
-	* Monadic Lexical analysis
-	* Simple Error recovery
-	* so many bugfixes and small additions that I can't remember
-	  them all.
+	* Several bugfixes
+	* A new backend (GHC + coercions)
+	* A new BSD-style license.
 
 Happy is available in source form, which can be compiled with GHC
-version 0.29 or 2.xx, and we also provide binaries for various
-architectures.  All available from:
+version 3.xx or 4.xx, and we also provide binaries for various
+architectures.  The Happy homepage with links to the various
+distributions lives at:
 
-        ftp://ftp.dcs.gla.ac.uk/pub/haskell/happy
+	http://www.haskell.org/happy/
 
-There is a Happy parser for Haskell currenly under construction - for
-a snapshot of the code see
-
-	http://www.dcs.gla.ac.uk/~simonm/hsparse.tar.gz
-
-To keep updated about the current status of Happy, you can read its
-World Wide Web page:
-
-	http://www.dcs.gla.ac.uk/fp/software/happy.html
-
-Please send any bug reports and comments to simonm@dcs.gla.ac.uk.
+Please send any bug reports and comments to simonmar@microsoft.com.

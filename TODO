@@ -1,6 +1,5 @@
 * allow polymorphic type signatures for productions.
 * allow omitted semnatic values, defaulting to $1?
-* use unsafeCoerce instead of HappyAbsSyn datatype.
 
 -OLD-------------------------------------------------------------------------
 

@@ -1,23 +1,19 @@
-This is Happy version 1.5, the parser generator for Haskell 1.4.
+This is Happy version 1.6, a parser generator for Haskell 98.
 
-The source for Happy is in the subdirectory 'src'.  To install Happy,
-read the instructions in src/Makefile.
+WWW:	http://www.haskell.org/happy/
 
-Complete documentation can be found in the directory 'doc', in SGML.
-To format the documentation, you'll need the SGML-Tools (see
-http://www.xs4all.nl/~cg/sgmltools/).
+Complete documentation can be found in the directory 'doc', in
+SGML/DocBook.  To format the documentation, the DocBook-Tools suite
+(see http://www.http://sourceware.cygnus.com/docbook-tools/) provides
+all the bits & pieces you need.  Alternatively, pre-formatted
+documentation is available from Happy's homepage (URL above).
 
-The directory 'examples' contains some example parsers that use Happy.
+The directory 'examples' contains some example parsers that use Happy,
 
 For information on copying this program, see the file LICENSE in this
 directory.
 
-Bug reports should be sent to simonm@dcs.gla.ac.uk.
-
-To keep updated about the current status of Happy, you can read its
-World Wide Web page:
-
-	http://www.dcs.gla.ac.uk/fp/software/happy.html
+Bug reports should be sent to simonmar@microsoft.com.
 
 Happy Parsing!
 
