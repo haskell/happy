@@ -2,7 +2,7 @@
 
 {-
    GLR_Lib.lhs
-   $Id: GLR_Lib.lhs,v 1.3 2004/09/07 15:53:48 paulcc Exp $
+   $Id: GLR_Lib.lhs,v 1.4 2004/09/08 10:42:28 paulcc Exp $
 -}
 
 > {-
@@ -95,7 +95,6 @@ Note that tokens are stored as part of the spans.
 
 >type Forest       = FiniteMap ForestId [Branch]
 
-
 ---
 End result of parsing: 
  - successful parse with rooted forest
@@ -106,10 +105,9 @@ End result of parsing:
 >type Tokens = [[(Int, GSymbol)]]	-- list of ambiguous lexemes
 
 >data GLRResult 
-> = ParseOK     RootNode NodeMap    -- forest with root
-> | ParseError  Tokens   NodeMap    -- partial forest with bad input
-> | ParseEOF             NodeMap    -- partial forest (missing input)
->   deriving Show
+> = ParseOK     RootNode Forest    -- forest with root
+> | ParseError  Tokens   Forest    -- partial forest with bad input
+> | ParseEOF             Forest    -- partial forest (missing input)
 
 %-----------------------
 Forest to simplified output
@@ -117,8 +115,8 @@ Forest to simplified output
 >forestResult :: Int -> Forest -> GLRResult
 >forestResult length f
 > = case roots of
->	[]       -> ParseEOF ns_map
->	[r]      -> ParseOK r ns_map
+>	[]       -> ParseEOF f
+>	[r]      -> ParseOK r f
 >	rs@(_:_) -> error $ "multiple roots in forest, = " ++ show rs
 >						++ unlines (map show ns_map)
 >   where
@@ -133,7 +131,7 @@ Forest to simplified output
 >glr_parse :: [[UserDefTok]] -> GLRResult
 >glr_parse toks 
 > = case runST emptyFM [0..] (tp toks) of
->    (f,Left ts)   -> ParseError ts (fmToList f) 
+>    (f,Left ts)   -> ParseError ts f 
 >						-- Error within sentence
 >    (f,Right ss)  -> forestResult (length toks) f
 >						-- Either good parse or EOF
