@@ -1,6 +1,4 @@
 -----------------------------------------------------------------------------
-$Id: Info.lhs,v 1.14 2005/01/14 14:47:17 simonmar Exp $
-
 Generating info files.
 
 (c) 1993-2001 Andy Gill, Simon Marlow
@@ -11,7 +9,8 @@ Generating info files.
 > import Version		( version )
 > import LALR 			( Lr0Item )
 > import GenUtils               ( str, interleave, interleave', ljustify )
-> import Set
+> import Set ( Set )
+> import qualified Set hiding ( Set )
 > import Grammar
 
 > import Array
@@ -110,7 +109,7 @@ Produce a file of parser information, useful for debugging the parser.
 >   showStates =
 >   	  banner "States"
 >	. interleave "\n" (zipWith showState 
->		(map setToList items) [ 0 :: Int .. ])
+>		(map Set.toAscList items) [ 0 :: Int .. ])
 
 >   showState state n
 >   	= str "State ". shows n

@@ -1,6 +1,4 @@
 -----------------------------------------------------------------------------
-$Id: Set.lhs,v 1.8 1998/06/19 13:41:06 simonm Exp $
-
 A set ADT.
 
 This code is derived from the Set Module in the Glasgow Haskell
@@ -11,44 +9,31 @@ License.
 
 > module Set (
 >        Set,
->        mkSet, setToList, emptySet, singletonSet,
->        union, union_Int, unionManySets,
->        elementOf, isEmptySet,
->        sizeOfSet, mapSet, concatSet, concatMapSet, filterSet,
->	 subtractSet
+>        fromList, toAscList, empty, singleton,
+>        union,
+>        null,
+>        concatMapSet, filter,
+>	 difference
 >    ) where
 
+> import Prelude hiding ( null, filter )
 > import GenUtils
 
 > type Set a = [a] 
 
- instance (Show a) => Show (Set a) where 
-    showsPrec _ (MkSet [])     = showString "{}"
-    showsPrec _ (MkSet (x:xs)) = showChar '{' . shows x . showl xs
-                      where showl []     = showChar '}'
-                            showl (x:xs) = showChar ',' . shows x . showl xs
-
-#ifdef GOFER
-
- instance Eq (Set a) where { (==) = primGenericEq } 
- instance Ord [a] => Ord (Set a) where 
-       (MkSet a) <= (MkSet b) = a <= b
-
-#endif
-
 This is where we order the list and remove duplicates.
 
-> emptySet :: Ord a => Set a
-> emptySet =  []
+> empty :: Ord a => Set a
+> empty =  []
 
-> singletonSet :: Ord a => a -> Set a
-> singletonSet x = [x]
+> singleton :: Ord a => a -> Set a
+> singleton x = [x]
 
-> setToList :: Ord a => Set a -> [a]
-> setToList xs = xs
+> toAscList :: Ord a => Set a -> [a]
+> toAscList xs = xs
 
-> mkSet :: (Ord a) => [a] -> Set a
-> mkSet xs = sort_and_nuke_dups (<) (==) xs
+> fromList :: (Ord a) => [a] -> Set a
+> fromList xs = sort_and_nuke_dups (<) (==) xs
 
 -- slightly tweaked for performance...
 
@@ -84,54 +69,19 @@ This is where we order the list and remove duplicates.
 > union :: (Ord a) => Set a -> Set a -> Set a
 > union a b = merge_with_nuke (<) (==) a b
 
-> merge_with_nuke_Int []     ys      = ys
-> merge_with_nuke_Int xs     []      = xs
-> merge_with_nuke_Int (x:xs) (y:ys)
->        | x < y     = x : merge_with_nuke_Int xs (y:ys)
->	 | x == y    = x : merge_with_nuke_Int xs ys
->        | otherwise = y : merge_with_nuke_Int (x:xs) ys
-
-- tmp: poor man's specialisation
-
-> union_Int :: Set Int -> Set Int -> Set Int
-> union_Int a b = merge_with_nuke_Int a b
-
--- and, union of a whole list of sets:
-
-> unionManySets :: (Ord a) => [Set a] -> Set a
-> unionManySets = foldb union
-
-> elementOf :: (Ord a) => a -> Set a -> Bool
-> elementOf x y = elementOf_l (==) (>) x y
-
- elementOf_l :: (Ord a) => a -> [a] -> Bool
-
-> elementOf_l eq gt x []     = False
-> elementOf_l eq gt x (y:ys) 
->	= (x `eq` y) || (x `gt` y && elementOf_l eq gt x ys)
-
-> isEmptySet :: (Ord a) => Set a -> Bool
-> isEmptySet []    = True
-> isEmptySet other = False
-
-> sizeOfSet :: Set a -> Int
-> sizeOfSet a = length a
-
-> mapSet :: (Ord a,Ord b) => (a -> b) -> Set a -> Set b
-> mapSet = map
-
-> concatSet :: (Ord a) => Set (Set a) -> Set a
-> concatSet = mkSet . concat
+> null :: (Ord a) => Set a -> Bool
+> null []    = True
+> null other = False
 
 > concatMapSet :: (Ord b) => (a -> Set b) -> Set a -> Set b
-> concatMapSet f [] = emptySet
+> concatMapSet f [] = empty
 > concatMapSet f a  = foldb union (map f a)
 
-> filterSet :: (Ord a) => (a -> Bool) -> Set a -> Set a
-> filterSet = filter
+> filter :: (Ord a) => (a -> Bool) -> Set a -> Set a
+> filter p xs = [ x | x <- xs, p x]
 
-> subtractSet :: (Ord a) => Set a -> Set a -> Set a
-> subtractSet a b = subtract_l (<) (==) a b
+> difference :: (Ord a) => Set a -> Set a -> Set a
+> difference a b = subtract_l (<) (==) a b
 
 > subtract_l _ _ x [] = x
 > subtract_l _ _ [] _ = []
@@ -139,37 +89,3 @@ This is where we order the list and remove duplicates.
 >	| a `lt` b = a : subtract_l lt eq as y
 >	| a `eq` b = subtract_l lt eq as bs
 >	| otherwise = subtract_l lt eq x bs
-
-
-
------
-
-> {-
-> closure1 :: GrammarInfo -> ([Name] -> Set Name) -> Set Lr1Item -> [Lr1Item]
-> closure1 gram first set
->       = setToList (fst (mkClosure (\(_,new) _ -> isEmptySet new) 
->				    addItems 
->			 	    (emptySet,set)))
->	where
-
->	addItems :: (Set Lr1Item,Set Lr1Item) -> (Set Lr1Item,Set Lr1Item)
->	addItems (oldItems,newItems) = (newOldItems, newNewItems)
-> 	  where
->		newOldItems = newItems `union` oldItems
->		newNewItems = subtractSet (concatMapSet fn newItems)
->					   newOldItems
-
-				(concat (map fn newItems)))
-
->		fn :: Lr1Item -> Set Lr1Item
->       	fn (rule,dot,a) = 
->	   	  case lookupProdNo gram rule of
->		   (name,lhs,_) -> 
->		      case drop dot lhs of
->			(b@(NonTerminal nt):beta) ->
->				let terms = setToList (first (beta ++ [a]))
->				    bRules = lookupProdsOfName gram b in
->					mkSet [ (rule,0,b) | rule <- bRules,
->						       b <- terms ]
->			_ -> emptySet
-> -}

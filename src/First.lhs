@@ -1,15 +1,14 @@
 -----------------------------------------------------------------------------
-$Id: First.lhs,v 1.9 2001/04/27 10:10:23 simonmar Exp $
-
 Implementation of FIRST
 
 (c) 1993-2001 Andy Gill, Simon Marlow
 -----------------------------------------------------------------------------
 
-> module First (mkFirst ) where
+> module First ( mkFirst ) where
 
 > import GenUtils
-> import Set
+> import Set ( Set )
+> import qualified Set hiding ( Set )
 > import Grammar
 
 \subsection{Utilities}
@@ -20,14 +19,14 @@ Implementation of FIRST
 >                   h' = f h
 >                 in
 >                    if incEmpty h'
->                    then filterSet (not. isEmpty) h' `union_Int` b
+>                    then Set.filter (not. isEmpty) h' `Set.union` b
 >                    else h')
->        (singletonSet epsilonTok)
+>        (Set.singleton epsilonTok)
 
 Does the Set include the $\epsilon$ symbol ?
 
 > incEmpty :: Set Name -> Bool
-> incEmpty set = any isEmpty (setToList set)
+> incEmpty set = any isEmpty (Set.toAscList set)
 
 \subsection{Implementation of FIRST}
 
@@ -38,24 +37,24 @@ Does the Set include the $\epsilon$ symbol ?
 >		   , non_terminals = nts
 >		   })
 >       = joinSymSets (\ h -> case lookup h env of
->                               Nothing -> singletonSet h
+>                               Nothing -> Set.singleton h
 >                               Just ix -> ix)
 >   where
 >       env = mkClosure (==) (getNext fst_term prodNo prodsOfName)
->               [ (name,emptySet) | name <- nts ]
+>               [ (name,Set.empty) | name <- nts ]
 
 > getNext fst_term prodNo prodsOfName env = 
 >		[ (nm, next nm) | (nm,_) <- env ]
 >    where 
->    	fn t | t == errorTok || t >= fst_term = singletonSet t
+>    	fn t | t == errorTok || t >= fst_term = Set.singleton t
 >    	fn x = case lookup x env of
 >           	        Just t -> t
 >                       Nothing -> error "attempted FIRST(e) :-("
 
 > 	next :: Name -> Set Name
-> 	next t | t >= fst_term = singletonSet t
+> 	next t | t >= fst_term = Set.singleton t
 > 	next n = 
->       	foldb union_Int 
+>       	foldb Set.union 
 >               	[ joinSymSets fn (snd4 (prodNo rl)) | 
 >				rl <- prodsOfName n ]
 
