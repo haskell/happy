@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.38 2001/08/02 05:15:33 qrczak Exp $
+# $Id: Makefile,v 1.39 2001/08/08 13:21:04 qrczak Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -37,8 +37,6 @@ LALR_HC_OPTS        = -H12m
 ProduceCode_HC_OPTS = -H14m
 Main_HC_OPTS        = -H10m
 Version_HC_OPTS	    = -DHAPPY_VERSION=$(ProjectVersion)
-# TODO: remove -H80M when the strictness analyser is working again.
-ProduceCode_HC_OPTS = -H80M
 
 # This is not a good idea for a source distribution
 # SRC_HAPPY_OPTS += -g
@@ -95,4 +93,3 @@ all clean distclean maintainer-clean ::
 endif
 
 include $(TOP)/mk/target.mk
-
