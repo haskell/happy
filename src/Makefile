@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.12 1997/09/18 15:42:56 simonm Exp $
+# $Id: Makefile,v 1.13 1997/09/18 16:23:51 simonm Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -41,7 +41,7 @@ boot :: Version.hs
 boot ::
 	if [ -d $(FPTOOLS_TOP)/ghc ]; then \
 		(cd $(FPTOOLS_TOP)/ghc/utils/unlit && $(MAKE) boot); \
-		(cd $(FPTOOLS_TOP)/ghc/utils/mkdependHS && $(MAKE) boot) \
+		(cd $(FPTOOLS_TOP)/ghc/utils/mkdependHS && $(MAKE) boot); \
 		(cd $(FPTOOLS_TOP)/ghc/driver && $(MAKE) boot); \
 	fi 
 
