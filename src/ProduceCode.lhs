@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.11 1998/01/09 13:16:40 sof Exp $
+$Id: ProduceCode.lhs,v 1.12 1998/01/12 20:19:28 sof Exp $
 
 The code generator.
 
@@ -489,7 +489,7 @@ outlaw them inside { }
 >    produceMonadStuff =
 >	(case monad of
 >	  Nothing -> 
->            str "happyThen = \\m k -> k m" .
+>            str "happyThen = \\m k -> k m\n" .
 >	     str "happyReturn = " .
 >            (case lexer of 
 >		  Nothing -> str "\\a tks -> a"
