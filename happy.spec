@@ -1,4 +1,4 @@
-%define version    1.11
+%define version    1.12
 %define patchlevel 1
 %define prefix     /usr
 
