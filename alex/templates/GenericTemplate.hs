@@ -71,17 +71,7 @@ alexIndexShortOffAddr arr off = arr ! off
 
 -- alexScan :: AlexInput -> StartCode -> Maybe (AlexInput,Int,act)
 alexScan input IBOX(sc)
-  = case alex_scan_tkn (alexInputPrevChar input) ILIT(0) input sc AlexNone of
-	AlexNone ->
-#ifdef ALEX_DEBUG
-	  trace ("Error, or end of input.") $
-#endif
-	  Nothing
-	AlexLastAcc k input' len -> 
-#ifdef ALEX_DEBUG
-	  trace ("Accept.") $ 
-#endif
-	  Just (input', len, k)
+  = alex_scan_tkn (alexInputPrevChar input) ILIT(0) input sc AlexNone
 
 -- Push the input through the DFA, remembering the most recent accepting
 -- state it encountered.
@@ -89,8 +79,19 @@ alexScan input IBOX(sc)
 alex_scan_tkn lc len input s last_acc =
   input `seq` -- strict in the input
   case s of 
-    ILIT(-1) -> last_acc
+    ILIT(-1) -> finish last_acc input
     _ -> alex_scan_tkn' lc len input s last_acc
+
+finish AlexNone input = 
+#ifdef ALEX_DEBUG
+	trace ("Error, or end of input.") $
+#endif
+	Left input
+finish (AlexLastAcc k input' len) _ =
+#ifdef ALEX_DEBUG
+	trace ("Accept.") $ 
+#endif
+	Right (input', len, k)
 
 alex_scan_tkn' lc len input s last_acc =
   let 
@@ -98,7 +99,7 @@ alex_scan_tkn' lc len input s last_acc =
   in
   new_acc `seq`
   case alexGetChar input of
-     Nothing -> new_acc
+     Nothing -> finish new_acc input
      Just (c, new_input) -> 
 #ifdef ALEX_DEBUG
         trace ("State: " ++ show IBOX(s) ++ ", char: " ++ show c) $
@@ -133,8 +134,8 @@ alex_scan_tkn' lc len input s last_acc =
 		   Just IBOX(sn) ->
 		      let c = alexInputPrevChar input in c `seq` 
 		      case alex_scan_tkn c ILIT(0) input sn AlexNone of
-			  AlexNone      -> fail
-			  AlexLastAcc{} -> ok
+			  Left{}  -> fail
+			  Right{} -> ok
 			-- TODO: there's no need to find the longest
 			-- match when checking the right context, just
 			-- the first match will do.

@@ -193,10 +193,10 @@ lexToken = do
   inp <- getInput
   sc <- getStartCode
   case alexScan inp sc of
-    Nothing -> case inp of
+    Left _ -> case inp of
 		 (p,_,"")   -> return (T p EOFT)
 		 (p,_,rest) -> lexError "lexical error"
-    Just (inp1,len,t) -> do
+    Right (inp1,len,t) -> do
 	setInput inp1
 	t inp len
 
