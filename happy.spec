@@ -12,7 +12,6 @@ Group:        Development/Languages/Haskell
 Packager:     simonmar@microsoft.com
 URL:          http://www.haskell.org/happy/
 Source:       http://www.haskell.org/happy/dist/%{version}/happy-%{version}-src.tar.gz
-Requires:     haskell
 Summary:      The LALR(1) Parser Generator for Haskell
 %description
 Happy is a parser generator system for Haskell, similar to the tool `yacc' for
