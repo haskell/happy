@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.35 2000/12/20 17:01:33 simonmar Exp $
+# $Id: Makefile,v 1.36 2001/02/08 13:21:47 sebc Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -29,7 +29,7 @@ Info.lhs \
 GetOpt.lhs \
 Main.lhs 
 
-SRC_HC_OPTS += -cpp -fglasgow-exts $(HappyHcOpts)
+SRC_HC_OPTS += -cpp -fglasgow-exts -package lang $(HappyHcOpts)
 
 Parser_HC_OPTS      = -Onot
 Grammar_HC_OPTS     = -H8m
