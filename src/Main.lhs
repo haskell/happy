@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.3 1997/06/09 22:48:31 sof Exp $
+$Id: Main.lhs,v 1.4 1997/07/16 13:32:38 simonm Exp $
 
 The main driver.
 
@@ -8,18 +8,9 @@ The main driver.
 
 > module Main (main) where
 
-#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
-
 > import System
+> import Char
 > import IO
-> import Char ( toLower, toUpper )
-
-#else 
-
-> import 
->	LibSystem
-
-#endif
 
 > import ParseMonad
 > import GenUtils
@@ -45,13 +36,6 @@ Read and parse the CLI arguments.
 
 >       getArgs				>>= \ args ->
 >	main2 args
-
-#ifdef __GOFER__
-
-> happy :: String -> Dialogue
-> happy str = main2 (words str)
-
-#endif
 
 > main2 :: [String] -> IO ()
 > main2 args = 
@@ -224,20 +208,7 @@ Successfully Finished.
 > optDump cli pass io =
 > 	optIO (elem pass cli) io
 
-------------------------------------------------------------------------------
-
-The constArgs list is a hack to pass command line arguments to the
-program when developing in gofer.
-
-#ifdef __GOFER__
-
- constArgs = words "examples/AndysExample.ly"
-
-#else
-
 > constArgs = []
-
-#endif
 
 ------------------------------------------------------------------------------
 

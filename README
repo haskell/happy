@@ -1,4 +1,4 @@
-This is Happy version 0.9.
+This is Happy version 1.2.
 
 The source for Happy is in the subdirectory 'src'.  To install Happy,
 read the instructions in src/Makefile (even if you are using Gofer).
@@ -17,9 +17,6 @@ World Wide Web page:
 
 	http://www.dcs.gla.ac.uk/fp/software/happy.html
 
-This release is an interim release before 1.0.  After a short period
-of testing, this version will hopefully be released as 1.0.
-
 Happy Parsing!
 
-Andy & Simon.
+Simon.

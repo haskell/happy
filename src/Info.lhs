@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Info.lhs,v 1.3 1997/06/09 22:48:28 sof Exp $
+$Id: Info.lhs,v 1.4 1997/07/16 13:32:36 simonm Exp $
 
 Generating info files.
 
@@ -8,6 +8,7 @@ Generating info files.
 
 > module Info (genInfoFile) where
 
+> import Array
 > import Version		( version )
 > import LALR 			( Lr0Item(..) )
 > import GenUtils
@@ -15,13 +16,7 @@ Generating info files.
 > import AbsSyn
 > import Grammar
 > import ProduceCode		( str, interleave, interleave' )
-
-#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
-
-> import Array
 > import List (nub)
-
-#endif
 
 Produce a file of parser information, useful for debugging the parser.
 
@@ -59,18 +54,8 @@ Produce a file of parser information, useful for debugging the parser.
 >	. foldr (.) id (map showConflictsState (assocs conflictArray))
 >	. str "\n"
 
-#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
-
 >   showConflictsState (state, (0,0)) = id
 >   showConflictsState (state, (sr,rr))
-
-#else
-
->   showConflictsState (state := (0,0)) = id
->   showConflictsState (state := (sr,rr))
-
-#endif
-
 >   	= str "state "
 >	. shows state
 >	. str " contains "
@@ -123,20 +108,9 @@ Produce a file of parser information, useful for debugging the parser.
 >		(nt, toks, sem) = lookupProdNo rule
 >		(beforeDot, afterDot) = splitAt dot toks
 
-#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
-
 >   showAction (t, LR'Fail)
 >   	= id
 >   showAction (t, act)
-
-#else
-
->   showAction (t := LR'Fail)
->   	= id
->   showAction (t := act)
-
-#endif
-
 >   	= str "\t"
 >	. showJName 15 t
 >	. showAction' act
@@ -157,20 +131,9 @@ Produce a file of parser information, useful for debugging the parser.
 >		(map (\a -> str "\t\t\t(" . showAction' a . str ")") 
 >		 (nub (filter (/= a) as)))
 
-#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
-
 >   showGoto (nt, NoGoto)
 >   	= id
 >   showGoto (nt, Goto n)
-
-#else
-
->   showGoto (nt := NoGoto)
->   	= id
->   showGoto (nt := Goto n)
-
-#endif
-
 >   	= str "\t"
 >	. showJName 15 nt
 >	. str "goto state "

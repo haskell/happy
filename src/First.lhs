@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: First.lhs,v 1.2 1997/03/27 14:14:35 simonm Exp $
+$Id: First.lhs,v 1.3 1997/07/16 13:32:33 simonm Exp $
 
 Implementation of FIRST
 
@@ -34,7 +34,7 @@ Does the Set include the $\epsilon$ symbol ?
 
 > mkFirst :: GrammarInfo -> [Name] -> Set Name
 > mkFirst prod = 
->       joinSymSets (\ h -> case assocMaybe env h of
+>       joinSymSets (\ h -> case lookup h env of
 >                               Nothing -> singletonSet h
 >                               Just ix -> ix)
 >   where
@@ -48,7 +48,7 @@ Does the Set include the $\epsilon$ symbol ?
 >		[ (nm, next nm) | (nm,_) <- env ]
 >    where 
 >    	fn t | t == -1 || t >= first_term = singletonSet t
->    	fn x = case assocMaybe env x of
+>    	fn x = case lookup x env of
 >           	        Just t -> t
 >                       Nothing -> error "attempted FIRST(e) :-("
 

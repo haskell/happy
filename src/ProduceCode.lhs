@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.3 1997/06/09 22:48:33 sof Exp $
+$Id: ProduceCode.lhs,v 1.4 1997/07/16 13:32:39 simonm Exp $
 
 The code generator.
 
@@ -8,21 +8,15 @@ The code generator.
 
 > module ProduceCode (produceParser, str, interleave, interleave') where
 
+> import Maybe 			( isJust )
+
 > import Version		( version )
 > import GenUtils
 > import AbsSyn
 > import Grammar
 > import Target			( Target(..) )
-
-#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
-
 > import Array
-> import Char (isDigit)
-
-#define ASSOC(a,b) (a , b)
-#else
-#define ASSOC(a,b) (a := b)
-#endif
+> import Char
 
 %-----------------------------------------------------------------------------
 Produce the complete output file.
@@ -73,7 +67,7 @@ data HappyAbsSyn a t1 .. tn
 
 >    produceAbsSynDecl
 >	= str "data HappyAbsSyn "
->	. str (unwords [ "t" ++ show n | ASSOC(n, Nothing) <- assocs nt_types ])
+>	. str (unwords [ "t" ++ show n | (n, Nothing) <- assocs nt_types ])
 >	. str "\n\t= HappyTerminal " . str token_type
 >	. str "\n\t| HappyErrorToken Int\n"
 >	. interleave "\n" 
@@ -82,7 +76,7 @@ data HappyAbsSyn a t1 .. tn
 >             (case ty of 
 >                 Nothing -> showString " t" . shows n
 >                 Just t  -> brack t)
->         | ASSOC(n,ty) <- assocs nt_types, 
+>         | (n, ty) <- assocs nt_types, 
 >	    (nt_types_index ! n) == n]
 
 %-----------------------------------------------------------------------------
@@ -97,7 +91,7 @@ based parsers -- types aren't as important there).
 
 >    produceTypes | target == TargetArrayBased = id
 
->     | all maybeToBool (elems nt_types) =
+>     | all isJust (elems nt_types) =
 >       str "type HappyReduction = \n\t"
 >     . str "   "
 >     . intMaybeHash
@@ -278,7 +272,7 @@ The token conversion function.
 >	Nothing -> pat 
 >	Just fn -> brack (fn (pat []))
 >     where
->	  tok_str_fn = case assocMaybe token_rep t of
+>	  tok_str_fn = case lookup t token_rep of
 >		      Nothing -> Nothing
 >		      Just str -> mapDollorDollor str
 >	  pat = mkHappyVar i
@@ -317,7 +311,7 @@ detected in a different state now.
 >	. str "happy_n_terms = " . shows n_terminals . str " :: Int\n"
 >	. str "happy_n_nonterms = " . shows n_nonterminals . str " :: Int\n\n"
 
->    produceStateFunction goto ASSOC(state, acts)
+>    produceStateFunction goto (state, acts)
 > 	= foldr (.) id (map produceActions (assocs acts))
 >	. foldr (.) id (map produceGotos   (assocs gotos))
 >	. mkActionName state
@@ -327,31 +321,20 @@ detected in a different state now.
 >
 >	where gotos = goto ! state
 >	
-
-#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
-
 >	      produceActions (t, LR'Fail) = id
 >	      produceActions (t, action@(LR'Reduce _))
-
-#else
-
->	      produceActions (t := LR'Fail) = id
->	      produceActions (t := action@(LR'Reduce _))
-
-#endif
-
 >	      	= if default_act == LR'Fail
 >			then   actionFunction t
 >			     . mkAction action . str "\n"
 >			else id
->	      produceActions ASSOC(t, action)
+>	      produceActions (t, action)
 >	      	= actionFunction t
 >		. mkAction action . str "\n"
 >		
->	      produceGotos ASSOC(t, (Goto i))
+>	      produceGotos (t, Goto i)
 >	        = actionFunction t
 >		. str "happyGoto " . mkActionName i . str "\n"
->	      produceGotos ASSOC(t, NoGoto) = id
+>	      produceGotos (t, NoGoto) = id
 >	      
 >	      actionFunction t
 >	      	= mkActionName state . strspace
@@ -428,13 +411,13 @@ for types that have alphas in them. Maybe we should
 outlaw them inside { }
 
 >    nt_types_index = array (bounds nt_types) 
->			[ ASSOC(a, fn a b) | ASSOC(a,b) <- assocs nt_types ]
+>			[ (a, fn a b) | (a, b) <- assocs nt_types ]
 >     where
 >	fn n Nothing = n
->	fn n (Just a) = case assocMaybe assoc_list a of
+>	fn n (Just a) = case lookup a assoc_list of
 >			  Just v -> v
 >			  Nothing -> error ("cant find an item in list")
->	assoc_list = [ (b,a) | ASSOC(a,(Just b)) <- assocs nt_types ]
+>	assoc_list = [ (b,a) | (a, Just b) <- assocs nt_types ]
 
 >    makeAbsSynCon = mkAbsSynCon nt_types_index
 
@@ -467,19 +450,8 @@ outlaw them inside { }
 >	. str "\n"
 
 > reduceArrElem n
-
-#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
-
->   	= str "\t(" . shows n . str " , "
->	. str "happyReduce_" . shows n . str ")"
-
-#else
-
 >   	= str "\t" . shows n . str " := "
 >	. str "happyReduce_" . shows n
-
-#endif
-
 
 > actionVal :: LRAction -> Int
 > actionVal (LR'Shift  state) 	= state + 1

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: GenUtils.lhs,v 1.3 1997/06/09 22:48:26 sof Exp $
+$Id: GenUtils.lhs,v 1.4 1997/07/16 13:32:34 simonm Exp $
 
 Some General Utilities, including sorts, etc.
 This is realy just an extended prelude.
@@ -9,16 +9,12 @@ All the code below is understood to be in the public domain.
 > module GenUtils (
 
 >       partition', tack, 
->       assocMaybe, assocMaybeErr,
+>       assocMaybeErr,
 >       arrElem,
 >       memoise,
 >	returnMaybe,handleMaybe, findJust,
->	concatMaybes,
 >       MaybeErr(..),
->	listToMaybe,
 >       mapMaybe,
->       maybeToBool,
->       maybeToObj,
 >       maybeMap,
 >       joinMaybe,
 >       mkClosure,
@@ -35,33 +31,9 @@ All the code below is understood to be in the public domain.
 >	fst3,
 >	snd3,
 >	thd3,
->	assert
 >        ) where
 
-#ifndef __GLASGOW_HASKELL__
-
-> import 
-> 	Trace
-
-#endif
-
-#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
-
-> import Ix    ( Ix(..) )
-> import Array ( listArray, array, (!) )
-
-#define Text Show
-
-> infix 1 =:
-> (=:) a b = (a,b)
-
-#else
-
-> infix 1 =:
-> (=:) a b = (a := b)
-
-#endif
-
+> import Array
 
 %------------------------------------------------------------------------------
 
@@ -102,14 +74,6 @@ HBC has it in one of its builtin modules
 
 #endif
 
-> maybeToBool :: Maybe a -> Bool
-> maybeToBool (Just _) = True
-> maybeToBool _        = False
-
-> maybeToObj  :: Maybe a -> a
-> maybeToObj (Just a) = a
-> maybeToObj _        = error "Trying to extract object from a Nothing"
-
 > maybeMap :: (a -> b) -> Maybe a -> Maybe b
 > maybeMap f (Just a) = Just (f a)
 > maybeMap f Nothing  = Nothing
@@ -120,14 +84,7 @@ HBC has it in one of its builtin modules
 > joinMaybe _ Nothing  (Just g) = Just g
 > joinMaybe f (Just g) (Just h) = Just (f g h)
 
-> concatMaybes :: [Maybe a] -> [a]
-> concatMaybes xs = [ a | Just a <- xs]
-
-> listToMaybe [x] = Just x
-> listToMaybe [] = Nothing
-> listToMaybe _ = error "listToMaybe: list len > 1"
-
-> data MaybeErr a err = Succeeded a | Failed err deriving (Eq,Text)
+> data MaybeErr a err = Succeeded a | Failed err deriving (Eq,Show)
 
 @mkClosure@ makes a closure, when given a comparison and iteration loop. 
 Be careful, because if the functional always makes the object different, 
@@ -231,12 +188,6 @@ Gofer-like stuff:
 >	combine (a:r) = a : combine r
 > 
 
-> 
-> assocMaybe :: (Eq a) => [(a,b)] -> a -> Maybe b
-> assocMaybe env k = case [ val | (key,val) <- env, k == key] of
->                [] -> Nothing
->                (val:vs) -> Just val
-> 
 > assocMaybeErr :: (Eq a) => [(a,b)] -> a -> MaybeErr b String
 > assocMaybeErr env k = case [ val | (key,val) <- env, k == key] of
 >                        [] -> Failed "assoc: "
@@ -270,7 +221,7 @@ will give a very efficent variation of the fib function.
 
 > memoise :: (Ix a) => (a,a) -> (a -> b) -> a -> b
 > memoise bds f = (!) arr
->   where arr = array bds [ t =: f t | t <- range bds ]
+>   where arr = array bds [ (t, f t) | t <- range bds ]
 
 > mapAccumR :: (acc -> x -> (acc, y))         -- Function of elt of input list
 >                                     -- and accumulator, returning new

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Grammar.lhs,v 1.3 1997/06/09 22:48:28 sof Exp $
+$Id: Grammar.lhs,v 1.4 1997/07/16 13:32:35 simonm Exp $
 
 The Grammar data type.
 
@@ -9,12 +9,12 @@ The Grammar data type.
 Here is our mid-section datatype
 
 > module Grammar (
-> 	Name(..), isEmpty, 
+> 	Name, isEmpty, 
 >	
->	Production(..),  Productions(..), Terminals(..), NonTerminals(..),
+>	Production,  Productions, Terminals, NonTerminals,
 >	Grammar(..), mangler, fixDir, getTerm, checkRules, 
 >	
->	LRAction(..), ActionTable(..), Goto(..), GotoTable(..),
+>	LRAction(..), ActionTable, Goto(..), GotoTable,
 >	
 >	GrammarInfo(..),
 >	getProds, lookupProdNo, lookupProdsOfName, getNonTerminals,
@@ -25,19 +25,7 @@ Here is our mid-section datatype
 
 > import GenUtils
 > import AbsSyn
-
-#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
-
 > import Array
-> infix =:
-> (=:) a b = (a,b)
-
-#else
-
-> infix =:
-> (=:) a b = (a := b)
-
-#endif
 
 epsilon		= -2
 error		= -1
@@ -150,8 +138,7 @@ This bit is a real mess, mainly because of the error mesasge support.
 >	tys   = listArray (1, l_nt) [ ty | (nm,_,ty) <- rules ]
 
 >	env_array :: Array Int String
->	env_array = array (-1, l_nt + l_t) 
-> 		(map (\(a,b) -> a =: b) env)
+>	env_array = array (-1, l_nt + l_t) env
 
 >	rules'' = mkProdInfo
 >		  ((startTok, [1], "no code") : concat rules')
@@ -286,9 +273,8 @@ we are generating a parser for.
 >     where
 >	eof = last term
 >	arr = listArray (0,length prod-1) prod
->	ass = combinePairs [ (a,no) | ((a,_,_),no) <- zip prod [0::Int .. ] ]
->	arr' = array (0,(length ass-1))
->		[ n =: num | (n,num) <- ass ]
+>	ass = combinePairs [ (a,no) | ((a,_,_),no) <- zip prod [0..] ]
+>	arr' = array (0,(length ass-1)) ass
 >	fn' :: Name -> [Int]
 >	fn' x | x >= 0 && x < first_term = arr' ! x
 >	fn' _ = error "looking up production failure"

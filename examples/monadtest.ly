@@ -1,6 +1,10 @@
 -----------------------------------------------------------------------------
 Test for monadic Happy Parsers, Simon Marlow 1996.
 
+> {
+> import Char
+> }
+
 > %name calc
 > %tokentype { Token }
 
@@ -148,7 +152,7 @@ Here we test our parser.
 >	case runCalc "1 + 2 * 3" of {
 >	(Exp1 (Plus (Term (Factor (Int 1))) (Times (Factor (Int 2)) (Int 3)))) ->
 >	case runCalc "let x = 2 in x * (x - 2)" of {
->	(Let 1 "x" (Exp1 (Term (Factor (Int 2)))) (Exp1 (Term (Times (Factor (Var "x")) (Brack (Exp1 (Minus (Term (Factor (Var "x"))) (Factor (Int 2))))))))) -> appendChan stdout "Test works\n" abort done; 
+>	(Let 1 "x" (Exp1 (Term (Factor (Int 2)))) (Exp1 (Term (Times (Factor (Var "x")) (Brack (Exp1 (Minus (Term (Factor (Var "x"))) (Factor (Int 2))))))))) -> print "Test works\n"; 
 >	_ -> quit } ; _ -> quit } ; _ -> quit } ; _ -> quit }
-> quit = appendChan stdout "Test failed\n" abort done
+> quit = print "Test failed\n"
 > }

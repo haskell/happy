@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: LALR.lhs,v 1.3 1997/06/09 22:48:29 sof Exp $
+$Id: LALR.lhs,v 1.4 1997/07/16 13:32:37 simonm Exp $
 
 Generation of LALR parsing tables.
 
@@ -15,24 +15,12 @@ Generation of LALR parsing tables.
 	 GrammarInfo(..), Name(..), Set, GotoTable(..),
 	 ActionTable(..)) where
 
+> import Array
 > import GenUtils
 > import Set
 > import AbsSyn
 > import Grammar
 > import First
-
-# if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
-
-> import Array
-> infix =:
-> (=:) a b = (a,b)
-
-#else
-
-> infix =:
-> (=:) a b = (a := b)
-
-#endif
 
 > type Lr0Item = (Int,Int)			-- (rule, dot)
 > type Lr1Item = (Int,Int,Name)			-- (rule, dot, lookahead)
@@ -52,7 +40,7 @@ using a memo table so that no work is repeated.
 
 > precalcClosure0 :: GrammarInfo -> Name -> RuleList
 > precalcClosure0 g = 
->	\n -> case assocMaybe info' n of
+>	\n -> case lookup n info' of
 >		Nothing -> []
 >		Just c  -> c
 >  where
@@ -66,7 +54,7 @@ using a memo table so that no work is repeated.
 >	follow h n loop
 >		| n `elem` loop = (h,[])
 >		| otherwise =
->	    case assocMaybe h n of
+>	    case lookup n h of
 >		Nothing ->  let rules = lookupProdsOfName g n 
 >			        (h',c) = follows h rules [] (n:loop)
 >		            in
@@ -266,9 +254,9 @@ calcLookaheads pass.
 > propLookaheads gram sets first = (concat s, array (0,length sets - 1) p)
 >   where
 
->     (s,p) = unzip (zipWith propLASet sets [0::Int .. ])
+>     (s,p) = unzip (zipWith propLASet sets [0..])
 
->     propLASet (set,goto) i = (concat s, i =: concat p)
+>     propLASet (set,goto) i = (concat s, (i, concat p))
 >	where
 
 >	  (s,p) = unzip (map propLAItem (setToList set))
@@ -282,7 +270,7 @@ calcLookaheads pass.
 >		spontaneous = concat [ 
 >		 (case findRule gram rule dot of
 >		     Nothing -> []
->		     Just x  -> case assocMaybe goto x of
+>		     Just x  -> case lookup x goto of
 >			 	  Nothing -> error "spontaneous"
 >				  Just k  -> [(k, (rule, dot+1), t)])
 >			| (rule,dot,t) <- j, t /= dummy ]
@@ -290,7 +278,7 @@ calcLookaheads pass.
 >		propagated = concat [
 >		 (case findRule gram rule dot of
 >		     Nothing -> []
->		     Just x  -> case assocMaybe goto x of
+>		     Just x  -> case lookup x goto of
 >				  Nothing -> error "propagated"
 >				  Just k  -> [(item, k, (rule, dot+1))])
 >			| (rule,dot,t) <- j, t == dummy ]
@@ -356,7 +344,7 @@ remove them?
 >	
 >	where
 >	  result = array (0,top_state) [
->		state =:
+>		(state,
 
 Spontaneous Lookaheads
 
@@ -370,7 +358,7 @@ Propagated Lookaheads
 >			(item', st, item) <- prop ! i,
 >			st == state,
 >			names <- [ names | (item'', names) <- result ! i,
->					   item'' == item' ] ]
+>					   item'' == item' ] ])
 >
 >		  | state <- [ 0 .. top_state ] ]
 >		  
@@ -422,7 +410,7 @@ Generating the goto table doesn't need lookahead info.
 >       gotoTable  = listArray (0,length sets-1)
 >         [
 >           (array (1, length non_terms-1) [ 
->		(n =: case assocMaybe goto n of
+>		(n, case lookup n goto of
 >			Nothing -> NoGoto
 >			Just s  -> Goto s)
 >                             | n <- tail non_terms, n >= 0, n < first_term ])
@@ -440,20 +428,20 @@ Generating the goto table doesn't need lookahead info.
 >	eof = getEOF g
 >       term_lim = (head terms,last terms)
 >       actionTable = array (0,length sets-1)
->             [ set_no =: accumArray res
+>             [ (set_no, accumArray res
 >				 LR'Fail term_lim 
->				(possActions goto set)
+>				(possActions goto set))
 >                   | ((set,goto),set_no) <- zip sets [0..] ]
 
 >       possAction goto set (rule,pos,la) = 
 >          case findRule g rule pos of
 >               Just t | t >= first_term || t == -1 -> 
->			case assocMaybe goto t of
+>			case lookup t goto of
 >                       	Nothing -> []
->                               Just j  -> [ t =: LR'Shift j ]
+>                               Just j  -> [ (t, LR'Shift j) ]
 >               Nothing -> if rule == 0 
->                  then [ eof =: LR'Accept ]
->                  else [ la  =: LR'Reduce rule ]
+>                  then [ (eof, LR'Accept) ]
+>                  else [ (la,  LR'Reduce rule) ]
 >               _ -> []
 
 >	possActions goto coll = 
@@ -494,17 +482,7 @@ file.)
 >	conflictArray = listArray (bounds action) conflictList
 >	conflictList  = map countConflictsState (assocs action)
 >
-
-#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
-
 >	countConflictsState (state, actions) 
-
-#else
-
->	countConflictsState (state := actions) 
-
-#endif
-
 >	  = foldr countMultiples (0,0) (elems actions)
 >	  where
 >	    countMultiples (LR'Multiple as a) (sr,rr) 

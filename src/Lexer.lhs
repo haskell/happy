@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Lexer.lhs,v 1.4 1997/06/09 22:48:30 sof Exp $
+$Id: Lexer.lhs,v 1.5 1997/07/16 13:32:37 simonm Exp $
 
 The lexer.
 
@@ -13,31 +13,12 @@ The lexer.
 
 > import ParseMonad        
 > import GenUtils
-
-#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
-
 > import Char ( isSpace, isAlphanum )
-
-#endif
 
 > data Token 
 >       = TokenInfo String TokenId
 >       | TokenKW          TokenId
 >	| TokenEOF
-
-#ifdef DEBUG
-
-#if __HASKELL1__ >= 3
-
->       deriving (Show) 
-
-#else
-
->       deriving (Text)
-
-#endif
-
-#endif
 
 > tokenToId :: Token -> TokenId
 > tokenToId (TokenInfo _ i) = i

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: AbsSyn.lhs,v 1.3 1997/06/09 22:48:25 sof Exp $
+$Id: AbsSyn.lhs,v 1.4 1997/07/16 13:32:32 simonm Exp $
 
 Abstract syntax for grammar files.
 
@@ -13,8 +13,6 @@ Here is the abstract syntax of the language we parse.
 > 	 getTokenType, getTokenSpec, getParserName, getLexer, getMonad,
 >	
 >	 Maybe) where
-
-import GenUtils 	( Maybe(..) )
 
 > data AbsSyn
 >     = AbsSyn

@@ -1,3 +1,26 @@
+-----------------------------------------------------------------------------
+Changes from version 0.9a to version 1.2
+
+* Supports Haskell 1.4
+
+* Lots of bugs fixed
+
+* Performance: the parser generator is at least 20% faster, and
+  generated parsers should be faster due to the replacement of a
+  data type with a newtype.
+
+* Simple error recovery: designed to be enough to implement the
+  Haskell layout rule.
+
+* Revamped monad support: the monad can now be threaded through
+  the lexer, enabling passing of state between the parser and the
+  lexer (handy for the Haskell layout rule), and consistent error
+  handling.
+
+* The %newline feature is removed, the same effect can be achieved
+  using the new monad support.
+
+-----------------------------------------------------------------------------
 Changes from version 0.8 to 0.9:
 
 * Happy should be much faster than before.

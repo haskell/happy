@@ -1,5 +1,7 @@
--- parser produced by Happy Version 
+-- parser produced by Happy Version 1.2-alpha
 
+
+import Char
 
 data HappyAbsSyn 
 	= HappyTerminal Token
@@ -351,11 +353,11 @@ main = case runCalc "1 + 2 + 3" of {
 	case runCalc "1 + 2 * 3" of {
 	(Exp1 (Plus (Term (Factor (Int 1))) (Times (Factor (Int 2)) (Int 3)))) ->
 	case runCalc "let x = 2 in x * (x - 2)" of {
-	(Let "x" (Exp1 (Term (Factor (Int 2)))) (Exp1 (Term (Times (Factor (Var "x")) (Brack (Exp1 (Minus (Term (Factor (Var "x"))) (Factor (Int 2))))))))) -> appendChan stdout "Test works\n" abort done; 
+	(Let "x" (Exp1 (Term (Factor (Int 2)))) (Exp1 (Term (Times (Factor (Var "x")) (Brack (Exp1 (Minus (Term (Factor (Var "x"))) (Factor (Int 2))))))))) -> print "Test works\n"; 
 	_ -> quit } ; _ -> quit } ; _ -> quit } ; _ -> quit }
-quit = appendChan stdout "Test failed\n" abort done
+quit = print "Test failed\n"
 
--- $Id: Test.hs-CMP,v 1.2 1997/03/28 14:56:29 simonm Exp $
+-- $Id: Test.hs-CMP,v 1.3 1997/07/16 13:32:40 simonm Exp $
 
 {-
 	The stack is in the following order throughout the parse:
@@ -375,7 +377,7 @@ happyParse = happyNewToken action_0 [] []
 -- All this HappyState stuff is simply because we can't have recursive
 -- types in Haskell without an intervening data structure.
 
-data HappyState b c = HappyState
+newtype HappyState b c = HappyState
         (Int ->                         -- token number
          Int ->                         -- token number (yes, again)
          b ->                           -- token semantic value
