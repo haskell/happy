@@ -19,24 +19,24 @@ License.
 > import Prelude hiding ( null, filter )
 > import GenUtils
 
-> type Set a = [a] 
+> newtype Set a = Set [a] deriving Eq
 
 This is where we order the list and remove duplicates.
 
 > member :: Ord a => a -> Set a -> Bool
-> member x xs = x `elem` xs
+> member x (Set xs) = x `elem` xs
 
 > empty :: Ord a => Set a
-> empty =  []
+> empty = Set []
 
 > singleton :: Ord a => a -> Set a
-> singleton x = [x]
+> singleton x = Set [x]
 
 > toAscList :: Ord a => Set a -> [a]
-> toAscList xs = xs
+> toAscList (Set xs) = xs
 
 > fromList :: (Ord a) => [a] -> Set a
-> fromList xs = sort_and_nuke_dups (<) (==) xs
+> fromList xs = Set (sort_and_nuke_dups (<) (==) xs)
 
 -- slightly tweaked for performance...
 
@@ -70,20 +70,20 @@ This is where we order the list and remove duplicates.
 >        | otherwise = y : merge_with_nuke lt eq (x:xs) ys
 
 > union :: (Ord a) => Set a -> Set a -> Set a
-> union a b = merge_with_nuke (<) (==) a b
+> union (Set a) (Set b) = Set (merge_with_nuke (<) (==) a b)
 
 > null :: (Ord a) => Set a -> Bool
-> null []    = True
-> null other = False
+> null (Set [])    = True
+> null (Set other) = False
 
 > filter :: (Ord a) => (a -> Bool) -> Set a -> Set a
-> filter p xs = [ x | x <- xs, p x]
+> filter p (Set xs) = Set [ x | x <- xs, p x ]
 
 > fold :: (a -> b -> b) -> b -> Set a -> b
-> fold = foldr
+> fold f z (Set xs) = foldr f z xs
 
 > difference :: (Ord a) => Set a -> Set a -> Set a
-> difference a b = subtract_l (<) (==) a b
+> difference (Set a) (Set b) = Set (subtract_l (<) (==) a b)
 
 > subtract_l _ _ x [] = x
 > subtract_l _ _ [] _ = []

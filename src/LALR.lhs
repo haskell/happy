@@ -56,23 +56,23 @@ using a memo table so that no work is repeated.
 >  where
 >
 >	info' :: [(Name, RuleList)]
->	info' = map (\(n,rules) -> (n,map (\rule -> (rule,0)) rules)) info
+>	info' = map (\(n,rules) -> (n,map (\rule -> (rule,0)) (Set.toAscList rules))) info
 
 >	info :: [(Name, Set Int)]
 >	info = mkClosure (==) (\f -> map (follow f) f)
->			(map (\nt -> (nt,lookupProdsOfName g nt)) nts)
+>			(map (\nt -> (nt,Set.fromList (lookupProdsOfName g nt))) nts)
 
->	follow :: [(Name, [Int])] -> (Name, Set Int) -> (Name, Set Int)
->	follow f (nt,rules) = (nt, foldr Set.union rules (map (followNT f) (Set.toAscList rules)))
+>	follow :: [(Name, Set Int)] -> (Name, Set Int) -> (Name, Set Int)
+>	follow f (nt,rules) = (nt, unionMap (followNT f) rules `Set.union` rules)
 
->	followNT :: [(Name, [Int])] -> Int -> [Int]
+>	followNT :: [(Name, Set Int)] -> Int -> Set Int
 >	followNT f rule = 
 >		case findRule g rule 0 of
 >			Just nt	| nt >= firstStartTok && nt < fst_term ->
 >				case lookup nt f of
 >					Just rs -> rs
 >					Nothing -> error "followNT"
->			_ -> []
+>			_ -> Set.empty
 
 >	nts = non_terminals g
 >	fst_term = first_term g
@@ -308,9 +308,9 @@ calcLookaheads pass.
 >		     Just x  -> case lookup x goto of
 >			 	  Nothing -> error "spontaneous"
 >				  Just k  ->
->					case filter (/= dummyTok) (Set.toAscList ts) of
->					   [] -> []
->					   ts' -> [(k, (rule, dot+1), ts')])
+>					case Set.filter (/= dummyTok) ts of
+>					   ts' | Set.null ts' -> []
+>					       | otherwise -> [(k, (rule, dot+1), ts')])
 >			| (rule,dot,ts) <- j ]
 
 >		propagated :: [(Lr0Item, Int, Lr0Item)]
@@ -466,16 +466,18 @@ Stick the lookahead info back into the state table.
 >	= zipWith mergeIntoSet sets [0..]
 >	where
 
+>	  mergeIntoSet :: (Set Lr0Item, [(Name, Int)]) -> Int -> ([Lr1Item], [(Name, Int)])
 >	  mergeIntoSet (items, goto) i
 >		= (concat (map mergeIntoItem (Set.toAscList items)), goto)
 >		where
 
+>	  	  mergeIntoItem :: Lr0Item -> [Lr1Item]
 >	  	  mergeIntoItem item@(rule,dot)
 >		     = [(rule,dot,la)]
 >		     where la = case [ s | (item',s) <- lookaheads ! i,
 >					    item == item' ] of
->					[] -> []
->					[x] -> Set.toAscList x
+>					[] -> Set.empty
+>					[x] -> x
 >					_ -> error "mergIntoItem"
 
 -----------------------------------------------------------------------------
