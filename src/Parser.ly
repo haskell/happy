@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Parser.ly,v 1.5 1997/09/24 10:06:26 simonm Exp $
+$Id: Parser.ly,v 1.6 1998/01/09 13:16:39 sof Exp $
 
 The parser.
 
@@ -70,6 +70,7 @@ The parser.
 >	| spec_token tokenSpecs			{ TokenSpec $2 }
 >	| spec_name id				{ TokenName $2 }
 >	| spec_lexer code code			{ TokenLexer $2 $3 }
+>	| spec_monad code		        { TokenMonad $2 ">>=" "return" }
 >	| spec_monad code code code		{ TokenMonad $2 $3 $4 }
 
 > tokenSpecs :: { [(String,String)] }

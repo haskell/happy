@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.10 1997/12/15 11:12:06 simonm Exp $
+$Id: ProduceCode.lhs,v 1.11 1998/01/09 13:16:40 sof Exp $
 
 The code generator.
 
@@ -487,17 +487,21 @@ outlaw them inside { }
 >			Just (_,_,r) -> str (r++"(") . s . str ")"
 
 >    produceMonadStuff =
->	  str "happyThen = "
->	. (case monad of
->	    Nothing -> str "\\m k -> k m"
->	    Just (_,tn,_) -> str tn)
->	. str "\n"
->	. str "happyReturn = "
->	. (case monad of
->	    Nothing -> case lexer of
->			  Nothing -> str "\\a tks -> a"
->			  _       -> str "\\a -> a"
->	    Just (_,_,rtn) -> str rtn)
+>	(case monad of
+>	  Nothing -> 
+>            str "happyThen = \\m k -> k m" .
+>	     str "happyReturn = " .
+>            (case lexer of 
+>		  Nothing -> str "\\a tks -> a"
+>		  _       -> str "\\a -> a")
+>	  Just (ty,tn,rtn) ->
+>            let pty = str ty in
+>            str "happyThen :: " . pty .
+>            str " a -> (a -> "  . pty . 
+>	     str " b) -> " . pty . str " b\n" .
+>            str "happyThen = (" . str tn . str ")\n" .
+>            str "happyReturn :: a -> " . pty . str " a\n" .
+>            str "happyReturn = " . str rtn)
 >	. str "\n"
 
 >    reduceArrElem n

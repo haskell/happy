@@ -605,12 +605,16 @@ the following directive to the declaration section of the grammar
 file:
 
 <tscreen> <verb>
-%monad { <type> } { <then> } { <return> }
+%monad { <type> } [ { <then> } { <return> } ]
 </verb> </tscreen>
 
 where <tt/&lt;type&gt;/ is the type constructor for the monad,
 <tt/&lt;then&gt;/ is the bind operation of the monad, and
-<tt/&lt;return&gt;/ is the return operation.
+<tt/&lt;return&gt;/ is the return operation. If you leave out
+the names for the bind and return operations, Happy assumes that 
+<tt/&lt;type&gt;/ is an instance of the standard Haskell type
+class <tt/Monad/ and uses the overloaded names for the bind and return
+operations.
 
 When this declaration is included in the grammar, Happy makes a couple
 of changes to the generated parser: the types of the main parser
