@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------
-# $Id: boilerplate.mk,v 1.2 1998/08/27 14:17:36 simonm Exp $
+# $Id: boilerplate.mk,v 1.3 2001/05/05 11:34:01 simonmar Exp $
 
 # Begin by slurping in the boilerplate from one level up.
 # Remember, TOP is the top level of the innermost level
@@ -25,3 +25,10 @@ TOP:=$(HAPPY_TOP)
 -include $(TOP)/mk/paths.mk
 -include $(TOP)/mk/opts.mk
 -include $(TOP)/mk/suffix.mk
+
+# -----------------------------------------------------------------
+# Override $(libdir) and $(datadir), so GHC stuff gets installed 
+# into a suitable subdirectory of $(libdir).
+
+libdir  := $(libdir)/$(ProjectNameShort)-$(ProjectVersion)
+datadir := $(datadir)/$(ProjectNameShort)-$(ProjectVersion)
