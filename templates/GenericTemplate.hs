@@ -1,4 +1,4 @@
--- $Id: GenericTemplate.hs,v 1.11 2001/03/30 14:24:07 simonmar Exp $
+-- $Id: GenericTemplate.hs,v 1.12 2001/06/09 01:29:38 sof Exp $
 
 #ifdef HAPPY_GHC
 #define ILIT(n) n#
@@ -95,18 +95,18 @@ happyDoAction i tk st
 				     happyFail i tk st
 		ILIT(-1) 	  -> DEBUG_TRACE("accept.\n")
 				     happyAccept i tk st
-		n | LT(n,ILIT(0)) -> DEBUG_TRACE("reduce (rule " ++ show rule
+		n | LT(n,(ILIT(0) :: FAST_INT)) -> DEBUG_TRACE("reduce (rule " ++ show rule
 						 ++ ")")
 				     (happyReduceArr ! rule) i tk st
-				     where rule = IBOX(NEGATE(PLUS(n,ILIT(1))))
+				     where rule = IBOX(NEGATE(PLUS(n,(ILIT(1) :: FAST_INT))))
 		n		  -> DEBUG_TRACE("shift, enter state "
 						 ++ show IBOX(new_state)
 						 ++ "\n")
 				     happyShift new_state i tk st
-				     where new_state = MINUS(n,ILIT(1))
+				     where new_state = MINUS(n,(ILIT(1) :: FAST_INT))
    where off    = indexShortOffAddr happyActOffsets st
 	 off_i  = PLUS(off,i)
-	 check  = if GTE(off_i,ILIT(0)) 
+	 check  = if GTE(off_i,(ILIT(0) :: FAST_INT))
 			then EQ(indexShortOffAddr happyCheck off_i, i)
 			else False
  	 action | check     = indexShortOffAddr happyTable off_i
@@ -187,10 +187,10 @@ happyMonadReduce k nt fn j tk st sts stk =
              drop_stk = happyDropStk k stk
 
 happyDrop ILIT(0) l = l
-happyDrop n CONS(_,t) = happyDrop MINUS(n,ILIT(1)) t
+happyDrop n CONS(_,t) = happyDrop MINUS(n,(ILIT(1) :: FAST_INT)) t
 
 happyDropStk ILIT(0) l = l
-happyDropStk n (x `HappyStk` xs) = happyDropStk MINUS(n,ILIT(1)) xs
+happyDropStk n (x `HappyStk` xs) = happyDropStk MINUS(n,(ILIT(1)::FAST_INT)) xs
 
 -----------------------------------------------------------------------------
 -- Moving to a new state after a reduction
