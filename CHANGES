@@ -1,4 +1,11 @@
 -----------------------------------------------------------------------------
+Changes from version 1.11 to 1.13
+
+	* Support for newer versions of GHC (>= 5.04).
+
+	* Addition of an experimental flag: --strict.
+
+-----------------------------------------------------------------------------
 Changes from version 1.10 to 1.11
 
 	* tokens no longer have a default precedence - if you 
