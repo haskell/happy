@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.12 2004/08/11 15:39:32 paulcc Exp $
+# $Id: Makefile,v 1.13 2004/08/13 09:11:04 simonmar Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -20,6 +20,9 @@ TEMPLATES = \
 
 GENERIC_TEMPLATE = GenericTemplate.hs
 GLR_TEMPLATE = GLR_Lib.lhs
+
+# We don't need dependencies here
+MKDEPENDHS_SRCS =
 
 INSTALL_DATAS = $(TEMPLATES)
 
