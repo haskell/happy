@@ -14,7 +14,8 @@ a bit longer.
 There are issues about how to efficiently skip over "noise" in the data.
 This would make the parser faster. 
 
-Use "make run" to parse the 1-600.dna sequence
+Use "make run" to parse the 1-1200.dna sequence - it should take under 15 
+seconds
 
 
 

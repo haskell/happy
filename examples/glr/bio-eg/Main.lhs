@@ -12,26 +12,25 @@
 >	[s] <- getArgs
 >	case doParse $ map (:[]) $ lexer s of 
 >	  ParseOK r f -> do 
->			    let f_ = filter_noise f
+>			    let f_ = filter_noise $ fmToList f
 >			    putStrLn $ "Ok " ++ show r ++ "\n" 
 >						++ unlines (map show f_)
 >			    --writeFile "full" (unlines $ map show f)
 >			    toDV (trim_graph f_ r)
 >	  ParseEOF f  -> do 
->			    let f_ = filter_noise f
+>			    let f_ = filter_noise $ fmToList f
 >			    putStrLn $ "Premature end of input:\n" 
 >						++ unlines (map show f_)
 >			    toDV f_
 >			    --writeFile "full" (unlines $ map show f)
 >	  ParseError ts f -> do 
->			    let f_ = filter_noise f
+>			    let f_ = filter_noise $ fmToList f
 >			    putStrLn $ "Error: " ++ show ts
 >			    toDV f_ 
 >			    --writeFile "full" (unlines $ map show f)
 
-> forest_lookup f i@(_,_,s)
->  = case lookup i f of
->	Just bs -> (s,bs)
+> forest_lookup f i
+>  = fromJust $ lookupFM f i
 
 ---
 remove intergenic things, to make graph small enough for drawing

@@ -9,3 +9,5 @@ discussion.
 
 For Hugs, load up Hugs.lhs - it is a simplified version of Main, with entry
 point "test :: String -> IO ()"
+
+NOTE: you need the -98 flag on Hugs, owing to non-standard class use
