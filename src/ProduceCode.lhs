@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.9 1997/11/21 12:54:56 simonm Exp $
+$Id: ProduceCode.lhs,v 1.10 1997/12/15 11:12:06 simonm Exp $
 
 The code generator.
 
@@ -312,6 +312,41 @@ action.  This should make the code smaller without affecting the
 speed.  It changes the sematics for errors, however; errors could be
 detected in a different state now.
 
+Further notes on default cases:
+
+Default reductions are important when error recovery is considered: we
+don't allow reductions whilst in error recovery, so we'd like the
+parser to automatically reduce down to a state where the error token
+can be shifted before entering error recovery.  This is achieved by
+using default reductions wherever possible.
+
+One case to consider is:
+
+State 345
+
+	con -> conid .                                      (rule 186)
+	qconid -> conid .                                   (rule 212)
+
+	error          reduce using rule 212
+	'{'            reduce using rule 186
+	etc.
+
+we should make reduce_212 the default reduction here.  So the rules become:
+
+   * if there is a production 
+	error -> reduce_n
+     then make reduce_n the default action.
+   * otherwise pick the most popular reduction in this state for the default.
+   * if there are no reduce actions in this state, then the default
+     action remains 'enter error recovery'.
+
+This gives us an invariant: there won't ever be a production of the
+type 'error -> reduce_n' explicitly in the grammar, which means that
+whenever an unexpected token occurs, either the parser will reduce
+straight back to a state where the error token can be shifted, or if
+none exists, we'll get a parse error.  In theory, we won't need the
+machinery to discard states in the parser...
+
 >    produceActionTable TargetHaskell 
 >	= foldr (.) id (map (produceStateFunction goto) (assocs action))
 >    produceActionTable TargetGhc
@@ -325,7 +360,7 @@ detected in a different state now.
 >	. str "happy_n_nonterms = " . shows n_nonterminals . str " :: Int\n\n"
 
 >    produceStateFunction goto ASSOC(state, acts)
-> 	= foldr (.) id (map produceActions (assocs acts))
+> 	= foldr (.) id (map produceActions assocs_acts)
 >	. foldr (.) id (map produceGotos   (assocs gotos))
 >	. mkActionName state
 >	. case target of
@@ -338,10 +373,9 @@ detected in a different state now.
 >	
 >	      produceActions ASSOC(t, LR'Fail{-'-}) = id
 >	      produceActions ASSOC(t, action@(LR'Reduce{-'-} _))
->	      	= if default_act == LR'Fail
->			then   actionFunction t
+>	      	 | action == default_act = id
+>		 | otherwise = actionFunction t
 >			     . mkAction action . str "\n"
->			else id
 >	      produceActions ASSOC(t, action)
 >	      	= actionFunction t
 >		. mkAction action . str "\n"
@@ -356,7 +390,9 @@ detected in a different state now.
 >		. ('(' :) . showInt t
 >		. str ") = "
 >		
-> 	      default_act = getDefault (elems acts)
+> 	      default_act = getDefault assocs_acts
+>
+>	      assocs_acts = assocs acts
 
 action array indexed by (terminal * last_state) + state
 
@@ -493,12 +529,17 @@ outlaw them inside { }
 
 > mkActionName i		= str "action_" . shows i
 
-> getDefault actions
-> 	| (not . null) reduces && all (== (head reduces)) (tail reduces)
->		= head reduces
->	| otherwise = LR'Fail
->   where reduces = [ act | act@(LR'Reduce _) <- actions ]
->   		    ++ [ act | (LR'Multiple _ act@(LR'Reduce _)) <- actions ]
+> getDefault actions =
+>   case [ act | ASSOC(-1,act@(LR'Reduce{-'-} _)) <- actions ] of
+>	(act:_) -> act	-- use error reduction if there is one.
+>	[] ->
+>	    case reduces of
+>		 [] -> LR'Fail
+>		 (act:_) -> act	-- pick the first one we see for now
+>
+>   where reduces = [ act | ASSOC(_,act@(LR'Reduce{-'-} _)) <- actions ]
+>   		    ++ [ act | ASSOC(_,(LR'Multiple{-'-} _ 
+>					act@(LR'Reduce{-'-} _))) <- actions ]
 
 -----------------------------------------------------------------------------
 Replace all the $n variables with happy_vars, and return a list of all the
