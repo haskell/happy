@@ -1,10 +1,10 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.10 1997/09/08 12:40:33 simonm Exp $
+# $Id: Makefile,v 1.11 1997/09/10 11:34:23 simonm Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
 
-HAPPY    = happy-new
+HAPPY    = happy
 
 MKDEPENDHS      := $(HC)
 
