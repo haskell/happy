@@ -1,17 +1,17 @@
-%define version    1.10
+%define version    1.11
 %define patchlevel 1
 %define prefix     /usr
 
-Vendor:       Z101-Solutions, Munich, Germany
+Vendor:       Simon Marlow
 Distribution: Softies
 Name:         happy
 Version:      %{version}
 Release:      %{patchlevel}
 Copyright:    BSD w/o adv. clause
 Group:        Development/Languages/Haskell
-Packager:     Sven.Panne@BetaResearch.de
+Packager:     simonmar@microsoft.com
 URL:          http://www.haskell.org/happy/
-Source:       http://haskell.cs.yale.edu/happy/dist/%{version}/happy-%{version}-src.tar.gz
+Source:       http://www.haskell.org/happy/dist/%{version}/happy-%{version}-src.tar.gz
 Requires:     haskell
 Summary:      The LALR(1) Parser Generator for Haskell
 %description
@@ -31,7 +31,7 @@ Authors:
     Andy Gill <andy@galconn.com>
 
 %prep
-%setup -n fptools
+%setup -n happy-%{version}
 
 %build
 autoconf
