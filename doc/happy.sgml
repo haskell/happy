@@ -21,7 +21,7 @@
     </copyright>
     <abstract>
       <para>This document describes Happy, the Haskell Parser
-	Generator, version 1.6.</para>
+	Generator, version 1.8.</para>
     </abstract>
   </bookinfo>
 
@@ -69,7 +69,7 @@
       <see><literal/hsparser/</see>
     </indexterm>
 
-    <para> <application/Happy/ can currently generate three types of
+    <para> <application/Happy/ can currently generate four types of
     parser from a given grammar, the intention being that we can
     experiment with different kinds of functional code to see which is
     the best, and compiler writers can use the different types of
@@ -100,30 +100,37 @@
       users.</para></listitem>
 
       <indexterm>
-	<primary>ghc</primary>
+	<primary>GHC</primary>
       </indexterm>
 
       <indexterm>
 	<primary>back-ends</primary>
-	<secondary>ghc</secondary>
+	<secondary>GHC</secondary>
       </indexterm>
+
+      <listitem>
+	<para>GHC Haskell with string-encoded arrays.  This is the
+	fastest/smallest option for GHC users.  If you're using GHC,
+	the optimum flag settings are <literal>-agc</literal> (see
+	<xref linkend="sec-invoking">.</para>
+      </listitem>
+
     </orderedlist>
+
+    <para>Happy can also generate parsers which will dump debugging
+    information at run time, showing state transitions and the input
+    tokens to the parser.</para>
 
     <sect1 id="sec-compatibility">
       <title>Compatibility</title>
 
-      <para> <application/Happy/ is written in Haskell 98. This means
-      that it will compile under <application/Glasgow Haskell/
-      (recommended), <application/hbc/, <application/Hugs/, and any
-      other Haskell 98 compiler.
-      </para>
+      <para> <application/Happy/ is written in Glasgow Haskell.  This
+      means that (for the time being), you need GHC to compile it.
+      Any version of GHC >= 3.02 should work.</para>
 
       <para> Remember: parsers produced using <application/Happy/
-      should compile happily (sic) under any Haskell 98 complier.  A
-      compatibility mode enables <application/Happy/ to generate
-      parsers that will compile with a Haskell 1.2 compiler, such as
-      <application/GHC 0.29/.  </para>
-
+      should compile without difficulty under any Haskell 98
+      complier or interpreter.</para>
     </sect1>
 
     <sect1 id="sec-reporting-bugs">
@@ -137,9 +144,9 @@
       to me: Simon Marlow <email>simonmar@microsoft.com</email>
       including all the relevant information: - the compiler used to
       compile <application/Happy/, the command-line options used, your
-      grammar file or a cut-down example showing the problem, and a
-      description of what goes wrong.  A patch to fix the problem
-      would also be greatly appreciated. </para>
+      grammar file or preferably a cut-down example showing the
+      problem, and a description of what goes wrong.  A patch to fix
+      the problem would also be greatly appreciated. </para>
 
       <para> Requests for new features should also be sent to the
       above address, especially if accompanied by patches.  You never
@@ -161,7 +168,7 @@
       license:</para>
       
       <blockquote>
-	<para> Copyright 1999, Simon Marlow and Andy Gill.  All rights
+	<para> Copyright 2000, Simon Marlow and Andy Gill.  All rights
 	reserved. </para>
 
 	<para> Redistribution and use in source and binary forms, with
@@ -1380,13 +1387,11 @@ happy - [ options ] &lt;filename&gt; [ options ]
 	    <secondary>arrays</secondary>
 	  </indexterm>
 	  <para> Instructs <application/Happy/ to generate a parser
-          using an array-based shift reduce parser.  Currently this
-          generates slower parsers for two reasons: standard Haskell
-          arrays are surrounded by overloading and bounds-checking
-          which makes lookup quite expensive, and secondly current
-          compilers don't know how to generate static objects
-          (i.e. they generate the code which builds the array at
-          run-time).</para>
+          using an array-based shift reduce parser.  When used in
+          conjunction with <literal>-g</literal>, the arrays will be
+          encoded as strings, resulting in faster parsers.  Without
+          <literal>-g</literal>, standard Haskell arrays will be
+          used.</para>
 	</listitem>
       </varlistentry>
 
@@ -1394,17 +1399,15 @@ happy - [ options ] &lt;filename&gt; [ options ]
 	<term> <literal/-g | --ghc/ </term>
 	<listitem>
 	  <indexterm>
-	    <primary>ghc</primary>
+	    <primary>GHC</primary>
 	  </indexterm>
 	  <indexterm>
 	    <primary>back-ends</primary>
-	    <secondary>ghc</secondary>
+	    <secondary>GHC</secondary>
 	  </indexterm>
-	  <para> Instructs <application/Happy/ to generate a parser
-	  that uses ghc-specific extensions to obtain faster code.
-	  When compiling the resulting Haskell module, remember to add
-	  the declaration <literal/import GlaExts/ to the module
-	  header.</para>
+	  <para>Instructs <application/Happy/ to generate a parser
+	  that uses GHC-specific extensions to obtain faster
+	  code.</para>
 	</listitem>
       </varlistentry>
 
@@ -1419,17 +1422,31 @@ happy - [ options ] &lt;filename&gt; [ options ]
 	    <secondary>coerce</secondary>
 	  </indexterm>
 	  <para> Use GHC's <literal/unsafeCoerce#/ extension to
-          generate smaller faster parsers.  One drawback is that some
-          type safety is lost, which means that a parser generated
-          with <literal/-c/ may compile fine but crash at run-time.
-          Be sure to compile your grammar without <literal/-c/ first
-          to ensure it is type-correct.</para>
+          generate smaller faster parsers.  Type-safety isn't
+          compromised.</para>
 
-	  <para>This option quite a significant effect on the
-          performance of the resulting parser, but remember that
-          parsers generated this way can only be compiled by GHC 3.02
-          and above.  This option may only be used in conjuction with
+	  <para>This option may only be used in conjuction with
           <literal/-g/.</para>
+	</listitem>
+      </varlistentry>
+
+      <varlistentry>
+	<term> <literal/-d | --debug/ </term>
+	<listitem>
+	  <indexterm>
+	    <primary>debug</primary>
+	  </indexterm>
+	  <indexterm>
+	    <primary>back-ends</primary>
+	    <secondary>debug</secondary>
+	  </indexterm>
+	  <para>Generate a parser that will print debugging
+	  information to <literal>stderr</literal> at run-time,
+	  including all the shifts, reductions, state transitions and
+	  token inputs performed by the parser.</para>
+
+	  <para>This option can only be used in conjunction with
+	  <literal>-a</literal>.</para>
 	</listitem>
       </varlistentry>
 
@@ -1440,11 +1457,13 @@ happy - [ options ] &lt;filename&gt; [ options ]
 	  <indexterm>
 	    <primary>info file</primary>
 	  </indexterm>
-	  <para> Directs <application/Happy/ to produce an info file containing
-          detailed information about the grammar, parser states,
-          parser actions, and conflicts.  Info files are vital during
-          the debugging of grammars.  The filename argument is
-          optional, and if omitted the info file will be written to
+	  <para> Directs <application/Happy/ to produce an info file
+          containing detailed information about the grammar, parser
+          states, parser actions, and conflicts.  Info files are vital
+          during the debugging of grammars.  The filename argument is
+          optional (note that there's no space between
+          <literal>-i</literal> and the filename in the short
+          version), and if omitted the info file will be written to
           <literal/&lt;file&gt;.info/ (where <literal/&lt;file&gt/; is
           the input file name with any extension removed). </para>
 	</listitem>
@@ -1476,7 +1495,8 @@ happy - [ options ] &lt;filename&gt; [ options ]
       <varlistentry>
 	<term> <literal/-v | --version/ </term>
 	<listitem>
-	  <para>Print version information on standard output then exit successfully.</para>
+	  <para>Print version information on standard output then exit
+	  successfully.</para>
 	</listitem>
       </varlistentry>
 
@@ -1498,11 +1518,6 @@ happy - [ options ] &lt;filename&gt; [ options ]
       
     </variablelist>
 
-    <para>Note: only one of the options <literal/-g/ and <literal/-a/
-    may be given (or their long versions).  There is no array-based
-    parser with ghc extensions yet, but this is planned for a future
-    version.</para>
-    
   </chapter>
 
   <chapter id="sec-grammar-files">
@@ -1832,14 +1847,15 @@ any projection function.</para>
 
 	<listitem>
 	  <indexterm>
-	    <primary>ghc</primary>
+	    <primary>GHC</primary>
 	  </indexterm>
 	  <para> If you are using GHC, generate parsers using the
-          <literal/-g/ option, and compile them using ghc with the
-          <literal/-fglasgow-exts/ option.  This is worth about
-          10-20%.  Use the <literal/-c/ option: this is worth at least
-          another 10%, in code size, execution time and space
-          usage.</para>
+          <literal/-g -a -c/ options, and compile them using GHC with
+          the <literal/-fglasgow-exts/ option.  This is worth a
+          <emphasis>lot</emphasis>, in terms of compile-time,
+          execution speed and binary size <footnote><para>omitting the
+          <literal>-a</literal> may generate slightly faster parsers,
+          but they will be much bigger.</para></footnote>.</para>
 	</listitem>
 
 	<listitem>
@@ -1913,9 +1929,9 @@ any projection function.</para>
 	</listitem>
 
 	<listitem>
-	  <para> Using <application/Happy/'s <literal/-g/ option when
-	  generating parsers to be compiled with GHC will help
-	  considerably.</para>
+	  <para> Using <application/Happy/'s <literal/-g -a -c/
+	  options when generating parsers to be compiled with GHC will
+	  help considerably.</para>
 	</listitem>
 
       </itemizedlist>
