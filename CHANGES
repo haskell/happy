@@ -1,4 +1,13 @@
 -----------------------------------------------------------------------------
+Changes from version 1.2 to version 1.5
+
+* Many bug fixes to the error recovery support, found by experimenting
+  with the Haskell grammar and layout.
+
+* Happy is about 5 times faster on large examples, due to some
+  changes in the LALR(1) algorithms.
+
+-----------------------------------------------------------------------------
 Changes from version 0.9a to version 1.2
 
 * Supports Haskell 1.4
