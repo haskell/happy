@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.45 2001/01/15 11:18:13 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.46 2001/01/17 17:15:37 simonmar Exp $
 
 The code generator.
 
@@ -1075,7 +1075,7 @@ Replace $$ with an arbitrary string, being careful to avoid ".." and '.'.
 >		'"'  :r    -> case reads code :: [(String,String)] of
 >				 []      -> '"' : go r
 >				 (s,r):_ -> show s ++ go r
->		a:'\'' :r | isAlphaNum a -> '\'' : go r
+>		a:'\'' :r | isAlphaNum a -> a:'\'' : go r
 >		'\'' :r    -> case reads code :: [(Char,String)] of
 >				 []      -> '\'' : go r
 >				 (c,r):_ -> show c ++ go r
