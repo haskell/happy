@@ -11,12 +11,9 @@
 -------------------------------------------------------------------------------
 
 {
-module Scan(lexer) where
+module Scan(lexer, Posn(..), Token(..), Tkn(..), tokPosn) where
 
-import Alex
-import AbsSyn hiding (DFA,State(..),StartCode,Accept(..))
-
-import qualified Array
+import Array
 import Data.Char
 import Debug.Trace
 }
@@ -69,6 +66,32 @@ alex :-
 <startcodes> 	\> 		{ begin 0 special }
 
 {
+-- -----------------------------------------------------------------------------
+-- Token type
+
+data Token = T Posn Tkn
+  deriving Show
+
+tokPosn (T p _) = p
+
+data Tkn
+ = SpecialT Char
+ | CodeT String
+ | ZeroT
+ | IdT String
+ | StringT String
+ | BindT String
+ | CharT Char
+ | SMacT String
+ | RMacT String  
+ | SMacDefT String
+ | RMacDefT String  
+ | NumT Int	
+ deriving Show
+
+-- -----------------------------------------------------------------------------
+-- Token functions
+
 special = mk_act (\p ln str -> T p (SpecialT  (head str)))
 brace   = mk_act (\p ln str -> T p (SpecialT  '\123'))
 zero    = mk_act (\p ln str -> T p ZeroT)
@@ -97,11 +120,11 @@ begin startcode tok p c input len cont (_,s) =
 nest_code p c input len cont (sc,(0,_)) =
   cont (sc,(1,""))
 nest_code p c input len cont (sc,(state,so_far)) =
-  trace ("incode " ++ show state) $
+  -- trace ("incode " ++ show state) $
   cont (sc,(state+1,'\123':so_far))  -- TODO \123 = open brace
 
 code p c inp len cont (sc,(n,so_far)) = 
-  trace "code" $
+  -- trace "code" $
   cont (sc,(n, reverse (take len inp) ++ so_far))
 
 unnest_code p c input len cont (sc,(1,so_far)) =
@@ -137,5 +160,5 @@ str2int:: String -> Int
 str2int = foldl (\n d-> n*10+ord d-ord '0') 0
 
 lexer :: String -> [Token]
-lexer = gscan (load_gscan stop alex) (0::Int,"")
+lexer = gscan stop (0::Int,"")
 }

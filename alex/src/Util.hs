@@ -1,9 +1,12 @@
---
--- Util.hs
+-- -----------------------------------------------------------------------------
+-- 
+-- Util.hs, part of Alex
 --
 -- (c) Simon Marlow 2003
 --
 -- General utilities used in various parts of Alex
+--
+-- ----------------------------------------------------------------------------}
 
 module Util where
 

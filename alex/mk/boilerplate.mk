@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------
-# $Id: boilerplate.mk,v 1.1.1.1 2002/12/09 21:51:51 ijones Exp $
+# $Id: boilerplate.mk,v 1.1.1.1.2.1 2003/02/12 12:20:02 simonmar Exp $
 
 # Begin by slurping in the boilerplate from one level up.
 # Remember, TOP is the top level of the innermost level
@@ -11,7 +11,7 @@
 # The TOP variable is reset after the inclusion of the fptools
 # boilerplate, so we stash TOP away first:
 ALEX_TOP := $(TOP)
-TOP:=$(TOP)/..
+TOP:=$(TOP)/../..
 
 include $(TOP)/mk/boilerplate.mk
 

@@ -1,6 +1,14 @@
+-- -----------------------------------------------------------------------------
+-- 
+-- CharSet.hs, part of Alex
+--
+-- (c) Chris Dornan 1995-2000, Simon Marlow 2003
+--
 -- An abstract CharSet type for Alex.  To begin with we'll use Alex's
 -- original definition of sets as functions, then later will
 -- transition to something that will work better with Unicode.
+--
+-- ----------------------------------------------------------------------------}
 
 module CharSet (
   CharSet, -- abstract

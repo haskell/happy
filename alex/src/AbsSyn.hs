@@ -1,58 +1,34 @@
-{------------------------------------------------------------------------------
-		       REGULAR EXPRESSIONS AND SCANNERS
-
-This module provides a concrete representation for regular expressions and
-scanners.  Scanners are used for tokenising files in preparation for parsing.
-
-Chris Dornan, Aug-95, 10-Jul-96
-Simon Marlow, Jan 2003
-------------------------------------------------------------------------------}
+-- -----------------------------------------------------------------------------
+-- 
+-- AbsSyn.hs, part of Alex
+--
+-- (c) Chris Dornan 1995-2000, Simon Marlow 2003
+--
+-- This module provides a concrete representation for regular expressions and
+-- scanners.  Scanners are used for tokenising files in preparation for parsing.
+--
+-- ----------------------------------------------------------------------------}
 
 module AbsSyn (
-  Token(..), Tkn(..), tokPosn,
   Script,
   Code,
   Def(..),
   Scanner(..),
   RECtx(..),
   RExp(..),
-  DFA, SNum, StartCode, State(..), Accept(..),
-  encode_start_codes
+  DFA(..), State(..), SNum, StartCode, Accept(..),
+  encode_start_codes,
+  Target(..)
   ) where
 
 import CharSet
-import Alex 		( Posn(..) )
 import Sort
 
 import Data.FiniteMap
 import Data.Maybe
-import qualified Data.Array as Array
 
 infixl 4 :|
 infixl 5 :%%
-
--- -----------------------------------------------------------------------------
--- Token type
-
-data Token = T Posn Tkn
-  deriving Show
-
-tokPosn (T p _) = p
-
-data Tkn
- = SpecialT Char
- | CodeT String
- | ZeroT
- | IdT String
- | StringT String
- | BindT String
- | CharT Char
- | SMacT String
- | RMacT String  
- | SMacDefT String
- | RMacDefT String  
- | NumT Int	
- deriving Show
 
 -- -----------------------------------------------------------------------------
 -- Abstract Syntax for Alex scripts
@@ -104,16 +80,19 @@ showRCtx (Just r) = ('\\':) . shows r
 -- -----------------------------------------------------------------------------
 -- DFAs
 
-type DFA a = Array.Array SNum (State a)
+data DFA s a = DFA
+  { dfa_start_states :: [s],
+    dfa_states       :: FiniteMap s (State s a)
+  }
+
+data State s a = State [Accept a] (FiniteMap Char s)
 
 type SNum = Int
 
-data State a = St Bool [Accept a] SNum (Array.Array Char SNum)
-
-data Accept a 
+data Accept a
   = Acc { accPrio       :: Int,
 	  accAction     :: a,
-	  accLeftCtx    :: Maybe(Char->Bool),
+	  accLeftCtx    :: Maybe CharSet,
 	  accRightCtx   :: Maybe SNum
     }
 
@@ -253,3 +232,9 @@ encode_start_codes ind defs = (defs', 0 : map snd name_code_pairs, sc_hdr)
 	nms = [nm | DefScanner scr <- defs,
 		    RECtx{reCtxStartCodes = scs} <- scannerTokens scr,
 		    (nm,_) <- scs, nm /= "0"]
+
+-- -----------------------------------------------------------------------------
+-- Code generation targets
+
+data Target = GhcTarget | HaskellTarget
+

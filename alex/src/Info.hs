@@ -1,39 +1,44 @@
---
--- Info.hs
+-- -----------------------------------------------------------------------------
+-- 
+-- Info.hs, part of Alex
 --
 -- (c) Simon Marlow 2003
 --
+-- Generate a human-readable rendition of the state machine.
+--
+-- ----------------------------------------------------------------------------}
 
 module Info (infoDFA) where
 
 import AbsSyn
 import Util
 
+import Data.FiniteMap
 import Data.Array
 
 -- -----------------------------------------------------------------------------
 -- Generate a human readable dump of the state machine
 
-infoDFA :: Int -> String -> DFA Code -> ShowS
+infoDFA :: Int -> String -> DFA SNum Code -> ShowS
 infoDFA n func_nm dfa
   = str "Scanner : " . str func_nm . nl
-  . str "States  : " . shows (r-l) . nl
+  . str "States  : " . shows (length dfa_list) . nl
   . nl . infoDFA dfa
   where    
-    (l,r) = bounds dfa
+    dfa_list = fmToList (dfa_states dfa)
 
-    infoDFA dfa = interleave_shows nl (map infoStateN (assocs dfa))
+    infoDFA dfa = interleave_shows nl (map infoStateN dfa_list)
 
     infoStateN (i,s) = str "State " . shows i . nl . infoState s . nl
 
-    infoState :: State Code -> ShowS
-    infoState (St cl accs df out)
+    infoState :: State SNum Code -> ShowS
+    infoState (State accs out)
 	= infoArr out . nl
-	. str ("\tDefault -> ") . shows df
+	-- . str ("\tDefault -> ") . shows df
 
     infoArr out
 	= char '\t' . interleave_shows (str "\n\t")
-			(map infoTransition (assocs out))
+			(map infoTransition (fmToList out))
 
     infoTransition (char,state)
 	= str (ljustify 8 (show char))

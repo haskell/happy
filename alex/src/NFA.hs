@@ -1,15 +1,18 @@
-{------------------------------------------------------------------------------
-				      NFA GENERATOR
-
-The `scanner2nfa' takes a `Scanner' (see the `RExp' module) and generates its
-equivelent nondeterministic finite automaton.  NFAs are turned into DFAs in the
-DFA module.
-
-See the chapter on `Finite Automata and Lexical Analysis' in the dragon book
-for an excellent overview of the algorithms in this module.
-
-Chris Dornan, Aug-95, 10-Jul-96, 29-Sep-97
-------------------------------------------------------------------------------}
+-- -----------------------------------------------------------------------------
+-- 
+-- NFA.hs, part of Alex
+--
+-- (c) Chris Dornan 1995-2000, Simon Marlow 2003
+--
+-- The `scanner2nfa' takes a `Scanner' (see the `RExp' module) and
+-- generates its equivelent nondeterministic finite automaton.  NFAs
+-- are turned into DFAs in the DFA module.
+-- 
+-- See the chapter on `Finite Automata and Lexical Analysis' in the
+-- dragon book for an excellent overview of the algorithms in this
+-- module.
+--
+-- ----------------------------------------------------------------------------}
 
 module NFA where
 

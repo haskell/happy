@@ -1,14 +1,17 @@
-{------------------------------------------------------------------------------
-				DFA GENERATION
-
-This module generates a DFA from a scanner by first converting it to an NFA and
-then converting the NFA with the subset construction.
-
-See the chapter on `Finite Automata and Lexical Analysis' in the dragon book
-for an excellent overview of the algorithms in this module.
-
-Chris Dornan, Aug-95, 10-Jul-96, 29-Aug-96, 29-Sep-97
-------------------------------------------------------------------------------}
+-- -----------------------------------------------------------------------------
+-- 
+-- DFA.hs, part of Alex
+--
+-- (c) Chris Dornan 1995-2000, Simon Marlow 2003
+--
+-- This module generates a DFA from a scanner by first converting it
+-- to an NFA and then converting the NFA with the subset construction.
+-- 
+-- See the chapter on `Finite Automata and Lexical Analysis' in the
+-- dragon book for an excellent overview of the algorithms in this
+-- module.
+--
+-- ----------------------------------------------------------------------------}
 
 module DFA(scanner2dfa) where
 
@@ -85,11 +88,11 @@ type StartCode = Int
 -- state of the partial DFA, until all possible state sets have been considered
 -- The final DFA is then constructed with a `mk_dfa'.
 
-scanner2dfa:: Scanner -> [StartCode] -> DFA Code
+scanner2dfa:: Scanner -> [StartCode] -> DFA SNum Code
 scanner2dfa scanner scs = nfa2dfa scs (scanner2nfa scanner scs)
 
-nfa2dfa:: [StartCode] -> NFA -> DFA Code
-nfa2dfa scs nfa = mk_dfa (nfa2pdfa pdfa (start_pdfa pdfa))
+nfa2dfa:: [StartCode] -> NFA -> DFA SNum Code
+nfa2dfa scs nfa = mk_int_dfa nfa (nfa2pdfa nfa pdfa (dfa_start_states pdfa))
 	where
 	pdfa = new_pdfa n_starts nfa
 	n_starts = length scs  -- number of start states
@@ -101,28 +104,28 @@ nfa2dfa scs nfa = mk_dfa (nfa2pdfa pdfa (start_pdfa pdfa))
 -- it incorporates the trailing context references into the search (by
 -- including `rctx_ss' in the search).
 
-nfa2pdfa:: PartDFA -> [StateSet] -> PartDFA
-nfa2pdfa pdfa [] = pdfa
-nfa2pdfa pdfa (ss:umkd) =
-	if ss `in_pdfa` pdfa
-	   then nfa2pdfa pdfa umkd
-	   else nfa2pdfa pdfa' umkd'
-	where
-	pdfa' = add_pdfa ss (PDS accs ss_outs) pdfa
+nfa2pdfa:: NFA -> DFA StateSet Code -> [StateSet] -> DFA StateSet Code
+nfa2pdfa nfa pdfa [] = pdfa
+nfa2pdfa nfa pdfa (ss:umkd)
+  |  ss `in_pdfa` pdfa =  nfa2pdfa nfa pdfa  umkd
+  |  otherwise         =  nfa2pdfa nfa pdfa' umkd'
+  where
+	pdfa' = add_pdfa ss (State accs (listToFM ss_outs)) pdfa
 
-	umkd' = rctx_sss ++ [ss|(_,ss)<-ss_outs] ++ umkd
+	umkd' = rctx_sss ++ map snd ss_outs ++ umkd
 
-	ss_outs = [(ch, mk_ss pdfa ss')| 
-			ch<-dfa_alphabet,
-			ss'<-[[s'| (p,s')<-outs, p ch]],
-			not(null ss')]
+	ss_outs = [ (ch, mk_ss nfa ss')
+		  | ch  <- dfa_alphabet,
+		    let ss'  = [ s' | (p,s') <- outs, p ch ],
+		    not (null ss')
+		  ]
 
-	rctx_sss = [mk_ss pdfa [s]| Acc _ _ _ (Just s)<-accs]
+	rctx_sss = [ mk_ss nfa [s]
+		   | s <- ss,
+		     Acc _ _ _ (Just s) <- accs ]
 
-	accs = sort_accs [acc| s<-ss, acc<-nst_accs(nfa!s)]
-	outs =           [out| s<-ss, out<-nst_outs(nfa!s)]
-
-	nfa = pdfa_nfa pdfa
+	outs = [ out | s <- ss, out <- nst_outs (nfa!s) ]
+	accs = sort_accs [acc| s<-ss, acc<-nst_accs (nfa!s)]
 
 dfa_alphabet:: [Char]
 dfa_alphabet = ['\0'..'\255']
@@ -153,55 +156,53 @@ sort_accs accs = foldr chk [] (msort le accs)
 -- state set for a given list of NFA states is calculated by taking the epsilon
 -- closure of all the states, sorting the result with duplicates eliminated.
 
-type PartDFA = ([StateSet], NFA, FiniteMap StateSet PDS)
---	in new_pdfa, mk_ss, add_pdfa, in_pdfa, start_pdfa, pdfa_nfa, mk_dfa
-
 type StateSet = [SNum]
 
-data PDS = PDS [Accept Code] [(Char,StateSet)]
+new_pdfa:: Int -> NFA -> DFA StateSet a
+new_pdfa starts nfa
+ = DFA { dfa_start_states = start_ss,
+         dfa_states = emptyFM
+       }
+ where
+	start_ss = [ msort (<=) (nst_cl(nfa!n)) | n <- [0..starts]]
 
-new_pdfa:: Int -> NFA -> PartDFA
-new_pdfa starts nfa 
- = ([ msort (<=) (nst_cl(nfa!n)) | n <- [0..starts]], nfa, emptyFM)
  -- starts is the number of start states
 
-mk_ss:: PartDFA -> [Int] -> StateSet
-mk_ss (_,nfa,_) l = nub' (<=) [s'| s<-l, s'<-nst_cl(nfa!s)]
+-- constructs the epsilon-closure of a set of NFA states
+mk_ss:: NFA -> [SNum] -> StateSet
+mk_ss nfa l = nub' (<=) [s'| s<-l, s'<-nst_cl(nfa!s)]
 
-add_pdfa:: StateSet -> PDS -> PartDFA -> PartDFA
-add_pdfa ss pst (st,nfa,mp) = (st, nfa, addToFM mp ss pst)
+add_pdfa:: StateSet -> State StateSet a -> DFA StateSet a -> DFA StateSet a
+add_pdfa ss pst (DFA st mp) = DFA st (addToFM mp ss pst)
 
-in_pdfa:: StateSet -> PartDFA -> Bool
-in_pdfa ss (_,_,mp) = ss `elemFM` mp
+in_pdfa:: StateSet -> DFA StateSet a -> Bool
+in_pdfa ss (DFA _ mp) = ss `elemFM` mp
 
-start_pdfa:: PartDFA -> [StateSet]
-start_pdfa (st,_,_) = st	
+-- Construct a DFA with numbered states, from a DFA whose states are
+-- sets of states from the original NFA.
 
-pdfa_nfa:: PartDFA -> NFA
-pdfa_nfa (_,nfa,_) = nfa
-
-
--- Constructing a DFA from a partial DFA is fairly straightforward.  Note the
--- way the trailing context references have to be converted from a state in the
--- NFA to the corresponding state in the DFA.
-
-mk_dfa:: PartDFA -> DFA Code
-mk_dfa pdfa@(start_states,_,mp) 
-	= listArray (0, sizeFM mp-1) (map cnv (eltsFM mp))
-	where
-	cnv (PDS accs as) = mk_st (map cnv_acc accs) as'
-		where
-		as' = [(ch, fromJust (lookupFM i_mp ss))| (ch,ss)<-as]
-
-		cnv_acc acc@Acc{accRightCtx = rctx} = acc{accRightCtx = rctx'}
-			where
-			rctx' =	case rctx of
-				  Nothing -> Nothing
-				  Just s -> Just (fromJust (lookupFM i_mp (mk_ss pdfa [s])))
-
-	i_mp =  listToFM (zip (start_states ++ 
+mk_int_dfa:: NFA -> DFA StateSet a -> DFA SNum a
+mk_int_dfa nfa pdfa@(DFA start_states mp)
+  = DFA [0 .. length start_states-1] 
+	(listToFM [ (lookup st, cnv pds) | (st, pds) <- fmToList mp ])
+  where
+	mp' = listToFM (zip (start_states ++ 
 				keysFM (delListFromFM mp start_states)) [0..])
 
+	lookup = fromJust . lookupFM mp'
+
+	cnv :: State StateSet a -> State SNum a
+	cnv (State accs as) = State accs' as'
+		where
+		as'   = mapFM (\ch s -> lookup s) as
+
+		accs' = map cnv_acc accs
+		cnv_acc (Acc p a lctx rctx) = Acc p a lctx rctx'
+		  where rctx' =	case rctx of
+				  Nothing -> Nothing
+				  Just s -> Just (lookup (mk_ss nfa [s]))
+
+{-
 
 -- `mk_st' constructs a state node from the list of accept values and a list of
 -- transitions.  The transitions list all the valid transitions out of the
@@ -223,11 +224,9 @@ mk_dfa pdfa@(start_states,_,mp)
 mk_st:: [Accept Code] -> [(Char,Int)] -> State Code
 mk_st accs as =
 	if null as
-	   then St clr accs (-1) (listArray ('0','0') [-1])
-	   else St clr accs df (listArray bds [arr!c| c<-range bds])
+	   then St accs (-1) (listArray ('0','0') [-1])
+	   else St accs df (listArray bds [arr!c| c<-range bds])
 	where
-	clr = not(null[()| Acc _ [] Nothing Nothing<-accs])
-
 	bds = if sz==0 then ('0','0') else bds0
 
 	(sz,df,bds0) | sz1 < sz2 = (sz1,df1,bds1)
@@ -242,3 +241,4 @@ mk_st accs as =
 		t = length (takeWhile id [arr!c==df| c<-['\xff','\xfe'..'\0']])
 
 	arr = listArray ('\0','\xff') (take 256 (repeat (-1))) // as
+-}

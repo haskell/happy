@@ -27,7 +27,7 @@ boot ::
 	fi 
 
 Scan.hs : Scan.x
-	../src/alex Scan.x
+	../src/alex-inplace Scan.x
 
 ifeq "$(INSTALLING)" "1"
 ifeq "$(BIN_DIST)"   "1"
@@ -38,18 +38,23 @@ ALEXLIB=$(libdir)/alex
 ALEXBIN=$(libexecdir)/$(HS_PROG)
 endif # BIN_DIST
 else
-#ALEXLIB=$(FPTOOLS_TOP_ABS)/alex/templates
-ALEXBIN=$(FPTOOLS_TOP_ABS)/alex/src/$(HS_PROG)
+ALEXLIB=$(FPTOOLS_TOP_ABS)/happy/alex/templates
+ALEXBIN=$(FPTOOLS_TOP_ABS)/happy/alex/src/$(HS_PROG)
 endif
+
+INSTALLED_SCRIPT_PROG  = alex-$(ProjectVersion)
+INPLACE_SCRIPT_PROG    = alex-inplace
 
 ifeq "$(INSTALLING)" "1"
 TOP_PWD 	:= $(prefix)
+SCRIPT_PROG 	=  $(INSTALLED_SCRIPT_PROG)
 LINK	 	=  alex
 else
 TOP_PWD 	:= $(FPTOOLS_TOP_ABS)
+SCRIPT_PROG 	=  $(INPLACE_SCRIPT_PROG)
 endif
 
-#SCRIPT_OBJS=happy.sh
+SCRIPT_OBJS=alex.sh
 
 INTERP=$(SHELL)
 
@@ -59,7 +64,6 @@ SCRIPT_SUBST_VARS = 	\
 
 INSTALL_EXECS = $(HS_PROG)
 INSTALL_PROGS = $(HS_PROG)
-INSTALL_LIBS = Alex.hs Alex.o Alex.hi Scan.hs Scan.o Scan.hi
 
 # Hack to avoid automatic cleaning machinery from cleaning Parser.hs
 #
