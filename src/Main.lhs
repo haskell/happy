@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.17 1998/06/19 13:41:03 simonm Exp $
+$Id: Main.lhs,v 1.18 1998/06/19 13:46:07 simonm Exp $
 
 The main driver.
 
@@ -303,7 +303,7 @@ The command line arguments.
 >    Option ['a'] ["array"] (NoArg OptArrayTarget)
 >	"Generate an array-based parser",
 >    Option ['i'] ["info"] (OptArg OptInfoFile "FILE")
->	"Output grammar info to FILE",
+>	"Put detailed grammar info in FILE",
 >    Option ['c'] ["coerce"] (NoArg OptUseCoercions)
 >	"Use type coercions (only available with -g)",
 >    Option ['g'] ["ghc"]    (NoArg OptGhcTarget)
@@ -311,7 +311,7 @@ The command line arguments.
 >    Option ['m'] ["magic-name"] (ReqArg OptMagicName "NAME")
 >	"Use NAME as the symbol prefix instead of \"happy\"",
 >    Option ['o'] ["outfile"] (ReqArg OptOutputFile "FILE")
->	"Write the output to FILE (default: INFILE.hs)",
+>	"Write the output to FILE (default: file.hs)",
 >    Option ['t'] ["template"] (ReqArg OptTemplate "DIR")
 >	"Look in DIR for template files",
 >    Option ['v'] ["verbose"] (NoArg DumpVerbose)
@@ -399,7 +399,7 @@ Extract various command-line options.
 
 > copyright :: IO ()
 > copyright = putStr (unlines  [
->  "Happy Version " ++ version ++ " Copyright (c) 1993-1996 Andy Gill, Simon Marlow (c) Simon Marlow 1997-1998","",
+>  "Happy Version " ++ version ++ " Copyright (c) 1993-1996 Andy Gill, Simon Marlow (c) 1997-1998 Simon Marlow","",
 >  "Happy is a Yacc for Haskell, and comes with ABSOLUTELY NO WARRANTY.",
 >  "This program is free software; you can redistribute it and/or modify",
 >  "it under the terms given in the file 'LICENSE' distributed with",
