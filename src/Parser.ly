@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Parser.ly,v 1.2 1997/03/27 14:14:48 simonm Exp $
+$Id: Parser.ly,v 1.3 1997/08/25 12:31:00 simonm Exp $
 
 The parser.
 
@@ -12,6 +12,9 @@ The parser.
 > import GenUtils
 > import AbsSyn
 > import Lexer
+> #ifdef __GLASGOW_HASKELL__
+> import GlaExts
+> #endif
 > }
 
 > %name ourParser
