@@ -7,6 +7,6 @@
 HappyMainDir = happy
 HappyBinDistDirs = happy
 HappyBinDistDocs = happy/doc
-HappyBinDistShScripts = happy
+HappyBinDistShScripts = happy-$(ProjectVersion)
 
 include $(HappyMainDir)/mk/version.mk
