@@ -1,6 +1,6 @@
-<!DOCTYPE BOOK PUBLIC "-//OASIS//DTD DocBook V3.1//EN" [
-<!entity  the-index SYSTEM "genindex.sgml">
-]>
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+   "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
 
 <book id="happy">
   <bookinfo>
@@ -28,7 +28,7 @@
   <!-- Table of contents -->
   <toc></toc>
   
-<!-- Introduction --------------------------------------------------------- -->
+<!-- Introduction ========================================================= -->
 
   <chapter id="happy-introduction">
     <title>Introduction</title>
@@ -83,41 +83,34 @@
     
     <orderedlist>
       
-      <listitem id="item-default-backend"> <para>`standard' Haskell 98
-      (should work with any compiler that compiles Haskell
-      98).</para></listitem>
+      <listitem id="item-default-backend">
+	<para>`standard' Haskell 98 (should work with any compiler
+	that compiles Haskell 98).</para>
+      </listitem>
       
-      <listitem> <para>standard Haskell using arrays
-      <indexterm scope="all">
-	    <primary>arrays</primary>
-	  </indexterm>
-      <indexterm scope="all">
-	    <primary>back-ends</primary>
-	    <secondary>arrays</secondary>
-	  </indexterm>
-      (this is not the default because we have
-      found this generates slower parsers than <xref
-      linkend="item-default-backend">).</para></listitem>
+      <listitem>
+	<indexterm scope="all"><primary>arrays</primary></indexterm>
+	<indexterm scope="all"><primary>back-ends</primary><secondary>arrays</secondary></indexterm>
+	<para>standard Haskell using arrays (this is not the default
+	because we have found this generates slower parsers than <xref
+	linkend="item-default-backend"/>).</para>
+      </listitem>
 
-      <listitem> <para>Haskell with GHC (Glasgow Haskell) extensions.
-      This is a slightly faster option than <xref
-      linkend="item-default-backend"> for Glasgow Haskell
-      users.</para></listitem>
+      <listitem>
+	<indexterm><primary>GHC</primary></indexterm>
+	<indexterm><primary>back-ends</primary><secondary>GHC</secondary></indexterm>
+	<para>Haskell with GHC (Glasgow Haskell) extensions. This is a
+	slightly faster option than <xref
+	linkend="item-default-backend"/> for Glasgow Haskell
+	users.</para>
+      </listitem>
 
-      <indexterm>
-	<primary>GHC</primary>
-      </indexterm>
-
-      <indexterm>
-	<primary>back-ends</primary>
-	<secondary>GHC</secondary>
-      </indexterm>
 
       <listitem>
 	<para>GHC Haskell with string-encoded arrays.  This is the
 	fastest/smallest option for GHC users.  If you're using GHC,
 	the optimum flag settings are <literal>-agc</literal> (see
-	<xref linkend="sec-invoking">).</para>
+	<xref linkend="sec-invoking"/>).</para>
       </listitem>
 
     </orderedlist>
@@ -224,7 +217,7 @@
 
   </chapter>
 
-<!-- Using Happy------------------------------------------------------------ -->
+<!-- Using Happy =========================================================== -->
 
   <chapter id="sec-using">
     <title>Using <application>Happy</application></title>
@@ -371,7 +364,7 @@ Factor
     <indexterm>
       <primary>non-terminal</primary>
     </indexterm>
-    <para>Each production consists of a <firstterm>non-terminal</>
+    <para>Each production consists of a <firstterm>non-terminal</firstterm>
     symbol on the left, followed by a colon, followed by one or more
     expansions on the right, separated by <literal>|</literal>.  Each expansion
     has some Haskell code associated with it, enclosed in braces as
@@ -402,12 +395,10 @@ n   : t_1 ... t_n   { E }
     grammar file may optionally contain a final code section, enclosed
     in curly braces.</para>
 
-<programlisting>
-{
-</programlisting>
+<programlisting>{</programlisting>
 
     <indexterm>
-      <primary><function>happyError</></primary>
+      <primary><function>happyError</function></primary>
     </indexterm>
     <para>All parsers must declare the function <function>happyError</function>,
     which is called when an error is detected. </para>
@@ -420,11 +411,11 @@ happyError _ = error "Parse error"
     <para>Note that <literal>happyError</literal> must be polymorphic
     in its return type <literal>a</literal>, which usually means it
     must be a call to <literal>error</literal>.  We'll see in <xref
-    linkend="sec-monads"> how to wrap the parser in a monad so that we
+    linkend="sec-monads"/> how to wrap the parser in a monad so that we
     can do something more sensible with errors.  It's also possible to
     keep track of line numbers in the parser for use in error
     messages, this is described in <xref
-    linkend="sec-line-numbers">.</para>
+    linkend="sec-line-numbers"/>.</para>
 
     <para>Next we can declare the data type that represents the parsed
     expression:</para>
@@ -521,7 +512,7 @@ main = getContents >>= print . calc . lexer
     command <command>happy example.y -i</command> will produce the
     file <filename>example.info</filename> which contains detailed information
     about the parser, including states and reduction rules (see <xref
-    linkend="sec-info-files">).  This can be invaluable for debugging
+    linkend="sec-info-files"/>).  This can be invaluable for debugging
     parsers, but requires some knowledge of the operation of a
     shift-reduce parser. </para>
 
@@ -770,21 +761,19 @@ Exp   : let var '=' Exp in Exp  { Let $2 $4 $6 }
       is also a <literal>%nonassoc</literal> directive which indicates
       that the specified operators may not be used together.  For
       example, if we add the comparison operators
-      <literal>'>'</literal> and <literal>'<'</literal> to our
+      <literal>'>'</literal> and <literal>'&lt;'</literal> to our
       grammar, then we would probably give their precedence as:</para>
 
-<programlisting>
-...
-%nonassoc '>' '<'
+<programlisting>...
+%nonassoc '>' '&lt;'
 %right in
 %left '+' '-'
 %left '*' '/'
 %%
-...
-</programlisting>
+...</programlisting>
 
       <para>which indicates that <literal>'>'</literal> and
-      <literal>'<'</literal> bind less tightly than the other
+      <literal>'&lt;'</literal> bind less tightly than the other
       operators, and the non-associativity causes expressions such as
       <literal>1 > 2 > 3</literal> to be disallowed.</para>
 
@@ -848,8 +837,7 @@ Exp   : let var '=' Exp in Exp  { Let $2 $4 $6 }
 
 	<para>We can implement this in Happy as follows:</para>
 
-<programlisting>
-%nonassoc '>' '<'
+<programlisting>%nonassoc '>' '&lt;'
 %right in
 %left '+' '-'
 %left '*' '/'
@@ -864,8 +852,7 @@ Exp   : let var '=' Exp in Exp  { Let $2 $4 $6 }
       | '(' Exp ')'             { Brack $2 }
       | '-' Exp %prec NEG       { Negate $2 }
       | int                     { Int $1 }
-      | var                     { Var $1 }
-</programlisting>
+      | var                     { Var $1 }</programlisting>
 <indexterm><primary><literal>%prec</literal> directive</primary></indexterm>
 
 	<para>We invent a new token <literal>NEG</literal> as a
@@ -965,7 +952,7 @@ stmts   :: { [ Stmt ] }
 	  </indexterm> 
 -->
 	  <para> Handling parse errors by using an exception monad
-          (see <xref linkend="sec-exception">).</para>
+          (see <xref linkend="sec-exception"/>).</para>
 	</listitem>
 
 	<listitem>
@@ -974,7 +961,7 @@ stmts   :: { [ Stmt ] }
 	  </indexterm>
 	  <para> Keeping track of line numbers in the input file, for
           example for use in error messages (see <xref
-          linkend="sec-line-numbers">).</para>
+          linkend="sec-line-numbers"/>).</para>
 	</listitem>
 
 	<listitem>
@@ -997,7 +984,7 @@ stmts   :: { [ Stmt ] }
 </programlisting>
 
       <indexterm>
-	<primary><literal>%monad</></primary>
+	<primary><literal>%monad</literal></primary>
       </indexterm>
 
       <para>where <literal>&lt;type&gt;</literal> is the type constructor for
@@ -1022,7 +1009,7 @@ stmts   :: { [ Stmt ] }
       parser).  And that's all it does.</para>
 
       <indexterm>
-	<primary><function>happyError</></primary>
+	<primary><function>happyError</function></primary>
       </indexterm>
       <para>This still isn't very useful: all you can do is return
       something of monadic type from <literal>happyError</literal>.  How do you
@@ -1136,7 +1123,7 @@ catchE m k =
 happyError tokens = failE "Parse error"
 </programlisting>
 	  <indexterm>
-	    <primary><function>happyError</></primary>
+	    <primary><function>happyError</function></primary>
 	  </indexterm>
 
 	<para>The parser now raises an exception in the monad instead
@@ -1148,13 +1135,11 @@ happyError tokens = failE "Parse error"
         later.  An example comes from Haskell, where the precedence
         values in infix declarations must be between 0 and 9:</para>
 
-<programlisting>
-prec :: { Int }
-      : int    {% if $1 < 0 || $1 > 9 
+<programlisting>prec :: { Int }
+      : int    {% if $1 &lt; 0 || $1 > 9 
 	                then failE "Precedence out of range"
 		        else returnE $1
-		}
-</programlisting>
+		}</programlisting>
 
 	<para>The monadic action allows the check to be placed in the
 	parser itself, where it belongs.</para>
@@ -1210,7 +1195,7 @@ prec :: { Int }
 </programlisting>
 	
 	<indexterm>
-	  <primary><literal>%lexer</></primary>
+	  <primary><literal>%lexer</literal></primary>
 	</indexterm>
 
 	<para>where <literal>&lt;lexer&gt;</literal> is the name of the lexical
@@ -1227,7 +1212,7 @@ prec :: { Int }
         <literal>happyError</literal> is now just <literal>P a</literal> - the input is
         being handled completely within the monad.</para>
 	<indexterm>
-	  <primary><function>happyError</></primary>
+	  <primary><function>happyError</function></primary>
 	</indexterm>
 
 	<para>The lexical analysis function must have the following
@@ -1320,7 +1305,7 @@ lexwrap cont = real_lexer `thenP` \token -> cont token
 	</indexterm>
 
 	<indexterm>
-	  <primary><literal>%newline</></primary>
+	  <primary><literal>%newline</literal></primary>
 	</indexterm>
 	<para>Previous versions of <application>Happy</application> had a
         <literal>%newline</literal> directive that enabled simple line numbers
@@ -1370,7 +1355,7 @@ happyError = getLineNo `thenP` \line ->
              failP (show line ++ ": parse error")
 </programlisting>
 	<indexterm>
-	  <primary><function>happyError</></primary>
+	  <primary><function>happyError</function></primary>
 	</indexterm>
 
 	<para>We can also get hold of the line number during parsing,
@@ -1378,10 +1363,8 @@ happyError = getLineNo `thenP` \line ->
         A good way to do this is to have a production in the grammar
         that returns the current line number: </para>
 
-<programlisting>
-lineno :: { LineNumber }
-        : {- empty -}      {% getLineNo }
-</programlisting>
+<programlisting>lineno :: { LineNumber }
+        : {- empty -}      {% getLineNo }</programlisting>
 
 	<para>The semantic value of <literal>lineno</literal> is the line
         number of the last token read - this will always be the token
@@ -1404,7 +1387,7 @@ lineno :: { LineNumber }
 
 	<indexterm>
 	  <primary>type</primary>
-	  <secondary>of <function>happyError</></secondary>
+	  <secondary>of <function>happyError</function></secondary>
 	</indexterm>
 	<indexterm>
 	  <primary>type</primary>
@@ -1563,16 +1546,14 @@ close : '}'                  { () }
 
   </chapter>
 
-<!-- Invoking ------------------------------------------------------------ -->
+<!-- Invoking ============================================================ -->
 
   <chapter id="sec-invoking">
     <title>Invoking <application>Happy</application></title>
 
     <para>An invocation of <application>Happy</application> has the following syntax:</para>
 
-<programlisting>
-happy [ <emphasis>options</emphasis> ] <emphasis>filename</emphasis> [ <emphasis>options</emphasis> ]
-</programlisting>
+<screen>$ happy [ <emphasis>options</emphasis> ] <emphasis>filename</emphasis> [ <emphasis>options</emphasis> ]</screen>
 
     <para>All the command line options are optional (!) and may occur
     either before or after the input file name. Options that take
@@ -1804,10 +1785,10 @@ happy [ <emphasis>options</emphasis> ] <emphasis>filename</emphasis> [ <emphasis
     </indexterm>
     <para>If the name of the grammar file ends in <literal>.ly</literal>, then
     it is assumed to be a literate script.  All lines except those
-    beginning with a <literal>&gt</literal> will be ignored, and the
-    <literal>&gt</literal> will be stripped from the beginning of all the code
+    beginning with a <literal>&gt;</literal> will be ignored, and the
+    <literal>&gt;</literal> will be stripped from the beginning of all the code
     lines.  There must be a blank line between each code section
-    (lines beginning with <literal>&gt</literal>) and comment section.
+    (lines beginning with <literal>&gt;</literal>) and comment section.
     Grammars not using the literate notation must be in a file with
     the <literal>.y</literal> suffix.</para>
     
@@ -1877,7 +1858,7 @@ the BNF syntax from the Haskell Report):</para>
 </programlisting>
 
 	<indexterm>
-	  <primary><literal>%tokentype</></primary>
+	  <primary><literal>%tokentype</literal></primary>
 	</indexterm>
 	<para>(mandatory) The <literal>%tokentype</literal> directive gives the
         type of the tokens passed from the lexical analyser to the
@@ -1896,7 +1877,7 @@ the BNF syntax from the Haskell Report):</para>
 </programlisting>
 
 	<indexterm>
-	  <primary><literal>%token</></primary>
+	  <primary><literal>%token</literal></primary>
 	</indexterm>
 	<para>(mandatory) The <literal>%token</literal> directive is used to
         tell <application>Happy</application> about all the terminal symbols used
@@ -1923,7 +1904,7 @@ the BNF syntax from the Haskell Report):</para>
         <literal>&dollar;&dollar;</literal> in your Haskell pattern. For
         example:</para>
 	<indexterm>
-	  <primary><literal>&dollar;&dollar;</></primary>
+	  <primary><literal>&dollar;&dollar;</literal></primary>
 	</indexterm>
 
 <programlisting>
@@ -1945,7 +1926,7 @@ any projection function.</para>
 ...
 </programlisting>
 	<indexterm>
-	  <primary><literal>%name</></primary>
+	  <primary><literal>%name</literal></primary>
 	</indexterm>
 
 	<para>(optional) The <literal>%name</literal> directive is followed by
@@ -1957,7 +1938,7 @@ any projection function.</para>
 	<para>If the <literal>%name</literal> directive is omitted, it
         defaults to <literal>happyParse</literal>.</para>
 	<indexterm>
-	  <primary><function>happyParse</></primary>
+	  <primary><function>happyParse</function></primary>
 	</indexterm>
 
 	<para>The <literal>%name</literal> directive takes an optional
@@ -1968,7 +1949,7 @@ any projection function.</para>
 
 	<para>Multiple <literal>%name</literal> directives may be
 	given, specifying multiple parser entry points for this
-	grammar (see <xref linkend="sec-multiple-parsers">).  When
+	grammar (see <xref linkend="sec-multiple-parsers"/>).  When
 	multiple <literal>%name</literal> directives are given, they
 	must all specify explicit non-terminals.</para>
       </sect2>
@@ -1980,7 +1961,7 @@ any projection function.</para>
 %monad { &lt;type&gt; } { &lt;then&gt; } { &lt;return&gt; }
 </programlisting>
 	<indexterm>
-	  <primary><literal>%monad</></primary>
+	  <primary><literal>%monad</literal></primary>
 	</indexterm>
 
 	<para>(optional) The <literal>%monad</literal> directive takes three
@@ -1990,7 +1971,7 @@ any projection function.</para>
         constructor can be any type with kind <literal>* -&gt; *</literal>.</para>
 
 	<para>Monad declarations are described in more detail in <xref
-        linkend="sec-monads">.</para>
+        linkend="sec-monads"/>.</para>
 	
       </sect2>
 
@@ -2001,7 +1982,7 @@ any projection function.</para>
 %lexer { &lt;lexer&gt; } { &lt;eof&gt; }
 </programlisting>
 	<indexterm>
-	  <primary><literal>%lexer</></primary>
+	  <primary><literal>%lexer</literal></primary>
 	</indexterm>
 
 	<para>(optional) The <literal>%lexer</literal> directive takes two
@@ -2010,7 +1991,7 @@ any projection function.</para>
         is to be treated as the end of file.</para>
 
 	<para>Lexer declarations are described in more detail in <xref
-        linkend="sec-lexers">.</para>
+        linkend="sec-lexers"/>.</para>
 	
       </sect2>
 
@@ -2046,7 +2027,7 @@ any projection function.</para>
 	the right, or non-associative respectively.</para>
 
 	<para>Precedence declarations are described in more detail in
-	<xref linkend="sec-Precedences">.</para>
+	<xref linkend="sec-Precedences"/>.</para>
       </sect2>
     </sect1>
 
@@ -2059,7 +2040,7 @@ any projection function.</para>
       <emphasis>productions</emphasis>, each of which defines a single
       non-terminal.  Each production has the following syntax:</para>
       <indexterm>
-	<primary><literal>%%</></primary>
+	<primary><literal>%%</literal></primary>
       </indexterm>
 
 <programlisting>
@@ -2072,7 +2053,7 @@ any projection function.</para>
       <para>The first line gives the non-terminal to be defined by the
       production and optionally its type (type signatures for
       productions are discussed in <xref
-      linkend="sec-type-signatures">).</para>
+      linkend="sec-type-signatures"/>).</para>
 
       <para>Each production has at least one, and possibly many
       right-hand sides.  Each right-hand side consists of zero or more
@@ -2096,8 +2077,8 @@ any projection function.</para>
       <para>A semantic value of the form <literal>{% ... }</literal> is a
       <emphasis>monadic action</emphasis>, and is only valid when the grammar
       file contains a <literal>%monad</literal> directive (<xref
-      linkend="sec-monad-decl">).  Monadic actions are discussed in
-      <xref linkend="sec-monads">.</para>
+      linkend="sec-monad-decl"/>).  Monadic actions are discussed in
+      <xref linkend="sec-monads"/>.</para>
       <indexterm>
 	<primary>monadic</primary>
 	<secondary>action</secondary>
@@ -2223,7 +2204,7 @@ any projection function.</para>
 	    <secondary>signatures in grammar</secondary>
 	  </indexterm>
 	  <para> Give type signatures for everything (see <xref
-          linkend="sec-type-signatures">.  This is reported to improve
+          linkend="sec-type-signatures"/>.  This is reported to improve
           things by about 50%.  If there is a type signature for every
           single non-terminal in the grammar, then <application>Happy</application>
           automatically generates type signatures for most functions
@@ -2282,7 +2263,7 @@ any projection function.</para>
 HappyAbsSyn&lt;n&gt; ( E )
 </programlisting>
       <indexterm>
-	<primary><literal>HappyAbsSyn</></primary>
+	<primary><literal>HappyAbsSyn</literal></primary>
       </indexterm>
 
       <para>where <literal>E</literal> is the Haskell expression from the
@@ -2427,7 +2408,7 @@ HAPPY_OPTS =
 all: MyParser.y
 
 %.hs: %.y
-	$(HAPPY) $(HAPPY_OPTS) $< -o $@</programlisting>
+	$(HAPPY) $(HAPPY_OPTS) $&lt; -o $@</programlisting>
 	</listitem>
 
 	<listitem>
@@ -2435,9 +2416,9 @@ all: MyParser.y
           <literal>:reload</literal> command, like so (type this all
           on one line):</para>
 
-<programlisting>:def rh (\_ -> System.system "make -f Makefile_happysrcs"
+<screen>:def rh (\_ -> System.system "make -f Makefile_happysrcs"
    >>= \rr -> case rr of { System.ExitSuccess -> return ":reload" ; 
-                           _ -> return "" })</programlisting>
+                           _ -> return "" })</screen>
 	</listitem>
 
 	<listitem>
@@ -2448,7 +2429,4 @@ all: MyParser.y
       </itemizedlist>
     </sect1>
   </chapter>
-
-  &the-index
-
 </book>
