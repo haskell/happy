@@ -56,7 +56,7 @@ SCRIPT_SUBST_VARS = 	\
 
 INSTALL_EXECS = $(HS_PROG)
 INSTALL_PROGS = $(HS_PROG)
-INSTALL_LIBS = Alex.hs Scan.hs
+INSTALL_LIBS = Alex.hs Alex.o Alex.hi Scan.hs Scan.o Scan.hi
 
 # Hack to avoid automatic cleaning machinery from cleaning Parser.hs
 #
