@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.2 2000/12/03 16:21:51 simonmar Exp $
+# $Id: Makefile,v 1.3 2001/04/27 11:10:14 simonmar Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -48,7 +48,7 @@ ALL_TEST_HS = $(shell echo $(TESTS) | sed -e 's/\([^\. ]*\)\.\(l\)\{0,1\}y/\1.n.
 
 ALL_TESTS = $(patsubst %.hs, %.run, $(ALL_TEST_HS))
 
-HC_OPTS += -fglasgow-exts
+HC_OPTS += -fglasgow-exts -package lang
 
 %.run : %.bin
 	./$<
