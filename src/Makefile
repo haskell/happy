@@ -1,11 +1,10 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.28 1999/07/14 19:33:57 panne Exp $
+# $Id: Makefile,v 1.29 1999/10/05 15:27:20 simonmar Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
 
-# Note: might be overridden from cmd-line (see install rule below)
-INSTALLING=0
+INSTALLING=1
 
 HC = $(WithHappyHc)
 
@@ -62,9 +61,20 @@ HAPPYLIB=$(FPTOOLS_TOP_ABS)/happy/templates
 HAPPYBIN=$(FPTOOLS_TOP_ABS)/happy/src/$(HS_PROG)
 endif
 
-SCRIPT_PROG=happy-$(ProjectVersion)
+INSTALLED_SCRIPT_PROG  = happy-$(ProjectVersion)
+INPLACE_SCRIPT_PROG    = happy-inplace
+
+ifeq "$(INSTALLING)" "1"
+TOP_PWD 	:= $(prefix)
+SCRIPT_PROG 	=  $(INSTALLED_SCRIPT_PROG)
+SCRIPT_LINK 	=  happy
+else
+TOP_PWD 	:= $(FPTOOLS_TOP_ABS)
+SCRIPT_PROG 	=  $(INPLACE_SCRIPT_PROG)
+endif
+
 SCRIPT_OBJS=happy.sh
-SCRIPT_LINK=happy
+
 INTERP=$(SHELL)
 
 SCRIPT_SUBST_VARS = 	\
@@ -74,9 +84,12 @@ SCRIPT_SUBST_VARS = 	\
 INSTALL_SCRIPTS += $(SCRIPT_PROG)
 INSTALL_LIBEXECS = $(HS_PROG)
 
-install ::
-	@$(RM) $(SCRIPT_PROG)
-	@$(MAKE) $(MFLAGS) INSTALLING=1 $(SCRIPT_PROG)
+# don't recurse on 'make install'
+#
+ifeq "$(INSTALLING)" "1"
+all clean veryclean maintainer-clean ::
+	$(MAKE) INSTALLING=0 BIN_DIST=0 $(MFLAGS) $@
+endif
 
 check ::
 	./happy Test.ly
@@ -97,11 +110,4 @@ check ::
 	-rm -f ./happy_test
 
 include $(TOP)/mk/target.mk
-
-# Hack to re-create the in-situ build tree driver script after 
-# having installed it.
-#
-install ::
-	@$(RM) $(SCRIPT_PROG)
-	@$(MAKE) $(MFLAGS) BIN_DIST=0 $(SCRIPT_PROG)
 
