@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: LALR.lhs,v 1.24 2004/08/12 11:53:54 simonmar Exp $
+$Id: LALR.lhs,v 1.25 2004/09/10 06:52:36 paulcc Exp $
 
 Generation of LALR parsing tables.
 
@@ -22,12 +22,14 @@ Generation of LALR parsing tables.
 > import Control.Monad.ST
 > import Data.Array.ST
 > import Data.Array hiding (bounds)
+> import Data.List (nub)
 
 #elif defined(__GLASGOW_HASKELL__)
 
 > import ST
 > import MArray
 > import Array 	hiding (bounds)
+> import List (nub)
 
 #endif
 
@@ -536,19 +538,47 @@ eventually.  This may not be true with precedence parsing, though.  If
 there are two non-associative operators together, we must fail at this
 point rather than reducing.  Hence the use of LR'MustFail.
 
+
+NOTE: on (LR'Multiple as a) handling
+      PCC [sep04] has changed this to have the following invariants:
+        * the winning action appears only once, in the "a" slot
+	* only reductions appear in the "as" list
+	* there are no duplications
+      This removes complications elsewhere, where LR'Multiples were 
+      building up tree structures... 
+
 >       res LR'Fail x = x
 >       res x LR'Fail = x
 >	res LR'MustFail x = LR'MustFail
 >	res x LR'MustFail = LR'MustFail
 >	res x x' | x == x' = x
->	res (LR'Multiple as x) x' = LR'Multiple (x':as) (res x x')
 >       res (LR'Accept) _ = LR'Accept
 >       res _ (LR'Accept) = LR'Accept
+
+>	res a@(LR'Multiple as x) b@(LR'Multiple bs x')
+>        | x == x' = LR'Multiple (nub $ as ++ bs) x
+>		-- merge dropped reductions for identical action
+
+>	res a@(LR'Multiple as x) b@(LR'Multiple bs x')
+>	       = case res x x' of 
+>		   LR'Multiple cs a 
+>		     | a == x    -> LR'Multiple (nub $ x' : as ++ bs ++ cs) x
+>		     | a == x'   -> LR'Multiple (nub $ x  : as ++ bs ++ cs) x'
+>		     | otherwise -> error "failed invariant in resolve"
+>		       		-- last means an unexpected change
+>		   other -> other
+>		-- merge dropped reductions for clashing actions, but only 
+>		-- if they were S/R or R/R
+
+>	res a@(LR'Multiple _ _) b = res a (LR'Multiple [] b)
+>	res a b@(LR'Multiple _ _) = res (LR'Multiple [] a) b 
+>	  -- leave cases above to do the appropriate merging
+
 >       res a@(LR'Shift s p) b@(LR'Reduce s' p') = res b a
 >       res a@(LR'Reduce s p) b@(LR'Shift s' p')
 >		= case (p,p') of
->                      (No,_) -> LR'Multiple [a,b] b
->                      (_,No) -> LR'Multiple [a,b] b
+>                      (No,_) -> LR'Multiple [a] b	-- shift wins
+>                      (_,No) -> LR'Multiple [a] b	-- shift wins
 >                      (Prio c i, Prio _ j)
 >               		| i < j     -> b
 >               		| i > j     -> a
@@ -559,13 +589,13 @@ point rather than reducing.  Hence the use of LR'MustFail.
 >                                     None       -> LR'MustFail
 >       res a@(LR'Reduce r p) b@(LR'Reduce r' p')
 >		= case (p,p') of
->                      (No,_) -> LR'Multiple [a,b] b
->                      (_,No) -> LR'Multiple [a,b] b
+>                      (No,_) -> LR'Multiple [a] b	-- give to earlier rule?
+>                      (_,No) -> LR'Multiple [a] b
 >                      (Prio c i, Prio _ j)
 >               		| i < j     -> b
 >               		| j > i     -> a
->				| r < r'    -> LR'Multiple [a,b] a
->				| otherwise -> LR'Multiple [a,b] b
+>				| r < r'    -> LR'Multiple [b] a
+>				| otherwise -> LR'Multiple [a] b
 >       res _ _ = error "confict in resolve"
 
 -----------------------------------------------------------------------------
@@ -583,14 +613,12 @@ Count the conflicts
 >	countConflictsState (state, actions) 
 >	  = foldr countMultiples (0,0) (elems actions)
 >	  where
->	    countMultiples (LR'Multiple as a) (sr,rr) 
->	    	= (sr + sr', rr + rr')
->	    	where sr' = foldr (\a b -> case a of
->						LR'Shift _ _ -> 1
->						_ -> b) 0 as
->		      rr' = if (length [ () | (LR'Reduce _ _) <- as ] > 1)
->		      		then 1
->				else 0
+>	    countMultiples (LR'Multiple (_:_) (LR'Shift{})) (sr,rr) 
+>	    	= (sr + 1, rr)
+>	    countMultiples (LR'Multiple (_:_) (LR'Reduce{})) (sr,rr) 
+>	    	= (sr, rr + 1)
+>	    countMultiples (LR'Multiple as a) (sr,rr)
+>	    	= error "bad conflict representation"
 >	    countMultiples _ c = c
 
 -----------------------------------------------------------------------------

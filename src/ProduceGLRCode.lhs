@@ -6,7 +6,7 @@ This module is designed as an extension to the Haskell parser generator Happy.
 (c) University of Durham, Paul Callaghan 2004
 	-- extension to semantic rules, and various optimisations
 
-$Id: ProduceGLRCode.lhs,v 1.5 2004/09/10 06:39:55 paulcc Exp $
+$Id: ProduceGLRCode.lhs,v 1.6 2004/09/10 06:52:36 paulcc Exp $
 
 %-----------------------------------------------------------------------------
 
@@ -136,12 +136,13 @@ the driver and data strs (large template).
 >	       , let beginning = moduleHdr ++ tomitaStr ++ userInfo
 >	             position = 2 + length (lines beginning)
 >	         in "{-# LINE " ++ show position ++ " "
+>		                  ++ show (basename ++ "Data.hs") ++ "#-}"
 >	       , mkGSymbols g 
 >	       , sem_def
 >	       , mkSemObjects options sem_info
 >	       , mkDecodeUtils options sem_info
 >	       -- , unlines $ map show sem_info
->	 , typeForToks 
+>	       , typeForToks 
 >	       , tables ]
 >   typeForToks = unlines [ "type UserDefTok = " ++ token_type g ]
 >   moduleHdr
@@ -242,16 +243,13 @@ It also shares identical reduction values as CAFs
 >       LR'Shift newSt _ -> "Shift " ++ show newSt ++ " []"
 >       LR'Reduce r    _ -> "Reduce " ++ "[" ++ mkRed r ++ "]" 
 >       LR'Accept	 -> "Accept"
->       LR'Multiple as _ ->
->	 let as' = nub $ concatMap flatten as in 
->	 case ([ st | LR'Shift st _ <- as' ],[ r  | LR'Reduce r _ <- as' ]) of
->	  ([],rs)   -> "Reduce " ++ mkReds rs 
->	  ([st],rs) -> "Shift " ++ show st ++ " " ++ mkReds rs
+>       LR'Multiple rs (LR'Shift st _) 
+>	                 -> "Shift " ++ show st ++ " " ++ mkReds rs
+>       LR'Multiple rs r@(LR'Reduce{})
+>	                 -> "Reduce " ++ mkReds (r:rs)
 >    where
 >     rule r  = lookupProdNo g r
->     mkReds rs = "[" ++ tail (concat [ "," ++ mkRed r | r <- rs ]) ++ "]"
->     flatten (LR'Multiple as a) = concatMap flatten (a:as)
->     flatten a                  = [a]
+>     mkReds rs = "[" ++ tail (concat [ "," ++ mkRed r | LR'Reduce r _ <- rs ]) ++ "]"
 
 >   mkRed r = "red_" ++ show r
 >   mkReductions = [ mkRedDefn p | p@(_,(n,_,_,_)) <- zip [0..] $ productions g 
