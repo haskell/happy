@@ -7,11 +7,12 @@ Version:        %{version}
 Release:        %{release}
 License:        BSD-like
 Group:          Development/Languages/Haskell
-URL:            http://www.haskell.org/happy/
-Source:         http://www.haskell.org/happy/dist/%{version}/happy-%{version}-src.tar.gz
-Packager:       Simon Marlow <simonmar@microsoft.com>
+URL:            http://haskell.org/happy/
+Source:         http://haskell.org/happy/dist/%{version}/happy-%{version}-src.tar.gz
+Packager:       Sven Panne <sven.panne@aedion.de>
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Prefix:         %{_prefix}
+BuildRequires:  ghc, docbk31, jade, jadetex, dvips
 Summary:        The LALR(1) Parser Generator for Haskell
 
 %description
