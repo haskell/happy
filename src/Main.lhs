@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.8 1997/09/09 16:31:47 simonm Exp $
+$Id: Main.lhs,v 1.9 1997/09/24 10:05:41 simonm Exp $
 
 The main driver.
 
@@ -21,6 +21,7 @@ The main driver.
 > import Info (genInfoFile)
 > import Target (Target(..))
 > import GetOpt
+> import Set
 
 #if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
 
@@ -28,7 +29,11 @@ The main driver.
 > import Char
 > import IO
 
+#define ASSOC(a,b) (a , b)
+
 #else
+
+#define ASSOC(a,b) (a := b)
 
 > import
 >	LibSystem
@@ -102,25 +107,36 @@ Mangle the syntax into something useful.
 
 >       let first  	= sCC "First" (mkFirst gram_info)
 >	    closures    = sCC "Closures" (precalcClosure0 gram_info)
->           items  	= sCC "Items" (genLR0items gram_info closures)
->	    lainfo@(spont,prop) = sCC "Prop" (propLookaheads gram_info items first)
->	    la 		= sCC "Calc" (calcLookaheads (length items)
+>           sets  	= sCC "LR0 Sets" (genLR0items gram_info closures)
+>	    lainfo@(spont,prop) = sCC "Prop" (propLookaheads gram_info sets first)
+>	    la 		= sCC "Calc" (calcLookaheads (length sets)
 >					((0,(0,0),[eof]):spont) prop)
->	    items2	= sCC "Merge" (mergeLookaheadInfo la items)
->           goto   	= sCC "Goto" (genGotoTable gram_info items)
+>	    items2	= sCC "Merge" (mergeLookaheadInfo la sets)
+>           goto   	= sCC "Goto" (genGotoTable gram_info sets)
 >           action 	= sCC "Action" (genActionTable gram_info first items2)
 >	    (conflictArray,(sr,rr))   = sCC "Conflict" (countConflicts action)
 >       in
 
 #ifdef DEBUG
 
->       optPrint cli DumpLR0 (putStr (show items))		>>
+>       optPrint cli DumpLR0 (putStr (show sets))		>>
 >       optPrint cli DumpAction (putStr (show action))      	>>
 >       optPrint cli DumpGoto (putStr (show goto))          	>>
 >       optPrint cli DumpLA (putStr (show lainfo))		>>
 >       optPrint cli DumpLA (putStr (show la))			>>
 
 #endif
+
+Report any unused rules and terminals
+
+>	let (unused_rules, unused_terminals) = 
+>		find_redundancies gram_info env action
+>	in
+>	optIO (not (null unused_rules))
+>	   (putStr ("unused rules: " ++ show (length unused_rules) ++ "\n")) >>
+>	optIO (not (null unused_terminals))
+>	   (putStr ("unused terminals: " ++ show (length unused_terminals) ++
+>		"\n")) >>
 
 Report any conflicts in the grammar.
 
@@ -137,13 +153,15 @@ Print out the info file.
 >	getInfoFileName name cli		>>= \info_filename ->
 >	let info = genInfoFile
 >			env
->			(map fst items)
+>			(map fst sets)
 >			gram_info
 >			action
 >			goto
 >			term_dir
 >			conflictArray
 >			fl_name
+>			unused_rules
+>			unused_terminals
 >	in
 
 >	(case info_filename of
@@ -221,6 +239,29 @@ Successfully Finished.
 > 	optIO (elem pass cli) io
 
 > constArgs = []
+
+-----------------------------------------------------------------------------
+Find unused rules and tokens
+
+> find_redundancies 
+>	:: GrammarInfo 
+>	-> Array Name String
+>	-> ActionTable
+>	-> ([Int], [String])
+>
+> find_redundancies g env action_table = 
+>	(unused_rules, map (env !) unused_terminals)
+>    where
+>	actions		 = concat (map assocs (elems action_table))
+>	used_rules       = 0 : nub [ r | ASSOC(_,LR'Reduce{-'-} r) <- actions ]
+>	used_tokens      = errorTok : eof : 
+>			       nub [ t | ASSOC(t,LR'Shift{-'-} _ ) <- actions ]
+>	terminals        = getTerminals g
+>	non_terminals    = getNonTerminals g
+>	eof		 = getEOF g
+>	n_prods		 = length (getProds g)
+>	unused_terminals = filter (`notElem` used_tokens) terminals
+>	unused_rules     = filter (`notElem` used_rules ) [0..n_prods-1]
 
 ------------------------------------------------------------------------------
 

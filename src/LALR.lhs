@@ -1,19 +1,16 @@
 -----------------------------------------------------------------------------
-$Id: LALR.lhs,v 1.7 1997/09/23 14:59:03 simonm Exp $
+$Id: LALR.lhs,v 1.8 1997/09/24 10:05:40 simonm Exp $
 
 Generation of LALR parsing tables.
 
 (c) 1993-1996 Andy Gill, Simon Marlow
 -----------------------------------------------------------------------------
 
-> module LALR where
-
- 	(genActionTable, genGotoTable, genLR0items, 
-	 Lr0Item(..),ItemSetWithGotos(..),
-	 propLookaheads, calcLookaheads, mergeLookaheadInfo,
-	 countConflicts,
-	 GrammarInfo(..), Name(..), Set, GotoTable(..),
-	 ActionTable(..)) where
+> module LALR
+>	(genActionTable, genGotoTable, genLR0items, precalcClosure0,
+>	 propLookaheads, calcLookaheads, mergeLookaheadInfo, countConflicts,
+>	 Lr0Item(..), Lr1Item(..))
+>	where
 
 > import GenUtils
 > import Set

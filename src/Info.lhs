@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Info.lhs,v 1.5 1997/09/09 16:31:44 simonm Exp $
+$Id: Info.lhs,v 1.6 1997/09/24 10:05:39 simonm Exp $
 
 Generating info files.
 
@@ -37,14 +37,17 @@ Produce a file of parser information, useful for debugging the parser.
 >	-> [(Int,String)]
 >	-> Array Int (Int,Int)
 >	-> String
+>	-> [Int]			-- unused rules
+>	-> [String]			-- unused terminals
 >	-> String
 
 > genInfoFile env items 
 > 	(GrammarInfo prods lookupProdNo lookupProdsOfName nonterms terms eof
 >		first_term)
->	 action goto tokens conflictArray filename
+>	 action goto tokens conflictArray filename unused_rules unused_terminals
 > 	= (showHeader
 >	. showConflicts
+>	. showUnused
 >	. showProductions 
 >	. showTerminals 
 >	. showNonTerminals 
@@ -75,6 +78,24 @@ Produce a file of parser information, useful for debugging the parser.
 >			then [ shows rr . str " reduce/reduce conflicts" ]
 >			else [])
 >	. str ".\n"
+
+>   showUnused =
+>	  (case unused_rules of
+>	    [] -> id
+>	    _  ->   interleave "\n" (
+>			map (\r ->   str "rule " 
+>				   . shows r 
+>				   . str " is unused")
+>				unused_rules)
+>		  . str "\n")
+>	. (case unused_terminals of
+>	    [] -> id
+>	    _  ->   interleave "\n" (
+>			map (\t ->   str "terminal " 
+>				   . str t 
+>				   . str " is unused")
+>				unused_terminals)
+>		  . str "\n")
 
 >   showProductions = 
 >	  banner "Grammar"

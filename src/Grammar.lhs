@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Grammar.lhs,v 1.5 1997/09/09 16:31:43 simonm Exp $
+$Id: Grammar.lhs,v 1.6 1997/09/24 10:05:38 simonm Exp $
 
 The Grammar data type.
 
@@ -58,8 +58,8 @@ terminals 	= n..m
 >               Terminals
 >               NonTerminals
 >		(Array Int (Maybe String))	-- types
->               (Array Int String)
->               Name                    -- eof
+>               (Array Int String)		-- token names
+>               Name                    	-- eof
 
 #ifdef DEBUG
 
