@@ -6,7 +6,7 @@ This module is designed as an extension to the Haskell parser generator Happy.
 (c) University of Durham, Paul Callaghan 2004
 	-- extension to semantic rules, and various optimisations
 
-$Id: ProduceGLRCode.lhs,v 1.12 2004/12/04 15:01:37 paulcc Exp $
+$Id: ProduceGLRCode.lhs,v 1.13 2004/12/09 09:05:38 paulcc Exp $
 
 %-----------------------------------------------------------------------------
 
@@ -145,21 +145,30 @@ the driver and data strs (large template).
 
 >   (sem_def, sem_info) = mkGSemType options g
 >   table_text = mkTbls tables sem_info (thd3 options) g
+
+>   header_parts = fmap (span (\x -> take 3 (dropWhile isSpace x) == "{-#") 
+>                                  . lines) 
+>                       header
+>	-- Split off initial options, if they are present
+>	-- Assume these options ONLY related to code which is in 
+>	--   parser tail or in sem. rules
   
->   content tomitaStr opts 
->    = str (comment "data")                    .nl .nl
->    . str ("{-# OPTIONS " ++ opts ++ " #-}")  .nl
->    . str ("module " ++ data_mod ++ " where") .nl 
+>   content base_defs opts 
+>    = str ("{-# OPTIONS " ++ opts ++ " #-}")    .nl 
+>    . str (unlines $ maybe [] fst header_parts) .nl
+>    . nl
+>    . str (comment "data")                      .nl .nl
+>    . str ("module " ++ data_mod ++ " where")   .nl 
 
 >     . nl
->     . maybestr header  .nl 
+>     . maybestr (fmap (unlines.snd) header_parts) .nl 
 >     . nl
->     . str tomitaStr    .nl
+>     . str base_defs .nl
 >     . nl
 
 >    . let count_nls     = length . filter (=='\n')
 >          pre_trailer   = maybe 0 count_nls header	-- check fmt below
->                        + count_nls tomitaStr
+>                        + count_nls base_defs
 >                        + 10				-- for the other stuff
 >          post_trailer  = pre_trailer + maybe 0 count_nls trailer + 4
 >      in 
@@ -193,8 +202,8 @@ the driver and data strs (large template).
 >   lib_content imps opts lib_text
 >    = let (pre,drop_me:post) = break (== "fakeimport DATA") $ lines lib_text
 >      in 
->      unlines [ comment "driver" ++ "\n"
->              , "{-# OPTIONS " ++ opts ++ " #-}"
+>      unlines [ "{-# OPTIONS " ++ opts ++ " #-}\n"
+>	       , comment "driver" ++ "\n"
 >	       , "module " ++ mod_name ++ "("
 >	       , case lexer g of 
 >                  Nothing     -> ""
