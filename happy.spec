@@ -1,5 +1,5 @@
 %define name    happy
-%define version 1.14
+%define version 1.15
 %define release 1
 
 Name:           %{name}
