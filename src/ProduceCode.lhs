@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.40 2000/12/03 16:53:53 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.41 2000/12/19 15:00:31 simonmar Exp $
 
 The code generator.
 
@@ -92,7 +92,7 @@ Produce the complete output file.
 >	. produceTokenConverter . nl
 >	. produceMonadStuff
 >	. produceEntries
->	. maybestr module_trailer
+>	. maybestr module_trailer . nl
 >	) ""
 >   where
 
