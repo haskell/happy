@@ -1,3 +1,8 @@
+* allow polymorphic type signatures for productions.
+* allow omitted semnatic values, defaulting to $1?
+
+-OLD-------------------------------------------------------------------------
+
 1. Add in a simple lexical analyser
 
 2. Add in choice for lexical analyis
