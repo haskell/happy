@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: LALR.lhs,v 1.4 1997/07/16 13:32:37 simonm Exp $
+$Id: LALR.lhs,v 1.5 1997/08/25 12:35:16 simonm Exp $
 
 Generation of LALR parsing tables.
 
@@ -9,7 +9,7 @@ Generation of LALR parsing tables.
 > module LALR where
 
  	(genActionTable, genGotoTable, genLR0items, 
-	 Lr0Item(..),Lr1Item(..),ItemSetWithGotos(..),
+	 Lr0Item(..),ItemSetWithGotos(..),
 	 propLookaheads, calcLookaheads, mergeLookaheadInfo,
 	 countConflicts,
 	 GrammarInfo(..), Name(..), Set, GotoTable(..),
@@ -22,8 +22,15 @@ Generation of LALR parsing tables.
 > import Grammar
 > import First
 
+#ifdef __GLASGOW_HASKELL__
+
+> import GlaExts
+> import ST (runST)
+
+#endif
+
 > type Lr0Item = (Int,Int)			-- (rule, dot)
-> type Lr1Item = (Int,Int,Name)			-- (rule, dot, lookahead)
+> type Lr1Item = (Int,Int,Set Name)		-- (rule, dot, lookahead)
 
 > type RuleList = [Lr0Item]
 
@@ -84,62 +91,75 @@ using a memo table so that no work is repeated.
 >           	(Just nt) | nt >= 0 && nt < first_term -> closureOfNT nt
 >               _                           -> []
 
-%-----------------------------------------------------------------------------
-\subsection{Generating the closure of a set of LR(1) items}
+-----------------------------------------------------------------------------
+Generating the closure of a set of LR(1) items
 
-> closure1 :: GrammarInfo -> ([Name] -> Set Name) -> Set Lr1Item -> [Lr1Item]
+> closure1 :: GrammarInfo -> ([Name] -> Set Name) -> [Lr1Item] -> [Lr1Item]
 > closure1 g first set
->       = setToList (fst (mkClosure (\(_,new) _ -> isEmptySet new) 
->				    addItems 
->			 	    (emptySet,set)))
+>       = fst (mkClosure (\(_,new) _ -> null new) addItems ([],set))
 >	where
 >	first_term = getFirstTerm g
 
->	addItems :: (Set Lr1Item,Set Lr1Item) -> (Set Lr1Item,Set Lr1Item)
->	addItems (oldItems,newItems) = (newOldItems, newNewItems)
-> 	  where
->		newOldItems = newItems `union` oldItems
->		newNewItems = subtractSet (concatMapSet fn newItems)
->					   newOldItems
-
-				(concat (map fn newItems)))
-
->		fn :: Lr1Item -> Set Lr1Item
->       	fn (rule,dot,a) = 
->	   	  case lookupProdNo g rule of
->		   (name,lhs,_) -> 
->		      case drop dot lhs of
->			(b:beta) | b >= 0 && b < first_term ->
->				let terms = setToList (first (beta ++ [a]))
->				    bRules = lookupProdsOfName g b in
->					mkSet [ (rule,0,b) | rule <- bRules,
->						       b <- terms ]
->			_ -> emptySet
->{-
-> closure1 :: GrammarInfo -> ([Name] -> Set Name) -> Set Lr1Item -> [Lr1Item]
-> closure1 gram first set
->       = _scc_ "closure1$" (fst (mkClosure (\(_,new) _ -> null new) addItems ([],setToList set)))
->	where
-
 >	addItems :: ([Lr1Item],[Lr1Item]) -> ([Lr1Item],[Lr1Item])
->	addItems (oldItems,newItems) = (newOldItems, newNewItems)
-> 	  where
->		newOldItems = _scc_ "cl1$Old" (newItems ++ oldItems)
->		newNewItems = _scc_ "cl1$New" 
->				(nub (filter (`notElem` newOldItems)
->				(concat (map fn newItems))))
+>	addItems (old_items, new_items) = (new_old_items, new_new_items)
+>	  where
+>		new_old_items = new_items `union_items` old_items
+>		new_new_items = subtract_items 
+>				   (foldr union_items [] (map fn new_items))
+>					new_old_items
 
->       	fn (rule,dot,a) = _scc_ "cl1$fn" (
->	   	  case lookupProdNo gram rule of
->		   (name,lhs,_) -> 
->		      case drop dot lhs of
->			(b@(NonTerminal nt):beta) ->
->				let terms = setToList (first (beta ++ [a]))
->				    bRules = lookupProdsOfName gram b in
->					[ (rule,0,b) | rule <- bRules,
->						       b <- terms ]
->			_ -> [])
-> -}
+>		fn :: Lr1Item -> [Lr1Item]
+>		fn (rule,dot,as) =
+>		    case lookupProdNo g rule of { (name,lhs,_) ->
+>		    case drop dot lhs of
+>			(b:beta) | b >= 0 && b < first_term ->
+>			    let terms = concatMapSet 
+>						(\a -> first (beta ++ [a])) as
+>			    in
+>			    [ (rule,0,terms) | rule <- lookupProdsOfName g b ]
+>			_ -> []
+>		    }
+
+Subtract the first set of items from the second.
+
+> subtract_items :: [Lr1Item] -> [Lr1Item] -> [Lr1Item]
+> subtract_items items1 items2 = foldr (subtract_item items2) [] items1
+
+These utilities over item sets are crucial to performance.
+
+Stamp on overloading with judicious use of type signatures...
+
+> subtract_item :: [Lr1Item] -> Lr1Item -> [Lr1Item] -> [Lr1Item]
+> subtract_item [] i result = i : result
+> subtract_item ((rule,dot,as):items) i@(rule',dot',as') result =
+>	case compare rule' rule of
+>		LT -> i : result
+>		GT -> carry_on
+>		EQ -> case compare dot' dot of
+>			LT -> i : result
+>			GT -> carry_on
+>			EQ -> case subtractSet as' as of
+>				[] -> result
+>				bs -> (rule,dot,bs) : result
+>  where
+>	carry_on = subtract_item items i result
+
+Union two sets of items.
+
+> union_items :: [Lr1Item] -> [Lr1Item] -> [Lr1Item]
+> union_items is [] = is
+> union_items [] is = is
+> union_items (i@(rule,dot,as):is) (i'@(rule',dot',as'):is') =
+>	case compare rule rule' of
+>		LT -> drop_i
+>		GT -> drop_i'
+>		EQ -> case compare dot dot' of
+>			LT -> drop_i
+>			GT -> drop_i'
+>			EQ -> (rule,dot,as `union_Int` as') : union_items is is'
+>  where
+>	drop_i  = i  : union_items is (i':is')
+>	drop_i' = i' : union_items (i:is) is'
 
 %-----------------------------------------------------------------------------
 \subsection{goto(I,X) function}
@@ -247,7 +267,7 @@ calcLookaheads pass.
 >	-> [(Set Lr0Item,[(Name,Int)])]		-- LR(0) kernel sets
 >	-> ([Name] -> Set Name)			-- First function
 >	-> (
->		[(Int, Lr0Item, Name)],		-- spontaneous lookaheads
+>		[(Int, Lr0Item, Set Name)],	-- spontaneous lookaheads
 >		Array Int [(Lr0Item, Int, Lr0Item)]	-- propagated lookaheads
 >	   )
 
@@ -264,7 +284,7 @@ calcLookaheads pass.
 >	  propLAItem item@(rule,dot) = (spontaneous, propagated)
 >	    where
 
->		j = closure1 gram first (singletonSet (rule,dot,dummy))
+>		j = closure1 gram first [(rule,dot,singletonSet dummy)]
 >		dummy = -100	-- no such thing as terminal -100, ever.
 
 >		spontaneous = concat [ 
@@ -272,8 +292,11 @@ calcLookaheads pass.
 >		     Nothing -> []
 >		     Just x  -> case lookup x goto of
 >			 	  Nothing -> error "spontaneous"
->				  Just k  -> [(k, (rule, dot+1), t)])
->			| (rule,dot,t) <- j, t /= dummy ]
+>				  Just k  ->
+>					case filter (/= dummy) (setToList ts) of
+>					   [] -> []
+>					   ts' -> [(k, (rule, dot+1), ts')])
+>			| (rule,dot,ts) <- j ]
 
 >		propagated = concat [
 >		 (case findRule gram rule dot of
@@ -281,15 +304,81 @@ calcLookaheads pass.
 >		     Just x  -> case lookup x goto of
 >				  Nothing -> error "propagated"
 >				  Just k  -> [(item, k, (rule, dot+1))])
->			| (rule,dot,t) <- j, t == dummy ]
+>			| (rule,dot,ts) <- j, dummy `elem` (setToList ts) ]
 
 %-----------------------------------------------------------------------------
 \subsection{Calculate lookaheads}
 
-ToDo: write this efficiently -- really needs an array with constant
-time update.  Use an ordered list for now.
+#ifdef __GLASGOW_HASKELL__
 
-Complexity: monstrous.
+Special version using a mutable array for GHC.
+
+> calcLookaheads
+>	:: Int					-- number of states
+>	-> [(Int, Lr0Item, Set Name)]		-- spontaneous lookaheads
+>	-> Array Int [(Lr0Item, Int, Lr0Item)]	-- propagated lookaheads
+>	-> Array Int [(Lr0Item, Set Name)]
+
+> calcLookaheads n_states spont prop
+>	= runST (do
+>	    array <- newArray (0,n_states) []
+>	    propagate array (foldr fold_lookahead [] spont)
+>	    freezeArray array
+>	)
+
+>   where
+>	propagate array []  = return ()
+>	propagate array new = do 
+>		let
+>		   items = [ (i,item'',s) | (j,item,s) <- new, 
+>				            (item',i,item'') <- prop ! j,
+>				            item == item' ]
+>		new_new <- get_new array items []
+>		add_lookaheads array new
+>		propagate array new_new
+
+This function is needed to merge all the (set_no,item,name) triples
+into (set_no, item, set name) triples.  It can be removed when we get
+the spontaneous lookaheads in the right form to begin with (ToDo).
+
+> fold_lookahead :: (Int,Lr0Item,Set Name) -> [(Int,Lr0Item,Set Name)]
+>		-> [(Int,Lr0Item,Set Name)]
+> fold_lookahead l [] = [l]
+> fold_lookahead l@(i,item,s) (m@(i',item',s'):las)
+>  	| i == i' && item == item' = (i,item, s `union_Int` s'):las
+>	| i < i' = (i,item,s):m:las
+>	| otherwise = m : fold_lookahead l las
+
+> add_lookaheads array [] = return ()
+> add_lookaheads array ((i,item,s) : lookaheads) = do
+>	las <- readArray array i
+>	writeArray array i (add_lookahead item s las)
+>	add_lookaheads array lookaheads
+
+> add_lookahead :: Lr0Item -> Set Name -> [(Lr0Item,Set Name)] ->
+> 			[(Lr0Item,Set Name)]
+> add_lookahead item s [] = [(item,s)]
+> add_lookahead item s (m@(item',s') : las)
+>	| item == item' = (item, s `union_Int` s') : las
+>	| otherwise     = m : add_lookahead item s las
+
+> get_new array [] new = return new
+> get_new array (l@(i,item,s):las) new = do
+>	state_las <- readArray array i
+>	get_new array las (get_new' l state_las new)
+
+> get_new' :: (Int,Lr0Item,Set Name) -> [(Lr0Item,Set Name)] ->
+>		 [(Int,Lr0Item,Set Name)] -> [(Int,Lr0Item,Set Name)]
+> get_new' l [] new = l : new
+> get_new' l@(i,item,s) (m@(item',s') : las) new
+>	| item == item' =
+>		let s'' = filter (`notElem` s') s in
+>		if null s'' then new else
+>		((i,item,s''):new)
+>	| otherwise = 
+>		get_new' l las new
+
+#else
 
 > calcLookaheads
 >	:: [(Int, Lr0Item, Name)]		-- spontaneous lookaheads
@@ -312,67 +401,35 @@ Complexity: monstrous.
 >		in
 >		(new_las, new_new)
 
+> addLookahead :: (Int,Lr0Item,Set Name) -> [(Int,Lr0Item,Set Name)]
+>		-> [(Int,Lr0Item,Set Name)]
+> addLookahead l [] = [l]
+> addLookahead l@(i,item,s) (m@(i',item',s'):las)
+>  	| i == i' && item == item' = (i,item, s `union_Int` s'):las
+>	| i < i' = (i,item,s):m:las
+>	| otherwise = m : addLookahead l las
 
->	  addLookahead l [] = [l]
->	  addLookahead l@(i,item,s) (m@(i',item',s'):las)
->	  	| i == i' && item == item' = (i,item, s `union` s'):las
->		| i < i' = (i,item,s):m:las
->		| otherwise = m : addLookahead l las
-
-> 	  getNew l [] new = l:new
->	  getNew l@(i,item,s) (m@(i',item',s'):las) new
->	  	| i == i' && item == item' = 
->			let s'' = filter (`notElem` s') s in
->			if null s'' then new else
->			((i,item,s''):new)
->		| i < i'    = (i,item,s):new
->		| otherwise = getNew l las new
-
-#if 0
-
-Can we do this using a lazy array definition?  Bad news, we have
-circular propagations in the lookahead information.  Is there a way to
-remove them?
-
-> calcLookaheads'
->	:: [(Int, Lr0Item, Name)]
->	-> Array Int [(Lr0Item, Int, Lr0Item)]
->	-> Array Int [(Lr0Item, Set Name)]
-
-> calcLookaheads' spont prop
->	= result
->	
->	where
->	  result = array (0,top_state) [
->		(state,
-
-Spontaneous Lookaheads
-
->		[ (item, singletonSet name) | 
->			(st, item, name) <- spont, st == state ] ++
-
-Propagated Lookaheads
-
->		[ (item, names) |
->			i <- [ 0 .. top_state ],
->			(item', st, item) <- prop ! i,
->			st == state,
->			names <- [ names | (item'', names) <- result ! i,
->					   item'' == item' ] ])
->
->		  | state <- [ 0 .. top_state ] ]
->		  
->	  (_,top_state) = bounds prop
+> getNew :: (Int,Lr0Item,Set Name) -> [(Int,Lr0Item,Set Name)]
+>	-> [(Int,Lr0Item,Set Name)] -> [(Int,Lr0Item,Set Name)]
+> getNew l [] new = l:new
+> getNew l@(i,item,s) (m@(i',item',s'):las) new
+>  	| i == i' && item == item' = 
+>		let s'' = filter (`notElem` s') s in
+>		if null s'' then new else
+>		((i,item,s''):new)
+>	| i < i'    = (i,item,s):new
+>	| otherwise = getNew l las new
 
 #endif
 
-\subsection{Merge lookaheads}
+-----------------------------------------------------------------------------
+Merge lookaheads
 
 Stick the lookahead info back into the state table.
 
 > mergeLookaheadInfo
->	:: [(Int, Lr0Item, Set Name)]
->	-> [(Set Lr0Item, [(Name,Int)])]
+>	:: Array Int [(Lr0Item, Set Name)] 	-- lookahead info
+>	-> [(Set Lr0Item, [(Name,Int)])] 	-- state table
 >	-> [ ([Lr1Item], [(Name,Int)]) ]
 
 > mergeLookaheadInfo lookaheads sets
@@ -383,19 +440,16 @@ Stick the lookahead info back into the state table.
 >		= (concat (map mergeIntoItem (setToList items)), goto)
 >		where
 
->	  	  thisSetLookaheads 
->			= [ l | l@(i',_,_) <- lookaheads, i == i' ]
-
 >	  	  mergeIntoItem item@(rule,dot)
->		     = [(rule,dot,la)
-> 			| la <- case [ s | (_,item',s) <- thisSetLookaheads,
+>		     = [(rule,dot,la)]
+>		     where la = case [ s | (item',s) <- lookaheads ! i,
 >					    item == item' ] of
 >					[] -> []
 >					[x] -> setToList x
->					_ -> error "mergIntoItem" ]
+>					_ -> error "mergIntoItem"
 
-%-----------------------------------------------------------------------------
-\susbsection{Generate the goto table}
+-----------------------------------------------------------------------------
+Generate the goto table
 
 This is pretty straightforward, given all the information we stored
 while generating the LR0 sets of items.
@@ -441,12 +495,12 @@ Generating the goto table doesn't need lookahead info.
 >                               Just j  -> [ (t, LR'Shift j) ]
 >               Nothing -> if rule == 0 
 >                  then [ (eof, LR'Accept) ]
->                  else [ (la,  LR'Reduce rule) ]
+>                  else zip la (repeat (LR'Reduce rule))
 >               _ -> []
 
 >	possActions goto coll = 
->		(concat [ possAction goto coll col | 
->			      col <- closure1 g first (mkSet coll) ])
+>		(concat [ possAction goto coll item |
+>				item <- closure1 g first coll ])
 
 Here's how we resolve conflicts, leaving a complete record of the
 conflicting actions in an LR'Multiple structure for later output in
