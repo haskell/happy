@@ -1,8 +1,10 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.13 1997/09/18 16:23:51 simonm Exp $
+# $Id: Makefile,v 1.14 1997/09/19 10:40:23 simonm Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
+
+HC = $(WithHappyHc)
 
 HAPPY    = happy
 
