@@ -2429,4 +2429,5 @@ all: MyParser.y
       </itemizedlist>
     </sect1>
   </chapter>
+  <index/>
 </book>
