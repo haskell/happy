@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.25 2000/02/28 14:18:03 simonmar Exp $
+$Id: Main.lhs,v 1.26 2000/03/28 14:30:04 panne Exp $
 
 The main driver.
 
@@ -54,16 +54,16 @@ Read and parse the CLI arguments.
 
 >       case getOpt Permute argInfo (constArgs ++ args) of
 >         	(cli,[fl_name],[]) -> runParserGen cli fl_name
->               (cli,[],[]) | DumpVerbose `elem` cli -> copyright
+>               (cli,[],[]) | DumpVersion `elem` cli -> copyright
 >		(_,_,errors) -> die (concat errors ++ 
 >				     usageInfo usageHeader argInfo)
 
 >  where 	
 >    runParserGen cli fl_name =
 
-Print out the copyright message if we are in verbose mode.
+Print out the copyright message if we are in version mode.
 
->       optIO (elem DumpVerbose cli) copyright		>>
+>       optIO (elem DumpVersion cli) copyright		>>
 
 Open the file.
 
@@ -301,7 +301,7 @@ The command line arguments.
 >               | DumpGoto
 >		| DumpLA
 >		
->               | DumpVerbose
+>               | DumpVersion
 >		| OptInfoFile (Maybe String)
 >		| OptTemplate String
 >		| OptMagicName String
@@ -332,7 +332,7 @@ The command line arguments.
 >	"Write the output to FILE (default: file.hs)",
 >    Option ['t'] ["template"] (ReqArg OptTemplate "DIR")
 >	"Look in DIR for template files",
->    Option ['v'] ["verbose"] (NoArg DumpVerbose)
+>    Option ['v'] ["version"] (NoArg DumpVersion)
 >       "Print out version info"
 
 #ifdef DEBUG
