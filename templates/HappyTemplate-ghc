@@ -1,0 +1,54 @@
+-- Start of Happy Template (version 0.8, ghc specific optimisations)
+
+happyParse tks = happyNewToken action_0 (1::Int) tks [] []
+
+-- All this HappyState stuff is simply because we can't have recursive
+-- types in Haskell without an intervening data structure.
+
+data HappyState b c = HappyState
+	(Int# ->			-- token number
+	 Int# ->			-- token number (yes, again)
+	 b -> 				-- token semantic value
+	 HappyState b c ->		-- current state
+	 Int ->				-- line number
+	 [b] ->				-- rest of tokens
+	 [HappyState b c] ->		-- state stack
+	 c)
+
+-- Ok, Here are the action functions.
+
+happyAccept _ _ _ _ _ _ [ HappyAbsSyn1 ans ] = ans
+happyAccept 0# _ _ _ _ _ _ = error ""	-- typechecker hack
+
+happyFail   _ _ _ ln tks _ _ = happyError ln tks
+happyFail  0# _ _ _  _   _ _ = error ""
+
+happyShift new_state i tk st ln tks sts stk =
+     happyNewToken new_state ln tks (st:sts) (HappyTerminal tk:stk)
+happyShift _ 0# _ _ _ _ _ _ = error ""	-- typechecker hack
+
+happyGoto action j tk st = action j j tk (HappyState action)
+
+-- happyReduce is specialised for the common cases.
+
+specHappyReduce_0 i fn j tk st@(HappyState action) ln tks sts stk
+     = action i j tk st ln tks (st:sts) (fn stk ln)
+specHappyReduce_1 i fn j tk _ ln tks sts@(st@(HappyState action):_) stk
+     = action i j tk st ln tks sts (fn stk ln)
+specHappyReduce_2 i fn j tk _ ln tks (_:sts@(st@(HappyState action):_)) stk
+     = action i j tk st ln tks sts (fn stk ln)
+specHappyReduce_3 i fn j tk _ ln tks (_:_:sts@(st@(HappyState action):_)) stk
+     = action i j tk st ln tks sts (fn stk ln)
+
+happyReduce i k fn j tk st ln tks sts stk
+              = action i j tk st' ln tks sts' (fn stk ln)
+       where sts'@(st'@(HappyState action):_) = drop (I# k) (st:sts)
+
+-- Internal happy errors:
+
+notHappyAtAll :: Int -> a
+notHappyAtAll i = error ("Internal Happy error in reduction ( " 
+			   ++ show i ++ " )")
+
+-- end of Happy Template.
+
