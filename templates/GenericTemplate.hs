@@ -1,4 +1,4 @@
--- $Id: GenericTemplate.hs,v 1.23 2002/05/23 09:24:27 simonmar Exp $
+-- $Id: GenericTemplate.hs,v 1.24 2003/06/03 09:41:51 ross Exp $
 
 #ifdef HAPPY_GHC
 #define ILIT(n) n#
@@ -147,7 +147,7 @@ indexShortOffAddr arr off = arr ! off
 data HappyAddr = HappyA# Addr#
 #endif
 
-#endif {- HAPPY_ARRAY -}
+#endif /* HAPPY_ARRAY */
 
 -----------------------------------------------------------------------------
 -- HappyState data type (not arrays)
