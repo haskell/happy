@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.5 1997/08/25 12:35:48 simonm Exp $
+$Id: Main.lhs,v 1.6 1997/09/01 09:45:38 simonm Exp $
 
 The main driver.
 
@@ -147,7 +147,7 @@ of code we should generate, and where it should go:
 >	getTarget cli					>>= \target ->
 >	getOutputFileName fl_name cli			>>= \outfilename ->
 >	getTemplate template_dir cli			>>= \template' ->
->	let template = template_file template' target in
+>	let template = template_file template' target (Opt1_2 `elem` cli) in
 
 Read in the template file for this target:
 
@@ -246,7 +246,7 @@ The command line arguments.
 > argFns "-lr0"         = flag DumpLR0
 > argFns "-action"      = flag DumpAction
 > argFns "-goto"        = flag DumpGoto
-> argFns "-1.3"         = flag Opt1_3
+> argFns "1.2"          = flag Opt1_2
 > argFns "i"            = flagWithOptArg OptInfoFile
 > argFns "-info"        = flagWithOptArg OptInfoFile
 > argFns "-template"    = flagWithArg OptTemplate
@@ -269,14 +269,12 @@ The command line arguments.
 >               | DumpLR0
 >               | DumpAction
 >               | DumpGoto
->               | DumpOutFile
->               | DumpNever
 >		| DumpLA
 >		
 >		| OptInfoFile (Maybe String)
 >		| OptTemplate String
 >		| OptMagicName String
->		| Opt1_3
+>		| Opt1_2
 >
 >		| OptGhcTarget
 >		| OptArrayTarget
@@ -291,12 +289,14 @@ How would we like our code to be generated?
 > optToTarget OptArrayTarget 	= Just TargetArrayBased
 > optToTarget _			= Nothing
 
-> template_file temp_dir target 
->   = temp_dir ++
->	  (case target of
->		TargetHaskell 	 -> "/HappyTemplate"
->		TargetGhc	 -> "/HappyTemplate-ghc"
->		TargetArrayBased -> "/HappyTemplate-arrays")
+> template_file temp_dir target haskell_1_2
+>   = temp_dir ++ base ++
+>     if haskell_1_2 then "-1_2" else ""
+>  where  
+>	base = case target of
+>		 TargetHaskell 	  -> "/HappyTemplate"
+>		 TargetGhc	  -> "/HappyTemplate-ghc"
+>		 TargetArrayBased -> "/HappyTemplate-arrays"
 
 ------------------------------------------------------------------------------
 Extract various command-line options.
@@ -346,8 +346,9 @@ Extract various command-line options.
 
 
 > syntax = unlines [
->   "syntax: happy [-v] [--outfile] [--info [file]]",
->   "              [-g | --ghc] [-a | --array] [-o [file]] file\n" ]
+>   "syntax: happy [-v] [-o | --outfile <file>] [--info [<file>]]",
+>   "		   [-1.2] [--template <dir>]",
+>   "              [-g | --ghc] [-a | --array] <file>\n" ]
 
 -----------------------------------------------------------------------------
 
