@@ -6,7 +6,7 @@ This module is designed as an extension to the Haskell parser generator Happy.
 (c) University of Durham, Paul Callaghan 2004
 	-- extension to semantic rules, and various optimisations
 
-$Id: ProduceGLRCode.lhs,v 1.8 2004/10/28 12:48:48 paulcc Exp $
+$Id: ProduceGLRCode.lhs,v 1.9 2004/11/08 15:53:31 paulcc Exp $
 
 %-----------------------------------------------------------------------------
 
@@ -17,6 +17,7 @@ $Id: ProduceGLRCode.lhs,v 1.8 2004/10/28 12:48:48 paulcc Exp $
 >                       , Options
 >                       ) where
 
+> import Version ( version )
 > import GenUtils ( fst3, thd3, mapDollarDollar )
 > import GenUtils ( str, char, nl, brack, brack', interleave, maybestr )
 > import Grammar
@@ -132,7 +133,8 @@ the driver and data strs (large template).
 >   table_text = mkTbls tables sem_info (thd3 options) g
   
 >   content tomitaStr opts 
->    = str ("{-# OPTIONS " ++ opts ++ " #-}")  .nl
+>    = str (comment "data")                    .nl .nl
+>    . str ("{-# OPTIONS " ++ opts ++ " #-}")  .nl
 >    . str ("module " ++ data_mod ++ " where") .nl 
 
 >     . nl
@@ -142,9 +144,9 @@ the driver and data strs (large template).
 >     . nl
 
 >    . let count_nls     = length . filter (=='\n')
->          pre_trailer   = maybe 0 count_nls header    -- check fmt below
+>          pre_trailer   = maybe 0 count_nls header	-- check fmt below
 >                        + count_nls tomitaStr
->                        + 8
+>                        + 10				-- for the other stuff
 >          post_trailer  = pre_trailer + maybe 0 count_nls trailer + 4
 >      in 
 >         str ("{-# LINE " ++ show pre_trailer ++ " "
@@ -177,7 +179,8 @@ the driver and data strs (large template).
 >   lib_content imps opts lib_text
 >    = let (pre,drop_me:post) = break (== "fakeimport DATA") $ lines lib_text
 >      in 
->      unlines [ "{-# OPTIONS " ++ opts ++ " #-}"
+>      unlines [ comment "driver" ++ "\n"
+>              , "{-# OPTIONS " ++ opts ++ " #-}"
 >	       , "module " ++ mod_name ++ "("
 >	       , case lexer g of 
 >                  Nothing     -> ""
@@ -195,6 +198,9 @@ the driver and data strs (large template).
 >   start_prod = token_names g ! (let (_,_,i) = head $ starts g in i)
 >   use_filtering = case options of (_, UseFiltering,_) -> True
 >                                   _                   -> False
+
+> comment which
+>  = "-- parser (" ++ which ++ ") produced by Happy (GLR) Version " ++ version
 
 
 %-----------------------------------------------------------------------------
