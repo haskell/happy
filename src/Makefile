@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.29 1999/10/05 15:27:20 simonmar Exp $
+# $Id: Makefile,v 1.30 1999/10/07 15:26:29 simonmar Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -92,19 +92,27 @@ all clean veryclean maintainer-clean ::
 endif
 
 check ::
-	./happy Test.ly
+	./happy-inplace Test.ly
 	$(HC) -fglasgow-exts Test.hs -o happy_test
 	./happy_test
 	-rm -f ./happy_test
-	./happy -g Test.ly
+	./happy-inplace -g Test.ly
 	$(HC) -fglasgow-exts Test.hs -o happy_test
 	./happy_test
 	-rm -f ./happy_test
-	./happy -a Test.ly
+	./happy-inplace -a Test.ly
 	$(HC) -fglasgow-exts Test.hs -o happy_test
 	./happy_test
 	-rm -f ./happy_test
-	./happy -g -c Test.ly
+	./happy-inplace -g -c Test.ly
+	$(HC) -fglasgow-exts Test.hs -o happy_test
+	./happy_test
+	-rm -f ./happy_test
+	./happy-inplace -a -g Test.ly
+	$(HC) -fglasgow-exts Test.hs -o happy_test
+	./happy_test
+	-rm -f ./happy_test
+	./happy-inplace -a -g -c Test.ly
 	$(HC) -fglasgow-exts Test.hs -o happy_test
 	./happy_test
 	-rm -f ./happy_test
