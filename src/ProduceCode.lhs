@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.36 2000/07/13 09:36:32 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.37 2000/07/13 14:27:23 simonmar Exp $
 
 The code generator.
 
@@ -666,7 +666,7 @@ outlaw them inside { }
 >                  str "happyThen :: " . pty
 >                . str " a -> (a -> "  . pty
 >	         . str " b) -> " . pty . str " b\n"
->                . str "happyThen = " . brack tn . char '\n'
+>                . str "happyThen = " . brack tn . nl
 >                . str "happyReturn = " . brack rtn . nl
 >            	 . str "happyThen1 = happyThen\n"
 >	     	 . str "happyReturn1 = happyReturn\n"
