@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.21 1999/05/14 15:18:16 simonm Exp $
+$Id: ProduceCode.lhs,v 1.22 1999/05/21 08:57:26 simonmar Exp $
 
 The code generator.
 
@@ -141,8 +141,6 @@ These are only generated if types for *all* rules are given (and not for array
 based parsers -- types aren't as important there).
 
 >    produceTypes 
->     | coerce = id		-- ToDo.
-
 >     | target == TargetArrayBased = id
 
 >     | all isJust (elems nt_types) =
