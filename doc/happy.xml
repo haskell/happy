@@ -1773,7 +1773,20 @@ close : '}'                  { () }
 	     <term>precedence information</term>
 	     <listitem>
 	       <para>
-	       This is ignored. This <emphasis>is</emphasis> a GLR parser!
+	       This still works, but note the reasons.
+	       The precedence and associativity declarations are used in 
+	       <application>Happy</application>'s LR table creation to 
+	       resolve certain conflicts. It does this by retaining the 
+	       actions implied by the declarations and removing the ones 
+	       which clash with these. 
+	       The GLR parser back-end then produces code from these 
+	       filtered tables, hence the rejected actions are never
+	       considered by the GLR parser. 
+	       </para>
+	       <para>
+	       Hence, declaring precedence and associativity is still 
+	       a good thing, since it avoids a certain amount of ambiguity
+	       that the user knows how to remove. 
 	       </para>
 	     </listitem>
 	   </varlistentry>
