@@ -6,7 +6,7 @@ This module is designed as an extension to the Haskell parser generator Happy.
 (c) University of Durham, Paul Callaghan 2004
 	-- extension to semantic rules, and various optimisations
 
-$Id: ProduceGLRCode.lhs,v 1.11 2004/12/04 12:46:33 ross Exp $
+$Id: ProduceGLRCode.lhs,v 1.12 2004/12/04 15:01:37 paulcc Exp $
 
 %-----------------------------------------------------------------------------
 
@@ -186,7 +186,7 @@ the driver and data strs (large template).
 >     . nl
 >     . mkDecodeUtils options (monad_sub g) sem_info      .nl 
 >     . nl
->     . str ("type UserDefTok = " ++ token_type g)    .nl
+>     . user_def_token_code (token_type g)                .nl
 >     . nl
 >     . table_text
 
@@ -215,6 +215,13 @@ the driver and data strs (large template).
 
 > comment which
 >  = "-- parser (" ++ which ++ ") produced by Happy (GLR) Version " ++ version
+
+> user_def_token_code token_type
+>  = str "type UserDefTok = " . str token_type                      .nl
+>  . str "instance TreeDecode " . brack token_type . str " where"   .nl
+>  . str "\tdecode_b f (Branch (SemTok t) []) = [happy_return t]"   .nl
+>  . str "instance LabelDecode " . brack token_type . str " where"  .nl
+>  . str "\tunpack (SemTok t) = t"                                  .nl
 
 
 %-----------------------------------------------------------------------------
@@ -547,14 +554,14 @@ Creates the appropriate semantic values.
 >    ] 
 
 > mk_lambda pats v
->  = (\s -> "\\(" ++ s ++ ") -> ") . mk_binder id pats v
+>  = (\s -> "\\" ++ s ++ " -> ") . mk_binder id pats v
 
 > mk_binder wrap pats v
 >  = case lookup v pats of
 >	Nothing -> mkHappyVar v 
 >	Just p  -> case mapDollarDollar p of 
->	              Nothing -> wrap . showString p
->	              Just fn -> wrap . fn . mkHappyVar v 
+>	              Nothing -> wrap . mkHappyVar v . showChar '@' . brack p
+>	              Just fn -> wrap . brack' (fn . mkHappyVar v)
 
 
 ---
