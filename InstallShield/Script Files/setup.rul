@@ -1,29 +1,3 @@
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//  IIIIIII SSSSSS
-//    II    SS                          InstallShield (R)
-//    II    SSSSSS      (c) 1996-1997, InstallShield Software Corporation
-//    II        SS      (c) 1990-1996, InstallShield Corporation
-//  IIIIIII SSSSSS                     All Rights Reserved.
-//
-//
-//  This code is generated as a starting setup template.  You should
-//  modify it to provide all necessary steps for your setup.
-//
-//
-//    File Name:  Setup.rul
-//
-//  Description:  InstallShield script
-//
-//     Comments:  This template script performs a basic setup on a
-//                Windows 95 or Windows NT 4.0 platform. With minor
-//                modifications, this template can be adapted to create
-//                new, customized setups.
-//
-////////////////////////////////////////////////////////////////////////////////
-
-
   // Include header file
 #include "ifx.h"
 
@@ -32,12 +6,6 @@
 #define UNINST_LOGFILE_NAME      "Uninst.isu"
 
 //////////////////// installation declarations ///////////////////
-
-  // ----- DLL prototypes -----
-
-
-     // your DLL prototypes
-
 
   // ---- script prototypes -----
 
@@ -292,7 +260,7 @@ function ProcessAfterDataMove()
   RegDBGetKeyValueEx ( "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment" ,
                        "path" , nvType, szPath , nvSize );
 
-  // Spin through path looking for sh.exe.
+  // Spin through path looking for bash.exe.
   // Our task is made considerably harder since the
   // the free version of InstallShield doesn't support
   // functions such as StrGetTokens() or ParsePath().
@@ -301,7 +269,7 @@ function ProcessAfterDataMove()
   nResult = ListGetFirstString ( listPath, szPathEntry);
   szPathEntry = ""; szShellPath="";
   while ( nResult != END_OF_LIST )
-     if ( FindFile (szPathEntry, "sh.exe", szRes ) = 0 ) then
+     if ( FindFile (szPathEntry, "bash.exe", szRes ) = 0 ) then
        szShellPath = szPathEntry + "/" + szRes;
        nResult = END_OF_LIST;
      else
@@ -317,7 +285,7 @@ function ProcessAfterDataMove()
     nResult = ListGetFirstString ( listPath, szPathEntry);
     szPathEntry = ""; szShellPath="";
     while ( nResult != END_OF_LIST )
-      if ( FindFile (szPathEntry, "sh.exe", szRes ) = 0 ) then
+      if ( FindFile (szPathEntry, "bash.exe", szRes ) = 0 ) then
         szShellPath = szPathEntry + "/" + szRes;
         nResult = END_OF_LIST;
       else
@@ -327,13 +295,11 @@ function ProcessAfterDataMove()
   endif;
 
   if ( StrCompare ( szShellPath, "" ) = 0 ) then
-     // Default it to /bin/sh
-     MessageBox ("Unable to find sh in your PATH. You should copy bash to /bin/sh when installation finishes",
+     // Default it to /bin/bash
+     MessageBox ("Unable to find bash in your PATH. You should copy bash to /bin/bash when installation finishes",
                  INFORMATION);
-     szShellPath = "/bin/sh.exe";
+     szShellPath = "/bin/bash.exe";
   else
-     // strip initial drive spec.
-     GetDir ( szShellPath, szTemp);
      ForwardSlashify ( szTemp, szShellPath );
   endif;
   DropSuffix (szShellPath, szTemp);
