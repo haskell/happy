@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.42 2000/12/20 15:23:56 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.43 2001/01/06 05:34:52 qrczak Exp $
 
 The code generator.
 
@@ -29,9 +29,12 @@ The code generator.
 > import MArray hiding (assocs, indices, elems)
 > import IArray
 > marray_indices a = MArray.indices a	-- add args to avoid MR :-(
+> newArray bounds val = do 
+>   a <- marray bounds
+>   sequence_ [ put a i val | i <- marray_indices a ]
+>   return a
 > readArray  a ix   = get a ix
 > writeArray a ix e = put a ix e
-> newArray b  = marray b
 
 #else
 
@@ -39,9 +42,11 @@ The code generator.
 
 > type STUArray s ix e = STArray s ix e
 > type UArray ix e = Array ix e
+> newArray   :: Ix ix => (ix,ix) -> e -> ST s (STUArray s ix e)
 > readArray  :: Ix ix => STUArray s ix e -> ix -> ST s e
 > writeArray :: Ix ix => STUArray s ix e -> ix -> e -> ST s ()
-> freeze :: Ix ix => STUArray s ix e -> ST s (UArray ix e)
+> freeze     :: Ix ix => STUArray s ix e -> ST s (UArray ix e)
+> newArray   = newSTArray
 > readArray  = readSTArray
 > writeArray = writeSTArray
 > freeze     = freezeSTArray
@@ -895,7 +900,7 @@ vars used in this piece of code.
 > genTables
 >	 :: Int				-- number of actions
 >	 -> Int				-- maximum token no.
->	 -> [TableEntry]			-- entries for the table
+>	 -> [TableEntry]		-- entries for the table
 >	 -> ST s (UArray Int Int,	-- table
 >		  UArray Int Int,	-- check
 >		  UArray Int Int,	-- action offsets
@@ -905,11 +910,11 @@ vars used in this piece of code.
 >
 > genTables n_actions max_token entries = do
 >
->   table      <- fillNewArray (0, mAX_TABLE_SIZE) 0
->   check      <- fillNewArray (0, mAX_TABLE_SIZE) (-1)
->   act_offs   <- fillNewArray (0, n_actions) 0
->   goto_offs  <- fillNewArray (0, n_actions) 0
->   off_arr    <- fillNewArray (-max_token, mAX_TABLE_SIZE) 0
+>   table      <- newArray (0, mAX_TABLE_SIZE) 0
+>   check      <- newArray (0, mAX_TABLE_SIZE) (-1)
+>   act_offs   <- newArray (0, n_actions) 0
+>   goto_offs  <- newArray (0, n_actions) 0
+>   off_arr    <- newArray (-max_token, mAX_TABLE_SIZE) 0
 >
 >   max_off <- genTables' table check act_offs goto_offs 
 >			off_arr entries max_token
@@ -925,6 +930,16 @@ vars used in this piece of code.
 >	 mAX_TABLE_SIZE = n_states * (max_token + 1)
 
 
+> genTables'
+>	 :: STUArray s Int Int		-- table
+>	 -> STUArray s Int Int		-- check
+>	 -> STUArray s Int Int		-- action offsets
+>	 -> STUArray s Int Int		-- goto offsets
+>	 -> STUArray s Int Int		-- offset array
+>	 -> [TableEntry]		-- entries for the table
+>	 -> Int				-- maximum token no.
+>	 -> ST s Int 	   		-- highest offset in table
+>
 > genTables' table check act_offs goto_offs off_arr entries max_token
 >	= fit_all entries 0 1
 >   where
@@ -1008,21 +1023,6 @@ vars used in this piece of code.
 >	 i <- readArray table n
 >	 if i == 0 then return n
 >		   else findFstZero table (n+1)
-
-#if __GLASGOW_HASKELL__ >= 408
-
-> fillNewArray :: (Int,Int) -> Int -> ST s (STUArray s Int Int)
-> fillNewArray bounds val = do 
->   a <- newArray bounds
->   sequence_ [ writeArray a i val | i <- marray_indices a ]
->   return a
-
-#else
-
-> fillNewArray :: (Int,Int) -> Int -> ST s (STUArray s Int Int)
-> fillNewArray = newSTArray
-
-#endif
 
 -----------------------------------------------------------------------------
 -- Misc.
