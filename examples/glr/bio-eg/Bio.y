@@ -29,11 +29,11 @@ Intergenic_noise
 Match  
  : Promoter Translation {} 
 
-Promoter 
- : Promoter_consensus {}
- | Promoter_hcv_large {}
- | Promoter_cart {}
- | Promoter_hcv_small {}
+Promoter :: {Int}
+ : Promoter_consensus {1}
+ | Promoter_hcv_large {2}
+ | Promoter_cart {3}
+ | Promoter_hcv_small {4}
 
 
 --------------------
