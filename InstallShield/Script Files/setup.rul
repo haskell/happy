@@ -369,8 +369,13 @@ function SetupFolders()
   //    CreateProgramFolder, AddFolderIcon....
   //
 
-  CreateHappyScript(szBinDirUnslashed, "happy");
-  CreateHappyBat(szBinDirUnslashed);
+  CreateHappyScript ( szBinDirUnslashed, "happy-" + @PRODUCT_VERSION );
+  VarSave (SRCTARGETDIR);
+  SRCDIR = szBinDirUnslashed;
+  TARGETDIR = szBinDirUnslashed;
+  CopyFile( "happy-" + @PRODUCT_VERSION, "happy");
+  VarRestore (SRCTARGETDIR);
+  CreateHappyBat ( szBinDirUnslashed );
   
   nResult = CreateShellObjects( "" );
 
@@ -739,7 +744,7 @@ function ForwardSlashify ( szStr , theRes )
    WriteLine (writeHandle, "@echo off" );
    WriteLine (writeHandle, "set HAPPYLIB=" + szLibDir + "/happy" );
    WriteLine (writeHandle, "set HAPPYBIN=" + szLibDirUnslashed ^ "happy.bin" );
-   WriteLine (writeHandle, "%HAPPYBIN% --template %HAPPYLIB% %*" );
+   WriteLine (writeHandle, "%HAPPYBIN% --template $HAPPYLIB %*" );
 
    SetFileInfo ( szPath ^ szFileName, FILE_ATTRIBUTE, FILE_ATTR_NORMAL, "");
    return 0;
