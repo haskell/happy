@@ -4,4 +4,7 @@
 #	HAPPYLIB
 #	HAPPYBIN
 
-$HAPPYBIN --template $HAPPYLIB $*
+case $* in
+*--template*) $HAPPYBIN $*;;
+*)            $HAPPYBIN --template $HAPPYLIB $*;;
+esac
