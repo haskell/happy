@@ -1,4 +1,4 @@
--- $Id: HappyTemplate-arrays,v 1.9 1999/05/14 14:26:18 simonm Exp $
+-- $Id: HappyTemplate-arrays,v 1.10 1999/06/30 14:14:33 simonmar Exp $
 
 happyParse = happyNewToken 0 [] []
 
@@ -19,7 +19,7 @@ happyAccept sts _                    = notHappyAtAll
 -- Shifting a token
 
 happyShift new_state 1 tk st sts (HappyErrorToken i : stk) =
---     _trace "shifting the error token" $
+--     trace "shifting the error token" $
      happyDoAction i tk new_state (st:sts) stk
 
 happyShift new_state i tk st sts stk =
@@ -27,37 +27,33 @@ happyShift new_state i tk st sts stk =
 
 -- happyReduce is specialised for the common cases.
 
-happySpecReduce_0 i fn 1 tk _ sts stk
-     = case sts of
-	st:sts -> happyDoAction 1 tk st sts stk
-	_ -> happyError
+happySpecReduce_0 i fn 1 tk st sts stk
+     = happyFail 1 tk st sts stk
 happySpecReduce_0 nt fn j tk st sts stk
      = happyGoto nt j tk st (st:sts) (fn : stk)
 
-happySpecReduce_1 i fn 1 tk _ (st:sts) stk
-     = happyDoAction 1 tk st sts stk
+happySpecReduce_1 i fn 1 tk st sts stk
+     = happyFail 1 tk st sts stk
 happySpecReduce_1 nt fn j tk _ sts@(st:_) (v1:stk')
      = happyGoto nt j tk st sts (fn v1 : stk')
 
-happySpecReduce_2 i fn 1 tk _ (st:sts) stk
-     = happyDoAction 1 tk st sts stk
+happySpecReduce_2 i fn 1 tk st sts stk
+     = happyFail 1 tk st sts stk
 happySpecReduce_2 nt fn j tk _ (_:sts@(st:_)) (v1:v2:stk')
      = happyGoto nt j tk st sts (fn v1 v2 : stk')
 
-happySpecReduce_3 i fn 1 tk _ (st:sts) stk
-     = happyDoAction 1 tk st sts stk
+happySpecReduce_3 i fn 1 tk st sts stk
+     = happyFail 1 tk st sts stk
 happySpecReduce_3 nt fn j tk _ (_:_:sts@(st:_)) (v1:v2:v3:stk')
      = happyGoto nt j tk st sts (fn v1 v2 v3 : stk')
 
-happyReduce k i fn 1 tk _ (st:sts) stk
-     = happyDoAction 1 tk st sts stk
+happyRedcue k i fn 1 tk st sts stk
+     = happyFail 1 tk st sts stk
 happyReduce k nt fn j tk st sts stk = happyGoto nt j tk st' sts' (fn stk)
        where sts'@(st':_) = drop (k::Int) (st:sts)
 
-happyMonadReduce k i c fn 1 tk _ sts stk
-     = case sts of
-	    st:sts -> happyDoAction 1 tk st sts stk
-	    []     -> happyError
+happyMonadReduce k nt c fn 1 tk st sts stk
+     = happyFail 1 tk st sts stk
 happyMonadReduce k nt c fn j tk st sts stk =
         happyThen (fn stk) (\r -> happyGoto nt j tk st' sts' (c r : stk'))
        where sts'@(st':_) = drop (k::Int) (st:sts)
@@ -73,18 +69,20 @@ happyGoto nt j tk st = happyDoAction j tk new_state
 -----------------------------------------------------------------------------
 -- Error recovery (1 is the error token)
 
--- fail if we are in recovery and no more states to discard
-happyFail  1 tk st' [] stk = happyError
+-- parse error if we are in recovery and we fail again
+happyFail  1 tk st' [] stk =
+--	trace "failing" $ 
+    	happyError
 
 -- discard a state
-happyFail  1 tk st' (st:sts) stk =
---      _trace "discarding state" $
-        happyDoAction 1 tk st sts stk
+happyFail  1 tk st' (st:sts) (saved_tok : _ : stk) =
+--	trace ("discarding state, depth " ++ show (length stk))  $
+	happyDoAction 1 tk st sts (saved_tok:stk)
 
 -- Enter error recovery: generate an error token,
 --                       save the old token and carry on.
 happyFail  i tk st sts stk =
---      _trace "entering error recovery" $
+--      trace "entering error recovery" $
         happyDoAction 1 tk st sts (HappyErrorToken i : stk)
 
 -- Internal happy errors:

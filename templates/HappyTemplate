@@ -1,4 +1,4 @@
--- $Id: HappyTemplate,v 1.9 1999/03/11 17:16:03 simonm Exp $
+-- $Id: HappyTemplate,v 1.10 1999/06/30 14:14:33 simonmar Exp $
 
 {-
 	The stack is in the following order throughout the parse:
@@ -50,44 +50,40 @@ happyShift new_state i tk st sts stk =
 -- don't allow reductions when we're in error recovery, because this can
 -- lead to an infinite loop.
 
-happySpecReduce_0 i fn 1 tk _ sts stk
-     = case sts of
-	st@(HappyState action):sts -> action 1 1 tk st sts stk
-	_ -> happyError
+happySpecReduce_0 i fn 1 tk st sts stk
+     = happyFail 1 tk st sts stk 
 happySpecReduce_0 i fn j tk st@(HappyState action) sts stk
      = action i j tk st (st:sts) (fn : stk)
 
-happySpecReduce_1 i fn 1 tk _ (st@(HappyState action):sts) stk
-     = action 1 1 tk st sts stk
+happySpecReduce_1 i fn 1 tk st sts stk
+     = happyFail 1 tk st sts stk 
 happySpecReduce_1 i fn j tk _ sts@(st@(HappyState action):_) (v1:stk')
      = action i j tk st sts (fn v1 : stk')
 happySpecReduce_1 _ _ _ _ _ _ _
      = notHappyAtAll
 
-happySpecReduce_2 i fn 1 tk _ (st@(HappyState action):sts) stk
-     = action 1 1 tk st sts stk
+happySpecReduce_2 i fn 1 tk st sts stk
+     = happyFail 1 tk st sts stk 
 happySpecReduce_2 i fn j tk _ (_:sts@(st@(HappyState action):_)) (v1:v2:stk')
      = action i j tk st sts (fn v1 v2 : stk')
 happySpecReduce_2 _ _ _ _ _ _ _
      = notHappyAtAll
 
-happySpecReduce_3 i fn 1 tk _ (st@(HappyState action):sts) stk
-     = action 1 1 tk st sts stk
+happySpecReduce_3 i fn 1 tk st sts stk
+     = happyFail 1 tk st sts stk 
 happySpecReduce_3 i fn j tk _ (_:_:sts@(st@(HappyState action):_)) 
 	(v1:v2:v3:stk')
      = action i j tk st sts (fn v1 v2 v3 : stk')
 happySpecReduce_3 _ _ _ _ _ _ _
      = notHappyAtAll
 
-happyReduce k i fn 1 tk _ (st@(HappyState action):sts) stk
-     = action 1 1 tk st sts stk
+happyReduce k i fn 1 tk st sts stk
+     = happyFail 1 tk st sts stk 
 happyReduce k i fn j tk st sts stk = action i j tk st' sts' (fn stk)
        where sts'@(st'@(HappyState action):_) = drop (k::Int) (st:sts)
 
-happyMonadReduce k i c fn 1 tk _ sts stk
-      = case sts of
-	     (st@(HappyState action):sts) -> action 1 1 tk st sts stk
-	     [] -> happyError
+happyMonadReduce k i c fn 1 tk st sts stk
+     = happyFail 1 tk st sts stk 
 happyMonadReduce k i c fn j tk st sts stk =
 	happyThen (fn stk) (\r -> action i j tk st' sts' (c r : stk'))
        where sts'@(st'@(HappyState action):_) = drop (k::Int) (st:sts)
@@ -102,12 +98,14 @@ happyGoto action j tk st = action j j tk (HappyState action)
 -- Error recovery (1 is the error token)
 
 -- fail if we are in recovery and no more states to discard
-happyFail  1 tk st' [] stk = happyError
+happyFail  1 tk st' [] stk = 
+--	trace "failing" $ 
+    	happyError
 
 -- discard a state
-happyFail  1 tk st' (st@(HappyState action):sts) stk =
---	_trace "discarding state" $
-	action 1 1 tk st sts stk
+happyFail  1 tk st' (st@(HappyState action):sts) (saved_tok : _ : stk) =
+--	trace ("discarding state, depth " ++ show (length stk))  $
+	action 1 1 tk st sts (saved_tok:stk)
 
 -- Enter error recovery: generate an error token,
 -- 			 save the old token and carry on.
@@ -122,5 +120,20 @@ happyFail  i tk st@(HappyState action) sts stk =
 -- Internal happy errors:
 
 notHappyAtAll = error "Internal Happy error\n"
+
+-----------------------------------------------------------------------------
+-- Don't inline any functions from the template.  GHC has a nasty habit
+-- of deciding to inline happyGoto everywhere, which increases the size of
+-- the generated parser quite a bit.
+
+{-# NOINLINE happyShift #-}
+{-# NOINLINE happySpecReduce_0 #-}
+{-# NOINLINE happySpecReduce_1 #-}
+{-# NOINLINE happySpecReduce_2 #-}
+{-# NOINLINE happySpecReduce_3 #-}
+{-# NOINLINE happyReduce #-}
+{-# NOINLINE happyMonadReduce #-}
+{-# NOINLINE happyGoto #-}
+{-# NOINLINE happyFail #-}
 
 -- end of Happy Template.
