@@ -37,25 +37,6 @@
 
     You need to give a %eof 
 
---------------------------------------------------------------------------------
-
-3. Add a new style of  %name
-
-OLD:
-
-	%name foo
-
-NEW:
-
-	%multiname 
-		foo Exp		-- means that Exp is the parsed object, rather
-				-- than the default, first one
-	
-		bar Exp'	-- while bar is another parser
-
-
-Lets you have several parsers in one world.
-
 -----------------------------------------------------------------------------
 
 ******************************************************************************
