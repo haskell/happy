@@ -1,5 +1,13 @@
+* happyError should take the current token as an argument in %lexer mode;
+  it's silly not to, because it means the monad has to keep track of the
+  previous token in order to report it in the error message.
+
 * allow polymorphic type signatures for productions.
 * allow omitted semnatic values, defaulting to $1?
+
+* unlit properly
+
+* maintain indentation in code between { } so that layout works.
 
 -OLD-------------------------------------------------------------------------
 
