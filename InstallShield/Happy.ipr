@@ -1,0 +1,57 @@
+[Language]
+LanguageSupport0=0009
+
+[OperatingSystem]
+OSSupport=0000000000011010
+
+[Data]
+CurrentMedia=rel
+CurrentComponentDef=Default.cdf
+ProductName=Happy Parser Generator
+set_mifserial=
+DevEnvironment=Microsoft Visual C++ 6
+AppExe=ghc
+set_dlldebug=No
+EmailAddresss=
+Instructions=Instructions.txt
+set_testmode=No
+set_mif=No
+SummaryText=
+Department=
+HomeURL=http://www.haskell.org/happy/
+Author=
+Type=Software Development Application
+InstallRoot=C:\Happy InstallShield
+Version=1.8
+InstallationGUID=32350ad7-147b-41e3-9275-db4530ad145c
+set_level=Level 3
+CurrentFileGroupDef=Default.fdf
+Notes=Notes.txt
+set_maxerr=50
+set_args=
+set_miffile=Status.mif
+set_dllcmdline=
+Copyright=
+set_warnaserr=No
+CurrentPlatform=
+Category=
+set_preproc=
+CurrentLanguage=English
+CompanyName=University of Glasgow
+Description=Description.txt
+set_maxwarn=50
+set_crc=Yes
+set_compileb4build=No
+set_libraries=isrt.obl ifx.obl
+set_linkpath=
+
+[MediaInfo]
+mediadata0=release/Media\release
+mediadata1=rel/Media\rel
+
+[General]
+Type=INSTALLMAIN
+Version=2.20.000
+ReadOnly=N
+PassData=
+
