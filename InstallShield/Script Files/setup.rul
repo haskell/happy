@@ -29,10 +29,9 @@
      prototype DialogShowSdFinishReboot();
 
      // your prototypes
-     prototype MyParsePath ( STRING );
      prototype ForwardSlashify ( STRING, BYREF STRING );
-     prototype DropSuffix ( STRING, BYREF STRING );
-     prototype CreateExecShellScript ( STRING, STRING );
+     prototype CreateHappyScript ( STRING, STRING );
+     prototype CreateHappyBat ( STRING );
 
   // ----- global variables ------
 
@@ -46,7 +45,6 @@
 
 
      // your global variables
-     STRING      szShellPath;
      STRING      szBinDir, szBinDirUnslashed,
                  szLibDir, szLibDirUnslashed,
                  szLibExecDir;
@@ -256,56 +254,6 @@ function ProcessAfterDataMove()
   LIST   listDirs;
  begin
 
-  RegDBSetDefaultRoot ( HKEY_LOCAL_MACHINE );
-  RegDBGetKeyValueEx ( "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment" ,
-                       "path" , nvType, szPath , nvSize );
-
-  // Spin through path looking for bash.exe.
-  // Our task is made considerably harder since the
-  // the free version of InstallShield doesn't support
-  // functions such as StrGetTokens() or ParsePath().
-
-  MyParsePath ( szPath );
-  nResult = ListGetFirstString ( listPath, szPathEntry);
-  szPathEntry = ""; szShellPath="";
-  while ( nResult != END_OF_LIST )
-     if ( FindFile (szPathEntry, "bash.exe", szRes ) = 0 ) then
-       szShellPath = szPathEntry + "/" + szRes;
-       nResult = END_OF_LIST;
-     else
-       nResult = ListGetNextString ( listPath, szPathEntry );
-     endif;
-  endwhile;
-  if ( StrCompare ( szShellPath, "" ) = 0 ) then
-    // If not found in global env. block, look in the
-    // user-specific part.
-    RegDBSetDefaultRoot ( HKEY_CURRENT_USER );
-    RegDBGetKeyValueEx ( "Environment", "path", nvType, szPath, nvSize);
-    MyParsePath ( szPath );
-    nResult = ListGetFirstString ( listPath, szPathEntry);
-    szPathEntry = ""; szShellPath="";
-    while ( nResult != END_OF_LIST )
-      if ( FindFile (szPathEntry, "bash.exe", szRes ) = 0 ) then
-        szShellPath = szPathEntry + "/" + szRes;
-        nResult = END_OF_LIST;
-      else
-        nResult = ListGetNextString ( listPath, szPathEntry );
-      endif;
-    endwhile;
-  endif;
-
-  if ( StrCompare ( szShellPath, "" ) = 0 ) then
-     // Default it to /bin/bash
-     MessageBox ("Unable to find bash in your PATH. You should copy bash to /bin/bash when installation finishes",
-                 INFORMATION);
-     szShellPath = "/bin/bash.exe";
-  else
-     ForwardSlashify ( szTemp, szShellPath );
-  endif;
-  DropSuffix (szShellPath, szTemp);
-  szShellPath = szTemp;
-
-  ListDestroy (listPath);
   return 0;
  end;
 
@@ -421,13 +369,14 @@ function SetupFolders()
   //    CreateProgramFolder, AddFolderIcon....
   //
 
-  CreateExecShellScript ( szBinDirUnslashed, "happy-" + @PRODUCT_VERSION );
+  CreateHappyScript ( szBinDirUnslashed, "happy-" + @PRODUCT_VERSION );
   VarSave (SRCTARGETDIR);
   SRCDIR = szBinDirUnslashed;
   TARGETDIR = szBinDirUnslashed;
   CopyFile( "happy-" + @PRODUCT_VERSION, "happy");
   VarRestore (SRCTARGETDIR);
-
+  CreateHappyBat ( szBinDirUnslashed );
+  
   nResult = CreateShellObjects( "" );
 
   return nResult;
@@ -746,26 +695,6 @@ function DialogShowSdFinishReboot()
   endif;
  end;
 
-function MyParsePath(szPath)
-  STRING szTmp,szPth;
-  NUMBER nPos;
- begin
-   szPth = szPath;
-   listPath = ListCreate( STRINGLIST );
-
-   // Man, all I want is map. Please? :-)
-   nPos = StrFind ( szPth, ";");
-   while ( nPos > 0 )
-    StrSub ( szTmp, szPth, 0, nPos);
-    ListAddString ( listPath, szTmp, AFTER );
-    StrSub ( szTmp, szPth, nPos + 1, StrLength ( szPth) - nPos );
-    szPth = szTmp;
-    nPos = StrFind ( szPth, ";" );
-   endwhile;
-
-  return 0;
- end;
-
 function ForwardSlashify ( szStr , theRes )
    NUMBER nPos;
    STRING szTemp, szRes;
@@ -787,71 +716,36 @@ function ForwardSlashify ( szStr , theRes )
   return 0;
  end;
 
- function CreateExecShellScript ( szPath, szFileName )
-    NUMBER nResult, writeHandle, readHandle;
-    STRING szLine;
+ function CreateHappyScript ( szPath, szFileName )
+    NUMBER writeHandle;
  begin
-   // backup existing file..
-   DeleteFile ( szPath ^ szFileName + ".bak");
-   VarSave (SRCTARGETDIR);
-   SRCDIR = szPath;
-   TARGETDIR = szPath;
-   RenameFile ( szFileName, szFileName + ".bak");
-   VarRestore (SRCTARGETDIR);
-
-   // Note: szFileName is sans suffix.
    OpenFileMode (FILE_MODE_APPEND);
    if ( CreateFile ( writeHandle, szPath, szFileName ) < 0 ) then
       MessageBox ("CreateFile " + szPath ^ szFileName + " failed", INFORMATION);
    endif;
-   // append
-   WriteLine (writeHandle, "#!" + szShellPath );
-   WriteLine (writeHandle, "libdir='" + szLibDir + "'");
-   WriteLine (writeHandle, "libexecdir='" + szLibExecDir + "'");
+   WriteLine (writeHandle, "#! /bin/sh" );
+   WriteLine (writeHandle, "happy.bat $*" );
 
-   OpenFileMode (FILE_MODE_NORMAL);
-   if ( OpenFile ( readHandle, szPath, szFileName + ".bak") < 0 ) then
-      MessageBox ("OpenFile " + szPath ^ szFileName + ".bak failed", INFORMATION);
-   endif;
-
-   // copy the template over.
-   nResult = GetLine ( readHandle, szLine);
-   while ( nResult >= 0 )
-     WriteLine ( writeHandle, szLine);
-     nResult = GetLine ( readHandle, szLine);
-   endwhile;
-   if ( CloseFile( readHandle ) < 0 ) then
-       MessageBox ( "CloseFile " + szPath ^ szFileName + ".bak failed",
-                    INFORMATION);
-   endif;
-   if ( CloseFile( writeHandle ) < 0 ) then
-       MessageBox ( "CloseFile() " + szPath ^ szFileName + " failed",
-                    INFORMATION);
-   endif;
-   // There's no way to set the 'x' bit using
-   // SetFileInfo(), but, luckily, it is not needed to run #! scripts
-   // under cygwin32,b19.
-   SetFileInfo ( szPath ^ "\\" + szFileName, FILE_ATTRIBUTE,
-                 FILE_ATTR_NORMAL, "");
+   // There's no way to set the 'x' bit using SetFileInfo(), but, luckily,
+   // it is not needed to run #! scripts under cygwin
+   SetFileInfo ( szPath ^ "\\" + szFileName, FILE_ATTRIBUTE, FILE_ATTR_NORMAL, "");
    return 0;
  end;
+ 
+ function CreateHappyBat ( szPath )
+    NUMBER writeHandle;
+    STRING szFileName;
+ begin            
+   szFileName = "happy.bat";
+   OpenFileMode (FILE_MODE_APPEND);
+   if ( CreateFile ( writeHandle, szPath, szFileName ) < 0 ) then
+      MessageBox ("CreateFile " + szPath ^ szFileName + " failed", INFORMATION);
+   endif;
+   WriteLine (writeHandle, "@echo off" );
+   WriteLine (writeHandle, "set HAPPYLIB=" + szLibDir + "/happy" );
+   WriteLine (writeHandle, "set HAPPYBIN=" + szLibDirUnslashed ^ "happy.bin" );
+   WriteLine (writeHandle, "%HAPPYBIN% --template $HAPPYLIB %*" );
 
- function DropSuffix ( szInp, szOut )
-   NUMBER nResult, nLen;
-   STRING szTemp, szTemp2;
- begin
-    nLen = 0;
-    szTemp2 = szInp;
-    nResult = StrFind ( szTemp2 , ".");
-    while ( nResult >= 0 )
-       nLen = nLen + nResult;
-       StrSub ( szTemp, szTemp2, nResult + 1, StrLength ( szTemp2) - nResult );
-       szTemp2 = szTemp;
-       nResult = StrFind ( szTemp2, "." );
-       if ( nResult >= 0 ) then
-          nLen = nLen + 1;  // incl the previous . if there's more.
-       endif;
-    endwhile;
-    StrSub ( szOut, szInp, 0, nLen);
-    return 0;
+   SetFileInfo ( szPath ^ szFileName, FILE_ATTRIBUTE, FILE_ATTR_NORMAL, "");
+   return 0;
  end;
