@@ -1,4 +1,12 @@
 -----------------------------------------------------------------------------
+Changes from version 1.13 to 1.14
+
+	* New meta-veriable $> represents the rightmost token.
+
+	* Happy's OPTIONS pragma is merged with an existing one in
+	  the grammar file, if any.
+
+-----------------------------------------------------------------------------
 Changes from version 1.11 to 1.13
 
 	* Support for newer versions of GHC (>= 5.04).
