@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: LALR.lhs,v 1.21 2001/09/24 15:48:54 simonmar Exp $
+$Id: LALR.lhs,v 1.22 2001/09/26 13:07:59 simonmar Exp $
 
 Generation of LALR parsing tables.
 
@@ -551,7 +551,7 @@ point rather than reducing.  Hence the use of LR'MustFail.
 >                      (_,No) -> LR'Multiple [a,b] b
 >                      (Prio c i, Prio _ j)
 >               		| i < j     -> b
->               		| j > i     -> a
+>               		| i > j     -> a
 >			        | otherwise ->
 >				   case c of
 >                                     LeftAssoc  -> a
