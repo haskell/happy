@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.9 2001/05/08 08:28:40 simonmar Exp $
+# $Id: Makefile,v 1.10 2002/09/02 13:23:13 simonmar Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -21,7 +21,7 @@ INSTALL_DATAS = $(TEMPLATES)
 
 all :: $(TEMPLATES)
 
-override datadir = $(libdir)/happy
+override datadir = $(libdir)
 
 ghc_411_at_least = $(shell expr "$(GhcMajVersion)"  =   4 \& \
                                 "$(GhcMinVersion)" \>= 11 \| \
