@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.45 2002/07/26 09:52:17 simonmar Exp $
+$Id: Main.lhs,v 1.46 2002/10/24 15:11:24 sof Exp $
 
 The main driver.
 
@@ -382,7 +382,7 @@ GHC version-dependent stuff in it.
 
 > optsToInject :: Target -> [CLIFlags] -> String
 > optsToInject _ cli 
->	| OptGhcTarget `elem` cli = "{-# OPTIONS -fglasgow-exts -cpp #-}\n"
+>	| OptGhcTarget `elem` cli = "-fglasgow-exts -cpp"
 >	| otherwise               = ""
 
 > importsToInject :: Target -> [CLIFlags] -> String

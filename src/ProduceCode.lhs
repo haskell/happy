@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.58 2002/05/23 09:24:27 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.59 2002/10/24 15:11:25 sof Exp $
 
 The code generator.
 
@@ -97,9 +97,9 @@ Produce the complete output file.
 >		})
 >	 	action goto top_options module_header module_trailer 
 >		target coerce ghc strict
->     =	( str top_options
+>     =	( top_opts
 >	. str comment
->	. maybestr module_header . nl
+>	. maybestr real_header . nl
 > 	. produceAbsSynDecl . nl
 >    	. produceTypes
 >	. produceActionTable target
@@ -111,6 +111,30 @@ Produce the complete output file.
 >	. maybestr module_trailer . nl
 >	) ""
 >   where
+>     -- combine happy-introduced OPTIONS with ones in
+>     -- in the grammar. Brittle, only works if the OPTIONS
+>     -- appear at the top.
+>    top_opts = 
+>      case top_options of
+>          "" -> str ""
+>          _  -> str (unwords [ opt_prefix
+>                             , top_options
+>                             , if not (null header_opts)
+>                                then header_opts 
+>                                else "#-}"
+>                             ]) . nl
+>
+>    (header_opts,real_header) = 
+>       case module_header of
+>         Nothing -> ("", module_header)
+>         Just s 
+>          | opt_prefix `isPrefixOf` s -> 
+>              case break (=='\n') (drop (length opt_prefix) s) of
+>                (_,[])  -> ("", module_header)
+>                (xs,ys) -> (xs, Just ys)
+>          | otherwise ->   ("", module_header)
+>
+>    opt_prefix = "{-# OPTIONS"
 
 >    n_starts = length starts
 
