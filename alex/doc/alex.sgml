@@ -2,6 +2,12 @@
 <!entity  the-index SYSTEM "genindex.sgml">
 ]>
 
+<!-- Translation from the ".verb" to Docbook by Isaac Jones -->
+<!-- Still To Do: -->
+<!-- - Double check cross references -->
+<!-- - Decide between clean and markuped figures -->
+<!-- - change Alex into <emphasis>Alex</emphasis>? -->
+
 <book id="alex">
   <bookinfo>
     <date>2003-2-13</date>
@@ -20,8 +26,10 @@
 <!--       <holder>Simon Marlow</holder> -->
 <!--     </copyright> -->
     <abstract>
-      <para>The <application>Alex</application> package, like <application>lex</application>, takes a description of tokens based on regular
-expressions and generates a program module for scanning text efficiently.  
+      <para>The <application>Alex</application> package, like
+            <application>lex</application>, takes a description of
+            tokens based on regular expres sions and generates a
+            program module for scanning text efficiently.
 	</para>
     </abstract>
   </bookinfo>
@@ -95,7 +103,7 @@ tokens_scan = load_scan (tokens_acts,stop_act) tokens_lx
            <literal>%}</literal> provide a code scrap (some inlined
            Haskell code) to be placed in the output.  All such code
            fragments will be placed in order at the head of the module
-           with the \lx-generated tables appearing at the end.</para>
+           with the <application>Alex</application>-generated tables appearing at the end.</para>
 
     <para>The next two lines define the <literal>^d</literal> and
     <literal>^l</literal> macros for use in the token
@@ -173,13 +181,17 @@ alex Tokens.x
     <para>If the script were written with literate conventions then
           the <literal>.lx</literal> extension would be used instead
           of <literal>.x</literal>.  (Literate scripts will be
-          described in Section~\ref{sec-lexical-syntax} on lexical
+          described in <xref linkend="sec-lexical-syntax"> on lexical
           syntax.)</para>
 
 </chapter>
 
-<chapter id="syntax">
-<title>Syntax</title> <para>The syntax in this section is described
+<!-- Syntax ------------------------------------------------------------ -->
+
+  <chapter id="syntax">
+    <title>Syntax</title>
+
+    <para>The syntax in this section is described
     with an extended BNF in which optional phrases are enclosed in
     square brackets <literal>([...])</literal> and repeated phrases in
     braces <literal>({...})</literal>.  The terminal symbols
@@ -187,18 +199,19 @@ alex Tokens.x
     <emphasis>ch</emphasis>, <emphasis>ech</emphasis>,
     <emphasis>cch</emphasis> <emphasis>smac</emphasis>,
     <emphasis>rmac</emphasis> and <emphasis>quot</emphasis> are are
-    defined in Section~\ref{sec-lexical-syntax} on lexical syntax.</para>
+    defined in <xref linkend="sec-lexical-syntax"> on lexical syntax.</para>
 
 <section id="ScriptsMacrosScanners">
 <Title>Scripts, Macros and Scanners</title>
 
 
-    <para>Alex scripts contain a list of scanner specifications,
-          optionally preceded by some global macro definitions.  Each
-          scanner consists of a header with the Haskell identifiers to
-          be bound in the output module, a list of macro definitions
-          and a list of token definitions.  Macros may also be
-          specified on the right-hand-side of token definitions.</para>
+    <para><application>Alex</application> scripts contain a list of
+          scanner specifications, optionally preceded by some global
+          macro definitions.  Each scanner consists of a header with
+          the Haskell identifiers to be bound in the output module, a
+          list of macro definitions and a list of token definitions.
+          Macros may also be specified on the right-hand-side of token
+          definitions.</para>
 <programlisting>
 alex		-> { macdef } { scanner }
 
@@ -252,7 +265,7 @@ sc		-> "0" | ide
           specified with the <literal>:</literal>,
           <literal>\</literal>, <literal>/</literal> operators.  These
           features will be described in
-          Section~\ref{sec-context-specifications} on context
+          <xref linkend="sec-context-specifications">on context
           specifications.  </para>
 
     <para>A token identifier may be bound to more than one
@@ -296,7 +309,8 @@ sc		-> "0" | ide
 <title>Sets of Characters</title>
 
     <para> A set is a special form of regular expression that matches
-    strings of length one.  Here Alex differs markedly from Lex.</para>
+          strings of length one.  Here <application>Alex</application>
+          differs markedly from Lex.</para>
 
 
 <programlisting><literal>
@@ -310,37 +324,39 @@ chr		-> <varname>ch</varname> |<varname> ech</varname> | <varname>cch</varname>
 </literal></programlisting>
 
     <para>The simplest set, <emphasis>chr</emphasis>, contains a
-    single character.  The letters and digits represent themselves
-    while symbolic characters can be escaped with a
-    <literal>^</literal>.  Any character can be generated with a
-    <literal>^</literal> followed by its decimal code, though this is
-    not portable.</para>
+          single character.  The letters and digits represent
+          themselves while symbolic characters can be escaped with a
+          <literal>^</literal>.  Any character can be generated with a
+          <literal>^</literal> followed by its decimal code, though
+          this is not portable.</para>
 
     <para>A range of characters can be expressed by separating the
-    characters with a <literal>-</literal>; all the characters with
-    codes in the given range are included in the set.  Character
-    ranges can also be non-portable.</para>
+          characters with a <literal>-</literal>; all the characters
+          with codes in the given range are included in the set.
+          Character ranges can also be non-portable.</para>
 
     <para>The union of a number of sets may be taken by enumerating
-    them in square brackets <literal>([...])</literal>, the complement
-    of a set can be taken with <literal>~</literal> and the difference
-    of two sets can be taken with the <literal>#</literal> operator.
-    Finding a good use for <literal>[]</literal> is left as an
-    exercise for the devious reader.</para>
+          them in square brackets <literal>([...])</literal>, the
+          complement of a set can be taken with <literal>~</literal>
+          and the difference of two sets can be taken with the
+          <literal>#</literal> operator.  Finding a good use for
+          <literal>[]</literal> is left as an exercise for the devious
+          reader.</para>
 
     <para>A quoted set of characters can be expressed by enclosing it
-    in quotes (<literal>`...'</literal>).  Note that the quoted set
-    starts with a back-quote and finishes with a single-quote.  A
-    <literal>'</literal> character may not be included in such
-    sets.</para>
+          in quotes (<literal>`...'</literal>).  Note that the quoted
+          set starts with a back-quote and finishes with a
+          single-quote.  A <literal>'</literal> character may not be
+          included in such sets.</para>
 
     <para>A set macro is expressed by a <literal>.</literal> or by a
-    <literal>^</literal> followed by a letter.  The standard macros
-    are listed in Figure~3.  Most of them consist of bindings for the
-    Haskell <literal>\&lt;letter></literal> character escape codes.
-    The <literal>^w</literal> and <literal>^p</literal> correspond to
-    the prelude <varname>isSpace</varname> and
-    <varname>isPrint</varname> prelude functions.</para>
+          <literal>^</literal> followed by a letter.  The standard
+          macros are listed in Figure~3.  Most of them consist of
+          bindings for the Haskell <literal>\&lt;letter></literal>
+          character escape codes.  The <literal>^w</literal> and
+          <literal>^p</literal> correspond to the prelude
+          <varname>isSpace</varname> and <varname>isPrint</varname>
+          prelude functions.</para>
 
 
 <programlisting><literal>
@@ -373,7 +389,663 @@ chr		-> <varname>ch</varname> |<varname> ech</varname> | <varname>cch</varname>
 
 <section id="sec-lexical-syntax">
 <title>Lexical Syntax</title>
-<para>...</para>
+
+    <para>ALEX supports the Haskell literate script convention as
+          described in the Haskell report (version 1.2).  See <xref
+          linkend="fig-lit"> for an example literate script.  If the
+          name of the file containing the scripts ends in
+          <literal>.lx</literal> then the lines that make up the
+          script start with a <literal>></literal>; the script is
+          preprocessed by stripping out all the other lines and
+          replacing the initial <literal>></literal> at the start of
+          each line with a space.  This process is formalised in <xref
+          linkend="sec-literate-scripts"> where the scanner used to
+          preprocess <application>Alex</application> scripts is given.
+</para>
+
+    <para>All white space appearing in the script is ignored, except
+          where a space is quoted with <literal>^</literal> or
+          <literal>'...'</literal>.  Haskell-style line comments are
+          introduced with <literal>--</literal> and code scraps are
+          enclosed in <literal>{ ... }</literal> brackets.
+          Otherwise,</para>
+
+
+<informaltable frame=none>
+<tgroup cols=2>
+<tbody>
+
+<row><entry>ide</entry>	<entry>is a Haskell identifier in quotes (<literal>"..."</literal>).</entry></row>
+
+<row><entry>tkn</entry>	<entry>is an optional Haskell identifier in
+		angle brackets (<literal>&lt;...></literal>).</entry></row>
+
+<row><entry>ch</entry>	<entry>is a letter or digit.</entry></row>
+
+<row><entry>ech</entry>	<entry>is a <literal>^</literal> followed by a symbolic character.</entry></row>
+
+<row><entry>cch</entry>	<entry>is a <literal>^</literal> followed by a character code.</entry></row>
+
+<row><entry>smac</entry>	<entry>is either a <literal>.</literal> or a <literal>^</literal> followed by a letter.</entry></row>
+
+<row><entry>rmac</entry>	<entry>is a <literal>%</literal> followed by a letter.</entry></row>
+
+<row><entry>quot</entry>	<entry>is a sequence of non-<literal>'</literal> characters in quotes(<literal>`...'</literal>).</entry></row>
+
+</tbody>
+</tgroup>
+</informaltable>
+
+<para>The lexical syntax is formalised by the <application>Alex</application> script in <xref linkend="fig-lx">.</para>
+      
+<figure ID="fig-lx" FLOAT="1"><TITLE>The <application>Alex</application> scanner.</TITLE>
+<programlisting><literal>
+{ ^s = ^w#^n	  }					-- spaces + tabs, etc
+{ ^d = 0-9        }					-- digits
+{ ^a = a-z        }					-- lower-case alphas
+{ ^A = A-Z        }					-- upper-case alphas
+{ ^l = [^a^A]     }					-- alpha characters
+{ ^i = [^l^d^_^'] }					-- identifier trailer
+	      
+"alex_lx" :-
+
+  &lt;>     ::=  ^w+ 					-- white space
+  &lt;>     ::=  ^-^-.*					-- comments
+  &lt;code> ::= 						-- code scraps:
+	^%^{ (.#^%|^%.#^})* ^%^}			--   single-line scraps
+	|  ^%^{^s*^n (((.#^%.*)?|^%(.#^}.*)?)^n)* ^%^}	--   multi-line scraps
+	|  ^%^{^s*^n					--   multi-line scraps
+	      (((.#^ .*)?|^ (.#^%.*)?|^ ^%(.#^}.*)?)^n)*--	(literate
+			^ ^%^}				--	 scripts)
+  &lt;zero> ::=  ^" 0 ^"					-- "0" start code
+  &lt;ide>  ::=  ^" ^a^i* ^"				-- function identifier
+  &lt;tkn>  ::=  ^&lt; (^a^i*)? ^>				-- token identifier
+  &lt;bnd>  ::=  ^:^-					-- ":-"
+  &lt;prd>  ::=  ^:^:^=					-- "::="
+  &lt;spe>  ::=  `{=}:\/|*+?,$()#[]-'			-- specials
+  &lt;ch>   ::=  [^l^d]					-- letter or digit
+  &lt;ech>  ::=  ^^ ^p#[^l^d]				-- escaped symbols
+  &lt;cch>  ::=  ^^ ^d{1,3}				-- character codes
+  &lt;smac> ::=  ^^ ^l | ^.				-- set macros
+  &lt;rmac> ::=  ^% ^l					-- rexp macros
+  &lt;quot> ::=  ^` ^p#^'+ ^'				-- quoted sets
+</literal></programlisting>
+</figure>
+
+
+    <para>As can be seen from the <literal>&lt;code></literal> token,
+          code scraps come in two varieties: those that start and end
+          with a newline and those that are contained on one line.  If
+          the code scrap starts with a newline then it must finish
+          with the <literal>%}</literal> at the start of the line.
+          (In fact, it may have a single space between the newline and
+          the <literal>%}</literal>; this is to accomodate literate
+          scripts where the <literal>></literal> between the newline
+          and the <literal>%}</literal> is converted to a space.)
+          This means that the <literal>%}</literal> sequence may be
+          used anywhere in the code scrap except at the start of the
+          line and that the text from the first newline to the last
+          newline can be copied without alteration into the output
+          module.
+    </para>
+
+    <para>The code in multi-line code scraps must follow the same
+          layout conventions used for the tables generated by
+          <application>Alex</application>, namely that all top-level
+          defintions start in the left-hand column for ordinary
+          scripts, column two for literate scripts.
+    </para>
+
+    <para>Line code scraps may not contain the <literal>%}</literal>
+          sequence anywhere in them.  They will appear in the output
+          in the left hand column for ordinary scripts, at column two
+          for literate scripts.
+    </para>
+
 </section>
+
+
+<!-- General Scanners ------------------------------------------------------------ -->
+  <Chapter id="sec-general-scanners">
+    <title>General Scanners</title>
+
+<section>
+<title>The Alex Module</title>
+
+    <para>The <literal>Alex</literal> module contains the run-time
+          interface.  It is self-contained so only
+          <literal>Alex</literal> and the
+          <application>Alex</application> generated modules need to be
+          added to programs using a <application>Alex</application>
+          scanner.
+    </para>
+
+    <para>The <literal>Posn</literal> data type is the first product
+          of the <literal>Alex</literal> module.  It provides a
+          standard means of positioning tokens in the input stream.
+    </para>
+
+<programlisting><literal>
+data Posn = Pn Int Int Int  deriving (Eq,Text)
+
+start_pos:: Posn
+start_pos = Pn 0 1 1
+
+eof_pos:: Posn
+eof_pos = Pn (-1) (-1) (-1)
+</literal></programlisting>
+
+    <para><literal>Pn addr ln col</literal> represents the location of
+          a token found <literal>addr</literal> characters into the
+          file on line <literal>ln</literal> and column
+          <literal>col</literal>.  In calculating the column position,
+          it will be assumed that tab characters use eight-character
+          tab stops.  The first character of the file is located at
+          <literal>start_pos</literal> and <literal>eof_pos</literal>,
+          by convention, will represent the end of file.
+    </para>
+
+    <para>The <literal>Alex</literal> module provides two packages for
+          generating scanners from the tables generated by
+          <application>Alex</application>: the basic
+          <literal>Scan</literal>/<literal>load_scan</literal>/<literal>scan</literal>
+          package used for the <literal>Token</literal> module of
+          Figure~\ref{fig-tokens}, and a more flexible
+          <literal>GScan</literal>/<literal>load_gscan</literal>/<literal>gscan</literal>
+          package.
+    </para>
+
+    <para>The <literal>scan</literal> package generates simple
+          scanners that convert input text to streams of tokens.  The
+          scanners are stateless as each token generated is a function
+          of its textual content and location.
+    </para>
+ 
+    <para>The token actions take the form of an association list
+          associating each token name with an action function that
+          constructs the token from the text matched and its location.
+          The stop action is invoked when no more input can be
+          tokenised; it takes the residual input and its position and
+          generates the remaining stream of tokens, usually the empty
+          list or an end-of-file token if the empty string is passed,
+          an error token otherwise.
+    </para>
+
+<programlisting><literal>
+type Actions t = ([(String,TokenAction t)], StopAction t)
+
+type TokenAction t = Posn -> String -> t
+
+type StopAction t = Posn -> String -> [t]
+</literal></programlisting>
+
+    <para><literal>load_scan</literal> combines the actions with the
+          dump generated by <application>Alex</application> to produce
+          a <literal>Scan</literal> structure that can be passed to
+          <literal>scan</literal>.  <literal>scan</literal> takes the
+          scanner and the input text and generates a stream of tokens.
+          It assumes that the text is at the start of the input with
+          the position set to <literal>start_pos</literal> (see above)
+          and sets the last character read to newline (the last
+          character read is used to resolve leading context
+          specifications); <literal>scan'</literal> can be used to
+          override these defaults.
+    </para>
+
+<programlisting><literal>
+load_scan:: Actions t -> DFADump -> Scan t
+scan:: Scan t -> String -> [t]
+scan':: Scan t -> Posn -> Char -> String -> [t]
+</literal></programlisting>
+
+    <para>The <literal>gscan</literal> package generates
+          general-purpose scanners for converting input text into a
+          return type determined by the application.  Access to the
+          scanner's internal state, start codes and some
+          application-specific state is provided.
+    </para>
+ 
+    <para>The token actions take the form of an association list
+          associating each token name with an action function that
+          constructs the result from the length of the token, the
+          scanner's state (including the remaining input from the
+          start of the token) and a continuation function that scans
+          the remaining input.
+    </para>
+ 
+    <para>More specifically, each token action takes as arguments the
+          position of the token, the last character read before the
+          token (used to resolve leading context), the whole input
+          from the start of the token, the length of the token, the
+          continuation function and the visible state (as distinct
+          from the scanner's internal state) including the current
+          start code and the application specific state.  The stop
+          action is invoked when no more input can be scanned; it
+          takes the same parameters as the token actions without the
+          token length and the continuation function.
+    </para>
+
+<programlisting><literal>
+type GScan s r = (DFA (GTokenAction s r), GStopAction s r)
+
+type GActions s r = ([(String, GTokenAction s r)], GStopAction s r)
+
+type GTokenAction s r = 
+	Posn -> Char -> String -> Int ->
+		((StartCode,s)->r) -> (StartCode,s) -> r
+
+type GStopAction s r = Posn -> Char -> String -> (StartCode,s) -> r
+</literal></programlisting>
+
+
+    <para><literal>load_gscan</literal> combines the actions with the
+          dump generated by <application>Alex</application> to produce
+          a <literal>GScan</literal> structure that can be passed to
+          <literal>gscan</literal>.  <literal>gscan</literal> takes
+          the scanner, the application-specific state and the input
+          text as parameters.  It assumes that the text is at the
+          start of the input with the position set to
+          <literal>start_pos</literal> (see above) and sets the last
+          character read to newline and the start code to 0;
+          <literal>gscan'</literal> can be used to override these
+          defaults.
+    </para>
+
+<programlisting><literal>
+load_gscan:: GActions s r -> DFADump -> GScan s r
+gscan:: GScan s r -> s -> String -> r
+gscan':: GScan s r -> Posn -> Char -> String -> (StartCode,s) -> r
+</literal></programlisting>
+
+    <para>Note that a token action can ignore its continuation
+          function and call up <literal>gscan'</literal> with a
+          different scanner to tokenise the rest of the input.  This
+          offers a more efficient alternative to start codes (see
+          Section~\ref{sec-context-specifications} on context
+          specifications) for invoking alternate scanners on segments
+          of the input.
+    </para>
+
+</section>
+
+<section id="sec-stateful-scanners">
+<title>Stateful Scanners</title>
+
+    <para>Some parsing constructions are best handled by making the
+          scanner stateful, allowing the action functions to read and
+          alter some state.  A stateful scanner will instantiate the
+          <literal>s</literal> parameter of <literal>GScan</literal>
+          with the state type needed by the application and will make
+          use of the <literal>(StartCode,s)</literal> argument of the
+          action functions.  (The <literal>StartCode</literal>
+          component of the scanner's state will be dealt with in
+          Section~\ref{sec-context-specifications} on context
+          specifications.)
+    </para>
+
+    <para>Consider the problem of collecting the code scraps from a
+          <application>Alex</application> script.  The code scraps
+          could have been included in the grammar, forcing them to
+          appear at certain points in the script and complicating the
+          grammar and parser.  Instead, they are ignored by the parser
+          and collected in the scanner's state, being passed back to
+          the parser in an explicit end-of-file token.
+    </para>
+
+    <para>A simple scanner illustrating this technique is given in
+          <xref linkend="fig-state">.  It returns a stream of
+          identifiers terminated with an end-of-file token containing
+          all the accumulated code scraps on the input.
+    </para>
+
+    <para>The idea for this technique, and another potential
+          application of it, came from the Brisk scanner which
+          constructs the symbol table, returning integer handles in
+          the token stream and the symbol table in the end-of-file
+          token.
+    </para>
+
+<figure ID="fig-state" FLOAT="1"><TITLE>A stateful scanner.</TITLE>
+<programlisting><literal>
+%{
+import Alex
+%}
+
+"state_lx"/"state_acts":-
+
+  &lt;>     ::= ^w+
+  &lt;code> ::= ^%^{ (~^% | ^%~^})* ^%^}
+  &lt;ide>  ::= [A-Za-z]+
+
+
+%{
+code _ _ inp len cont (sc,frags) = cont (sc,frag:frags)
+	where
+	frag = take (len-4) (drop 2 inp)
+
+ide _ _ inp len cont st = Ide (take len inp):cont st
+
+
+data Token = Ide String | Eof String | Err
+
+
+tokens:: String -> [Token]
+tokens inp = gscan state_scan [] inp
+
+state_scan:: GScan [String] [Token]
+state_scan = load_gscan (state_acts,stop_act) state_lx
+	where
+	stop_act _ _ "" (_,frags) = [Eof (unlines(reverse frags))]
+	stop_act _ _ _ _ = [Err]
+%}
+
+</literal></programlisting></figure>
+
+</section>
+
+<section id="sec-literate-scripts">
+<title>Literate Scripts</title>
+
+    <para>The <literal>scan</literal> package only provides for
+          actions that return a single token as part of a list of such
+          tokens.  Sometimes a more flexible format is required, such
+          as a preprocessor that generates another stream of
+          characters.
+    </para>
+
+    <para><application>Alex</application> itself uses such a
+          preprocessor to deal with literate scripts.  Recall that
+          each line in a (Haskell) literate scripts is either a blank
+          line, a code scrap line starting with a <literal>></literal>
+          or a comment line, and that comment lines and scrap lines
+          must be separated by one or more blank lines.  The script in
+          Figure~\ref{fig-lit} defines three macros,
+          <literal>%b</literal>, <literal>%s</literal> and
+          <literal>%c</literal>, for recognising blank, scrap and
+          comment lines (where each line <emphasis>starts</emphasis>
+          with a newline character).  <xref linkend="fig-lit"> is
+          itself a literate script, of course.
+    </para>
+
+    <para>If two newline characters are added to the front of the
+          input then a valid literate script could be considered as a
+          series of scraps and comments in which a scrap consists of a
+          blank line followed by one or more scrap lines and a comment
+          consists of a blank line followed by zero or more comment
+          lines.  Note that the initial lines in a series of blank
+          lines will each be considered comments in this scheme.
+    </para>
+
+    <para>The action for the <literal>&lt;scrap></literal> token
+          replaces each of the <literal>></literal> in column one with
+          a space, appending the continuation onto the result.  The
+          <literal>&lt;comment></literal> action strips out everything
+          except the newlines, appending its continuation. (The
+          newlines from the comment scraps are retained in order to
+          keep the line numbers synchronised with the original input.)
+    </para>
+
+    <para>To construct the <literal>literate</literal> scanner, of
+          type <literal>String -> String</literal>, we must remember
+          to insert the dummy newlines onto the input, and to remove
+          them again afterwards.
+    </para>
+
+<figure ID="fig-lit" FLOAT="1"><Title>A preprocessor for literate scripts.</title>
+<programlisting><literal>
+>%{ import Alex %}
+
+
+> "lit_lx"/"lit_acts":-
+
+> { ^s = ^w#^n			}
+> { %b = ^n^s*			}
+> { %s = ^n^>.*			}
+> { %c = ^n(~[^>^w].*|^s+~^w.*) }
+
+>   &lt;scrap>   ::= %b%s+
+>   &lt;comment> ::= %b%c*
+
+
+>%{
+> scrap _ _ inp len cont st = strip len inp
+>	where
+>	strip 0 _ = cont st
+>	strip (n+1) (c:rst) =
+>		if c=='\n'
+>		   then '\n':strip_nl n rst
+>		   else c:strip n rst
+>
+>	strip_nl (n+1) ('>':rst) = ' ':strip n rst
+>	strip_nl n rst = strip n rst
+
+> comment _ _ inp len cont st = strip len inp
+>	where
+>	strip 0 _ = cont st
+>	strip (n+1) (c:rst) = if c=='\n' then c:strip n rst else strip n rst
+
+
+> literate:: String -> String
+> literate inp = drop 2 (gscan lit_scan () ('\n':'\n':inp))
+
+> lit_scan:: GScan () String
+> lit_scan = load_gscan (lit_acts,stop_act) lit_lx
+>	where
+>	stop_act p _ "" st = []
+>	stop_act p _ _  _  = error (msg ++ loc p ++ "\n")
+>
+>	msg  = "literate preprocessing error at "
+>
+>	loc (Pn _ l c) = "line " ++ show(l-2) ++ ", column " ++ show c
+>%}
+</literal></programlisting>
+</figure>
+
+</section>
+
+
+<section id="sec-pp">
+<title>A Simple Preprocessor</title>
+
+    <para>A general scanner need not return a list at all.  The
+          scanner of <xref linkend="fig-pp"> is a schematic version of
+          the C preprocessor that only supports <literal>#include
+          "foo"</literal> preprocessor lines.  The return type of the
+          scanner, and therefore the continuation passed to the action
+          functions, is <literal>IO ()</literal>, which it combines
+          with the <literal>>></literal> and <literal>>>=</literal>
+          operators rather than the <literal>:</literal> and
+          <literal>++</literal> operators for the list generating
+          scanners.
+    </para>
+
+<figure ID="fig-pp" FLOAT="1"><TITLE>A scanner capable of I/O.</TITLE>
+<programlisting><literal>
+%{
+import Alex
+%}
+
+
+"pp_lx"/"pp_acts":-
+
+{ ^s = ^w#^n                }		-- spaces and tabs, etc.
+{ ^f = [A-Za-z0-9`~%-_.,/'] }		-- file-name character
+
+  &lt;inc> ::= ^#include^s+^"^f+^"^s*^n
+  &lt;txt> ::= .*^n
+
+
+%{
+inc p c inp len cont st = pp fn >> cont st
+	where
+	fn = (takeWhile ('"'/=) . tail . dropWhile isSpace . drop 8) inp
+<!--  " -->
+txt p c inp len cont st = putStr (take len inp) >> cont st
+
+
+pp:: String -> IO ()
+pp fn = readFile fn >>= \cts -> gscan pp_scan () cts
+
+pp_scan:: GScan () (IO ())
+pp_scan = load_gscan (pp_acts,stop_act) pp_lx
+	where
+	stop_act _ _ _ _ = return ()
+%}
+</literal></programlisting></figure>
+</section>
+
+<section id="sec-context-specifications">
+<title>Context Specifications</title>
+
+
+    <para><application>Alex</application> retains the facilities of
+          \lex\ for restricting token specifications to given
+          contexts, albeit in a modified form.  Leading context is
+          specified with the <literal>\</literal> operator, with its
+          left operand being restricted to a <emphasis>set</emphasis>
+          specification.  The character to the left of the token must
+          be matched by the specification but it is not included in
+          the token.
+    </para>
+
+    <para>Trailing context is specified with a <literal>/</literal>,
+          where the expression to the right can be a fully-fledged
+          regular expression.  Again, the input to the right of the
+          token must match the regular expression but it is not
+          included in the token.
+    </para>
+
+    <para>Note that unlike \lex, the leading and trailing context do
+          not contribute to the length of the token when choosing from
+          a number of matching tokens.  The only effect of the context
+          specifications is to eliminate tokens that would otherwise
+          match the input.
+    </para>
+
+    <para>A token may be restricted to given `start codes' by
+          prefixing the token specification (to the right of the
+          <literal>::=</literal>) with a <literal>"foo":</literal>
+          where <literal>foo</literal> is the name of the start code;
+          to restrict a definition to the <literal>0</literal> start
+          code, prefix it with <literal>"0":</literal>; if several
+          start codes are given then the scanner may be in any one of
+          start codes for the token to be selected.
+    </para>
+
+<figure ID="fig-ctx" FLOAT="1"><TITLE>Specifying context in <application>Alex</application>.</TITLE>
+<programlisting><literal>
+%{
+import Alex
+%}
+
+
+{ ^A = A-Z       }
+{ %t = [^ ^t]*^n }
+
+"ctx_lx"/"ctx_acts":-
+
+  &lt;only_ide>  ::=   ^n\^A+/%t		%{ only_ide  = tkn 0    %}
+  &lt;start_ide> ::=   ^n\^A+		%{ start_ide = tkn 1    %}
+  &lt;end_ide>   ::=      ^A+/%t		%{ end_ide   = tkn 2    %}
+  &lt;ide>       ::=      ^A+		%{ ide       = tkn 3    %}
+  &lt;tricky>    ::=      x*/x		%{ tricky    = tkn 4    %}
+  &lt;dot>       ::=  "0":^.		%{ dot       = tkn 5    %}
+  &lt;open>      ::=      ^(		%{ open      = start op %}
+  &lt;comma>     ::= "op":^,		%{ comma     = tkn 6    %}
+  &lt;close>     ::=      ^)		%{ close     = start 0  %}
+  &lt;>          ::=      [.^n]
+
+
+%{
+tkn n _ _ inp len cont st = Ide n (take len inp):cont st
+
+start sc _ _ _ _ cont (_,s) = cont (sc,s)
+
+
+data Tkn = Ide Int String
+
+tokens:: String -> [Tkn]
+tokens inp = gscan ctx_scan () inp
+
+ctx_scan:: GScan () [Tkn]
+ctx_scan = load_gscan (ctx_acts,stop_act) ctx_lx
+	where
+	stop_act _ _ "" _ = []
+	stop_act _ _ _  _ = error "tokens"
+%}
+</literal></programlisting></figure>
+
+    <para>Each start code, <literal>"foo"</literal>, mentioned in the
+          script will result in a definition like
+    </para>
+
+<programlisting><literal>
+foo = 1
+</literal></programlisting>
+
+    <para>being added to the output (where the integer is positive and
+          distinct from those assigned to other start codes) so each
+          start code must be a Haskell function identifier that is not
+          otherwise bound in the output module.
+    </para>
+
+    <para>By default, the scanner starts in start code
+          <literal>0</literal>.  To change to a different start code,
+          an action function has only to call its continuation
+          function with the <literal>StartCode</literal> component of
+          its state argument set to a different value; this will
+          immediately eliminate token definitions annotated with start
+          codes that do not include the new start code.
+    </para>
+
+    <para><xref linkend="fig-ctx"> gives a rather contrived scanner
+          that illustrates several aspects of context specifications.
+    </para>
+
+    <para>The first four tokens specifications match the same text,
+          only differing in their context.
+          <literal>&lt;only_ide></literal> will be selected if it is
+          the only alphabetic string on the line,
+          <literal>&lt;start_ide></literal> if it is at the start of
+          the line, <literal>&lt;end_ide></literal> if it is at the
+          end of a line, otherwise <literal>&lt;ide></literal>.  Note
+          that there is no question of the leading or trailing context
+          elongating any of the tokens and interfering with their
+          priority.
+    </para>
+
+    <para>The <literal>&lt;tricky></literal> definition would not work
+          properly in \lex, the final <literal>x</literal> in the
+          specification being included in the token.
+          <application>Alex</application> does not suffer from this
+          problem.
+    </para>
+
+    <para>The <literal>&lt;dot></literal> token is restricted to start
+          code 0 so dot characters will be initially recognised, but
+          they will be ignored after a <literal>(</literal> token has
+          been read, as it changes the start code to
+          <literal>op</literal>.  Once a <literal>)</literal> has been
+          read, the start code will revert to 0 and the dots will
+          resume.  On the other hand commas are restricted to the
+          <literal>op</literal> start code so they will be initially
+          disabled, appearing between open and close brackets.
+    </para>
+
+</section>
+
+</chapter>
+
+
+  <chapter id="ack">
+    <title>Acknowledgements</title>
+
+    <para>I would like to thank Tom Alardice for providing the
+          original motivation for writing
+          <application>Alex</application>, Henk Muller for suggestions
+          and encouragement, Ian Holyer for the various discussions
+          that have helped to shape it and Alastair Reid for feedback
+          and suggestions.
+    </para>
 
 </chapter> </book>
