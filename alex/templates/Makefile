@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.1.2.1 2003/02/12 12:20:09 simonmar Exp $
+# $Id: Makefile,v 1.1.2.2 2003/02/18 17:13:49 simonmar Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -8,7 +8,11 @@ TEMPLATES = \
 	AlexTemplate \
 	AlexTemplate-ghc \
 	AlexTemplate-ghc-debug \
-	AlexTemplate-debug
+	AlexTemplate-debug \
+	AlexTemplate-monad \
+	AlexTemplate-monad-ghc \
+	AlexTemplate-monad-ghc-debug \
+	AlexTemplate-monad-debug
 
 GENERIC_TEMPLATE = GenericTemplate.hs
 
@@ -39,6 +43,18 @@ AlexTemplate-ghc-debug.hspp : $(GENERIC_TEMPLATE)
 
 AlexTemplate-debug.hspp : $(GENERIC_TEMPLATE)
 	$(CPP_IT) $@ -DALEX_DEBUG $(GENERIC_TEMPLATE)
+
+AlexTemplate-monad.hspp : $(GENERIC_TEMPLATE)
+	$(CPP_IT) $@ -DALEX_MONAD $(GENERIC_TEMPLATE)
+
+AlexTemplate-monad-ghc.hspp : $(GENERIC_TEMPLATE)
+	$(CPP_IT) $@ -DALEX_MONAD -DALEX_GHC $(GENERIC_TEMPLATE)
+
+AlexTemplate-monad-ghc-debug.hspp : $(GENERIC_TEMPLATE)
+	$(CPP_IT) $@ -DALEX_MONAD -DALEX_GHC -DALEX_DEBUG $(GENERIC_TEMPLATE)
+
+AlexTemplate-monad-debug.hspp : $(GENERIC_TEMPLATE)
+	$(CPP_IT) $@ -DALEX_MONAD -DALEX_DEBUG $(GENERIC_TEMPLATE)
 
 # hack to turn cpp-style '# 27 "GenericTemplate.hs"' into 
 # '{-# LINE 27 "GenericTemplate.hs" #-}'.

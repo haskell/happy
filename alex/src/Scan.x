@@ -11,7 +11,7 @@
 -------------------------------------------------------------------------------
 
 {
-module Scan(lexer, Posn(..), Token(..), Tkn(..), tokPosn) where
+module Scan(lexer, AlexPosn(..), Token(..), Tkn(..), tokPosn) where
 
 import Data.Char
 import Debug.Trace
@@ -55,24 +55,20 @@ alex :-
 <0> %smac %ws? \=		{ smacdef }
 <0> %rmac %ws? \=		{ rmacdef }
 
--- TODO: deal with nested comments in code ({- ... -})
-<0> \{ [^$digit \}]		{ begin incode nest_code }  
-<incode> [^\{\}]+		{ code }
-<incode> \{			{ nest_code }
-<incode> \}			{ unnest_code }
+<0> \{ [^$digit \}]		{ code }
 
 -- identifiers are allowed to be unquoted in startcode lists
-<0> 		\< 		{ begin startcodes special }
+<0> 		\< 		{ special `andBegin` startcodes }
 <startcodes>	0		{ zero }
 <startcodes>	%id		{ startcode }
 <startcodes>	\,		{ special }
-<startcodes> 	\> 		{ begin 0 special }
+<startcodes> 	\> 		{ special `andBegin` 0 }
 
 {
 -- -----------------------------------------------------------------------------
 -- Token type
 
-data Token = T Posn Tkn
+data Token = T AlexPosn Tkn
   deriving Show
 
 tokPosn (T p _) = p
@@ -90,61 +86,33 @@ data Tkn
  | SMacDefT String
  | RMacDefT String  
  | NumT Int	
+ | EOFT
  deriving Show
 
 -- -----------------------------------------------------------------------------
 -- Token functions
 
-special = mk_act (\p ln str -> T p (SpecialT  (head str)))
-brace   = mk_act (\p ln str -> T p (SpecialT  '\123'))
-zero    = mk_act (\p ln str -> T p ZeroT)
-string  = mk_act (\p ln str -> T p (StringT (extract ln str)))
-bind    = mk_act (\p ln str -> T p (BindT (takeWhile isIdChar str)))
-escape  = mk_act (\p ln str -> T p (CharT (esc str)))
-decch   = mk_act (\p ln str -> T p (CharT (do_ech 10 ln str)))
-hexch   = mk_act (\p ln str -> T p (CharT (do_ech 16 ln str)))
-octch   = mk_act (\p ln str -> T p (CharT (do_ech 8  ln str)))
-char    = mk_act (\p ln str -> T p (CharT (head str)))
-smac    = mk_act (\p ln str -> T p (SMacT (mac ln str)))
-rmac    = mk_act (\p ln str -> T p (RMacT (mac ln str)))
-smacdef = mk_act (\p ln str -> T p (SMacDefT (macdef ln str)))
-rmacdef = mk_act (\p ln str -> T p (RMacDefT (macdef ln str)))
-startcode = mk_act (\p ln str -> T p (IdT (take ln str)))
+special   (p,str) ln = return $ T p (SpecialT  (head str))
+brace     (p,str) ln = return $ T p (SpecialT  '{')
+zero      (p,str) ln = return $ T p ZeroT
+string    (p,str) ln = return $ T p (StringT (extract ln str))
+bind      (p,str) ln = return $ T p (BindT (takeWhile isIdChar str))
+escape    (p,str) ln = return $ T p (CharT (esc str))
+decch     (p,str) ln = return $ T p (CharT (do_ech 10 ln (take (ln-1) (tail str))))
+hexch     (p,str) ln = return $ T p (CharT (do_ech 16 ln (take (ln-2) (drop 2 str))))
+octch     (p,str) ln = return $ T p (CharT (do_ech 8  ln (take (ln-2) (drop 2 str))))
+char      (p,str) ln = return $ T p (CharT (head str))
+smac      (p,str) ln = return $ T p (SMacT (mac ln str))
+rmac      (p,str) ln = return $ T p (RMacT (mac ln str))
+smacdef   (p,str) ln = return $ T p (SMacDefT (macdef ln str))
+rmacdef   (p,str) ln = return $ T p (RMacDefT (macdef ln str))
+startcode (p,str) ln = return $ T p (IdT (take ln str))
 
 isIdChar c = isAlphaNum c || c `elem` "_'"
 
-skip p c input len cont scs = 
-  -- trace ("skip: " ++ take len input) $
-  cont scs
-
--- begin a new startcode
-begin startcode tok p c input len cont (_,s) = 
-  tok p c input len cont (startcode,s)
-
--- the state is the level of brace nesting in code
-nest_code p c input len cont (sc,(0,_)) =
-  cont (sc,(1,""))
-nest_code p c input len cont (sc,(state,so_far)) =
-  -- trace ("incode " ++ show state) $
-  cont (sc,(state+1,'\123':so_far))  -- TODO \123 = open brace
-
-code p c inp len cont (sc,(n,so_far)) = 
-  -- trace "code" $
-  cont (sc,(n, reverse (take len inp) ++ so_far))
-
-unnest_code p c input len cont (sc,(1,so_far)) =
-  T p (CodeT (reverse so_far)) : cont (0,(0,""))
-unnest_code p c input len cont (sc,(n,so_far)) =
-  cont (incode,(n-1,'\125':so_far))  -- TODO \125 = close brace
-
-stop p c "" scs   = []
-stop p c rest scs = error "lexical error" -- TODO
-
-mk_act ac = \p _ str len cont st -> ac p len str:cont st
-
 extract ln str = take (ln-2) (tail str)
 		
-do_ech radix ln str = chr (parseInt radix (take (ln-1) (tail str)))
+do_ech radix ln str = chr (parseInt radix str)
 
 mac ln (_ : str) = take (ln-1) str
 
@@ -164,6 +132,56 @@ esc (_ : x : _)  =
 parseInt :: Int -> String -> Int
 parseInt radix ds = foldl1 (\n d -> n * radix + d) (map digitToInt ds)
 
+-- In brace-delimited code, we have to be careful to match braces
+-- within the code, but ignore braces inside strings and character
+-- literals.  We do an approximate job (doing it properly requires
+-- implementing a large chunk of the Haskell lexical syntax).
+
+code (p,inp) len = go 1 ""
+ where
+  go 0 cs = return (T p (CodeT (reverse (tail cs))))
+  go n cs = do
+    c <- alexGetChar
+    case c of
+	Nothing  -> err
+	Just c   -> case c of
+			'{'  -> go (n+1) (c:cs)
+			'}'  -> go (n-1) (c:cs)
+			'\'' -> go_char n (c:cs)
+			'\"' -> go_str n (c:cs) '\"'
+			c    -> go n (c:cs)
+
+	-- try to catch occurrences of ' within an identifier
+  go_char n (c:cs) | isAlphaNum c = go n ('\'':c:cs)
+  go_char n cs = go_str n cs '\''
+
+  go_str n cs end = do
+    c <- alexGetChar
+    case c of
+	Nothing -> err
+	Just c
+	  | c == end  -> go n (c:cs)
+	  | otherwise -> 
+		case c of
+		   '\\' -> do
+			d <- alexGetChar
+			case d of
+			  Nothing -> err
+			  Just d  -> go_str n (d:c:cs) end
+		   c -> go_str n (c:cs) end
+				  
+
+alexEOF (p,"")   = return (T p EOFT)
+alexEOF (p,rest) = err
+
+err = error "lexical error" -- TODO
+
 lexer :: String -> [Token]
-lexer = gscan stop (0::Int,"")
+lexer str = runAlex str $ do
+  let loop = do tok <- alexScan; 
+		case tok of
+		  T _ EOFT -> return []
+		  _ -> do toks <- loop
+			  return (tok:toks)
+  loop  
 }

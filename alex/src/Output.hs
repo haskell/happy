@@ -74,7 +74,7 @@ outputDFA target n func_nm dfa
 	= brack (interleave_shows (char ',') (map (paren.outputAcc) accs))
 
     outputAcc (Acc prio act lctx rctx)
-	= str "Acc " . shows prio . space
+	= str "AlexAcc " . shows prio . space
 	. paren (str act) . space
 	. outputLCtx lctx . space
 	. outputRCtx rctx
@@ -90,7 +90,7 @@ outputDFA target n func_nm dfa
 	= paren (str "Just " . shows set)
 
     outputArr arr
-	= str "Array.array " . shows (bounds arr) . space
+	= str "array " . shows (bounds arr) . space
 	. shows (assocs arr)
 
 -- -----------------------------------------------------------------------------

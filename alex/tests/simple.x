@@ -2,11 +2,8 @@
 -- Tests the basic operation.
 module Main where
 
-import Array
+import Data.Char (toUpper)
 import Control.Monad
-import Data.Maybe
-import Debug.Trace
-import Data.Char
 import System.Exit
 }
 
@@ -26,35 +23,34 @@ $white+			{ skip }
 <parens> \)		{ begin 0 }
 
 {
-skip p c input len cont scs = cont scs
-
-begin code p c input len cont (_,s) = cont (code,s)
-
 {- we can now have comments in source code? -}
-word p c input len cont scs = 
-  take len input : cont scs
+word (p,input) len = return (take len input)
 
-eol p c input len cont scs = 
-  ("EOL:"++ take len input) : cont scs
+eol (p,input) len = return ("EOL:"++ take len input)
 
-bol p c input len cont scs = 
-  ("BOL:"++ take len input) : cont scs
+bol (p,input) len = return ("BOL:"++ take len input)
 
-parenword p c input len cont scs = 
-  map toUpper (take len input) : cont scs
+parenword (p,input) len = return (map toUpper (take len input))
 
-magic p c input len cont scs =
-  "PING!" : cont scs
+magic (p,input) len = return "PING!"
 
-stop p c "" scs   = ["stopped."]
-stop p c rest scs = ["error."]
+alexEOF (p,"")   = return "stopped."
+alexEOF (p,rest) = return "error."
+
+scanner str = runAlex str $ do
+  let loop = do tok <- alexScan; 
+		if tok == "stopped." || tok == "error." 
+			then return [tok]
+			else do toks <- loop
+				return (tok:toks)
+  loop  
 
 main = do
-  let test1 = gscan stop () str1
+  let test1 = scanner str1
   print test1
   when (test1 /= out1) $ exitFailure
 
-  let test2 = gscan stop () str2
+  let test2 = scanner str2
   print test2
   when (test2 /= out2) $ exitFailure
 

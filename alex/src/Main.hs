@@ -55,7 +55,7 @@ runAlex cli file = do
   prg <- readFile file
 
   case unP (parse (lexer prg)) initialParserEnv of
-	Left (Just (Pn _ line col),err) -> 
+	Left (Just (AlexPn _ line col),err) -> 
 		die (file ++ ":" ++ show line ++ ":" ++ show col
 				 ++ ": " ++ err ++ "\n")
 	Left (Nothing, err) ->
@@ -133,8 +133,11 @@ importsToInject tgt cli = always_imports ++ debug_imports ++ glaexts_import
 
 always_imports = "#if __GLASGOW_HASKELL__ >= 503\n\ 
 		   \import Data.Array\n\ 
+		   \import Data.Char (ord)\n\ 
+		   \import Data.Array.Base (unsafeAt)\n\ 
 		   \#else\n\ 
 		   \import Array\n\ 
+		   \import Char (ord)\n\ 
 		   \#endif\n"
 
 import_glaexts = "#if __GLASGOW_HASKELL__ >= 503\n\ 
@@ -153,11 +156,15 @@ import_debug = "#if __GLASGOW_HASKELL__ >= 503\n\
 		   \#endif\n"
 
 templateFile target cli
-  = dir ++ "/AlexTemplate" ++ maybe_ghc ++ maybe_debug
+  = dir ++ "/AlexTemplate" ++ maybe_monad ++ maybe_ghc ++ maybe_debug
   where 
 	dir = case [ d | OptTemplateDir d <- cli ] of
 			[] -> "."
 			ds -> last ds
+
+	maybe_monad
+	  | OptMonad `elem` cli = "-monad"
+	  | otherwise           = ""
 
 	maybe_ghc 
 	  | GhcTarget <- target  = "-ghc"
@@ -196,6 +203,7 @@ data CLIFlags
   | OptOutputFile FilePath
   | OptInfoFile (Maybe FilePath)
   | OptTemplateDir FilePath
+  | OptMonad
   | DumpVersion
   deriving Eq
 
@@ -211,6 +219,8 @@ argInfo  = [
 	"Put detailed state-machine info in FILE",
    Option ['t'] ["template"] (ReqArg OptTemplateDir "DIR")
 	"Look in DIR for template files",
+   Option ['m'] ["monad"] (NoArg OptMonad)
+	"Use the monad-based scanner",
    Option ['v'] ["version"] (NoArg DumpVersion)
       "Print out version info"
   ]

@@ -164,7 +164,7 @@ sets	:: { [CharSet] }
 	: set sets			{ $1 : $2 }
 	| {- empty -}			{ [] }
 
-smac	:: { (Posn,String) }
+smac	:: { (AlexPosn,String) }
  	: '.'				{ (tokPosn $1, ".") }
 	| SMAC				{ case $1 of T p (SMacT s) -> (p, s) }
 
@@ -174,7 +174,7 @@ smac	:: { (Posn,String) }
 
 type Env = (FiniteMap String CharSet, FiniteMap String RExp)
 
-type ParseError = (Maybe Posn,String)
+type ParseError = (Maybe AlexPosn,String)
 
 newtype P a = P { unP :: Env -> Either ParseError (Env,a) }
 
@@ -188,7 +188,7 @@ instance Monad P where
 -- syntax.  The parsing monad passes around two environments mapping
 -- macro names to sets and regexps respectively.
 
-lookupSMac :: (Posn,String) -> P CharSet
+lookupSMac :: (AlexPosn,String) -> P CharSet
 lookupSMac (posn,smac)
  = P $ \env@(senv,_) -> 
        case lookupFM senv smac of

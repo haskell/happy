@@ -26,11 +26,11 @@ boot ::
 		(cd $(FPTOOLS_TOP)/ghc/driver && $(MAKE) boot); \
 	fi 
 
-Scan.hs : Scan.x
-	../src-OLD8/alex-inplace Scan.x
+#Scan.hs : Scan.x
+#	../src-OLD8/alex-inplace -m -g Scan.x
 
 cmp :: Scan.hs
-	./alex-inplace Scan.x -o Scan.hs-CMP
+	./alex-inplace -m Scan.x -o Scan.hs-CMP
 	cmp Scan.hs Scan.hs-CMP
 
 ifeq "$(INSTALLING)" "1"

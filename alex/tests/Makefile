@@ -7,6 +7,8 @@ TESTS = simple.x
 
 ALEX=../src/alex-inplace
 
+TEST_ALEX_OPTS = -m
+
 %.n.hs : %.x
 	$(ALEX) $(TEST_ALEX_OPTS) $< -o $@
 
