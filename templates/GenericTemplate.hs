@@ -1,4 +1,4 @@
--- $Id: GenericTemplate.hs,v 1.10 2001/03/30 14:08:23 simonmar Exp $
+-- $Id: GenericTemplate.hs,v 1.11 2001/03/30 14:24:07 simonmar Exp $
 
 #ifdef HAPPY_GHC
 #define ILIT(n) n#
@@ -77,7 +77,9 @@ happyParse start_state = happyNewToken start_state notHappyAtAll notHappyAtAll
 -----------------------------------------------------------------------------
 -- Accepting the parse
 
-happyAccept j tk st sts (HappyStk ans _) = happyReturn1 ans
+happyAccept j tk st sts (HappyStk ans _) = IF_GHC(happyTcHack j 
+				                  IF_ARRAYS(happyTcHack st))
+					   (happyReturn1 ans)
 
 -----------------------------------------------------------------------------
 -- Arrays only: do the next action
