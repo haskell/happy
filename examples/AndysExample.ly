@@ -57,8 +57,8 @@ All parsers must declair this function,
 which is called when an error is detected.
 Note that currently we do no error recovery.
 
-> happyError :: Int -> [Token] -> a
-> happyError i _ = error ("Parse error in line " ++ show i ++ "\n")
+> happyError :: [Token] -> a
+> happyError _ = error ("Parse error\n")
 
 Now we declare the datastructure that we are parsing.
 
