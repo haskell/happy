@@ -1,10 +1,10 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.1 2000/07/13 10:23:01 simonmar Exp $
+# $Id: Makefile,v 1.2 2000/12/03 16:21:51 simonmar Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
 
-TESTS = Test.ly TestPrecedence.ly bug001.ly monad001.y monad002.ly
+TESTS = Test.ly TestMulti.ly TestPrecedence.ly bug001.ly monad001.y monad002.ly
 
 %.n.hs : %.ly
 	$(HAPPY_INPLACE) $< -o $@
@@ -44,7 +44,7 @@ TESTS = Test.ly TestPrecedence.ly bug001.ly monad001.y monad002.ly
 
 CLEAN_FILES += *.n.hs *.a.hs *.g.hs *.gc.hs *.ag.hs *.agc.hs *.info *.hi
 
-ALL_TEST_HS = $(shell echo $(TESTS) | sed -e 's/\([^\.]*\).\(l\|\)y/\1.n.hs \1.a.hs \1.g.hs \1.gc.hs \1.ag.hs \1.agc.hs/g')
+ALL_TEST_HS = $(shell echo $(TESTS) | sed -e 's/\([^\. ]*\)\.\(l\)\{0,1\}y/\1.n.hs \1.a.hs \1.g.hs \1.gc.hs \1.ag.hs \1.agc.hs/g')
 
 ALL_TESTS = $(patsubst %.hs, %.run, $(ALL_TEST_HS))
 

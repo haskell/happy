@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Grammar.lhs,v 1.14 2000/10/02 08:57:41 simonmar Exp $
+$Id: Grammar.lhs,v 1.15 2000/12/03 16:21:50 simonmar Exp $
 
 The Grammar data type.
 
@@ -11,58 +11,94 @@ Here is our mid-section datatype
 > module Grammar (
 > 	Name, isEmpty, 
 >	
->	Production,  Productions, Terminals, NonTerminals,
->	Grammar(..), mangler, fixDir, getTerm, checkRules, 
+>	Production, Grammar(..), mangler,
 >	
 >	LRAction(..), ActionTable, Goto(..), GotoTable, Priority(..),
 >       Assoc(..),
 >	
->	errorName, errorTok, startName, startTok, dummyTok,
->	firstNT, eofName, epsilonTok
+>	errorName, errorTok, startName, firstStartTok, dummyTok,
+>	eofName, epsilonTok
 >	) where
 
 > import GenUtils
 > import AbsSyn
 
 > import Array
+
+#ifdef DEBUG
+
 > import IOExts
 
-epsilon		= 0
-error		= 1
-dummy		= 2
-%start 		= 3
-non-terminals 	= 4..n
-terminals 	= n..m
-%eof 		= m
-
-These numbers are deeply magical, change at your own risk.  Several
-other places rely on these being arranged as they are, including
-ProduceCode.lhs and the various HappyTemplates.
+#endif
 
 > type Name = Int
 
 > type Production = (Name,[Name],String,Priority)
-> type Productions = Array Int Production
-> type Terminals = [Name]
-> type NonTerminals = [Name]
 
 > data Grammar 
 >       = Grammar {
->		productions 	:: [Production],
->		lookupProdNo 	:: Int -> Production,
+>		productions 	  :: [Production],
+>		lookupProdNo 	  :: Int -> Production,
 >		lookupProdsOfName :: Name -> [Int],
->               directives 	:: [Directive Name],
->               terminals 	:: Terminals,
->               non_terminals 	:: NonTerminals,
->		types 		:: Array Int (Maybe String),
->               token_names 	:: Array Int String,
->		first_term 	:: Name,
->               eof_term	:: Name,
->               priorities      :: [(Name,Priority)]
+>               token_specs 	  :: [(Name,String)],
+>               terminals 	  :: [Name],
+>               non_terminals 	  :: [Name],
+>		starts		  :: [(String,Name,Name)],
+>		types 		  :: Array Int (Maybe String),
+>               token_names 	  :: Array Int String,
+>		first_nonterm	  :: Name,
+>		first_term 	  :: Name,
+>               eof_term	  :: Name,
+>               priorities        :: [(Name,Priority)],
+>		token_type	  :: String,
+>		monad		  :: Maybe (String,String,String),
+>		lexer		  :: Maybe (String,String)
 >	}
 
+#ifdef DEBUG
+
+> instance Show Grammar where
+>       showsPrec _ (Grammar 
+>		{ productions		= p
+>		, token_specs		= t
+>               , terminals		= ts
+>               , non_terminals		= nts
+>		, starts		= starts
+>		, types			= tys
+>               , token_names		= e
+>		, first_nonterm		= fnt
+>		, first_term		= ft
+>               , eof_term		= eof
+>	 	})
+>	 = showString "productions = "     . shows p
+>        . showString "\ntoken_specs = "   . shows t
+>        . showString "\nterminals = "     . shows ts
+>        . showString "\nnonterminals = "  . shows nts
+>        . showString "\nstarts = "        . shows starts
+>        . showString "\ntypes = "         . shows tys
+>        . showString "\ntoken_names = "   . shows e
+>	 . showString "\nfirst_nonterm = " . shows fnt
+>	 . showString "\nfirst_term = "    . shows ft
+>        . showString "\neof = "           . shows eof
+>	 . showString "\n"
+
+#endif
+
 > data Assoc = LeftAssoc | RightAssoc | None
+
+#ifdef DEBUG
+
+>	deriving Show
+
+#endif
+
 > data Priority = No | Prio Assoc Int
+
+#ifdef DEBUG
+
+>	deriving Show
+
+#endif
 
 > instance Eq Priority where
 >   No == No = True
@@ -80,51 +116,47 @@ ProduceCode.lhs and the various HappyTemplates.
 > mkPrio i (TokenLeft _) = Prio LeftAssoc i
 > mkPrio i _ = error "Panic: impossible case in mkPrio"
 
-#ifdef DEBUG
+-----------------------------------------------------------------------------
+-- Magic name values
 
-> instance Show Grammar where
->       showsPrec _ (Grammar 
->		{ productions		= p
->               , directives		= d
->               , terminals		= ts
->               , non_terminals		= nts
->		, types			= tys
->               , token_names		= e
->		, first_term		= ft
->               , eof_term		= eof
->	 	})
->	 =      shows p . showString "\n" .
->               shows d . showString "\n" .
->               shows ts . showString "\n" .
->               shows nts . showString "\n" .
->               shows tys . showString "\n" .
->               shows e . showString "\n" .
->		shows ft . showString "\n" .
->               shows eof . showString "\n"
+All the tokens in the grammar are mapped onto integers, for speed.
+The namespace is broken up as follows:
 
-#endif
+epsilon		= 0
+error		= 1
+dummy		= 2
+%start 		= 3..s
+non-terminals 	= s..n
+terminals 	= n..m
+%eof 		= m
 
-> startName = "%start"			-- Token 2
+These numbers are deeply magical, change at your own risk.  Several
+other places rely on these being arranged as they are, including
+ProduceCode.lhs and the various HappyTemplates.
+
+Unfortunately this means you can't tell whether a given token is a
+terminal or non-terminal without knowing the boundaries of the
+namespace, which are kept in the Grammar structure.
+
+In hindsight, this was probably a bad idea.
+
+> startName = "%start" -- with a suffix, like %start_1, %start_2 etc.
 > eofName   = "%eof"			
-> errorName = "error"			-- Token 1
+> errorName = "error"
+> dummyName = "%dummy"  -- shouldn't occur in the grammar anywhere
 
-> startTok, dummyTok, firstNT, errorTok, epsilonTok :: Name
-> firstNT    = startTok+1
-> startTok   = 3
-> dummyTok   = 2
-> errorTok   = 1
-> epsilonTok = 0
+> firstStartTok, dummyTok, errorTok, epsilonTok :: Name
+> firstStartTok   = 3
+> dummyTok        = 2
+> errorTok    	  = 1
+> epsilonTok 	  = 0
 
 > isEmpty :: Name -> Bool
-> isEmpty 0 = True
-> isEmpty _ = False
+> isEmpty n | n == epsilonTok = True
+>	    | otherwise       = False
 
-%-----------------------------------------------------------------------------
-The Mangler.
-
-We are allowed to use the facts that the start symbol is always
-non-terminal zero, and the first non-terminal in the grammar file is
-non-terminal 1.
+-----------------------------------------------------------------------------
+-- The Mangler
 
 This bit is a real mess, mainly because of the error message support.
 
@@ -147,37 +179,76 @@ This bit is a real mess, mainly because of the error message support.
 > mangler :: AbsSyn -> MaybeErr Grammar [String]
 > mangler (AbsSyn hd dirs rules tl) = 
 
->	checkRules ([n | (n,_,_) <- rules]) "" []	   `thenE` \nts  ->
+>	checkRules ([n | (n,_,_) <- rules]) "" [] `thenE` \nonterm_strs  ->
 
 >	let
->       term     = concat (map getTerm dirs) ++ [eofName]
->       nonterm' = [ firstNT .. l_nt+firstNT-1 ]
->       term'    = [ l_nt+firstNT .. l_nt+l_t+firstNT-1 ]
->       env      = (errorTok, errorName) :
->		   (startTok, startName) :
->		   zip (nonterm'++term') (nts ++ term)
->	l_nt     = length nts
->	l_t      = length term
+
+>       terminal_strs  = concat (map getTerm dirs) ++ [eofName]
+
+>	n_starts   = length starts
+>	n_nts      = length nonterm_strs
+>	n_ts       = length terminal_strs
+>	first_nt   = firstStartTok + n_starts
+>	first_t    = first_nt + n_nts
+>	last_start = first_nt - 1
+>	last_nt    = first_t  - 1
+>	last_t     = first_t + n_ts - 1
+
+>	start_names    = [ firstStartTok .. last_start ]
+>       nonterm_names  = [ first_nt .. last_nt ]
+>       terminal_names = [ first_t .. last_t ]
+
+>	starts	    = getParserNames dirs
+>	start_strs  = map (\n -> startName++'_':show n) [1..n_starts :: Int]
+
+Build up a mapping from name values to strings.
+
+>       name_env = (errorTok, errorName) :
+>		   (dummyTok, dummyName) :
+>		   zip start_names    start_strs ++
+>		   zip nonterm_names  nonterm_strs ++
+>		   zip terminal_names terminal_strs
+
+>	lookupName :: String -> [Name]
+>	lookupName n = [ t | (t,r) <- name_env, r == n ]
+
+>       mapToName str = 
+>             case lookupName str  of
+>                [a] -> Succeeded a
+>                []  -> Failed ["unknown identifier `" ++ str ++ "'"]
+>                _   -> Failed ["multiple use of `" ++ str ++ "'"]
+
+Start symbols...
+
+>		-- default start token is the first non-terminal in the grammar
+>	lookupStart (TokenName s Nothing)  = Succeeded first_nt
+>	lookupStart (TokenName s (Just n)) = mapToName n
+>	in
+
+>	foldr (mightFails lookupStart) (Succeeded []) starts
+>					`thenE` \ start_toks ->
+
+>	let
+>	parser_names = [ s | TokenName s _ <- starts ]
+>	start_prods = zipWith (\nm tok -> (nm, [tok], "no code", No))
+>			 start_names start_toks
+
+Deal with priorities...
 
 >       priodir = zip [1..] (getPrios dirs)
 >
 >       prios = [ (name,mkPrio i dir)
 >               | (i,dir) <- priodir
->               , nm <- AbsSyn.getNames dir
->		, name <- [a|(a,r)<-env,r==nm]
+>               , nm <- AbsSyn.getPrioNames dir
+>		, name <- lookupName nm
 >		]
 
 >       prioByString = [ (name, mkPrio i dir)
 >                      | (i,dir) <- priodir
->                      , name <- AbsSyn.getNames dir
+>                      , name <- AbsSyn.getPrioNames dir
 >                      ]
 
-
->       mapToName str = 
->             case [ a | (a,r) <- env, r == str ] of
->                [a] -> Succeeded a
->                []  -> Failed ["unknown identifier `" ++ str ++ "'"]
->                _   -> Failed ["multiple use of `" ++ str ++ "'"]
+Translate the rules from string to name-based.
 
 > 	transRule (nt, prods, ty)
 >   	  = mapToName nt				       `thenE` \nt' ->
@@ -192,7 +263,7 @@ This bit is a real mess, mainly because of the error message support.
 >       mkPrec :: [Name] -> Maybe String -> Either String Priority
 >       mkPrec lhs prio =
 >             case prio of
->               Nothing -> case filter (flip elem term') lhs of
+>               Nothing -> case filter (flip elem terminal_names) lhs of
 >                            [] -> Right No
 >                            xs -> case lookup (last xs) prios of
 >                                    Nothing -> Right No
@@ -211,42 +282,52 @@ This bit is a real mess, mainly because of the error message support.
 >	foldr (mightFails transRule) (Succeeded []) rules  `thenE` \rules' ->
 
 >	let
->	tys   = listArray' (firstNT, l_nt+firstNT-1) 
->			[ ty | (nm,_,ty) <- rules ]
+>	tys = listArray' (first_nt, last_nt) [ ty | (nm,_,ty) <- rules ]
 
 >	env_array :: Array Int String
->	env_array = array (errorTok, l_nt+l_t+firstNT-1) env
+>	env_array = array (errorTok, last_t) name_env
 >	in
 
->       foldr (mightFails (fixDir mapToName)) (Succeeded []) dirs
->							`thenE` \dirs' ->
+Get the token specs in terms of Names.
+
+>	let 
+>	fixTokenSpec (a,b) = mapToName a `thenE` \a -> Succeeded (a,b)
+>	in
+>       foldr (mightFails fixTokenSpec) (Succeeded []) (getTokenSpec dirs)
+>						`thenE` \tokspec ->
 
 >	let
->	   ass = combinePairs [ (a,no) | ((a,_,_,_),no) <- zip prod [0..] ]
->	   arr = array (startTok, length ass - 1 + startTok) ass
-
->	   first_term = head term'
+>	   ass = combinePairs [ (a,no)
+>			      | ((a,_,_,_),no) <- zip productions [0..] ]
+>	   arr = array (firstStartTok, length ass - 1 + firstStartTok) ass
 
 >	   lookup_prods :: Name -> [Int]
->	   lookup_prods x | x >= startTok && x < first_term = arr ! x
->	   lookup_prods _ = error "looking up production failure"
+>	   lookup_prods x | x >= firstStartTok && x < first_t = arr ! x
+>	   lookup_prods _ = error "lookup_prods"
 >
->	   prod = (startTok, [firstNT], "no code", No) : concat rules'
+>	   productions = start_prods ++ concat rules'
+>	   prod_array  = listArray' (0,length productions-1) productions
 
 >	in
 
 >	Succeeded (Grammar {
->		productions 		= prod,
->		lookupProdNo	  	= (listArray' (0,length prod-1) prod !),
->		lookupProdsOfName 	= lookup_prods,
->               directives		= dirs',
->               terminals		= (errorTok : term'),
->               non_terminals		= (startTok : nonterm'),
->		types			= tys,
->               token_names		= env_array,
->		first_term		= first_term,
->               eof_term		= last term',
->               priorities              = prios
+>		productions 	  = productions,
+>		lookupProdNo   	  = (prod_array !),
+>		lookupProdsOfName = lookup_prods,
+>               token_specs	  = tokspec,
+>               terminals	  = errorTok : terminal_names,
+>               non_terminals	  = start_names ++ nonterm_names,
+>				  	-- INCLUDES the %start tokens
+>		starts		  = zip3 parser_names start_names start_toks,
+>		types		  = tys,
+>               token_names	  = env_array,
+>		first_nonterm	  = first_nt,
+>		first_term	  = first_t,
+>               eof_term	  = last terminal_names,
+>               priorities        = prios,
+>		monad		  = getMonad dirs,
+>		lexer		  = getLexer dirs,
+>		token_type	  = getTokenType dirs
 >	})
 
 For combining actions with possible error messages.
@@ -264,20 +345,6 @@ For combining actions with possible error messages.
 > 		combine (Failed sa) (Succeeded b)	= Failed sa
 > 		combine (Failed sa) (Failed sb) 	= Failed (sa ++ sb)
 
-This is horrible.
-
-> fixDir f (TokenType str)    = Succeeded (TokenType str)
-> fixDir f (TokenName str)    = Succeeded (TokenName str)
-> fixDir f (TokenLexer lex eof) = Succeeded (TokenLexer lex eof)
-> fixDir f (TokenSpec stuff)  
-> 	= foldr (mightFails (\(a,b) -> f a `thenE` \a -> Succeeded (a,b))) 
->			(Succeeded []) stuff `thenE` \stuff' ->
->	  Succeeded (TokenSpec stuff')
-> fixDir f (TokenMonad ty tn rt) = Succeeded (TokenMonad ty tn rt)
-> fixDir f (TokenNonassoc str) = Succeeded (TokenNonassoc str)
-> fixDir f (TokenRight str)    = Succeeded (TokenRight str)
-> fixDir f (TokenLeft str)     = Succeeded (TokenLeft str)
-
 > getTerm (TokenSpec stuff) = map fst stuff
 > getTerm _                 = []
 
@@ -291,8 +358,8 @@ So is this.
 
 > checkRules [] _ nonterms = Succeeded (reverse nonterms)
 
-%-----------------------------------------------------------------------------
-\subsection{Internal Reduction Datatypes}
+-----------------------------------------------------------------------------
+-- Internal Reduction Datatypes
 
 > data LRAction = LR'Shift Int Priority -- state number and priority
 >               | LR'Reduce Int Priority-- rule no and priority
@@ -320,8 +387,6 @@ So is this.
    showsPrec _ (LR'Fail)       = showString (" ")
  instance Eq LRAction where { (==) = primGenericEq } 
 
-
-
 > data Goto = Goto Int | NoGoto 
 >       deriving(Eq
 
@@ -334,4 +399,3 @@ So is this.
 >	)	
 
 > type GotoTable = Array Int{-state-} (Array Int{-nonterminal #-} Goto)
-

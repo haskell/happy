@@ -97,7 +97,7 @@ The datastructure for the tokens...
 
 .. and a simple lexer that returns this datastructure.
 
-> lexer :: (Token -> Parse) -> Parse
+> -- lexer :: (Token -> Parse) -> Parse
 > lexer cont s = case s of
 > 	[] -> cont TokenEOF []
 >  	('\n':cs) -> \line -> lexer cont cs (line+1)
@@ -137,7 +137,7 @@ This is the overall type of the parser.
 The next function is called when a parse error is detected.  It has
 the same type as the top-level parse function.
 
-> happyError :: Parse
+> -- happyError :: Parse
 > happyError = \s i -> error (
 >	"Parse error in line " ++ show (i::Int) ++ "\n")
 

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Info.lhs,v 1.9 2000/07/12 16:21:44 simonmar Exp $
+$Id: Info.lhs,v 1.10 2000/12/03 16:21:50 simonmar Exp $
 
 Generating info files.
 
@@ -12,7 +12,6 @@ Generating info files.
 > import LALR 			( Lr0Item )
 > import GenUtils
 > import Set
-> import AbsSyn
 > import Grammar
 > import ProduceCode		( str, interleave, interleave' )
 

@@ -48,11 +48,13 @@ exp	: num                { $1         }
 main = do
    calc (lexer "1 + 2 * 3 / 4\n")
 
+    {-
    -- check that non-associative operators can't be used together
    r <- try (calc (lexer "1 / 2 / 3"))
    case r of 
        Left e  -> return ()
        Right _ -> ioError (userError "fail!")
+-}
 
 data Token
 	= TokenExp

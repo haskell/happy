@@ -1,4 +1,4 @@
--- $Id: GenericTemplate.hs,v 1.7 2000/09/04 13:33:43 simonmar Exp $
+-- $Id: GenericTemplate.hs,v 1.8 2000/12/03 16:21:51 simonmar Exp $
 
 #ifdef HAPPY_GHC
 #define ILIT(n) n#
@@ -36,14 +36,12 @@ data Happy_IntList = HappyNil | HappyCons FAST_INT Happy_IntList
 #endif
 
 #if defined(HAPPY_ARRAY)
-#define ACTION_0 ILIT(0)
 #define ERROR_TOK ILIT(0)
 #define DO_ACTION(state,i,tk,sts,stk) happyDoAction i tk state sts (stk)
 #define HAPPYSTATE(i) (i)
 #define GOTO(action) happyGoto
 #define IF_ARRAYS(x) (x)
 #else
-#define ACTION_0 action_0
 #define ERROR_TOK ILIT(1)
 #define DO_ACTION(state,i,tk,sts,stk) state i i tk HAPPYSTATE(state) sts (stk)
 #define HAPPYSTATE(i) (HappyState (i))
@@ -55,12 +53,10 @@ data Happy_IntList = HappyNil | HappyCons FAST_INT Happy_IntList
 #define GET_ERROR_TOKEN(x)  (case unsafeCoerce# x of { IBOX(i) -> i })
 #define MK_ERROR_TOKEN(i)   (unsafeCoerce# IBOX(i))
 #define MK_TOKEN(x)	    (happyInTok (x))
-#define HAPPY_FINAL_ABSSYN(x) (happyOut4 (x))
 #else
 #define GET_ERROR_TOKEN(x)  (case x of { HappyErrorToken IBOX(i) -> i })
 #define MK_ERROR_TOKEN(i)   (HappyErrorToken IBOX(i))
 #define MK_TOKEN(x)	    (HappyTerminal (x))
-#define HAPPY_FINAL_ABSSYN(x) (case (x) of {HappyAbsSyn4 z -> z })
 #endif
 
 #if defined(HAPPY_DEBUG)
@@ -75,7 +71,15 @@ happyTrace string expr = unsafePerformIO $ do
 -----------------------------------------------------------------------------
 -- starting the parse
 
-happyParse = happyNewToken ACTION_0 NIL []
+happyParse start_state = happyNewToken start_state NIL []
+
+-----------------------------------------------------------------------------
+-- Accepting the parse
+
+happyAccept j tk st sts [ ans ] = happyReturn1 ans
+happyAccept j tk st sts _       = IF_GHC(happyTcHack j 
+				         IF_ARRAYS(happyTcHack st))
+				  notHappyAtAll
 
 -----------------------------------------------------------------------------
 -- Arrays only: do the next action
@@ -136,14 +140,6 @@ newtype HappyState b c = HappyState
          c)
 
 #endif
-
------------------------------------------------------------------------------
--- Accepting the parse
-
-happyAccept j tk st sts [ ans ] = happyReturn1 HAPPY_FINAL_ABSSYN(ans)
-happyAccept j tk st sts _       = IF_GHC(happyTcHack j 
-				         IF_ARRAYS(happyTcHack st))
-				  notHappyAtAll
 
 -----------------------------------------------------------------------------
 -- Shifting a token
@@ -207,9 +203,8 @@ happyDrop n CONS(_,t) = happyDrop MINUS(n,ILIT(1)) t
 happyGoto nt j tk st = 
    DEBUG_TRACE(", goto state " ++ show IBOX(new_state) ++ "\n")
    happyDoAction j tk new_state
-   where i      = MINUS(nt,ILIT(4))
-	 off    = indexShortOffAddr happyGotoOffsets st
-	 off_i  = PLUS(off,i)
+   where off    = indexShortOffAddr happyGotoOffsets st
+	 off_i  = PLUS(off,nt)
  	 new_state = indexShortOffAddr happyTable off_i
 #else
 happyGoto action j tk st = action j j tk (HappyState action)

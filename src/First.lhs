@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: First.lhs,v 1.6 2000/07/12 16:21:44 simonmar Exp $
+$Id: First.lhs,v 1.7 2000/12/03 16:21:50 simonmar Exp $
 
 Implementation of FIRST
 
@@ -10,7 +10,6 @@ Implementation of FIRST
 
 > import GenUtils
 > import Set
-> import AbsSyn
 > import Grammar
 
 \subsection{Utilities}

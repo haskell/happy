@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.28 2000/07/13 15:01:45 simonmar Exp $
+$Id: Main.lhs,v 1.29 2000/12/03 16:21:51 simonmar Exp $
 
 The main driver.
 
@@ -10,7 +10,6 @@ The main driver.
 
 > import ParseMonad
 > import GenUtils
-> import Lexer
 > import AbsSyn
 > import Grammar
 > import Parser
@@ -22,12 +21,11 @@ The main driver.
 > import Target (Target(..))
 > import GetOpt
 > import Set
-> import IntSet
 
 > import System
 > import Char
 > import IO
-> import Array( Array, assocs, elems, (!) )
+> import Array( assocs, elems, (!) )
 > import List( nub )
 
 #if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 400
@@ -82,13 +80,9 @@ Mangle the syntax into something useful.
 >		Failed s -> die (unlines s ++ "\n");
 >		Succeeded g -> 
 
->	let gram@(Grammar { directives  = dirs
->			  , token_names = env
->			  , types = tys
+>	let gram@(Grammar { token_specs = token_specs
 >			  , eof_term = eof
->			  , first_term = fst_term
 >			  })  = g
-> 	    term_dir = [ (a,b) | (a,b) <- getTokenSpec dirs, a >= fst_term]
 >       in
 
 
@@ -113,11 +107,11 @@ Mangle the syntax into something useful.
 
 #ifdef DEBUG
 
->       optPrint cli DumpLR0 (putStr (show sets))		>>
+>       optPrint cli DumpLR0    (putStr (show sets))		>>
 >       optPrint cli DumpAction (putStr (show action))      	>>
->       optPrint cli DumpGoto (putStr (show goto))          	>>
->       optPrint cli DumpLA (putStr (show lainfo))		>>
->       optPrint cli DumpLA (putStr (show la))			>>
+>       optPrint cli DumpGoto   (putStr (show goto))          	>>
+>       optPrint cli DumpLA     (putStr (show lainfo))		>>
+>       optPrint cli DumpLA     (putStr (show la))		>>
 
 #endif
 
@@ -149,7 +143,7 @@ Print out the info file.
 >			g
 >			action
 >			goto
->			term_dir
+>			token_specs
 >			conflictArray
 >			fl_name
 >			unused_rules
@@ -192,11 +186,6 @@ and generate the code.
 >                       g
 >                       action
 >                       goto
->                       (getLexer dirs)
->                       term_dir
->                       (getTokenType dirs)
->			(getParserName dirs)
->			(getMonad dirs)
 >			(optsToInject target cli)
 >                       header
 >                       tl
@@ -240,9 +229,6 @@ Successfully Finished.
 > optPrint cli pass io = 
 >       optIO (elem pass cli) (putStr "\n---------------------\n" >> io)
 
-> optDump cli pass io =
-> 	optIO (elem pass cli) io
-
 > constArgs = []
 
 -----------------------------------------------------------------------------
@@ -252,14 +238,20 @@ Find unused rules and tokens
 > find_redundancies g action_table = 
 >	(unused_rules, map (env !) unused_terminals)
 >    where
+>	Grammar { terminals = terms,
+>		  token_names = env,
+>		  eof_term = eof,
+>		  starts = starts,
+>		  productions = productions
+>	        } = g
+
 >	actions		 = concat (map assocs (elems action_table))
->	used_rules       = 0 : nub [ r | (_,LR'Reduce{-'-} r _) <- actions ]
+>	start_rules	 = [ 0 .. (length starts) ]
+>	used_rules       = start_rules ++
+>			   nub [ r | (_,LR'Reduce{-'-} r _) <- actions ]
 >	used_tokens      = errorTok : eof : 
 >			       nub [ t | (t,a) <- actions, is_shift a ]
->	terms            = terminals g
->	env              = token_names g
->	eof		 = eof_term g
->	n_prods		 = length (productions g)
+>	n_prods		 = length productions
 >	unused_terminals = filter (`notElem` used_tokens) terms
 >	unused_rules     = filter (`notElem` used_rules ) [0..n_prods-1]
 
@@ -275,13 +267,12 @@ Find unused rules and tokens
 > possDelit f            fl     = 
 >	dieHappy ("`" ++ reverse f ++ "' does not end in `.y' or `.ly'\n")
 
-This was a program hot-spot, but not any more.
-
 > deLitify :: String -> String
 > deLitify = deLit 
 >  where 
 >       deLit ('>':' ':r)  = deLit1 r
 >       deLit ('>':'\t':r)  = '\t' : deLit1 r
+>       deLit ('>':'\n':r)  = deLit r
 >       deLit ('>':r)  = error "Error when de-litify-ing"
 >       deLit ('\n':r) = '\n' : deLit r
 >       deLit r        = deLit2 r
@@ -448,12 +439,6 @@ Extract various command-line options.
 >  "the Happy sources.\n"])
 
 > usageHeader = "happy [OPTION...] file"
-
-> syntax = unlines [
->   "syntax: happy [-v] [-o | --outfile <file>] [--info [<file>]]",
->   "		   [-1.2] [--template <dir>]",
->   "              [-g | --ghc] [-a | --array] <file>\n" ]
-
 
 > template_dir = "/usr/local/lib/happy"
 

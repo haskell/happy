@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Lexer.lhs,v 1.16 2000/07/12 16:21:44 simonmar Exp $
+$Id: Lexer.lhs,v 1.17 2000/12/03 16:21:50 simonmar Exp $
 
 The lexer.
 
@@ -16,7 +16,6 @@ The lexer.
 >       lexer ) where
 
 > import ParseMonad        
-> import GenUtils
 
 > import Char ( isSpace, isAlphaNum )
 

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: AbsSyn.lhs,v 1.6 2000/07/12 16:21:44 simonmar Exp $
+$Id: AbsSyn.lhs,v 1.7 2000/12/03 16:21:50 simonmar Exp $
 
 Abstract syntax for grammar files.
 
@@ -8,12 +8,11 @@ Abstract syntax for grammar files.
 
 Here is the abstract syntax of the language we parse.
 
-> module AbsSyn 
-> 	(AbsSyn(..), Directive(..),
-> 	 getTokenType, getTokenSpec, getParserName, getLexer, getMonad,
->        getPrios, getNames,
->	
->	 Maybe) where
+> module AbsSyn (
+> 	AbsSyn(..), Directive(..),
+> 	getTokenType, getTokenSpec, getParserNames, getLexer, getMonad,
+>       getPrios, getPrioNames,
+>  ) where
 
 > data AbsSyn
 >     = AbsSyn
@@ -35,14 +34,14 @@ ToDo: find a consistent way to analyse all the directives together and
 generate some error messages.
 
 > data Directive a
->       = TokenType   String              -- %tokentype
->       | TokenSpec  [(a,String)]         -- %token
->       | TokenName   String              -- %name
->       | TokenLexer String String        -- %lexer
->	| TokenMonad String String String -- %monad
->	| TokenNonassoc [String]	  -- %nonassoc
->	| TokenRight [String]		  -- %right
->	| TokenLeft [String]		  -- %left
+>       = TokenType     String              	-- %tokentype
+>       | TokenSpec     [(a,String)]         	-- %token
+>       | TokenName     String (Maybe String)  	-- %name
+>       | TokenLexer    String String        	-- %lexer
+>	| TokenMonad    String String String 	-- %monad
+>	| TokenNonassoc [String]	  	-- %nonassoc
+>	| TokenRight    [String]		-- %right
+>	| TokenLeft     [String]		-- %left
 
 #ifdef DEBUG
 
@@ -56,11 +55,7 @@ generate some error messages.
 >		[]  -> error "no token type given"
 >		_   -> error "multiple token types"
 
-> getParserName ds
-> 	= case [ t | (TokenName t) <- ds ] of
-> 		[t] -> t
->		[]  -> ""
->		_   -> error "multiple parser name directives"
+> getParserNames ds = [ t | t@(TokenName _ _) <- ds ]
 
 > getLexer ds 
 > 	= case [ (a,b) | (TokenLexer a b) <- ds ] of
@@ -84,6 +79,6 @@ generate some error messages.
 >		    _ -> False
 >               ]
 
-> getNames (TokenNonassoc s) = s
-> getNames (TokenLeft s) = s
-> getNames (TokenRight s) = s
+> getPrioNames (TokenNonassoc s) = s
+> getPrioNames (TokenLeft s)     = s
+> getPrioNames (TokenRight s)    = s
