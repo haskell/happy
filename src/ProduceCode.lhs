@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.46 2001/01/17 17:15:37 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.47 2001/01/17 17:57:53 simonmar Exp $
 
 The code generator.
 
@@ -406,7 +406,9 @@ The token conversion function.
 Use a variable rather than '_' to replace '$$', so we can use it on
 the left hand side of '@'.
 
->	  removeDollarDollar xs = mapDollarDollar xs "happy_dollar_dollar"
+>	  removeDollarDollar xs = case mapDollarDollar xs of
+>				   Nothing -> xs
+>				   Just fn -> fn "happy_dollar_dollar"
 
 >    mkHappyTerminalVar :: Int -> Int -> String -> String
 >    mkHappyTerminalVar i t = 
@@ -416,7 +418,7 @@ the left hand side of '@'.
 >     where
 >	  tok_str_fn = case lookup t token_rep of
 >		      Nothing -> Nothing
->		      Just str -> Just (mapDollarDollar str)
+>		      Just str -> mapDollarDollar str
 >	  pat = mkHappyVar i
 
 >    tokIndex 
@@ -1066,22 +1068,22 @@ See notes under "Action Tables" above for some subtleties in this function.
 
 Replace $$ with an arbitrary string, being careful to avoid ".." and '.'.
 
-> mapDollarDollar :: String -> String -> String
-> mapDollarDollar code repl = go code
->   where go code =
+> mapDollarDollar :: String -> Maybe (String -> String)
+> mapDollarDollar code = go code ""
+>   where go code acc =
 >           case code of
->		[] -> []
+>		[] -> Nothing
 >	
 >		'"'  :r    -> case reads code :: [(String,String)] of
->				 []      -> '"' : go r
->				 (s,r):_ -> show s ++ go r
->		a:'\'' :r | isAlphaNum a -> a:'\'' : go r
+>				 []      -> go r ('"':acc)
+>				 (s,r):_ -> go r (reverse (show s) ++ acc)
+>		a:'\'' :r | isAlphaNum a -> go r ('\'':a:acc)
 >		'\'' :r    -> case reads code :: [(Char,String)] of
->				 []      -> '\'' : go r
->				 (c,r):_ -> show c ++ go r
->		'\\':'$':r -> '$' : go r
->		'$':'$':r  -> repl ++ r
->		c:r  -> c : go r
+>				 []      -> go r ('\'':acc)
+>				 (c,r):_ -> go r (reverse (show c) ++ acc)
+>		'\\':'$':r -> go r ('$':acc)
+>		'$':'$':r  -> Just (\repl -> reverse acc ++ repl ++ r)
+>		c:r  -> go r (c:acc)
 
 > brack s = str ('(' : s) . char ')'
 > brack' s = char '(' . s . char ')'
