@@ -1,8 +1,8 @@
-<!doctype book PUBLIC "-//Davenport//DTD DocBook V3.0//EN" [
+<!doctype book PUBLIC "-//OASIS//DTD DocBook V3.1//EN" [
 <!entity  the-index SYSTEM "genindex.sgml">
 ]>
 
-<book>
+<book id="happy">
   <bookinfo>
     <date>1999-9-17</date>
     <title>Happy User Guide</title>
@@ -30,7 +30,7 @@
   
 <!-- Introduction --------------------------------------------------------- -->
 
-  <chapter>
+  <chapter id="happy-introduction">
     <title>Introduction</title>
 
 
