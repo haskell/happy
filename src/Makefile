@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.36 2001/02/08 13:21:47 sebc Exp $
+# $Id: Makefile,v 1.37 2001/05/05 11:19:38 simonmar Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -68,7 +68,7 @@ INPLACE_SCRIPT_PROG    = happy-inplace
 ifeq "$(INSTALLING)" "1"
 TOP_PWD 	:= $(prefix)
 SCRIPT_PROG 	=  $(INSTALLED_SCRIPT_PROG)
-SCRIPT_LINK 	=  happy
+LINK	 	=  happy
 else
 TOP_PWD 	:= $(FPTOOLS_TOP_ABS)
 SCRIPT_PROG 	=  $(INPLACE_SCRIPT_PROG)
