@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.11 1997/09/10 11:34:23 simonm Exp $
+# $Id: Makefile,v 1.12 1997/09/18 15:42:56 simonm Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -37,6 +37,13 @@ SRC_HC_OPTS += -cpp -fhaskell-1.3 -fglasgow-exts $(HappyHcOpts)
 Parser_HC_OPTS = -Onot
 
 boot :: Version.hs
+
+boot ::
+	if [ -d $(FPTOOLS_TOP)/ghc ]; then \
+		(cd $(FPTOOLS_TOP)/ghc/utils/unlit && $(MAKE) boot); \
+		(cd $(FPTOOLS_TOP)/ghc/utils/mkdependHS && $(MAKE) boot) \
+		(cd $(FPTOOLS_TOP)/ghc/driver && $(MAKE) boot); \
+	fi 
 
 Version.hs : Makefile
 	@-rm -f Version.hs-NEW
