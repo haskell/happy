@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.1.2.2 2003/02/18 17:13:49 simonmar Exp $
+# $Id: Makefile,v 1.1.2.3 2003/03/31 16:52:24 simonmar Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -9,10 +9,9 @@ TEMPLATES = \
 	AlexTemplate-ghc \
 	AlexTemplate-ghc-debug \
 	AlexTemplate-debug \
-	AlexTemplate-monad \
-	AlexTemplate-monad-ghc \
-	AlexTemplate-monad-ghc-debug \
-	AlexTemplate-monad-debug
+	AlexWrapper-basic \
+	AlexWrapper-monad \
+	AlexWrapper-gscan
 
 GENERIC_TEMPLATE = GenericTemplate.hs
 
@@ -47,14 +46,14 @@ AlexTemplate-debug.hspp : $(GENERIC_TEMPLATE)
 AlexTemplate-monad.hspp : $(GENERIC_TEMPLATE)
 	$(CPP_IT) $@ -DALEX_MONAD $(GENERIC_TEMPLATE)
 
-AlexTemplate-monad-ghc.hspp : $(GENERIC_TEMPLATE)
-	$(CPP_IT) $@ -DALEX_MONAD -DALEX_GHC $(GENERIC_TEMPLATE)
+AlexWrapper-basic.hspp : wrappers.hs
+	$(CPP_IT) $@ -DALEX_BASIC $<
 
-AlexTemplate-monad-ghc-debug.hspp : $(GENERIC_TEMPLATE)
-	$(CPP_IT) $@ -DALEX_MONAD -DALEX_GHC -DALEX_DEBUG $(GENERIC_TEMPLATE)
+AlexWrapper-monad.hspp : wrappers.hs
+	$(CPP_IT) $@ -DALEX_MONAD $<
 
-AlexTemplate-monad-debug.hspp : $(GENERIC_TEMPLATE)
-	$(CPP_IT) $@ -DALEX_MONAD -DALEX_DEBUG $(GENERIC_TEMPLATE)
+AlexWrapper-gscan.hspp : wrappers.hs
+	$(CPP_IT) $@ -DALEX_GSCAN $<
 
 # hack to turn cpp-style '# 27 "GenericTemplate.hs"' into 
 # '{-# LINE 27 "GenericTemplate.hs" #-}'.

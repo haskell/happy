@@ -17,7 +17,7 @@
 module NFA where
 
 import Array
-import DFS
+import DFS	( t_close, out )
 import AbsSyn
 import CharSet
 import Util

@@ -18,13 +18,19 @@ import System
 import AbsSyn
 import DFA
 import Util
+import ParseMonad ( runP )
 
+import System.Directory		( removeFile )
+import Control.Exception as Exception
 import System.Console.GetOpt
 import Data.Char
 import Data.List
 import Data.FiniteMap
-import System.IO
+import System.IO hiding ( catch )
 import Control.Monad
+import Data.Maybe
+
+import Prelude hiding ( catch )
 
 version = "2.0"
 
@@ -53,16 +59,20 @@ runAlex cli file = do
 		_         -> die (file ++ ": filename must end in \'.x\'\n")
   
   prg <- readFile file
+  script <- parseScript file prg
+  alex cli file basename script
 
-  case unP (parse (lexer prg)) initialParserEnv of
+parseScript :: FilePath -> String
+  -> IO (Maybe String, [Directive], Scanner, Maybe String)
+parseScript file prg =
+  case runP prg initialParserEnv parse of
 	Left (Just (AlexPn _ line col),err) -> 
 		die (file ++ ":" ++ show line ++ ":" ++ show col
 				 ++ ": " ++ err ++ "\n")
 	Left (Nothing, err) ->
 		die (file ++ ": " ++ err ++ "\n")
 
-	Right (_,script) -> alex cli file basename script
-
+	Right script -> return script
 
 alex cli file basename script = do
    (put_info, finish_info) <- 
@@ -81,14 +91,22 @@ alex cli file basename script = do
 	| OptGhcTarget `elem` cli = GhcTarget
 	| otherwise               = HaskellTarget
 
-   let template_name = templateFile target cli
+   let template_dir  = templateDir cli
+       template_name = templateFile template_dir target cli
 		
-   out_h <- openFile o_file WriteMode
-   
+   -- open the output file; remove it if we encounter an error
+   bracketOnError 
+	(openFile o_file WriteMode)
+	(\h -> do hClose h; removeFile o_file)
+	$ \out_h -> do
+
    let
-	 (maybe_header, scanner, maybe_footer) = script
- 	 (scanner', scs, sc_hdr) = encode_start_codes "" scanner
+	 (maybe_header, directives, scanner1, maybe_footer) = script
+ 	 (scanner2, scs, sc_hdr) = encodeStartCodes scanner1
+	 (scanner_final, actions) = extractActions scanner2
  
+   wrapper_name <- wrapperFile template_dir directives
+
    hPutStr out_h (optsToInject target cli)
    case maybe_header of
 	Nothing   -> return ()
@@ -96,8 +114,8 @@ alex cli file basename script = do
 
    hPutStr out_h (importsToInject target cli)
 
-   let dfa = scanner2dfa scanner' scs
-       nm  = scannerName scanner'
+   let dfa = scanner2dfa scanner_final scs
+       nm  = scannerName scanner_final
 
    put_info (infoDFA 1 nm dfa "")
    hPutStr out_h (outputDFA target 1 nm dfa "")
@@ -107,10 +125,16 @@ alex cli file basename script = do
 	Just code -> hPutStr out_h code
 
    hPutStr out_h (sc_hdr "")
+   hPutStr out_h (actions "")
 
    -- add the template
    tmplt <- readFile template_name
    hPutStr out_h tmplt
+
+   -- add the wrapper, if necessary
+   when (isJust wrapper_name) $
+	do str <- readFile (fromJust wrapper_name)
+	   hPutStr out_h str
 
    hClose out_h
    finish_info
@@ -155,17 +179,14 @@ import_debug = "#if __GLASGOW_HASKELL__ >= 503\n\
 		   \import IOExts\n\ 
 		   \#endif\n"
 
-templateFile target cli
-  = dir ++ "/AlexTemplate" ++ maybe_monad ++ maybe_ghc ++ maybe_debug
+templateDir cli
+  = case [ d | OptTemplateDir d <- cli ] of
+	[] -> "."
+	ds -> last ds
+
+templateFile dir target cli
+  = dir ++ "/AlexTemplate" ++ maybe_ghc ++ maybe_debug
   where 
-	dir = case [ d | OptTemplateDir d <- cli ] of
-			[] -> "."
-			ds -> last ds
-
-	maybe_monad
-	  | OptMonad `elem` cli = "-monad"
-	  | otherwise           = ""
-
 	maybe_ghc 
 	  | GhcTarget <- target  = "-ghc"
 	  | otherwise            = ""
@@ -174,10 +195,19 @@ templateFile target cli
 	  | OptDebugParser `elem` cli  = "-debug"
 	  | otherwise		       = ""
 
+wrapperFile dir directives =
+  case [ f | WrapperDirective f <- directives ] of
+	[]  -> return Nothing
+	[f] -> return (Just (dir ++ "/AlexWrapper-" ++ f))
+	_many -> dieAlex "multiple %wrapper directives"
+
 infoStart x_file info_file = do
-  h <- openFile info_file WriteMode
-  infoHeader h x_file
-  return (hPutStr h, hClose h)
+  bracketOnError
+	(openFile info_file WriteMode)
+	(\h -> do hClose h; removeFile info_file)
+	(\h -> do infoHeader h x_file
+  		  return (hPutStr h, hClose h)
+	)
 
 infoHeader h file = do
   hPutStrLn h ("Info file produced by Alex version " ++ version ++ 
@@ -203,7 +233,6 @@ data CLIFlags
   | OptOutputFile FilePath
   | OptInfoFile (Maybe FilePath)
   | OptTemplateDir FilePath
-  | OptMonad
   | DumpVersion
   deriving Eq
 
@@ -219,8 +248,6 @@ argInfo  = [
 	"Put detailed state-machine info in FILE",
    Option ['t'] ["template"] (ReqArg OptTemplateDir "DIR")
 	"Look in DIR for template files",
-   Option ['m'] ["monad"] (NoArg OptMonad)
-	"Use the monad-based scanner",
    Option ['v'] ["version"] (NoArg DumpVersion)
       "Print out version info"
   ]
@@ -239,3 +266,16 @@ dieAlex s = do
   hPutStr stderr (prog ++ ": " ++ s)
   exitWith (ExitFailure 1)
 
+bracketOnError
+	:: IO a		-- ^ computation to run first (\"acquire resource\")
+	-> (a -> IO b)  -- ^ computation to run last (\"release resource\")
+	-> (a -> IO c)	-- ^ computation to run in-between
+	-> IO c		-- returns the value from the in-between computation
+bracketOnError before after thing =
+  block (do
+    a <- before 
+    r <- Exception.catch 
+	   (unblock (thing a))
+	   (\e -> do { after a; throw e })
+    return r
+ )

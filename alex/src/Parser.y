@@ -7,12 +7,12 @@
 --
 -- -----------------------------------------------------------------------------
 
-module Parser (parse, P(..)) where
+module Parser ( parse, P ) where
 import AbsSyn
 import Scan
 import CharSet
+import ParseMonad hiding ( StartCode )
 
-import Data.FiniteMap
 import Data.Char
 --import Debug.Trace
 }
@@ -22,6 +22,7 @@ import Data.Char
 %name parse
 
 %monad { P } { (>>=) } { return }
+%lexer { lexer } { T _ EOFT }
 
 %token
 	'.'		{ T _ (SpecialT '.') }
@@ -54,14 +55,22 @@ import Data.Char
 	RMAC		{ T _ (RMacT $$) }
 	SMAC_DEF	{ T _ (SMacDefT $$) }
 	RMAC_DEF	{ T _ (RMacDefT $$) }
+	WRAPPER		{ T _ WrapperT }
 %%
 
-alex	:: { (Maybe Code, Scanner, Maybe Code) }
-	: maybe_code macdefs scanner maybe_code { ($1,$3,$4) }
+alex	:: { (Maybe Code, [Directive], Scanner, Maybe Code) }
+	: maybe_code directives macdefs scanner maybe_code { ($1,$2,$4,$5) }
 
 maybe_code :: { Maybe Code }
 	: CODE				{ Just $1 }
 	| {- empty -}			{ Nothing }
+
+directives :: { [Directive] }
+	: directive directives		{ $1 : $2 }
+	| {- empty -}			{ [] }
+
+directive  :: { Directive }
+	: WRAPPER STRING		{ WrapperDirective $2 }
 
 macdefs :: { () }
 	: macdef macdefs		{ () }
@@ -169,51 +178,8 @@ smac	:: { (AlexPosn,String) }
 	| SMAC				{ case $1 of T p (SMacT s) -> (p, s) }
 
 {
--- ---------------------------------------------------------------------------
--- The parsing monad
-
-type Env = (FiniteMap String CharSet, FiniteMap String RExp)
-
-type ParseError = (Maybe AlexPosn,String)
-
-newtype P a = P { unP :: Env -> Either ParseError (Env,a) }
-
-instance Monad P where
- (P m) >>= k = P $ \env -> case m env of
-			Left err -> Left err
-			Right (env',ok) -> unP (k ok) env'
- return a = P $ \env -> Right (env,a)
-
--- Macros are expanded during parsing, to simplify the abstract
--- syntax.  The parsing monad passes around two environments mapping
--- macro names to sets and regexps respectively.
-
-lookupSMac :: (AlexPosn,String) -> P CharSet
-lookupSMac (posn,smac)
- = P $ \env@(senv,_) -> 
-       case lookupFM senv smac of
-	Just ok -> Right (env,ok)
-	Nothing -> Left (Just posn, "unknown set macro: $" ++ smac)
-
-lookupRMac :: String -> P RExp
-lookupRMac rmac 
- = P $ \env@(_,renv) -> 
-       case lookupFM renv rmac of
-	Just ok -> Right (env,ok)
-	Nothing -> Left (Nothing, "unknown regex macro: %" ++ rmac)
-
-newSMac :: String -> CharSet -> P ()
-newSMac smac set 
-  = P $ \(senv,renv) -> Right ((addToFM senv smac set, renv), ())
-
-newRMac :: String -> RExp -> P ()
-newRMac rmac rexp 
-  = P $ \(senv,renv) -> Right ((senv, addToFM renv rmac rexp), ())
-
-happyError :: [Token] -> P a
-happyError (T p tkn : _) 
- = P $ \env -> Left (Just p, "parse error: " ++ show tkn)
-happyError [] =  P $ \env -> Left (Nothing, "parse error")
+happyError :: P a
+happyError = failP "parse error"
 
 -- -----------------------------------------------------------------------------
 -- Utils

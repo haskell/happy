@@ -10,17 +10,18 @@
 -- ----------------------------------------------------------------------------}
 
 module AbsSyn (
-  Code,
+  Code, Directive(..),
   Scanner(..),
   RECtx(..),
   RExp(..),
   DFA(..), State(..), SNum, StartCode, Accept(..),
-  encode_start_codes,
+  encodeStartCodes, extractActions,
   Target(..)
   ) where
 
 import CharSet
 import Sort
+import Util
 
 import Data.FiniteMap
 import Data.Maybe
@@ -32,6 +33,9 @@ infixl 5 :%%
 -- Abstract Syntax for Alex scripts
 
 type Code = String
+
+data Directive
+   = WrapperDirective String		-- use this wrapper
 
 -- TODO: update this comment
 --
@@ -191,8 +195,8 @@ bar_ar sc sc' inp = sc inp ++ sc' inp
 
 -- Map the available start codes onto [1..]
 
-encode_start_codes:: String -> Scanner -> (Scanner,[StartCode],ShowS)
-encode_start_codes ind scan = (scan', 0 : map snd name_code_pairs, sc_hdr)
+encodeStartCodes:: Scanner -> (Scanner,[StartCode],ShowS)
+encodeStartCodes scan = (scan', 0 : map snd name_code_pairs, sc_hdr)
 	where
 	scan' = scan{ scannerTokens = map mk_re_ctx (scannerTokens scan) }
 
@@ -205,12 +209,12 @@ encode_start_codes ind scan = (scan', 0 : map snd name_code_pairs, sc_hdr)
 	sc_hdr tl =
 		case name_code_pairs of
 		  [] -> tl
-		  (nm,_):rst -> "\n" ++ ind ++ nm ++ foldr f t rst
+		  (nm,_):rst -> "\n" ++ nm ++ foldr f t rst
 			where
 			f (nm, _) t = "," ++ nm ++ t
 			t = " :: Int\n" ++ foldr fmt_sc tl name_code_pairs
 		where
-		fmt_sc (nm,sc) t = ind ++ nm ++ " = " ++ show sc ++ "\n" ++ t
+		fmt_sc (nm,sc) t = nm ++ " = " ++ show sc ++ "\n" ++ t
 
 	code_map = listToFM name_code_pairs
 
@@ -218,6 +222,25 @@ encode_start_codes ind scan = (scan', 0 : map snd name_code_pairs, sc_hdr)
 
 	nms = [nm | RECtx{reCtxStartCodes = scs} <- scannerTokens scan,
 		    (nm,_) <- scs, nm /= "0"]
+
+
+-- Grab the code fragments for the token actions, and replace them
+-- with function names of the form alex_action_$n$.  We do this
+-- because the actual action fragments might be duplicated in the
+-- generated file.
+
+extractActions :: Scanner -> (Scanner,ShowS)
+extractActions scanner = (scanner{scannerTokens = new_tokens}, decls)
+ where
+  (new_tokens, codes) = unzip
+	  [ (r{reCtxCode=act_name}, reCtxCode r)
+	  | (r,act_name) <- zip (scannerTokens scanner) act_names
+	  ]
+
+  act_names = map (\n -> "alex_action_" ++ show n) [0..]
+
+  decls = foldr (.) id (zipWith mkDecl act_names codes)
+    where mkDecl fun code = str fun . str " = " . str code . nl
 
 -- -----------------------------------------------------------------------------
 -- Code generation targets

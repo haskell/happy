@@ -26,11 +26,16 @@ boot ::
 		(cd $(FPTOOLS_TOP)/ghc/driver && $(MAKE) boot); \
 	fi 
 
-#Scan.hs : Scan.x
-#	../src-OLD8/alex-inplace -m -g Scan.x
+ALEX_BOOT = /home/simonmar/builds/i386-unknown-linux/happy-SAVE/alex/src/alex-inplace
+
+Scan.hs : Scan.x
+	 $(ALEX_BOOT) Scan.x
+
+#tmp
+SRC_HC_OPTS += -O
 
 cmp :: Scan.hs
-	./alex-inplace -m Scan.x -o Scan.hs-CMP
+	./alex-inplace Scan.x -o Scan.hs-CMP
 	cmp Scan.hs Scan.hs-CMP
 
 ifeq "$(INSTALLING)" "1"
