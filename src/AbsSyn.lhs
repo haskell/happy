@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: AbsSyn.lhs,v 1.10 2004/09/02 13:08:14 simonmar Exp $
+$Id: AbsSyn.lhs,v 1.11 2004/12/13 12:19:39 simonmar Exp $
 
 Abstract syntax for grammar files.
 
@@ -10,7 +10,7 @@ Here is the abstract syntax of the language we parse.
 
 > module AbsSyn (
 > 	AbsSyn(..), Directive(..),
-> 	getTokenType, getTokenSpec, getParserNames, getLexer, getMonad,
+> 	getTokenType, getTokenSpec, getParserNames, getLexer, getImportedIdentity, getMonad,
 >       getPrios, getPrioNames, getExpect
 >  ) where
 
@@ -38,7 +38,8 @@ generate some error messages.
 >       | TokenSpec     [(a,String)]         	-- %token
 >       | TokenName     String (Maybe String)  	-- %name
 >       | TokenLexer    String String        	-- %lexer
->	| TokenMonad    String String String 	-- %monad
+>       | TokenImportedIdentity					-- %importedidentity
+>	| TokenMonad    String String String String -- %monad
 >	| TokenNonassoc [String]	  	-- %nonassoc
 >	| TokenRight    [String]		-- %right
 >	| TokenLeft     [String]		-- %left
@@ -64,10 +65,16 @@ generate some error messages.
 >		[]  -> Nothing
 >		_   -> error "multiple lexer directives"
 
+> getImportedIdentity ds 
+> 	= case [ (()) | TokenImportedIdentity <- ds ] of
+> 		[_] -> True
+>		[]  -> False
+>		_   -> error "multiple importedidentity directives"
+
 > getMonad ds 
-> 	= case [ (a,b,c) | (TokenMonad a b c) <- ds ] of
-> 		[t] -> Just t
->		[]  -> Nothing
+> 	= case [ (True,a,b,c,d) | (TokenMonad a b c d) <- ds ] of
+> 		[t] -> t
+>		[]  -> (False,"()","HappyIdentity",">>=","return")
 >		_   -> error "multiple monad directives"
 
 > getTokenSpec ds = concat [ t | (TokenSpec t) <- ds ]

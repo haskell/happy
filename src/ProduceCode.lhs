@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.64 2004/12/03 09:55:33 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.65 2004/12/13 12:19:41 simonmar Exp $
 
 The code generator.
 
@@ -94,7 +94,8 @@ Produce the complete output file.
 >		, eof_term = eof
 >		, first_term = fst_term
 >		, lexer = lexer
->		, monad = monad
+>		, imported_identity = imported_identity
+>		, monad = (use_monad,monad_context,monad_tycon,monad_then,monad_return)
 >		, token_specs = token_rep
 >		, token_type = token_type
 >		, starts = starts
@@ -111,6 +112,7 @@ Produce the complete output file.
 >	. produceActionTable target
 >	. produceReductions
 >	. produceTokenConverter . nl
+>	. produceIdentityStuff
 >	. produceMonadStuff
 >	. produceEntries
 >	. produceStrict strict
@@ -222,7 +224,7 @@ based parsers -- types aren't as important there).
 >     | target == TargetArrayBased = id
 
 >     | all isJust (elems nt_types) =
->       str "type HappyReduction = \n\t"
+>       str "type HappyReduction m = \n\t"
 >     . str "   "
 >     . intMaybeHash
 >     . str " \n\t-> " . token
@@ -240,14 +242,14 @@ based parsers -- types aren't as important there).
 >     . interleave' ",\n " 
 >             [ mkActionName i | (i,action) <- zip [ 0 :: Int .. ] 
 >                                             (assocs action) ]
->     . str " :: "
+>     . str " :: " . str monad_context . str " => "
 >     . intMaybeHash
->     . str " -> HappyReduction\n\n"
+>     . str " -> HappyReduction (" . str monad_tycon . str ")\n\n"
 >     . interleave' ",\n " 
 >             [ mkReduceFun i | 
 >                     (i,action) <- zip [ n_starts :: Int .. ]
 >                                       (drop n_starts prods) ]
->     . str " :: HappyReduction\n\n" 
+>     . str " :: " . str monad_context . str " => HappyReduction (" . str monad_tycon . str ")\n\n" 
 
 >     | otherwise = id
 
@@ -258,7 +260,7 @@ based parsers -- types aren't as important there).
 >     		case lexer of
 >	  		Nothing -> char '[' . token . str "] -> "
 >	  		Just _ -> id
->	      result = mkMonadTy (str "HappyAbsSyn")
+>	      result = (str "m HappyAbsSyn")
 
 %-----------------------------------------------------------------------------
 Next, the reduction functions.   Each one has the following form:
@@ -397,9 +399,9 @@ The token conversion function.
 >	. str "let cont i = " . doAction . str " sts stk tks in\n\t"
 >	. str "case tk of {\n\t"
 >	. interleave ";\n\t" (map doToken token_rep)
->	. str "_ -> happyError (tk:tks)\n\t"
+>	. str "_ -> happyError' (tk:tks)\n\t"
 >	. str "}\n\n"
->       . str "happyError_ tk tks = happyError (tk:tks)\n";
+>       . str "happyError_ tk tks = happyError' (tk:tks)\n";
 
 >	Just (lexer,eof) ->
 >	  str "happyNewToken action sts stk\n\t= "
@@ -412,9 +414,9 @@ The token conversion function.
 >	. str (eof ++ " -> ")
 >    	. eofAction . str ";\n\t"
 >	. interleave ";\n\t" (map doToken token_rep)
->	. str "_ -> happyError\n\t"
+>	. str "_ -> happyError'\n\t"
 >	. str "})\n\n"
->       . str "happyError_ tk = happyError\n";
+>       . str "happyError_ tk = happyError'\n";
 >	}
 
 >	where 
@@ -673,63 +675,80 @@ outlaw them inside { }
 
 >    makeAbsSynCon = mkAbsSynCon nt_types_index
 
->    mkMonadTy s = case monad of
->			Nothing -> s
->			Just (ty,_,_) -> str (ty++"(") . s . char ')'
+
+>    produceIdentityStuff | use_monad = id
+>     | imported_identity =
+>	     str "type HappyIdentity = Identity\n"
+>	   . str "happyIdentity = Identity\n"
+>	   . str "happyRunIdentity = runIdentity\n\n"
+>     | otherwise =
+>	     str "newtype HappyIdentity a = HappyIdentity a\n"
+>	   . str "happyIdentity = HappyIdentity\n"
+>	   . str "happyRunIdentity (HappyIdentity a) = a\n\n"
+>	   . str "instance Monad HappyIdentity where\n"
+>	   . str "    return = HappyIdentity\n"
+>	   . str "    (HappyIdentity p) >>= q = q p\n\n"
 
 MonadStuff:
 
   - with no %monad or %lexer:
 
-	happyThen    :: a -> (a -> b) -> b
-	happyReturn  :: a -> [Token] -> a
-	happyThen1   = happyThen
-	happyReturn1 = happyReturn
+	happyThen    :: () => HappyIdentity a -> (a -> HappyIdentity b) -> HappyIdentity b
+	happyReturn  :: () => a -> HappyIdentity a
+	happyThen1   m k tks = happyThen m (\a -> k a tks)
+	happyReturn1 = \a tks -> happyReturn a
 
   - with %monad:
 
-	happyThen    :: P a -> (a -> P b) -> P b
-	happyReturn  :: a -> P a
+	happyThen    :: CONTEXT => P a -> (a -> P b) -> P b
+	happyReturn  :: CONTEXT => a -> P a
 	happyThen1   m k tks = happyThen m (\a -> k a tks)
 	happyReturn1 = \a tks -> happyReturn a
 
   - with %monad & %lexer:
 
-	happyThen    :: P a -> (a -> P b) -> P b
-	happyReturn  :: a -> P a
+	happyThen    :: CONTEXT => P a -> (a -> P b) -> P b
+	happyReturn  :: CONTEXT => a -> P a
 	happyThen1   = happyThen
 	happyReturn1 = happyReturn
 
 
 >    produceMonadStuff =
->	(case monad of
->	  Nothing -> 
->            str "happyThen = \\m k -> k m\n"
->	   . str "happyReturn = \\a -> a\n"
->          . str "happyThen1 = happyThen\n"
->	   . str "happyReturn1 = "
->          . (case lexer of 
->		  Nothing -> str "\\a tks -> a\n"
->		  _       -> str "happyReturn\n")
->	  Just (ty,tn,rtn) ->
->	     let pty = str ty in
->	     str "happyThen :: " . pty
+>	     let pcont = str monad_context in
+>	     let pty = str monad_tycon in
+>	     str "happyThen :: " . pcont . str " => " . pty
 >	   . str " a -> (a -> "	 . pty
 >	   . str " b) -> " . pty . str " b\n"
->	   . str "happyThen = " . brack tn . nl
->	   . str "happyReturn :: a -> " . pty . str " a\n"
->	   . str "happyReturn = " . brack rtn . nl
+>	   . str "happyThen = " . brack monad_then . nl
+>	   . str "happyReturn :: " . pcont . str " => a -> " . pty . str " a\n"
+>	   . str "happyReturn = " . brack monad_return . nl
 >	   . case lexer of
 >		Nothing ->
->		   str "happyThen1 m k tks = (" . str tn 
+>		   str "happyThen1 m k tks = (" . str monad_then 
 >		 . str ") m (\\a -> k a tks)\n"
->		 . str "happyReturn1 = \\a tks -> " . brack rtn
+>		 . str "happyReturn1 :: " . pcont . str " => a -> b -> " . pty . str " a\n"
+>		 . str "happyReturn1 = \\a tks -> " . brack monad_return
 >		 . str " a\n"
+>		 . str "happyError' :: " . str monad_context . str " => ["
+>		 . str token_type
+>		 . str "] -> "
+>		 . str monad_tycon
+>		 . str " a\n"
+>		 . str "happyError' = "
+>		 . str (if use_monad then "" else "HappyIdentity . ")
+>		 . str "happyError\n"
+>		 . str "\n"
 >		_ ->
 >		   str "happyThen1 = happyThen\n"
+>	     	 . str "happyReturn1 :: " . pcont . str " => a -> " . pty . str " a\n"
 >	     	 . str "happyReturn1 = happyReturn\n"
->	)
->	. str "\n"
+>	     	 . str "happyError' :: " . str monad_context . str " => "
+>	     	 . str monad_tycon
+>	     	 . str " a\n"
+>	     	 . str "happyError' = "
+>	     	 . str (if use_monad then "" else "HappyIdentity ")
+>	     	 . str "happyError\n"
+>	     	 . str "\n"
 
 >    reduceArrElem n
 >      = str "\t(" . shows n . str " , "
@@ -744,7 +763,10 @@ MonadStuff:
 >    produceEntry ((name, start_nonterm, accept_nonterm), no)
 >	= str name 
 >	. maybe_tks
->	. str " = happyThen (happyParse "
+>	. str " = "
+>	. str unmonad
+>	. str "happySomeParser where\n"
+>	. str "  happySomeParser = happyThen (happyParse "
 >	. case target of
 >	     TargetHaskell -> str "action_" . shows no
 >	     TargetArrayBased
@@ -762,6 +784,8 @@ MonadStuff:
 >     where
 >	maybe_tks | isNothing lexer = str " tks"
 >		  | otherwise = id
+>	unmonad | use_monad = ""
+>		  | otherwise = "happyRunIdentity "
 
 -----------------------------------------------------------------------------
 -- Strict or non-strict parser

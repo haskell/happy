@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Grammar.lhs,v 1.22 2004/09/02 13:08:14 simonmar Exp $
+$Id: Grammar.lhs,v 1.23 2004/12/13 12:19:39 simonmar Exp $
 
 The Grammar data type.
 
@@ -52,7 +52,8 @@ Here is our mid-section datatype
 >               eof_term	  :: Name,
 >               priorities        :: [(Name,Priority)],
 >		token_type	  :: String,
->		monad		  :: Maybe (String,String,String),
+>		imported_identity		  :: Bool,
+>		monad		  :: (Bool,String,String,String,String),
 >		lexer		  :: Maybe (String,String),
 >               expect            :: Maybe Int
 >	}
@@ -337,6 +338,7 @@ Get the token specs in terms of Names.
 >		first_term	  = first_t,
 >               eof_term	  = last terminal_names,
 >               priorities        = prios,
+>		imported_identity		  = getImportedIdentity dirs,
 >		monad		  = getMonad dirs,
 >		lexer		  = getLexer dirs,
 >		token_type	  = getTokenType dirs,

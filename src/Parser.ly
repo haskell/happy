@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Parser.ly,v 1.12 2004/09/02 13:08:16 simonmar Exp $
+$Id: Parser.ly,v 1.13 2004/12/13 12:19:41 simonmar Exp $
 
 The parser.
 
@@ -21,6 +21,7 @@ The parser.
 >	spec_token	{ TokenKW      TokSpecId_Token }
 >	spec_name	{ TokenKW      TokSpecId_Name }
 >	spec_lexer	{ TokenKW      TokSpecId_Lexer }
+>	spec_imported_identity	{ TokenKW      TokSpecId_ImportedIdentity }
 >	spec_monad	{ TokenKW      TokSpecId_Monad }
 >       spec_nonassoc	{ TokenKW      TokSpecId_Nonassoc }
 >       spec_left	{ TokenKW      TokSpecId_Left }
@@ -74,9 +75,12 @@ The parser.
 >	: spec_tokentype code		{ TokenType $2 }
 >	| spec_token tokenSpecs		{ TokenSpec $2 }
 >	| spec_name id optStart		{ TokenName $2 $3 }
+>	| spec_imported_identity	{ TokenImportedIdentity }
 >	| spec_lexer code code		{ TokenLexer $2 $3 }
->	| spec_monad code		{ TokenMonad $2 ">>=" "return" }
->	| spec_monad code code code	{ TokenMonad $2 $3 $4 }
+>	| spec_monad code		{ TokenMonad "()" $2 ">>=" "return" }
+>	| spec_monad code code		{ TokenMonad $2 $3 ">>=" "return" }
+>	| spec_monad code code code	{ TokenMonad "()" $2 $3 $4 }
+>	| spec_monad code code code code	{ TokenMonad $2 $3 $4 $5 }
 >	| spec_nonassoc ids		{ TokenNonassoc $2 }
 >	| spec_right ids		{ TokenRight $2 }
 >	| spec_left ids			{ TokenLeft $2 }

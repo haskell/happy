@@ -6,7 +6,7 @@ This module is designed as an extension to the Haskell parser generator Happy.
 (c) University of Durham, Paul Callaghan 2004
 	-- extension to semantic rules, and various optimisations
 
-$Id: ProduceGLRCode.lhs,v 1.13 2004/12/09 09:05:38 paulcc Exp $
+$Id: ProduceGLRCode.lhs,v 1.14 2004/12/13 12:19:42 simonmar Exp $
 
 %-----------------------------------------------------------------------------
 
@@ -193,7 +193,7 @@ the driver and data strs (large template).
 >     . nl
 >     . mkSemObjects  options (monad_sub g) sem_info      .nl
 >     . nl
->     . mkDecodeUtils options (monad_sub g) sem_info      .nl 
+>     . mkDecodeUtils options (monad_sub g) sem_info      .nl
 >     . nl
 >     . user_def_token_code (token_type g)                .nl
 >     . nl
@@ -513,12 +513,6 @@ Creates the appropriate semantic values.
  - for label-decode, these are the code, but abstracted over the child indices
  - for tree-decode, these are the code abstracted over the children's values
 
-> type MonadInfo = Maybe (String,String,String)
-> monad_sub :: Grammar -> MonadInfo
-> monad_sub g = monad g
-> -- monad_sub g = fmap (\(_,_,ty,bd,ret) -> (ty,bd,ret)) $ monad g
->    -- TMP: ignore the monad context info
-
 > mkSemObjects :: Options -> MonadInfo -> SemInfo -> ShowS 
 > mkSemObjects (LabelDecode,filter_opt,_) ignore_monad_info sem_info
 >  = interleave "\n" 
@@ -658,6 +652,20 @@ only unpacked when needed. Using classes here to manage the unpacking.
 >	 = ("instance LabelDecode (" ++ ty ++ ") where ")
 >	 : [ "\tunpack (" ++ c_name ++ " s) = s"
 >	   | (c_name, mask) <- cns ]
+
+
+---
+This selects the info used for monadic parser generation
+
+> type MonadInfo = Maybe (String,String,String)
+> monad_sub :: Grammar -> MonadInfo
+> monad_sub g 
+>  = case monad g of
+>      (True, _, ty,bd,ret) -> Just (ty,bd,ret)
+>      _                    -> Nothing 
+>    -- TMP: only use monad info if it was user-declared, and ignore ctxt
+>    -- TMP: otherwise default to non-monadic code
+>    -- TMP: (NB not sure of consequences of monads-everywhere yet)
 
 
 --- 
