@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.36 2001/09/24 15:45:55 simonmar Exp $
+$Id: Main.lhs,v 1.37 2001/12/05 14:49:59 simonmar Exp $
 
 The main driver.
 
@@ -166,6 +166,7 @@ of code we should generate, and where it should go:
 >	getOutputFileName fl_name cli			>>= \outfilename ->
 >	getTemplate template_dir cli			>>= \template' ->
 >	getCoerce target cli				>>= \opt_coerce ->
+>	getStrict cli					>>= \opt_strict ->
 >	getGhc cli					>>= \opt_ghc ->
 >	let 
 >	    template = template_file template' target cli opt_coerce in
@@ -197,6 +198,7 @@ and generate the code.
 >			target
 >			opt_coerce
 >			opt_ghc
+>			opt_strict
 >	    magic_filter = 
 >	      case magic_name of
 >		Nothing -> id
@@ -306,6 +308,7 @@ The command line arguments.
 >		| OptArrayTarget
 >		| OptUseCoercions
 >		| OptDebugParser
+>		| OptStrict
 >		
 >		| OptOutputFile String
 >  deriving Eq
@@ -326,6 +329,8 @@ The command line arguments.
 >	"Use NAME as the symbol prefix instead of \"happy\"",
 >    Option ['o'] ["outfile"] (ReqArg OptOutputFile "FILE")
 >	"Write the output to FILE (default: file.hs)",
+>    Option ['s'] ["strict"] (NoArg OptStrict)
+>	"Semantic values are evaluated eagerly during parsing",
 >    Option ['t'] ["template"] (ReqArg OptTemplate "DIR")
 >	"Look in DIR for template files",
 >    Option ['v'] ["version"] (NoArg DumpVersion)
@@ -433,6 +438,8 @@ Extract various command-line options.
 >	     else return False
 
 > getGhc cli = return (OptGhcTarget `elem` cli)
+
+> getStrict cli = return (OptStrict `elem` cli)
 
 ------------------------------------------------------------------------------
 

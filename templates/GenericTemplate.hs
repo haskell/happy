@@ -1,4 +1,4 @@
--- $Id: GenericTemplate.hs,v 1.18 2001/09/25 14:39:03 simonmar Exp $
+-- $Id: GenericTemplate.hs,v 1.19 2001/12/05 14:49:59 simonmar Exp $
 
 #ifdef HAPPY_GHC
 #define ILIT(n) n#
@@ -173,21 +173,25 @@ happySpecReduce_0 nt fn j tk st@(HAPPYSTATE(action)) sts stk
 happySpecReduce_1 i fn ERROR_TOK tk st sts stk
      = happyFail ERROR_TOK tk st sts stk
 happySpecReduce_1 nt fn j tk _ sts@(CONS(st@HAPPYSTATE(action),_)) (v1`HappyStk`stk')
-     = GOTO(action) nt j tk st sts (fn v1 `HappyStk` stk')
+     = let r = fn v1 in
+       happySeq r (GOTO(action) nt j tk st sts (r `HappyStk` stk'))
 
 happySpecReduce_2 i fn ERROR_TOK tk st sts stk
      = happyFail ERROR_TOK tk st sts stk
 happySpecReduce_2 nt fn j tk _ CONS(_,sts@(CONS(st@HAPPYSTATE(action),_))) (v1`HappyStk`v2`HappyStk`stk')
-     = GOTO(action) nt j tk st sts (fn v1 v2 `HappyStk` stk')
+     = let r = fn v1 v2 in
+       happySeq r (GOTO(action) nt j tk st sts (r `HappyStk` stk'))
 
 happySpecReduce_3 i fn ERROR_TOK tk st sts stk
      = happyFail ERROR_TOK tk st sts stk
 happySpecReduce_3 nt fn j tk _ CONS(_,CONS(_,sts@(CONS(st@HAPPYSTATE(action),_)))) (v1`HappyStk`v2`HappyStk`v3`HappyStk`stk')
-     = GOTO(action) nt j tk st sts (fn v1 v2 v3 `HappyStk` stk')
+     = let r = fn v1 v2 v3 in
+       happySeq r (GOTO(action) nt j tk st sts (r `HappyStk` stk'))
 
 happyReduce k i fn ERROR_TOK tk st sts stk
      = happyFail ERROR_TOK tk st sts stk
-happyReduce k nt fn j tk st sts stk = GOTO(action) nt j tk st1 sts1 (fn stk)
+happyReduce k nt fn j tk st sts stk
+     = GOTO(action) nt j tk st1 sts1 (fn stk)
        where sts1@(CONS(st1@HAPPYSTATE(action),_)) = happyDrop k CONS(st,sts)
 
 happyMonadReduce k nt fn ERROR_TOK tk st sts stk
@@ -255,6 +259,16 @@ happyTcHack :: Int# -> a -> a
 happyTcHack x y = y
 {-# INLINE happyTcHack #-}
 #endif
+
+-----------------------------------------------------------------------------
+-- Seq-ing.  If the --strict flag is given, then Happy emits 
+--	happySeq = happyDoSeq
+-- otherwise it emits
+-- 	happySeq = happyDontSeq
+
+happyDoSeq, happyDontSeq :: a -> b -> b
+happyDoSeq   a b = a `seq` b
+happyDontSeq a b = b
 
 -----------------------------------------------------------------------------
 -- Don't inline any functions from the template.  GHC has a nasty habit

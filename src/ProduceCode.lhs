@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.53 2001/10/16 10:45:46 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.54 2001/12/05 14:49:59 simonmar Exp $
 
 The code generator.
 
@@ -65,6 +65,7 @@ Produce the complete output file.
 >		-> Target			-- type of code required
 >		-> Bool				-- use coercions
 >		-> Bool				-- use ghc extensions
+>		-> Bool				-- strict parser
 >		-> String
 
 > produceParser (Grammar 
@@ -85,7 +86,7 @@ Produce the complete output file.
 >		, starts = starts
 >		})
 >	 	action goto top_options module_header module_trailer 
->		target coerce ghc
+>		target coerce ghc strict
 >     =	( str top_options
 >	. str comment
 >	. maybestr module_header . nl
@@ -96,6 +97,7 @@ Produce the complete output file.
 >	. produceTokenConverter . nl
 >	. produceMonadStuff
 >	. produceEntries
+>	. produceStrict strict
 >	. maybestr module_trailer . nl
 >	) ""
 >   where
@@ -145,7 +147,7 @@ If we're using coercions, we need to generate the injections etc.
 >		. mkHappyOut n . str " x = unsafeCoerce# x\n"
 >		. str "{-# INLINE " . mkHappyOut n . str " #-}"
 >	  in
->	    str "data " . happy_item . str " = HappyAbsSyn\n"
+>	    str "type " . happy_item . str " = () -> ()\n"
 >	  . interleave "\n" 
 >	    [ inject n ty . nl . extract n ty | (n,ty) <- assocs nt_types ]
 >	  -- token injector
@@ -722,6 +724,13 @@ MonadStuff:
 >     where
 >	maybe_tks | isNothing lexer = str " tks"
 >		  | otherwise = id
+
+-----------------------------------------------------------------------------
+-- Strict or non-strict parser
+
+> produceStrict strict
+>	| strict    = str "happySeq = happyDoSeq\n\n"
+>	| otherwise = str "happySeq = happyDontSeq\n\n"
 
 -----------------------------------------------------------------------------
 Replace all the $n variables with happy_vars, and return a list of all the
