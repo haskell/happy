@@ -6,7 +6,7 @@ This module is designed as an extension to the Haskell parser generator Happy.
 (c) University of Durham, Paul Callaghan 2004
 	-- extension to semantic rules, and various optimisations
 
-$Id: ProduceGLRCode.lhs,v 1.10 2004/12/03 17:11:54 paulcc Exp $
+$Id: ProduceGLRCode.lhs,v 1.11 2004/12/04 12:46:33 ross Exp $
 
 %-----------------------------------------------------------------------------
 
@@ -17,15 +17,28 @@ $Id: ProduceGLRCode.lhs,v 1.10 2004/12/03 17:11:54 paulcc Exp $
 >                       , Options
 >                       ) where
 
-> import IOExts
 > import Version ( version )
 > import GenUtils ( fst3, thd3, mapDollarDollar )
 > import GenUtils ( str, char, nl, brack, brack', interleave, maybestr )
 > import Grammar
+
+#if __GLASGOW_HASKELL__ >= 503
+
+> import System.IO
+> import Data.Array
+> import Data.Maybe ( fromJust )
+> import Data.Char ( isUpper, isSpace )
+> import Data.List ( nub, (\\), sort )
+
+#else
+
+> import IOExts
 > import Array
 > import Maybe ( fromJust )
 > import Char ( isUpper, isSpace )
 > import List ( nub, (\\), sort )
+
+#endif
 
 %-----------------------------------------------------------------------------
 File and Function Names
