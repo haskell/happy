@@ -22,8 +22,9 @@ import Data.FiniteMap
 import Data.Array (Array)
 import Data.Array.Unboxed
 import Data.Array.ST
+import Data.Array.Base ( unsafeRead )
 
-import Debug.Trace
+--import Debug.Trace
 
 -- -----------------------------------------------------------------------------
 -- Printing the output
@@ -260,7 +261,7 @@ findFreeOffset off check off_arr state = do
   if off == 0 then try_next else do
 
     -- don't use an offset we've used before
-  b <- readArray off_arr off
+  b <- unsafeRead off_arr off
   if b /= 0 then try_next else do
 
     -- check whether the actions for this state fit in the table
@@ -269,10 +270,13 @@ findFreeOffset off check off_arr state = do
  where
 	try_next = findFreeOffset (off+1) check off_arr state
 
+-- This is an inner loop, so we use some strictness hacks, and avoid
+-- array bounds checks (unsafeRead instead of readArray) to speed
+-- things up a bit.
 fits :: Int -> [(Int,Int)] -> STUArray s Int Int -> ST s Bool
-fits off [] check = return True
+fits off [] check = off `seq` check `seq` return True -- strictness hacks
 fits off ((t,_):rest) check = do
-  i <- readArray check (off+t)
+  i <- unsafeRead check (off+t)
   if i /= -1 then return False
 	     else fits off rest check
 
