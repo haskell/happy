@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.8 1997/09/03 23:27:38 sof Exp $
+# $Id: Makefile,v 1.9 1997/09/08 09:26:49 simonm Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -38,6 +38,8 @@ GetOpt.lhs \
 Main.lhs 
 
 SRC_HC_OPTS += -cpp -fhaskell-1.3 -fglasgow-exts $(HappyHcOpts)
+
+Parser_HC_OPTS = -Onot
 
 boot :: Version.hs
 
