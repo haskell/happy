@@ -1,4 +1,22 @@
 -----------------------------------------------------------------------------
+Changes from version 1.5 to 1.6
+
+* Now written in, and generates, Haskell 98.
+
+* Several bug fixes.
+
+* A new option, -c, generates parsers that use GHC's unsafeCoerce# 
+  primitive to speed up parsing and cut down the binary size.
+  The -c option can only be used with the -g (GHC extensions) option.
+
+* Parsers generated with the -g option will compile to smaller binaries
+  now - some sources of parser-bloat were identified and squished.
+
+* Happy has a new Open Source license, based on the BSD license.
+
+* A sample Haskell parser using Happy is included.
+
+-----------------------------------------------------------------------------
 Changes from version 1.2 to version 1.5
 
 * Many bug fixes to the error recovery support, found by experimenting
