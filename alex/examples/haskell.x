@@ -1,6 +1,8 @@
 --
--- Stripped-down lexical analyser for Haskell, 
--- useful for syntax highlighting.
+-- Lexical syntax for Haskell 98.
+--
+-- (c) Simon Marlow 2003, with the caveat that much of this is
+-- translated directly from the syntax in the Haskell 98 report.
 --
 
 {
