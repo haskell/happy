@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Lexer.lhs,v 1.19 2001/04/27 10:10:23 simonmar Exp $
+$Id: Lexer.lhs,v 1.20 2004/09/02 13:08:15 simonmar Exp $
 
 The lexer.
 
@@ -17,15 +17,17 @@ The lexer.
 
 > import ParseMonad        
 
-> import Char ( isSpace, isAlphaNum )
+> import Char ( isSpace, isAlphaNum, isDigit, digitToInt )
 
 > data Token 
 >       = TokenInfo String TokenId
+>       | TokenNum  Int    TokenId
 >       | TokenKW          TokenId
 >	| TokenEOF
 
 > tokenToId :: Token -> TokenId
 > tokenToId (TokenInfo _ i) = i
+> tokenToId (TokenNum _ i) = i
 > tokenToId (TokenKW i) = i
 
 > instance Eq Token where
@@ -45,12 +47,14 @@ The lexer.
 >       | TokSpecId_Left        -- %left
 >       | TokSpecId_Right       -- %right
 >       | TokSpecId_Prec        -- %prec
+>       | TokSpecId_Expect      -- %expect
 >       | TokCodeQuote          -- stuff inside { .. }
 >       | TokColon              -- :
 >       | TokSemiColon          -- ;
 >       | TokDoubleColon        -- ::
 >       | TokDoublePercent      -- %%
 >       | TokBar                -- |
+>       | TokNum                -- Integer
 >       deriving (Eq,Ord
 
 #ifdef DEBUG
@@ -85,6 +89,7 @@ ToDo: proper text instance here, for use in parser error messages.
 >	  | isSpace c -> lexer cont
 >	  |  c >= 'a' && c <= 'z' 
 >	     || c >= 'A' && c <= 'Z' -> lexId cont c
+>         | isDigit c -> lexNum cont c
 >	c       -> lexError ("lexical error before `" ++ c : "'")
 
 Percents come in two forms, in pairs, or 
@@ -110,6 +115,8 @@ followed by a special identifier.
 >               cont (TokenKW TokSpecId_Right) rest
 >       'p':'r':'e':'c':rest ->
 >               cont (TokenKW TokSpecId_Prec) rest
+>       'e':'x':'p':'e':'c':'t':rest ->
+>               cont (TokenKW TokSpecId_Expect) rest
 >	_ -> lexError ("unrecognised directive: %" ++ 
 >				takeWhile (not.isSpace) s) s
 
@@ -126,6 +133,11 @@ followed by a special identifier.
 >	(\ id -> cont (TokenInfo ("\"" ++ id ++ "\"") TokId))
 
 > lexCode cont rest = lexReadCode rest 0 "" cont
+
+> lexNum cont c rest = 
+>        readNum rest (\ num rest' -> 
+>                         cont (TokenNum (stringToInt (c:num)) TokNum) rest')
+>  where stringToInt = foldl (\n c -> digitToInt c + 10*n) 0
 
 > cleanupCode s = 
 >    dropWhile isSpace (reverse (dropWhile isSpace (reverse s)))
@@ -161,6 +173,9 @@ Utilities that read the rest of a token.
 > readId :: String -> (String -> String -> a) -> a
 > readId (c:r) fn | isIdPart c = readId r (fn . (:) c)
 > readId r     fn = fn [] r
+
+> readNum (c:r) fn | isDigit c = readNum r (fn . (:) c)
+> readNum r     fn = fn [] r
 
 > isIdPart :: Char -> Bool
 > isIdPart c =

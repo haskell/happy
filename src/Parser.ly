@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Parser.ly,v 1.11 2000/12/03 16:53:53 simonmar Exp $
+$Id: Parser.ly,v 1.12 2004/09/02 13:08:16 simonmar Exp $
 
 The parser.
 
@@ -26,7 +26,9 @@ The parser.
 >       spec_left	{ TokenKW      TokSpecId_Left }
 >       spec_right	{ TokenKW      TokSpecId_Right }
 >       spec_prec	{ TokenKW      TokSpecId_Prec }
+>       spec_expect     { TokenKW      TokSpecId_Expect }
 >	code		{ TokenInfo $$ TokCodeQuote }
+>       int             { TokenNum $$  TokNum }
 >	":"		{ TokenKW      TokColon }
 >	";"		{ TokenKW      TokSemiColon }
 >	"::"		{ TokenKW      TokDoubleColon }
@@ -78,6 +80,7 @@ The parser.
 >	| spec_nonassoc ids		{ TokenNonassoc $2 }
 >	| spec_right ids		{ TokenRight $2 }
 >	| spec_left ids			{ TokenLeft $2 }
+>       | spec_expect int               { TokenExpect $2 }
 
 > optStart :: { Maybe String }
 > 	: id				{ Just $1 }

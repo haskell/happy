@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: AbsSyn.lhs,v 1.9 2001/04/27 10:10:23 simonmar Exp $
+$Id: AbsSyn.lhs,v 1.10 2004/09/02 13:08:14 simonmar Exp $
 
 Abstract syntax for grammar files.
 
@@ -11,7 +11,7 @@ Here is the abstract syntax of the language we parse.
 > module AbsSyn (
 > 	AbsSyn(..), Directive(..),
 > 	getTokenType, getTokenSpec, getParserNames, getLexer, getMonad,
->       getPrios, getPrioNames,
+>       getPrios, getPrioNames, getExpect
 >  ) where
 
 > data AbsSyn
@@ -42,6 +42,7 @@ generate some error messages.
 >	| TokenNonassoc [String]	  	-- %nonassoc
 >	| TokenRight    [String]		-- %right
 >	| TokenLeft     [String]		-- %left
+>       | TokenExpect   Int                     -- %expect
 
 #ifdef DEBUG
 
@@ -82,3 +83,9 @@ generate some error messages.
 > getPrioNames (TokenNonassoc s) = s
 > getPrioNames (TokenLeft s)     = s
 > getPrioNames (TokenRight s)    = s
+
+> getExpect ds
+>         = case [ n | (TokenExpect n) <- ds ] of
+>                 [t] -> Just t
+>                 []  -> Nothing
+>                 _   -> error "multiple expect directives"

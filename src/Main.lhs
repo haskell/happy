@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.52 2004/08/12 11:53:55 simonmar Exp $
+$Id: Main.lhs,v 1.53 2004/09/02 13:08:15 simonmar Exp $
 
 The main driver.
 
@@ -143,13 +143,27 @@ Report any unused rules and terminals
 
 Report any conflicts in the grammar.
 
->	(if sr /= 0
->		then hPutStrLn stderr ("shift/reduce conflicts:  " ++ show sr)
->		else return ())			>>
+>       (case expect gram of
+>          Just n | n == sr && rr == 0 -> return ()
+>          Just n | rr > 0 -> 
+>                  die ("The grammar has reduce/reduce conflicts.\n" ++
+>                       "This is not allowed when an expect directive is given")
+>          Just n -> 
+>                 die ("The grammar has " ++ show sr ++ 
+>                      " shift/reduce conflicts.\n" ++
+>                      "This is different from the number given in the " ++
+>                      "expect directive")
+>          _ -> do
 
->	(if rr /= 0
+>	    (if sr /= 0
+>		then hPutStrLn stderr ("shift/reduce conflicts:  " ++ show sr)
+>		else return ())
+
+>	    (if rr /= 0
 >		then hPutStrLn stderr ("reduce/reduce conflicts: " ++ show rr)
->		else return ())			>>
+>		else return ())
+
+>       ) >>
 
 Print out the info file.
 

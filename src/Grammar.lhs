@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Grammar.lhs,v 1.21 2003/11/19 14:43:58 simonmar Exp $
+$Id: Grammar.lhs,v 1.22 2004/09/02 13:08:14 simonmar Exp $
 
 The Grammar data type.
 
@@ -53,7 +53,8 @@ Here is our mid-section datatype
 >               priorities        :: [(Name,Priority)],
 >		token_type	  :: String,
 >		monad		  :: Maybe (String,String,String),
->		lexer		  :: Maybe (String,String)
+>		lexer		  :: Maybe (String,String),
+>               expect            :: Maybe Int
 >	}
 
 #ifdef DEBUG
@@ -338,7 +339,8 @@ Get the token specs in terms of Names.
 >               priorities        = prios,
 >		monad		  = getMonad dirs,
 >		lexer		  = getLexer dirs,
->		token_type	  = getTokenType dirs
+>		token_type	  = getTokenType dirs,
+>               expect            = getExpect dirs
 >	})
 
 For combining actions with possible error messages.
