@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.34 2001/06/07 15:04:39 rrt Exp $
+$Id: Main.lhs,v 1.35 2001/08/29 15:32:57 simonmar Exp $
 
 The main driver.
 
@@ -370,9 +370,12 @@ How would we like our code to be generated?
 >	 debug_extn | OptDebugParser `elem` cli  = "-debug"
 >		    | otherwise			 = ""
 
+Note: we need -cpp at the moment because the template has some
+GHC version-dependent stuff in it.
+
 > optsToInject :: Target -> [CLIFlags] -> String
 > optsToInject _ cli 
->	| OptGhcTarget `elem` cli = "{-# OPTIONS -fglasgow-exts #-}\n"
+>	| OptGhcTarget `elem` cli = "{-# OPTIONS -fglasgow-exts -cpp #-}\n"
 >	| otherwise               = ""
 
 > importsToInject :: Target -> [CLIFlags] -> String
