@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.53 2004/08/31 12:44:08 simonmar Exp $
+# $Id: Makefile,v 1.54 2005/01/18 11:17:42 simonmar Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -79,7 +79,7 @@ INPLACE_SCRIPT_PROG    = happy-inplace
 ifeq "$(INSTALLING)" "1"
 TOP_PWD 	:= $(prefix)
 SCRIPT_PROG 	=  $(INSTALLED_SCRIPT_PROG)
-ifneq "$(TARGETPLATFORM)" "i386-unknown-mingw32"
+ifneq "$(Windows)" "YES"
 LINK	 	=  happy
 endif
 else
