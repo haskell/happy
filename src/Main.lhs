@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.40 2002/02/16 18:49:12 sof Exp $
+$Id: Main.lhs,v 1.41 2002/05/16 15:30:45 simonmar Exp $
 
 The main driver.
 
@@ -309,6 +309,7 @@ The command line arguments.
 >		| OptMagicName String
 >
 >		| OptGhcTarget
+>		| OptOldGhcTarget  -- imports GlaExts instead of GHC.Exts
 >		| OptArrayTarget
 >		| OptUseCoercions
 >		| OptDebugParser
@@ -327,6 +328,8 @@ The command line arguments.
 >	"Produce a debugging parser (only with -a)",
 >    Option ['g'] ["ghc"]    (NoArg OptGhcTarget)
 >	"Use GHC extensions",
+>    Option [] ["old-ghc"] (NoArg OptOldGhcTarget)
+>	"Use GHC (pre-5.03) extensions",
 >    Option ['i'] ["info"] (OptArg OptInfoFile "FILE")
 >	"Put detailed grammar info in FILE",
 >    Option ['m'] ["magic-name"] (ReqArg OptMagicName "NAME")
@@ -392,8 +395,9 @@ GHC version-dependent stuff in it.
 >  	concat [ "import "++s++"\n" 
 >	       | s <- glaexts_import ++ array_import ++ debug_imports ]
 >   where
->	glaexts_import | OptGhcTarget `elem` cli   = ["GlaExts"]
->		       | otherwise                 = []
+>	glaexts_import | OptGhcTarget `elem` cli    = ["GHC.Exts"]
+>		       | OptOldGhcTarget `elem` cli = ["GlaExts"]
+>		       | otherwise                  = []
 >
 >	array_import   | tgt == TargetArrayBased   = ["Array"]
 >		       | otherwise                 = []

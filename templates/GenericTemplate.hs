@@ -1,4 +1,4 @@
--- $Id: GenericTemplate.hs,v 1.20 2001/12/08 18:31:14 sof Exp $
+-- $Id: GenericTemplate.hs,v 1.21 2002/05/16 15:30:45 simonmar Exp $
 
 #ifdef HAPPY_GHC
 #define ILIT(n) n#
@@ -140,6 +140,11 @@ HAPPY_ENDIF
 indexShortOffAddr arr off = arr ! off
 #endif
 
+HAPPY_IF_GHC_GE_503
+-- Addr has gone away in 5.03
+data HappyAddr = A# Addr#
+HAPPY_ENDIF
+
 #endif {- HAPPY_ARRAY -}
 
 -----------------------------------------------------------------------------
@@ -196,8 +201,10 @@ happySpecReduce_3 nt fn j tk _ CONS(_,CONS(_,sts@(CONS(st@HAPPYSTATE(action),_))
 happyReduce k i fn ERROR_TOK tk st sts stk
      = happyFail ERROR_TOK tk st sts stk
 happyReduce k nt fn j tk st sts stk
-     = GOTO(action) nt j tk st1 sts1 (fn stk)
-       where sts1@(CONS(st1@HAPPYSTATE(action),_)) = happyDrop k CONS(st,sts)
+     = case happyDrop MINUS(k,(ILIT(1) :: FAST_INT)) sts of
+	 sts1@(CONS(st1@HAPPYSTATE(action),_)) ->
+        	let r = fn stk in  -- it doesn't hurt to always seq here...
+       		happyDoSeq r (GOTO(action) nt j tk st1 sts1 r)
 
 happyMonadReduce k nt fn ERROR_TOK tk st sts stk
      = happyFail ERROR_TOK tk st sts stk
