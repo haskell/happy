@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.29 1999/11/03 15:21:51 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.30 1999/11/24 10:41:49 simonmar Exp $
 
 The code generator.
 
@@ -32,6 +32,7 @@ Produce the complete output file.
 >		-> String			-- token type
 >		-> String			-- parser name
 >		-> (Maybe (String,String,String)) -- optional monad
+>		-> String			-- stuff to go at the top
 >		-> Maybe String			-- module header
 >		-> Maybe String			-- module trailer
 >		-> Target			-- type of code required
@@ -51,8 +52,10 @@ Produce the complete output file.
 >		, first_term = fst_term
 >		})
 >	 	action goto lexer token_rep token_type
->		name monad module_header module_trailer target coerce ghc
->     =	( str comment
+>		name monad top_options module_header module_trailer 
+>		target coerce ghc
+>     =	( str top_options
+>	. str comment
 >	. maybestr module_header . nl
 > 	. produceAbsSynDecl . nl
 >    	. produceTypes

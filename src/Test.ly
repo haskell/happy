@@ -5,12 +5,6 @@ and the type of the tokens the parser reads.
 
 > {
 > import Char
-> import GlaExts -- for happy -g
-> import Array   -- for happy -a
-> import Addr
-> import Int
-> import Word
-> import Bits
 > }
 
 > %name calc

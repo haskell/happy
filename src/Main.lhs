@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.23 1999/10/08 12:03:51 simonmar Exp $
+$Id: Main.lhs,v 1.24 1999/11/24 10:41:49 simonmar Exp $
 
 The main driver.
 
@@ -175,10 +175,20 @@ Read in the template file for this target:
 
 >       readFile template				>>= \ templ ->
 
+Add any special options or imports required by the parsing machinery.
+
+>	let
+>	    header = Just (
+>			(case hd of Just s -> s; Nothing -> "")
+>			++ importsToInject target cli
+>		     )
+>	in
+
 and generate the code.
 
 >	getMagicName cli				>>= \ magic_name ->
->       let outfile = produceParser 
+>	let
+>           outfile = produceParser 
 >                       g
 >                       action
 >                       goto
@@ -187,7 +197,8 @@ and generate the code.
 >                       (getTokenType dirs)
 >			(getParserName dirs)
 >			(getMonad dirs)
->                       hd
+>			(optsToInject target cli)
+>                       header
 >                       tl
 >			target
 >			opt_coerce
@@ -358,6 +369,25 @@ How would we like our code to be generated?
 >
 >	 debug_extn | OptDebugParser `elem` cli  = "-debug"
 >		    | otherwise			 = ""
+
+> optsToInject :: Target -> [CLIFlags] -> String
+> optsToInject _ cli 
+>	| OptGhcTarget `elem` cli = "{-# OPTIONS -fglasgow-exts #-}\n"
+>	| otherwise               = ""
+
+> importsToInject :: Target -> [CLIFlags] -> String
+> importsToInject tgt cli = "\n" ++ 
+>  	concat [ "import "++s++"\n" 
+>	       | s <- glaexts_import ++ array_import ++ debug_imports ]
+>   where
+>	glaexts_import | OptGhcTarget `elem` cli   = ["GlaExts"]
+>		       | otherwise                 = []
+>
+>	array_import   | tgt == TargetArrayBased   = ["Array"]
+>		       | otherwise                 = []
+>
+>	debug_imports  | OptDebugParser `elem` cli = ["IO", "IOExts"]
+>		       | otherwise		   = []
 
 ------------------------------------------------------------------------------
 Extract various command-line options.
