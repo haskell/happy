@@ -1,0 +1,27 @@
+Changes from version 0.8 to 0.9:
+
+* Happy should be much faster than before.
+
+* Generated parsers will be 5-10% smaller.
+
+* Happy now compiles with ghc-0.26.
+
+* Support for monadic parsers via %monad (see the documentation).
+
+* New syntax: previously
+
+	f :: { <type> }
+	f : ...
+	  | ...
+	  etc.
+
+  can now be written
+
+	f :: { <type> }
+	  : ...
+	  | ...
+	  etc.
+
+  (i.e. omit the extra 'f'.  It was always ignored anyway :-)
+
+* Miscellaneous bug fixes.
