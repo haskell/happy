@@ -1,10 +1,15 @@
 -----------------------------------------------------------------------------
-Tests %monad without %lexer.
+Test for monadic Happy Parsers, Simon Marlow 1996.
+
+> {
+> import Char
+> }
 
 > %name calc
 > %tokentype { Token }
 
 > %monad { P } { thenP } { returnP }
+> %lexer { lexer } { TokenEOF }
 
 > %token 
 >	let		{ TokenLet }
@@ -22,7 +27,7 @@ Tests %monad without %lexer.
 > %%
 
 > Exp :: {Exp}
->     : let var '=' Exp in Exp	{ Let $2 $4 $6 }
+>     : let var '=' Exp in Exp	{% \s l -> ParseOk (Let l $2 $4 $6) }
 >     | Exp1			{ Exp1 $1 }
 > 
 > Exp1 :: {Exp1}
@@ -69,7 +74,7 @@ The monad serves three purposes:
 
 Now we declare the datastructure that we are parsing.
 
-> data Exp  = Let String Exp Exp | Exp1 Exp1 
+> data Exp  = Let Int String Exp Exp | Exp1 Exp1 
 > data Exp1 = Plus Exp1 Term | Minus Exp1 Term | Term Term 
 > data Term = Times Term Factor | Div Term Factor | Factor Factor 
 > data Factor = Int Int | Var String | Brack Exp 
@@ -92,33 +97,48 @@ The datastructure for the tokens...
 
 .. and a simple lexer that returns this datastructure.
 
-> lexer :: String -> [Token]
-> lexer [] = []
-> lexer (c:cs) 
->	| isSpace c = lexer cs
-> 	| isAlpha c = lexVar (c:cs)
->	| isDigit c = lexNum (c:cs)
-> lexer ('=':cs) = TokenEq : lexer cs
-> lexer ('+':cs) = TokenPlus : lexer cs
-> lexer ('-':cs) = TokenMinus : lexer cs
-> lexer ('*':cs) = TokenTimes : lexer cs
-> lexer ('/':cs) = TokenDiv : lexer cs
-> lexer ('(':cs) = TokenOB : lexer cs
-> lexer (')':cs) = TokenCB : lexer cs
-
-> lexNum cs = TokenInt (read num) : lexer rest
->	where (num,rest) = span isDigit cs
-
-> lexVar cs =
->    case span isAlpha cs of
->	("let",rest) -> TokenLet : lexer rest
->	("in",rest)  -> TokenIn : lexer rest
->	(var,rest)   -> TokenVar var : lexer rest
+> lexer :: (Token -> Parse) -> Parse
+> lexer cont s = case s of
+> 	[] -> cont TokenEOF []
+>  	('\n':cs) -> \line -> lexer cont cs (line+1)
+> 	(c:cs) 
+>               | isSpace c -> lexer cont cs
+>               | isAlpha c -> lexVar (c:cs)
+>               | isDigit c -> lexNum (c:cs)
+> 	('=':cs) -> cont TokenEq cs
+> 	('+':cs) -> cont TokenPlus cs
+> 	('-':cs) -> cont TokenMinus cs
+> 	('*':cs) -> cont TokenTimes cs
+> 	('/':cs) -> cont TokenDiv cs
+> 	('(':cs) -> cont TokenOB cs
+> 	(')':cs) -> cont TokenCB cs
+>  where
+> 	lexNum cs = cont (TokenInt (read num)) rest
+> 		where (num,rest) = span isDigit cs
+> 	lexVar cs =
+>    	    case span isAlpha cs of
+> 		("let",rest) -> cont TokenLet rest
+> 		("in",rest)  -> cont TokenIn rest
+> 		(var,rest)   -> cont (TokenVar var) rest
 
 > runCalc :: String -> Exp
-> runCalc s = calc (lexer s)
+> runCalc s = case calc s 1 of
+>		ParseOk e -> e
+>		ParseFail s -> error s
 
-> happyError = \tks i -> error (
+-----------------------------------------------------------------------------
+The following functions should be defined for all parsers.
+
+This is the overall type of the parser.
+
+> type Parse = P Exp
+> calc :: Parse
+
+The next function is called when a parse error is detected.  It has
+the same type as the top-level parse function.
+
+> happyError :: Parse
+> happyError = \s i -> error (
 >	"Parse error in line " ++ show (i::Int) ++ "\n")
 
 -----------------------------------------------------------------------------
@@ -132,7 +152,7 @@ Here we test our parser.
 >	case runCalc "1 + 2 * 3" of {
 >	(Exp1 (Plus (Term (Factor (Int 1))) (Times (Factor (Int 2)) (Int 3)))) ->
 >	case runCalc "let x = 2 in x * (x - 2)" of {
->	(Let "x" (Exp1 (Term (Factor (Int 2)))) (Exp1 (Term (Times (Factor (Var "x")) (Brack (Exp1 (Minus (Term (Factor (Var "x"))) (Factor (Int 2))))))))) -> appendChan stdout "Test works\n" abort done; 
+>	(Let 1 "x" (Exp1 (Term (Factor (Int 2)))) (Exp1 (Term (Times (Factor (Var "x")) (Brack (Exp1 (Minus (Term (Factor (Var "x"))) (Factor (Int 2))))))))) -> print "Test works\n"; 
 >	_ -> quit } ; _ -> quit } ; _ -> quit } ; _ -> quit }
-> quit = appendChan stdout "Test failed\n" abort done
+> quit = print "Test failed\n"
 > }

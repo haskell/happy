@@ -1,7 +1,11 @@
-This is a simple test for happy.
+This is a simple test for happy using operator precedence.
 
 First thing to declare is the name of your parser,
 and the type of the tokens the parser reads.
+
+> {
+> import Char
+> }
 
 > %name calc
 > %tokentype { Token }
@@ -15,53 +19,35 @@ production rules.  Now we declare all the possible tokens:
 >	int		{ TokenInt $$ }
 >	var		{ TokenVar $$ }
 >	'='		{ TokenEq }
+>	'>'		{ TokenGreater }
+>	'<'		{ TokenLess }
 >	'+'		{ TokenPlus }
 >	'-'		{ TokenMinus }
 >	'*'		{ TokenTimes }
 >	'/'		{ TokenDiv }
 >	'('		{ TokenOB }
 >	')'		{ TokenCB }
+>	UMINUS		{ TokenFoo }
 
-The *new* system.
-
- %token 
-	let		( let )
-	in		( in )
-	int		( digit+ )
-	var		( {alpha}{alphanum}+ )
-	'='		( = )
-	'+'		( + )
-	'-'		( - )
-	'*'		( * )
-	'/'		( / )
-	'('		( \( )
-	')'		( \) )
- %whitespace		( {space}|{tab} )
- %newline		( {newline} )
-
-The left hand side are the names of the terminals or tokens,
-and the right hand side is how to pattern match them.
-
-Like yacc, we include %% here, for no real reason.
+> %nonassoc '>' '<'
+> %left '+' '-'
+> %left '*' '/'
+> %left	UMINUS
 
 > %%
 
-Now we have the production rules.
-
+> Exp :: { Exp }
 > Exp : let var '=' Exp in Exp	{ Let $2 $4 $6 }
->     | Exp1			{ Exp1 $1 }
-> 
-> Exp1 : Exp1 '+' Term		{ Plus $1 $3 }
->      | Exp1 '-' Term		{ Minus $1 $3 }
->      | Term			{ Term $1 }
-> 
-> Term : Term '*' Factor	{ Times $1 $3 }
->      | Term '/' Factor	{ Div $1 $3 }
->      | Factor			{ Factor $1 }
-> 
-> Factor : int			{ Int $1 }
-> 	 | var			{ Var $1 }
-> 	 | '(' Exp ')'		{ Brack $2 }
+>     | Exp '>' Exp		{ Greater $1 $3 }
+>     | Exp '<' Exp		{ Less $1 $3 }
+>     | Exp '+' Exp		{ Plus $1 $3 }
+>     | Exp '-' Exp		{ Minus $1 $3 }
+>     | Exp '*' Exp		{ Times $1 $3 }
+>     | Exp '/' Exp		{ Div $1 $3 }
+>     | '-' Exp %prec UMINUS	{ Uminus $2 }
+>     | '(' Exp ')'		{ Brack $2 }
+>     | int			{ Int $1 }
+>     | var			{ Var $1 }
 
 We are simply returning the parsed data structure !
 Now we need some extra code, to support this parser,
@@ -73,15 +59,23 @@ All parsers must declair this function,
 which is called when an error is detected.
 Note that currently we do no error recovery.
 
-> happyError :: Int -> [Token] -> a
-> happyError i _ = error ("Parse error in line " ++ show i ++ "\n")
+> happyError tks = error "Parse error"
 
 Now we declare the datastructure that we are parsing.
 
-> data Exp  = Let String Exp Exp | Exp1 Exp1 
-> data Exp1 = Plus Exp1 Term | Minus Exp1 Term | Term Term 
-> data Term = Times Term Factor | Div Term Factor | Factor Factor 
-> data Factor = Int Int | Var String | Brack Exp 
+> data Exp
+>	= Let String Exp Exp
+>	| Greater Exp Exp
+>	| Less Exp Exp
+>	| Plus Exp Exp
+>	| Minus Exp Exp
+> 	| Times Exp Exp
+>	| Div Exp Exp
+>	| Uminus Exp
+>	| Brack Exp 
+>	| Int Int
+>	| Var String
+>	deriving Show
 
 The datastructure for the tokens...
 
@@ -91,12 +85,15 @@ The datastructure for the tokens...
 >	| TokenInt Int
 >	| TokenVar String
 >	| TokenEq
+>	| TokenGreater
+>	| TokenLess
 >	| TokenPlus
 >	| TokenMinus
 >	| TokenTimes
 >	| TokenDiv
 >	| TokenOB
 >	| TokenCB
+>	| TokenFoo
 
 .. and a simple lexer that returns this datastructure.
 
@@ -107,6 +104,8 @@ The datastructure for the tokens...
 > 	| isAlpha c = lexVar (c:cs)
 >	| isDigit c = lexNum (c:cs)
 > lexer ('=':cs) = TokenEq : lexer cs
+> lexer ('>':cs) = TokenGreater : lexer cs
+> lexer ('<':cs) = TokenLess : lexer cs
 > lexer ('+':cs) = TokenPlus : lexer cs
 > lexer ('-':cs) = TokenMinus : lexer cs
 > lexer ('*':cs) = TokenTimes : lexer cs
@@ -131,15 +130,15 @@ to print it.
 
 Here we test our parser.
 
-> main = case runCalc "1 + 2 + 3" of {
->	(Exp1 (Plus (Plus (Term (Factor (Int 1))) (Factor (Int 2))) (Factor (Int 3))))  ->
-> 	case runCalc "1 * 2 + 3" of {
->	(Exp1 (Plus (Term (Times (Factor (Int 1)) (Int 2))) (Factor (Int 3)))) ->
->	case runCalc "1 + 2 * 3" of {
->	(Exp1 (Plus (Term (Factor (Int 1))) (Times (Factor (Int 2)) (Int 3)))) ->
->	case runCalc "let x = 2 in x * (x - 2)" of {
->	(Let "x" (Exp1 (Term (Factor (Int 2)))) (Exp1 (Term (Times (Factor (Var "x")) (Brack (Exp1 (Minus (Term (Factor (Var "x"))) (Factor (Int 2))))))))) -> appendChan stdout "Test works\n" abort done; 
->	_ -> quit } ; _ -> quit } ; _ -> quit } ; _ -> quit }
-> quit = appendChan stdout "Test failed\n" abort done
-
+> main = case runCalc "let x = 1 in let y = 2 in x * y + x / y" of {
+>       (Let "x" (Int 1) (Let "y" (Int 2) (Plus (Times (Var "x") (Var "y")) (Div (Var "x") (Var "y"))))) -> 
+>       case runCalc "- 1 * - 2 + 3" of {
+>       (Plus (Times (Uminus (Int 1)) (Uminus (Int 2))) (Int 3)) ->
+>       case runCalc "- - - 1 + 2 * 3 - 4" of {
+>       (Minus (Plus (Uminus (Uminus (Uminus (Int 1)))) (Times (Int 2) (Int 3))) (Int 4)) ->
+>       print "Test works\n";
+>       _ -> quit } ; _ -> quit } ; _ -> quit }
+> 
+> quit = print "Test failed\n";
+> 
 > }

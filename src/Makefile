@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.32 2000/07/12 16:21:44 simonmar Exp $
+# $Id: Makefile,v 1.33 2000/07/13 10:23:01 simonmar Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -91,46 +91,6 @@ ifeq "$(INSTALLING)" "1"
 all clean veryclean maintainer-clean ::
 	$(MAKE) INSTALLING=0 BIN_DIST=0 $(MFLAGS) $@
 endif
-
-check ::
-	./happy-inplace Test.ly
-	$(HC) Test.hs -o happy_test
-	./happy_test
-	-rm -f ./happy_test
-	./happy-inplace -g Test.ly
-	$(HC) Test.hs -o happy_test
-	./happy_test
-	-rm -f ./happy_test
-	./happy-inplace -a Test.ly
-	$(HC) Test.hs -o happy_test
-	./happy_test
-	-rm -f ./happy_test
-	./happy-inplace -gc Test.ly
-	$(HC) Test.hs -o happy_test
-	./happy_test
-	-rm -f ./happy_test
-	./happy-inplace -ag Test.ly
-	$(HC) Test.hs -o happy_test
-	./happy_test
-	-rm -f ./happy_test
-	./happy-inplace -agc Test.ly
-	$(HC) Test.hs -o happy_test
-	./happy_test
-	-rm -f ./happy_test
-
-check-todo::
-	./happy-inplace -ad Test.ly
-	$(HC) Test.hs -o happy_test
-	./happy_test
-	-rm -f ./happy_test
-	./happy-inplace -agd Test.ly
-	$(HC) Test.hs -o happy_test
-	./happy_test
-	-rm -f ./happy_test
-	./happy-inplace -agcd Test.ly
-	$(HC) Test.hs -o happy_test
-	./happy_test
-	-rm -f ./happy_test
 
 include $(TOP)/mk/target.mk
 
