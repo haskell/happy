@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: AbsSyn.lhs,v 1.4 1997/07/16 13:32:32 simonm Exp $
+$Id: AbsSyn.lhs,v 1.5 1997/09/26 09:52:51 simonm Exp $
 
 Abstract syntax for grammar files.
 
@@ -23,7 +23,7 @@ Here is the abstract syntax of the language we parse.
 
 #ifdef DEBUG
 
->   deriving (Text)
+>   deriving Show
 
 #endif
 
@@ -42,7 +42,7 @@ generate some error messages.
 
 #ifdef DEBUG
 
->   deriving (Text)
+>   deriving Show
 
 #endif
 
