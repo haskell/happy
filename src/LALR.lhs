@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: LALR.lhs,v 1.12 1999/03/11 17:15:58 simonm Exp $
+$Id: LALR.lhs,v 1.13 2000/03/31 09:19:27 simonmar Exp $
 
 Generation of LALR parsing tables.
 
@@ -23,8 +23,14 @@ Generation of LALR parsing tables.
 
 #if defined(__GLASGOW_HASKELL__)
 
-> import GlaExts
-> import ST (runST)
+> import ST
+
+#if __GLASGOW_HASKELL__ < 407
+#define newSTArray newArray
+#define readSTArray readArray
+#define writeSTArray writeArray
+#define freezeSTArray freezeArray
+#endif
 
 #endif
 
@@ -307,13 +313,11 @@ Special version using a mutable array for GHC.
 >	-> Array Int [(Lr0Item, Int, Lr0Item)]	-- propagated lookaheads
 >	-> Array Int [(Lr0Item, Set Name)]
 
-#if __GLASGOW_HASKELL__ >= 200
-
 > calcLookaheads n_states spont prop
 >	= runST (do
->	    array <- newArray (0,n_states) []
+>	    array <- newSTArray (0,n_states) []
 >	    propagate array (foldr fold_lookahead [] spont)
->	    freezeArray array
+>	    freezeSTArray array
 >	)
 
 >   where
@@ -333,53 +337,14 @@ the spontaneous lookaheads in the right form to begin with (ToDo).
 
 > add_lookaheads array [] = return ()
 > add_lookaheads array ((i,item,s) : lookaheads) = do
->	las <- readArray array i
->	writeArray array i (add_lookahead item s las)
+>	las <- readSTArray array i
+>	writeSTArray array i (add_lookahead item s las)
 >	add_lookaheads array lookaheads
 
 > get_new array [] new = return new
 > get_new array (l@(i,item,s):las) new = do
->	state_las <- readArray array i
+>	state_las <- readSTArray array i
 >	get_new array las (get_new' l state_las new)
-
-#else
-
-> calcLookaheads n_states spont prop
->	= _runST (
->	    newArray (0,n_states) [] `thenStrictlyST` \array ->
->	    propagate array (foldr fold_lookahead [] spont) 
->			`thenStrictlyST` \_ ->
->	    freezeArray array
->	)
-
->   where
->	propagate array []  = returnST ()
->	propagate array new =
->		let
->		   items = [ (i,item'',s) | (j,item,s) <- new, 
->				            (item',i,item'') <- prop ! j,
->				            item == item' ]
->		in
->		get_new array items [] 		`thenStrictlyST` \new_new ->
->		add_lookaheads array new 	`thenStrictlyST` \_ ->
->		propagate array new_new
-
-This function is needed to merge all the (set_no,item,name) triples
-into (set_no, item, set name) triples.  It can be removed when we get
-the spontaneous lookaheads in the right form to begin with (ToDo).
-
-> add_lookaheads array [] = returnST ()
-> add_lookaheads array ((i,item,s) : lookaheads) =
->	readArray array i `thenStrictlyST` \las ->
->	writeArray array i (add_lookahead item s las) `thenStrictlyST` \_ ->
->	add_lookaheads array lookaheads
-
-> get_new array [] new = returnST new
-> get_new array (l@(i,item,s):las) new =
->	readArray array i `thenStrictlyST` \state_las ->
->	get_new array las (get_new' l state_las new)
-
-#endif
 
 > add_lookahead :: Lr0Item -> Set Name -> [(Lr0Item,Set Name)] ->
 > 			[(Lr0Item,Set Name)]
