@@ -1,4 +1,4 @@
--- $Id: HappyTemplate-coerce,v 1.4 1999/05/14 13:31:47 simonm Exp $
+-- $Id: HappyTemplate-coerce,v 1.5 1999/05/14 14:25:50 simonm Exp $
 
 {-
 	The stack is in the following order throughout the parse:
@@ -29,7 +29,7 @@ newtype HappyState b c = HappyState
 -----------------------------------------------------------------------------
 -- Accepting the parse
 
-happyAccept j tk st sts [ ans ] = happyReturn ans
+happyAccept j tk st sts [ ans ] = happyReturn (happyOut4 ans)
 happyAccept j tk st sts _ = happyTcHack j notHappyAtAll
 
 -----------------------------------------------------------------------------
