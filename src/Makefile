@@ -1,11 +1,18 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.3 1997/03/28 14:56:27 simonm Exp $
+# $Id: Makefile,v 1.4 1997/06/05 23:21:32 sof Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
 
-HC       = ghc-0.29
 HAPPY    = happy-new
+
+ifeq ($(Ghc2_0),NO)
+HC       = ghc-0.29
+MKDEPENDHS      = $(MKDEPENDHS_1_2)
+else
+MKDEPENDHS      := $(HC)
+HC := ghc-0.29
+endif
 
 VERSION  = 1.1
 HAPPYLIB = $(FPTOOLS_TOP_ABS)/happy/templates
