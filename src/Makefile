@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.4 1997/06/05 23:21:32 sof Exp $
+# $Id: Makefile,v 1.5 1997/06/09 22:48:32 sof Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -11,7 +11,6 @@ HC       = ghc-0.29
 MKDEPENDHS      = $(MKDEPENDHS_1_2)
 else
 MKDEPENDHS      := $(HC)
-HC := ghc-0.29
 endif
 
 VERSION  = 1.1

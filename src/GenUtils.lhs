@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: GenUtils.lhs,v 1.2 1997/03/27 14:14:36 simonm Exp $
+$Id: GenUtils.lhs,v 1.3 1997/06/09 22:48:26 sof Exp $
 
 Some General Utilities, including sorts, etc.
 This is realy just an extended prelude.
@@ -43,9 +43,25 @@ All the code below is understood to be in the public domain.
 > import 
 > 	Trace
 
+#endif
+
+#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
+
+> import Ix    ( Ix(..) )
+> import Array ( listArray, array, (!) )
+
+#define Text Show
+
+> infix 1 =:
+> (=:) a b = (a,b)
+
 #else
 
+> infix 1 =:
+> (=:) a b = (a := b)
+
 #endif
+
 
 %------------------------------------------------------------------------------
 
@@ -254,7 +270,7 @@ will give a very efficent variation of the fib function.
 
 > memoise :: (Ix a) => (a,a) -> (a -> b) -> a -> b
 > memoise bds f = (!) arr
->   where arr = array bds [ t := f t | t <- range bds ]
+>   where arr = array bds [ t =: f t | t <- range bds ]
 
 > mapAccumR :: (acc -> x -> (acc, y))         -- Function of elt of input list
 >                                     -- and accumulator, returning new

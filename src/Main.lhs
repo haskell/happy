@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.2 1997/03/27 14:14:44 simonm Exp $
+$Id: Main.lhs,v 1.3 1997/06/09 22:48:31 sof Exp $
 
 The main driver.
 
@@ -8,8 +8,18 @@ The main driver.
 
 > module Main (main) where
 
+#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
+
+> import System
+> import IO
+> import Char ( toLower, toUpper )
+
+#else 
+
 > import 
 >	LibSystem
+
+#endif
 
 > import ParseMonad
 > import GenUtils
