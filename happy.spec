@@ -41,8 +41,6 @@ make all
 
 %install
 make install
-rm -f %{prefix}/bin/happy
-ln -s %{prefix}/bin/happy-%{version} %{prefix}/bin/happy
 
 %files
 %doc happy/ANNOUNCE
@@ -54,6 +52,6 @@ ln -s %{prefix}/bin/happy-%{version} %{prefix}/bin/happy
 %doc happy/doc/happy.dvi.gz
 %doc happy/doc/happy.ps.gz
 %doc happy/examples
+%{prefix}/bin/happy
 %{prefix}/bin/happy-%{version}
-%{prefix}/lib/happy.bin
-%{prefix}/lib/happy
+%{prefix}/lib/happy-%{version}
