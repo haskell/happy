@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.33 2000/07/13 10:23:01 simonmar Exp $
+# $Id: Makefile,v 1.34 2000/07/13 10:38:53 simonmar Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -59,7 +59,7 @@ HAPPYBIN=$(libexecdir)/$(HS_PROG)
 endif # BIN_DIST
 else
 HAPPYLIB=$(FPTOOLS_TOP_ABS)/happy/templates
-HAPPYBIN=$(FPTOOLS_TOP_ABS)/happy-prec2/src/$(HS_PROG)
+HAPPYBIN=$(FPTOOLS_TOP_ABS)/happy/src/$(HS_PROG)
 endif
 
 INSTALLED_SCRIPT_PROG  = happy-$(ProjectVersion)
