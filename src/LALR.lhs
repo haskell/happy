@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: LALR.lhs,v 1.14 2000/04/19 12:46:41 simonmar Exp $
+$Id: LALR.lhs,v 1.15 2000/04/19 12:52:15 simonmar Exp $
 
 Generation of LALR parsing tables.
 
@@ -25,7 +25,7 @@ Generation of LALR parsing tables.
 
 > import ST
 
-#if __GLASGOW_HASKELL__ < 407
+#if __GLASGOW_HASKELL__ < 402
 #define newSTArray newArray
 #define readSTArray readArray
 #define writeSTArray writeArray
