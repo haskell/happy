@@ -2373,6 +2373,8 @@ exp     : atom op exp
 
     <sect1 id="sec-happy-ghci">
       <title>Using Happy with <application>GHCi</application></title>
+      <indexterm><primary><application>GHCi</application></primary>
+      </indexterm>
       
       <para><application>GHCi</application>'s compilation manager
       doesn't understand Happy grammars, but with some creative use of
