@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.34 2000/07/13 10:38:53 simonmar Exp $
+# $Id: Makefile,v 1.35 2000/12/20 17:01:33 simonmar Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -88,7 +88,7 @@ INSTALL_LIBEXECS = $(HS_PROG)
 # don't recurse on 'make install'
 #
 ifeq "$(INSTALLING)" "1"
-all clean veryclean maintainer-clean ::
+all clean distclean maintainer-clean ::
 	$(MAKE) INSTALLING=0 BIN_DIST=0 $(MFLAGS) $@
 endif
 
