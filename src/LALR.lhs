@@ -1,15 +1,25 @@
 -----------------------------------------------------------------------------
-$Id: LALR.lhs,v 1.8 1997/09/24 10:05:40 simonm Exp $
+$Id: LALR.lhs,v 1.9 1997/10/02 21:26:35 reid Exp $
 
 Generation of LALR parsing tables.
 
 (c) 1993-1996 Andy Gill, Simon Marlow
 -----------------------------------------------------------------------------
 
+Hack:
+  Haskell 1.2 doesn't allow T     in an export list if T is a type synonym.
+  Haskell 1.3 doesn't allow T(..) in an export list if T is a type synonym.
+
+#if __HASKELL1__ >= 3
+# define SYN(t) t
+#else
+# define SYN(t) t(..)
+#endif
+
 > module LALR
 >	(genActionTable, genGotoTable, genLR0items, precalcClosure0,
 >	 propLookaheads, calcLookaheads, mergeLookaheadInfo, countConflicts,
->	 Lr0Item(..), Lr1Item(..))
+>	 SYN(Lr0Item), SYN(Lr1Item))
 >	where
 
 > import GenUtils

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Grammar.lhs,v 1.7 1997/09/26 09:53:23 simonm Exp $
+$Id: Grammar.lhs,v 1.8 1997/10/02 21:26:34 reid Exp $
 
 The Grammar data type.
 
@@ -8,13 +8,23 @@ The Grammar data type.
 
 Here is our mid-section datatype
 
+Hack:
+  Haskell 1.2 doesn't allow T     in an export list if T is a type synonym.
+  Haskell 1.3 doesn't allow T(..) in an export list if T is a type synonym.
+
+#if __HASKELL1__ >= 3
+# define SYN(t) t
+#else
+# define SYN(t) t(..)
+#endif
+
 > module Grammar (
-> 	Name(..), isEmpty, 
+> 	SYN(Name), isEmpty, 
 >	
->	Production(..),  Productions(..), Terminals(..), NonTerminals(..),
+>	SYN(Production),  SYN(Productions), SYN(Terminals), SYN(NonTerminals),
 >	Grammar(..), mangler, fixDir, getTerm, checkRules, 
 >	
->	LRAction(..), ActionTable(..), Goto(..), GotoTable(..),
+>	LRAction(..), SYN(ActionTable), Goto(..), SYN(GotoTable),
 >	
 >	GrammarInfo(..),
 >	getProds, lookupProdNo, lookupProdsOfName, getNonTerminals,

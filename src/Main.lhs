@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.9 1997/09/24 10:05:41 simonm Exp $
+$Id: Main.lhs,v 1.10 1997/10/02 21:26:36 reid Exp $
 
 The main driver.
 
@@ -28,6 +28,8 @@ The main driver.
 > import System
 > import Char
 > import IO
+> import Array( Array, assocs, elems, (!) )
+> import List( nub )
 
 #define ASSOC(a,b) (a , b)
 
