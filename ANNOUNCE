@@ -1,19 +1,25 @@
-                            Happy 1.7
-             The LALR(1) Parser Generator for Haskell
+ANNOUNCING  Happy 1.8  - The LALR(1) Parser Generator for Haskell
+--------------------------------------------------------------------
 
-This is the n+1th public release of our parser generator system for
-Haskell, called Happy (a dyslexic acronym for 'A Yacc-like Haskell
-Parser generator').  
+I'm pleased to announce version 1.8 of Happy, the parser generator
+system for Haskell.  Changes in this version, relative to version 1.6
+(the previous full release):
 
-What's new in Happy 1.7 (vs. Happy 1.6)
+	* Parser table compression, and more efficient
+	  table encoding when used with GHC.  Large grammars
+	  can now be compiled in much less time/space than
+	  before using GHC.
 
-	* Several bugfixes
-	* Array-based parsers work with GHC (i.e. -a and -g can be
-          used together)
+	* Yacc-style operator precedence, thanks to patches
+	  from Hermann Oliveira Rodrigues <hermann@dcc.ufmg.br>
+	  and Josef Svenningsson <josefs@cs.chalmers.se>.
+
+	* A debug option which causes the generated parser to
+	  print tracing information at each step during parsing.
 
 Happy is available in source form, which can be compiled with GHC
-version 3.xx or 4.xx, and we also provide binaries for various
-architectures.  The Happy homepage with links to the various
+version 4.xx (4.08 recommended), and we also provide binaries for
+various architectures.  The Happy homepage with links to the various
 distributions lives at:
 
 	http://www.haskell.org/happy/
