@@ -6,7 +6,7 @@ This module is designed as an extension to the Haskell parser generator Happy.
 (c) University of Durham, Paul Callaghan 2004
 	-- extension to semantic rules, and various optimisations
 
-$Id: ProduceGLRCode.lhs,v 1.1 2004/08/11 15:39:31 paulcc Exp $
+$Id: ProduceGLRCode.lhs,v 1.2 2004/08/13 16:04:02 paulcc Exp $
 
 %-----------------------------------------------------------------------------
 
@@ -242,13 +242,15 @@ It also shares identical reduction values as CAFs
 >       LR'Reduce r    _ -> "Reduce " ++ "[" ++ mkRed r ++ "]" 
 >       LR'Accept	 -> "Accept"
 >       LR'Multiple as _ ->
->	 let as' = nub as in 
+>	 let as' = nub $ concatMap flatten as in 
 >	 case ([ st | LR'Shift st _ <- as' ],[ r  | LR'Reduce r _ <- as' ]) of
 >	  ([],rs)   -> "Reduce " ++ mkReds rs 
 >	  ([st],rs) -> "Shift " ++ show st ++ " " ++ mkReds rs
 >    where
 >     rule r  = lookupProdNo g r
 >     mkReds rs = "[" ++ tail (concat [ "," ++ mkRed r | r <- rs ]) ++ "]"
+>     flatten (LR'Multiple as a) = concatMap flatten (a:as)
+>     flatten a                  = [a]
 
 >   mkRed r = "red_" ++ show r
 >   mkReductions = [ mkRedDefn p | p@(_,(n,_,_,_)) <- zip [0..] $ productions g 
