@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Info.lhs,v 1.6 1997/09/24 10:05:39 simonm Exp $
+$Id: Info.lhs,v 1.7 1998/06/19 13:41:00 simonm Exp $
 
 Generating info files.
 
@@ -16,15 +16,8 @@ Generating info files.
 > import Grammar
 > import ProduceCode		( str, interleave, interleave' )
 
-#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
-
 > import Array
 > import List (nub)
-
-#define ASSOC(a,b) (a , b)
-#else
-#define ASSOC(a,b) (a := b)
-#endif
 
 Produce a file of parser information, useful for debugging the parser.
 
@@ -65,8 +58,8 @@ Produce a file of parser information, useful for debugging the parser.
 >	. foldr (.) id (map showConflictsState (assocs conflictArray))
 >	. str "\n"
 
->   showConflictsState ASSOC(state, (0,0)) = id
->   showConflictsState ASSOC(state, (sr,rr))
+>   showConflictsState (state, (0,0)) = id
+>   showConflictsState (state, (sr,rr))
 >   	= str "state "
 >	. shows state
 >	. str " contains "
@@ -137,9 +130,9 @@ Produce a file of parser information, useful for debugging the parser.
 >		(nt, toks, sem) = lookupProdNo rule
 >		(beforeDot, afterDot) = splitAt dot toks
 
->   showAction ASSOC(t, LR'Fail)
+>   showAction (t, LR'Fail)
 >   	= id
->   showAction ASSOC(t, act)
+>   showAction (t, act)
 >   	= str "\t"
 >	. showJName 15 t
 >	. showAction' act
@@ -160,9 +153,9 @@ Produce a file of parser information, useful for debugging the parser.
 >		(map (\a -> str "\t\t\t(" . showAction' a . str ")") 
 >		 (nub (filter (/= a) as)))
 
->   showGoto ASSOC(nt, NoGoto)
+>   showGoto (nt, NoGoto)
 >   	= id
->   showGoto ASSOC(nt, Goto n)
+>   showGoto (nt, Goto n)
 >   	= str "\t"
 >	. showJName 15 nt
 >	. str "goto state "

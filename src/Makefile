@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.23 1998/04/16 10:03:50 sof Exp $
+# $Id: Makefile,v 1.24 1998/06/19 13:41:04 simonm Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -9,7 +9,7 @@ INSTALLING=0
 
 HC = $(WithHappyHc)
 
-HAPPY    = happy -1.2
+HAPPY    = happy
 
 HS_PROG = happy.bin
 HS_SRCS = \
@@ -29,7 +29,7 @@ Info.lhs \
 GetOpt.lhs \
 Main.lhs 
 
-SRC_HC_OPTS += -cpp -fhaskell-1.3 -fglasgow-exts $(HappyHcOpts)
+SRC_HC_OPTS += -cpp -fglasgow-exts $(HappyHcOpts)
 
 Parser_HC_OPTS = -Onot
 SRC_HAPPY_OPTS += -g

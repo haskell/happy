@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Parser.ly,v 1.6 1998/01/09 13:16:39 sof Exp $
+$Id: Parser.ly,v 1.7 1998/06/19 13:41:05 simonm Exp $
 
 The parser.
 
@@ -13,7 +13,7 @@ The parser.
 > import AbsSyn
 > import Lexer
 
-> #if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
+> #ifdef __GLASGOW_HASKELL__
 > import GlaExts
 > #endif
 > }

@@ -1,3 +1,3 @@
 module Version (version) where
 
-version = "1.5"
+version = "1.6"

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.16 1998/01/08 17:37:18 simonm Exp $
+$Id: Main.lhs,v 1.17 1998/06/19 13:41:03 simonm Exp $
 
 The main driver.
 
@@ -23,27 +23,19 @@ The main driver.
 > import GetOpt
 > import Set
 
-#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
-
 > import System
 > import Char
 > import IO
 > import Array( Array, assocs, elems, (!) )
 > import List( nub )
 
-#define ASSOC(a,b) (a , b)
-
-#else
-
-#define ASSOC(a,b) (a := b)
-
-> import
->	LibSystem
-
-#endif
-
 #ifdef __GLASGOW_HASKELL__
+> import PrelGHC (unsafeCoerce#)
 #define sCC _scc_
+> coerceParser = unsafeCoerce#
+#else
+> sCC = id
+> coerceParser = id
 #endif
 
 > main = 
@@ -58,10 +50,11 @@ Read and parse the CLI arguments.
 
 Read and parse the CLI arguments.
 
->       case parseArgs (constArgs ++ args) argFns of
+>       case getOpt Permute argInfo (constArgs ++ args) of
 >         	(cli,[fl_name],[]) -> runParserGen cli fl_name
 >               (cli,[],[]) | DumpVerbose `elem` cli -> copyright
->		(_,_,errors) -> die (unlines errors ++ "\n" ++ syntax)
+>		(_,_,errors) -> die (concat errors ++ 
+>				     usageInfo usageHeader argInfo)
 
 >  where 	
 >    runParserGen cli fl_name =
@@ -74,19 +67,12 @@ Open the file.
 
 >       readFile fl_name		     		>>= \ fl ->
 >	possDelit (reverse fl_name) fl			>>= \ (file,name) ->
->       optPrint cli DumpInFile (putStr file) 		>>
 
 Parse, using bootstrapping parser.
 
->	case ourParser file 1 of {
+>	case coerceParser (ourParser file 1) of {
 >		FailP err -> die (fl_name ++ ':' : err);
 >		OkP abssyn@(AbsSyn hd _ _ tl) -> 
-
-#ifdef DEBUG
-
->       optPrint cli DumpParse (putStr (show abssyn))         >>
-
-#endif
 
 Mangle the syntax into something useful.
 
@@ -176,7 +162,9 @@ of code we should generate, and where it should go:
 >	getTarget cli					>>= \target ->
 >	getOutputFileName fl_name cli			>>= \outfilename ->
 >	getTemplate template_dir cli			>>= \template' ->
->	let template = template_file template' target (Opt1_2 `elem` cli) in
+>	getCoerce target cli				>>= \opt_coerce ->
+>	let 
+>	    template = template_file template' target opt_coerce in
 
 Read in the template file for this target:
 
@@ -198,8 +186,7 @@ and generate the code.
 >                       hd
 >                       tl
 >			target
->			opt1_2
->	    opt1_2 = Opt1_2 `elem` cli
+>			opt_coerce
 >	    magic_filter = 
 >	      case magic_name of
 >		Nothing -> id
@@ -255,9 +242,9 @@ Find unused rules and tokens
 >	(unused_rules, map (env !) unused_terminals)
 >    where
 >	actions		 = concat (map assocs (elems action_table))
->	used_rules       = 0 : nub [ r | ASSOC(_,LR'Reduce{-'-} r) <- actions ]
+>	used_rules       = 0 : nub [ r | (_,LR'Reduce{-'-} r) <- actions ]
 >	used_tokens      = errorTok : eof : 
->			       nub [ t | ASSOC(t,LR'Shift{-'-} _ ) <- actions ]
+>			       nub [ t | (t,LR'Shift{-'-} _ ) <- actions ]
 >	terminals        = getTerminals g
 >	non_terminals    = getNonTerminals g
 >	eof		 = getEOF g
@@ -291,50 +278,64 @@ This was a program hot-spot, but not any more.
 >       deLit2 []       = []
 
 ------------------------------------------------------------------------------
-
 The command line arguments.
 
-> argFns "-infile"      = flag DumpInFile
-> argFns "-parse"       = flag DumpParse
-> argFns "-mangle"      = flag DumpMangle
-> argFns "-lr0"         = flag DumpLR0
-> argFns "-action"      = flag DumpAction
-> argFns "-goto"        = flag DumpGoto
-> argFns "1.2"          = flag Opt1_2
-> argFns "i"            = flagWithOptArg OptInfoFile
-> argFns "-info"        = flagWithOptArg OptInfoFile
-> argFns "-template"    = flagWithArg OptTemplate
-> argFns "-magic-name"  = flagWithArg OptMagicName
-> argFns "v"            = flag DumpVerbose
-> argFns "-verbose"     = flag DumpVerbose
-> argFns "-lookaheads"  = flag DumpLA
-> argFns "g"		= flag OptGhcTarget
-> argFns "-ghc"		= flag OptGhcTarget
-> argFns "a"		= flag OptArrayTarget
-> argFns "-array"	= flag OptArrayTarget
-> argFns "o"		= flagWithArg OptOutputFile
-> argFns "-outfile"     = flagWithArg OptOutputFile
-> argFns _              = const Nothing
-
-> data CLIFlags = DumpInFile
->               | DumpParse 
->               | DumpMangle
->               | DumpVerbose
+> data CLIFlags = DumpMangle
 >               | DumpLR0
 >               | DumpAction
 >               | DumpGoto
 >		| DumpLA
 >		
+>               | DumpVerbose
 >		| OptInfoFile (Maybe String)
 >		| OptTemplate String
 >		| OptMagicName String
->		| Opt1_2
 >
 >		| OptGhcTarget
 >		| OptArrayTarget
+>		| OptUseCoercions
 >		
 >		| OptOutputFile String
->  deriving (Eq{-,Text-})
+>  deriving Eq
+
+> argInfo :: [OptDescr CLIFlags]
+> argInfo  = [
+>    Option ['a'] ["array"] (NoArg OptArrayTarget)
+>	"Generate an array-based parser",
+>    Option ['i'] ["info"] (OptArg OptInfoFile "FILE")
+>	"Output grammar info to FILE",
+>    Option ['c'] ["coerce"] (NoArg OptUseCoercions)
+>	"Use type coercions (only available with -g)",
+>    Option ['g'] ["ghc"]    (NoArg OptGhcTarget)
+>	"Use GHC extensions (not available with -a)",
+>    Option ['m'] ["magic-name"] (ReqArg OptMagicName "NAME")
+>	"Use NAME as the symbol prefix instead of \"happy\"",
+>    Option ['o'] ["outfile"] (ReqArg OptOutputFile "FILE")
+>	"Write the output to FILE (default: INFILE.hs)",
+>    Option ['t'] ["template"] (ReqArg OptTemplate "DIR")
+>	"Look in DIR for template files",
+>    Option ['v'] ["verbose"] (NoArg DumpVerbose)
+>       "Print out version info"
+
+#ifdef DEBUG
+
+Various debugging/dumping options...
+
+>    ,
+>    Option [] ['mangle'] (NoArg DumpMangle)
+>	"Dump mangled input",
+>    Option [] ['lr0'] (NoArg DumpLR0)
+>	"Dump LR0 item sets",
+>    Option [] ['action'] (NoArg DumpAction)
+>	"Dump action table",
+>    Option [] ['goto'] (NoArg DumpGoto)
+>	"Dump goto table",
+>    Option [] ['lookaheads'] (NoArg DumpLA)
+>	"Dump lookahead info",
+
+#endif
+
+>    ]
 
 -----------------------------------------------------------------------------
 How would we like our code to be generated?
@@ -343,20 +344,20 @@ How would we like our code to be generated?
 > optToTarget OptArrayTarget 	= Just TargetArrayBased
 > optToTarget _			= Nothing
 
-> template_file temp_dir target haskell_1_2
->   = temp_dir ++ base ++
->     if haskell_1_2 then "-1_2" else ""
+> template_file temp_dir target coerce
+>   = temp_dir ++ base
 >  where  
 >	base = case target of
 >		 TargetHaskell 	  -> "/HappyTemplate"
->		 TargetGhc	  -> "/HappyTemplate-ghc"
+>		 TargetGhc | coerce -> "/HappyTemplate-coerce"
+>			   | otherwise -> "/HappyTemplate-ghc"
 >		 TargetArrayBased -> "/HappyTemplate-arrays"
 
 ------------------------------------------------------------------------------
 Extract various command-line options.
 
 > getTarget cli = case [ t | (Just t) <- map optToTarget cli ] of
-> 			[t] -> return t
+> 			(t:ts) | all (==t) ts -> return t
 >			[]  -> return TargetHaskell
 >			_   -> dieHappy "multiple target options\n"
 
@@ -386,30 +387,32 @@ Extract various command-line options.
 >		[f]        -> return (Just (map toLower f))
 >		_          -> dieHappy "multiple --magic-name options\n"
 
+> getCoerce target cli
+>	= if OptUseCoercions `elem` cli 
+>	     then case target of
+>			TargetGhc -> return True
+>			otherwise -> dieHappy "-c/--coerce may only be used \ 
+>					      \in conjunction with -g/--ghc\n"
+>	     else return False
 
 ------------------------------------------------------------------------------
 
 > copyright :: IO ()
 > copyright = putStr (unlines  [
->  "Happy Version " ++ version ++ " Copyright (c) Andy Gill, Simon Marlow 1993-1997","",
+>  "Happy Version " ++ version ++ " Copyright (c) 1993-1996 Andy Gill, Simon Marlow (c) Simon Marlow 1997-1998","",
 >  "Happy is a Yacc for Haskell, and comes with ABSOLUTELY NO WARRANTY.",
 >  "This program is free software; you can redistribute it and/or modify",
 >  "it under the terms given in the file 'LICENSE' distributed with",
 >  "the Happy sources.\n"])
+
+> usageHeader = "happy [OPTION...] file"
 
 > syntax = unlines [
 >   "syntax: happy [-v] [-o | --outfile <file>] [--info [<file>]]",
 >   "		   [-1.2] [--template <dir>]",
 >   "              [-g | --ghc] [-a | --array] <file>\n" ]
 
+
 > template_dir = "/usr/local/lib/happy"
 
 -----------------------------------------------------------------------------
-
-#ifndef __GLASGOW_HASKELL__
-
-> sCC _ = id
-
-#endif
-
-

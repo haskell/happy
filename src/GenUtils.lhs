@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: GenUtils.lhs,v 1.7 1998/01/09 13:09:32 sof Exp $
+$Id: GenUtils.lhs,v 1.8 1998/06/19 13:40:58 simonm Exp $
 
 Some General Utilities, including sorts, etc.
 This is realy just an extended prelude.
@@ -31,25 +31,10 @@ All the code below is understood to be in the public domain.
 >	fst3,
 >	snd3,
 >	thd3
-
-#if __HASKELL1__ < 3 || ( defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ < 200 )
-
->	,Cmp(..), compare, lookup, isJust
-
-#endif
-
 >        ) where
-
-#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
 
 > import Ix    ( Ix(..) )
 > import Array ( listArray, array, (!) )
-
-#define Text Show
-#define ASSOC(a,b) (a , b)
-#else
-#define ASSOC(a,b) (a := b)
-#endif
 
 %------------------------------------------------------------------------------
 
@@ -77,7 +62,7 @@ HBC has it in one of its builtin modules
            primGenericGe "primGenericGe",
            primGenericGt "primGenericGt"   :: a -> a -> Bool
 
- instance Text (Maybe a) where { showsPrec = primPrint } 
+ instance Show (Maybe a) where { showsPrec = primPrint } 
  instance Eq (Maybe a) where
        (==) = primGenericEq 
        (/=) = primGenericNe
@@ -100,7 +85,7 @@ HBC has it in one of its builtin modules
 > joinMaybe _ Nothing  (Just g) = Just g
 > joinMaybe f (Just g) (Just h) = Just (f g h)
 
-> data MaybeErr a err = Succeeded a | Failed err deriving (Eq,Text)
+> data MaybeErr a err = Succeeded a | Failed err deriving (Eq,Show)
 
 @mkClosure@ makes a closure, when given a comparison and iteration loop. 
 Be careful, because if the functional always makes the object different, 
@@ -204,26 +189,6 @@ Gofer-like stuff:
 >	combine (a:r) = a : combine r
 > 
 
-#if __HASKELL1__ < 3 || ( defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ < 200 )
-
-> lookup :: (Eq a) => a -> [(a,b)] -> Maybe b
-> lookup k env = case [ val | (key,val) <- env, k == key] of
->                [] -> Nothing
->                (val:vs) -> Just val
->
-
-> data Cmp = LT | EQ | GT
-
-> compare a b | a <  b    = LT
->	      | a == b    = EQ
->	      | otherwise = GT 
-
-> isJust :: Maybe a -> Bool
-> isJust (Just _) = True
-> isJust _	  = False
-
-#endif
-
 > assocMaybeErr :: (Eq a) => [(a,b)] -> a -> MaybeErr b String
 > assocMaybeErr env k = case [ val | (key,val) <- env, k == key] of
 >                        [] -> Failed "assoc: "
@@ -255,7 +220,7 @@ will give a very efficent variation of the fib function.
 
 > memoise :: (Ix a) => (a,a) -> (a -> b) -> a -> b
 > memoise bds f = (!) arr
->   where arr = array bds [ ASSOC(t, f t) | t <- range bds ]
+>   where arr = array bds [ (t, f t) | t <- range bds ]
 
 > mapAccumR :: (acc -> x -> (acc, y))         -- Function of elt of input list
 >                                     -- and accumulator, returning new

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Set.lhs,v 1.7 1997/10/07 13:24:16 simonm Exp $
+$Id: Set.lhs,v 1.8 1998/06/19 13:41:06 simonm Exp $
 
 A set ADT.
 
@@ -9,18 +9,8 @@ Simon PJ's second book.  It is therefore *not* covered under the GNU
 License.
 -----------------------------------------------------------------------------
 
-Hack:
-  Haskell 1.2 doesn't allow T     in an export list if T is a type synonym.
-  Haskell 1.3 doesn't allow T(..) in an export list if T is a type synonym.
-
-#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
-# define SYN(t) t
-#else
-# define SYN(t) t(..)
-#endif
-
 > module Set (
->        SYN(Set),
+>        Set,
 >        mkSet, setToList, emptySet, singletonSet,
 >        union, union_Int, unionManySets,
 >        elementOf, isEmptySet,
@@ -32,7 +22,7 @@ Hack:
 
 > type Set a = [a] 
 
- instance (Text a) => Text (Set a) where 
+ instance (Show a) => Show (Set a) where 
     showsPrec _ (MkSet [])     = showString "{}"
     showsPrec _ (MkSet (x:xs)) = showChar '{' . shows x . showl xs
                       where showl []     = showChar '}'

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.14 1998/02/12 15:43:32 simonm Exp $
+$Id: ProduceCode.lhs,v 1.15 1998/06/19 13:41:06 simonm Exp $
 
 The code generator.
 
@@ -14,16 +14,9 @@ The code generator.
 > import Grammar
 > import Target			( Target(..) )
 
-#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
-
 > import Maybe 			( isJust )
 > import Array
 > import Char (isDigit)
-
-#define ASSOC(a,b) (a , b)
-#else
-#define ASSOC(a,b) (a := b)
-#endif
 
 %-----------------------------------------------------------------------------
 Produce the complete output file.
@@ -40,14 +33,14 @@ Produce the complete output file.
 >		-> Maybe String			-- module header
 >		-> Maybe String			-- module trailer
 >		-> Target			-- type of code required
->		-> Bool				-- support pre-1.3 haskell
+>		-> Bool				-- use coercions
 >		-> String
 
 > produceParser
 > 	(GrammarInfo prods lookupProd lookupProdNos nonterms terms eof 
 >		first_term) 
 >	 action goto lexer token_rep token_type nt_types
-> 	 name monad module_header module_trailer target opt1_2 = (
+> 	 name monad module_header module_trailer target coerce = (
 >	 
 > 	  str comment
 >	. maybestr module_header . str "\n"
@@ -73,9 +66,17 @@ data HappyAbsSyn a t1 .. tn
 	...
 	| HappyAbsSynn tn
 
->    produceAbsSynDecl
+>    produceAbsSynDecl 
+
+If we're using coercions, no need for an abstract syntax type at all:
+
+>     | coerce = id
+
+Otherwise, output the declaration in full...
+
+>     | otherwise
 >	= str "data HappyAbsSyn "
->	. str (unwords [ "t" ++ show n | ASSOC(n, Nothing) <- assocs nt_types ])
+>	. str (unwords [ "t" ++ show n | (n, Nothing) <- assocs nt_types ])
 >	. str "\n\t= HappyTerminal " . str token_type
 >	. str "\n\t| HappyErrorToken Int\n"
 >	. interleave "\n" 
@@ -84,7 +85,7 @@ data HappyAbsSyn a t1 .. tn
 >             (case ty of 
 >                 Nothing -> showString " t" . shows n
 >                 Just t  -> brack t)
->         | ASSOC(n, ty) <- assocs nt_types, 
+>         | (n, ty) <- assocs nt_types, 
 >	    (nt_types_index ! n) == n]
 
 %-----------------------------------------------------------------------------
@@ -97,7 +98,10 @@ reduction_1, ...   :: HappyReduction a b
 These are only generated if types for *all* rules are given (and not for array
 based parsers -- types aren't as important there).
 
->    produceTypes | target == TargetArrayBased = id
+>    produceTypes 
+>     | coerce = id		-- ToDo.
+
+>     | target == TargetArrayBased = id
 
 >     | all isJust (elems nt_types) =
 >       str "type HappyReduction = \n\t"
@@ -161,11 +165,12 @@ where n is the non-terminal number, and m is the rule number.
 
 >    produceReduction (nt, toks, sem) i
 
->     | isMonadProd sem
+>     | isMonadProd
 >	= mkReductionHdr (showInt lt) 
->		"happyMonadReduce " (strspace . makeAbsSynCon nt)
+>		"happyMonadReduce " (strspace . this_absSynCon)
 >	. str "(" . interleave " :\n\t" tokPatterns
 >	. str "happyRest)\n\t = "
+>	. tokLets
 >	. str (tail code)
 >       . defaultCase
 >	. str "}"
@@ -174,7 +179,8 @@ where n is the non-terminal number, and m is the rule number.
 >	= mkReductionHdr (shows lt) "happySpecReduce_" id
 >	. interleave "\n\t" tokPatterns
 >	. str " =  "
->	. makeAbsSynCon nt . str "\n\t\t " . brack code
+>	. tokLets
+>	. this_absSynCon . str "\n\t\t " . brack code
 >	. (if null toks || null vars_used then
 >		  id
 >	   else
@@ -187,39 +193,70 @@ where n is the non-terminal number, and m is the rule number.
 > 	= mkReductionHdr (showInt lt) "happyReduce "  id
 >	. str "(" . interleave " :\n\t" tokPatterns
 >	. str "happyRest)\n\t = "
->	. makeAbsSynCon nt . str "\n\t\t " . brack code . str " : happyRest"
+>	. tokLets
+>	. this_absSynCon . str "\n\t\t " . brack code . str " : happyRest"
 >	. defaultCase
 >	. str "}"
 
 >       where 
->		isMonadProd ('%' : code) = True
->		isMonadProd _ = False
+>		isMonadProd = case sem of ('%' : code) -> True
+>			 		  _            -> False
 > 
 >		mkReductionHdr lt s arg = 
 >			mkReductionFun i . str " = "
 >			. str s . lt . strspace . showInt nt . arg
->			. str " reduction where {\n  reduction\n\t"
+>			. strspace
+>			. reduction
+>			. str " where {\n  reduction\n\t"
 > 
+>		reduction | coerce = str "(unsafeCoerce# reduction)"
+>			  | otherwise = str "reduction"
+>
 >		defaultCase = if not (null toks)
 >              			then str ";\n  reduction _ = notHappyAtAll "
 >              			else id
 > 
->		tokPatterns = reverse (zipWith tokPattern [1 :: Int ..] toks)
+>		tokPatterns 
+>		 | coerce = reverse (map mkDummyVar [1 .. length toks])
+>		 | otherwise = reverse (zipWith tokPattern [1..] toks)
 > 
 >		tokPattern n _ | n `notElem` vars_used = str "_"
 >             	tokPattern n t | t >= 0 && t < first_term
->	      		= str "("
->			. makeAbsSynCon t . str "  "
->			. mkHappyVar n
->			. str ")"
+>	      		= if coerce 
+>				then mkHappyVar n
+>			  	else str "("
+>				   . makeAbsSynCon t . str "  "
+>				   . mkHappyVar n
+>				   . str ")"
 >		tokPattern n t
->			= str "(HappyTerminal " 
->			. mkHappyTerminalVar n t
->			. str ")"
-> 
+>			= if coerce
+>				then mkHappyTerminalVar n t
+>				else str "(HappyTerminal " 
+>				   . mkHappyTerminalVar n t
+>				   . str ")"
+>
+>		tokLets 
+>		   | coerce = 
+>		          str "let {\n\t" 
+>			. interleave "; \n\t"
+>				[ tokPattern n t . str " = " . 
+>				  str "(unsafeCoerce# " .
+>				  mkDummyVar n  . str ")"
+>				| (n,t) <- zip [1..] toks ]
+>			. str "} in\n\t\t"
+>
+>		   | otherwise = id
+>
+>		
+>		
 >		(code,vars_used) = expandVars sem
 > 
 >		lt = length toks
+
+>		this_absSynCon | coerce = if isMonadProd then 
+>						str "unsafeCoerce#"
+>					  else id
+>			       | otherwise = makeAbsSynCon nt
 
 %-----------------------------------------------------------------------------
 The token conversion function.
@@ -275,7 +312,7 @@ The token conversion function.
 Use a variable rather than '_' to replace '$$', so we can use it on
 the left hand side of '@'.
 
->	  removeDollorDollor xs = case mapDollorDollor xs of
+>	  removeDollorDollor xs = case mapDollarDollar xs of
 >				   Nothing -> xs
 >				   Just fn -> fn "happy_dollar_dollar"
 
@@ -287,7 +324,7 @@ the left hand side of '@'.
 >     where
 >	  tok_str_fn = case lookup t token_rep of
 >		      Nothing -> Nothing
->		      Just str -> mapDollorDollor str
+>		      Just str -> mapDollarDollar str
 >	  pat = mkHappyVar i
 
 >    tokIndex 
@@ -359,7 +396,7 @@ machinery to discard states in the parser...
 >	. str "happy_n_terms = " . shows n_terminals . str " :: Int\n"
 >	. str "happy_n_nonterms = " . shows n_nonterminals . str " :: Int\n\n"
 
->    produceStateFunction goto ASSOC(state, acts)
+>    produceStateFunction goto (state, acts)
 > 	= foldr (.) id (map produceActions assocs_acts)
 >	. foldr (.) id (map produceGotos   (assocs gotos))
 >	. mkActionName state
@@ -371,19 +408,19 @@ machinery to discard states in the parser...
 >
 >	where gotos = goto ! state
 >	
->	      produceActions ASSOC(t, LR'Fail{-'-}) = id
->	      produceActions ASSOC(t, action@(LR'Reduce{-'-} _))
+>	      produceActions (t, LR'Fail{-'-}) = id
+>	      produceActions (t, action@(LR'Reduce{-'-} _))
 >	      	 | action == default_act = id
 >		 | otherwise = actionFunction t
 >			     . mkAction action . str "\n"
->	      produceActions ASSOC(t, action)
+>	      produceActions (t, action)
 >	      	= actionFunction t
 >		. mkAction action . str "\n"
 >		
->	      produceGotos ASSOC(t, Goto i)
+>	      produceGotos (t, Goto i)
 >	        = actionFunction t
 >		. str "happyGoto " . mkActionName i . str "\n"
->	      produceGotos ASSOC(t, NoGoto) = id
+>	      produceGotos (t, NoGoto) = id
 >	      
 >	      actionFunction t
 >	      	= mkActionName state . strspace
@@ -462,13 +499,13 @@ for types that have alphas in them. Maybe we should
 outlaw them inside { }
 
 >    nt_types_index = array (bounds nt_types) 
->			[ ASSOC(a, fn a b) | ASSOC(a, b) <- assocs nt_types ]
+>			[ (a, fn a b) | (a, b) <- assocs nt_types ]
 >     where
 >	fn n Nothing = n
 >	fn n (Just a) = case lookup a assoc_list of
 >			  Just v -> v
 >			  Nothing -> error ("cant find an item in list")
->	assoc_list = [ (b,a) | ASSOC(a, Just b) <- assocs nt_types ]
+>	assoc_list = [ (b,a) | (a, Just b) <- assocs nt_types ]
 
 >    makeAbsSynCon = mkAbsSynCon nt_types_index
 
@@ -498,12 +535,24 @@ outlaw them inside { }
 >	. str "\n"
 
 >    reduceArrElem n
->      = if opt1_2 then
->		str "\t" . shows n . str " := "
->	      . str "happyReduce_" . shows n
->	 else
->		str "\t(" . shows n . str " , "
->      	      . str "happyReduce_" . shows n . str ")"
+>      = str "\t(" . shows n . str " , "
+>      . str "happyReduce_" . shows n . str ")"
+
+-----------------------------------------------------------------------------
+Replace all the $n variables with happy_vars, and return a list of all the
+vars used in this piece of code.
+
+>    expandVars :: String -> (String,[Int])
+>    expandVars [] = ("",[])
+>    expandVars ('$':r) 
+>    	   | isDigit (head r) = ("happy_var_" ++ num ++ code, read num : vars)
+>    	   | otherwise = error ("Illegal attribute: $" ++ [head r] ++ "\n")
+>    	where
+>    	   (num,rest)  = span isDigit r
+>    	   (code,vars) = expandVars rest
+>    expandVars (c:r) = (c:code,vars)
+>    	where
+>	(code,vars) = expandVars r
 
 > actionVal :: LRAction -> Int
 > actionVal (LR'Shift  state) 	= state + 1
@@ -525,32 +574,16 @@ outlaw them inside { }
 > mkActionName i		= str "action_" . shows i
 
 > getDefault actions =
->   case [ act | ASSOC(-1,act@(LR'Reduce{-'-} _)) <- actions ] of
+>   case [ act | (-1,act@(LR'Reduce{-'-} _)) <- actions ] of
 >	(act:_) -> act	-- use error reduction if there is one.
 >	[] ->
 >	    case reduces of
 >		 [] -> LR'Fail
 >		 (act:_) -> act	-- pick the first one we see for now
 >
->   where reduces = [ act | ASSOC(_,act@(LR'Reduce{-'-} _)) <- actions ]
->   		    ++ [ act | ASSOC(_,(LR'Multiple{-'-} _ 
+>   where reduces = [ act | (_,act@(LR'Reduce{-'-} _)) <- actions ]
+>   		    ++ [ act | (_,(LR'Multiple{-'-} _ 
 >					act@(LR'Reduce{-'-} _))) <- actions ]
-
------------------------------------------------------------------------------
-Replace all the $n variables with happy_vars, and return a list of all the
-vars used in this piece of code.
-
-> expandVars :: String -> (String,[Int])
-> expandVars [] = ("",[])
-> expandVars ('$':r) 
->	| isDigit (head r) = ("happy_var_" ++ num ++ code, read num : vars)
->	| otherwise = error ("Illegal attribute: $" ++ [head r] ++ "\n")
->    where
->	(num,rest)  = span isDigit r
->	(code,vars) = expandVars rest
-> expandVars (c:r) = (c:code,vars)
->    where
->	(code,vars) = expandVars r
 
 -----------------------------------------------------------------------------
 Misc.
@@ -566,20 +599,21 @@ Misc.
 > mkAbsSynCon fx t    	= str "HappyAbsSyn"   . shows (fx ! t)
 > mkHappyVar n     	= str "happy_var_"    . shows n
 > mkReductionFun n 	= str "happyReduce_"  . shows n
+> mkDummyVar n		= str "happy_x_"      . shows n
 
 > specReduceFun 	= (<= (3 :: Int))
 
 > maybestr (Just s)	= str s
 > maybestr _		= id
 
-> mapDollorDollor :: String -> Maybe (String -> String)
-> mapDollorDollor "" = Nothing
-> mapDollorDollor ('$':'$':r) = -- only map first instance
->    case mapDollorDollor r of
+> mapDollarDollar :: String -> Maybe (String -> String)
+> mapDollarDollar "" = Nothing
+> mapDollarDollar ('$':'$':r) = -- only map first instance
+>    case mapDollarDollar r of
 >	Just fn -> error "more that one $$ in pattern"
 >	Nothing -> Just (\ s -> s ++ r)
-> mapDollorDollor (c:r) =
->    case mapDollorDollor r of
+> mapDollarDollar (c:r) =
+>    case mapDollarDollar r of
 >	Just fn -> Just (\ s -> c : fn s)
 >	Nothing -> Nothing
 

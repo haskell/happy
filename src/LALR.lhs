@@ -1,25 +1,15 @@
 -----------------------------------------------------------------------------
-$Id: LALR.lhs,v 1.10 1997/10/07 13:24:11 simonm Exp $
+$Id: LALR.lhs,v 1.11 1998/06/19 13:41:01 simonm Exp $
 
 Generation of LALR parsing tables.
 
 (c) 1993-1996 Andy Gill, Simon Marlow
 -----------------------------------------------------------------------------
 
-Hack:
-  Haskell 1.2 doesn't allow T     in an export list if T is a type synonym.
-  Haskell 1.3 doesn't allow T(..) in an export list if T is a type synonym.
-
-#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
-# define SYN(t) t
-#else
-# define SYN(t) t(..)
-#endif
-
 > module LALR
 >	(genActionTable, genGotoTable, genLR0items, precalcClosure0,
 >	 propLookaheads, calcLookaheads, mergeLookaheadInfo, countConflicts,
->	 SYN(Lr0Item), SYN(Lr1Item))
+>	 Lr0Item, Lr1Item)
 >	where
 
 > import GenUtils
@@ -28,26 +18,13 @@ Hack:
 > import Grammar
 > import First
 
-#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
-
 > import Array
 
-#define ASSOC(a,b) (a , b)
-#else
-#define ASSOC(a,b) (a := b)
-#endif
-
 #if defined(__GLASGOW_HASKELL__)
-#if __GLASGOW_HASKELL__ >= 200
 
 > import GlaExts
 > import ST (runST)
 
-#else
-
-> import PreludeGlaST
-
-#endif
 #endif
 
 > type Lr0Item = (Int,Int)			-- (rule, dot)
@@ -282,7 +259,7 @@ calcLookaheads pass.
 >	   )
 
 > propLookaheads gram sets first = (concat s, array (0,length sets - 1) 
->			[ ASSOC(a,b) | (a,b) <- p ])
+>			[ (a,b) | (a,b) <- p ])
 >   where
 
 >     (s,p) = unzip (zipWith propLASet sets [0..])
@@ -517,7 +494,7 @@ Generating the goto table doesn't need lookahead info.
 >       gotoTable  = listArray (0,length sets-1)
 >         [
 >           (array (1, length non_terms-1) [ 
->		ASSOC(n, case lookup n goto of
+>		(n, case lookup n goto of
 >			Nothing -> NoGoto
 >			Just s  -> Goto s)
 >                             | n <- tail non_terms, n >= 0, n < first_term ])
@@ -535,7 +512,7 @@ Generating the goto table doesn't need lookahead info.
 >	eof = getEOF g
 >       term_lim = (head terms,last terms)
 >       actionTable = array (0,length sets-1)
->             [ ASSOC(set_no, accumArray res
+>             [ (set_no, accumArray res
 >				 LR'Fail term_lim 
 >				(possActions goto set))
 >                   | ((set,goto),set_no) <- zip sets [0..] ]
@@ -545,10 +522,10 @@ Generating the goto table doesn't need lookahead info.
 >               Just t | t >= first_term || t == -1 -> 
 >			case lookup t goto of
 >                       	Nothing -> []
->                               Just j  -> [ ASSOC(t,LR'Shift j{-'-}) ]
+>                               Just j  -> [ (t,LR'Shift j{-'-}) ]
 >               Nothing -> if rule == 0 
->                  then [ ASSOC(eof,LR'Accept{-'-}) ]
->                  else [ ASSOC(a,b) | (a,b) <- 
+>                  then [ (eof,LR'Accept{-'-}) ]
+>                  else [ (a,b) | (a,b) <- 
 >				zip la (repeat (LR'Reduce rule)) ]
 >               _ -> []
 
@@ -590,7 +567,7 @@ file.)
 >	conflictArray = listArray (bounds action) conflictList
 >	conflictList  = map countConflictsState (assocs action)
 >
->	countConflictsState ASSOC(state, actions) 
+>	countConflictsState (state, actions) 
 >	  = foldr countMultiples (0,0) (elems actions)
 >	  where
 >	    countMultiples (LR'Multiple as a) (sr,rr) 
