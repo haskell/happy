@@ -4,7 +4,7 @@
 
 <book id="happy">
   <bookinfo>
-    <date>1999-9-17</date>
+    <date>2000-7-13</date>
     <title>Happy User Guide</title>
     <author>
       <firstname>Simon</firstname>
@@ -16,7 +16,7 @@
     </author>
     <address><email>simonmar@microsoft.com</email></address>
     <copyright>
-      <year>1997-1999</year>
+      <year>1997-2000</year>
       <holder>Simon Marlow</holder>
     </copyright>
     <abstract>
