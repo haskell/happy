@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.41 2001/09/24 14:12:26 simonmar Exp $
+# $Id: Makefile,v 1.42 2001/11/27 04:30:14 sof Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -44,6 +44,7 @@ Version_HC_OPTS	    = -DHAPPY_VERSION=$(ProjectVersion)
 boot ::
 	if [ -d $(FPTOOLS_TOP)/ghc ]; then \
 		(cd $(FPTOOLS_TOP)/ghc/utils/unlit && $(MAKE) boot); \
+		(cd $(FPTOOLS_TOP)/ghc/includes && $(MAKE) boot); \
 		(cd $(FPTOOLS_TOP)/ghc/driver && $(MAKE) boot); \
 	fi 
 
