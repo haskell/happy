@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.66 2005/01/14 14:47:20 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.67 2005/01/18 10:30:59 simonmar Exp $
 
 The code generator.
 
@@ -296,7 +296,7 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 
 >    produceReduction (nt, toks, (code,vars_used), _) i
 
->     | isMonadProd
+>     | isMonadProd && (use_monad || imported_identity)
 >	= mkReductionHdr (showInt lt) "happyMonadReduce "
 >	. char '(' . interleave " `HappyStk`\n\t" tokPatterns
 >	. str "happyRest)\n\t = happyThen ("
