@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.12 1997/10/03 16:27:47 andre Exp $
+$Id: Main.lhs,v 1.13 1997/10/03 16:29:44 andre Exp $
 
 The main driver.
 
@@ -25,8 +25,6 @@ The main driver.
 
 #if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
 
-> import Array
-> import List (nub)
 > import System
 > import Char
 > import IO
