@@ -1777,11 +1777,11 @@ close : '}'                  { () }
 	       <para>
 	       There is some support for monadic parsers.
 	       The "tree decoding" mode 
-	       (see <xref linkend="sec-glr-semantics-tree">) can use the
+	       (see <xref linkend="sec-glr-semantics-tree"/>) can use the
 	       information given in the <literal>%monad</literal> 
 	       declaration to monadify the decoding process. 
 	       This is explained in more detail at
-	       <xref linkend="sec-glr-semantics-tree-monad">.
+	       <xref linkend="sec-glr-semantics-tree-monad"/>.
 	       </para>
 	     </listitem>
 	   </varlistentry>
