@@ -310,7 +310,7 @@ main = case runCalc "1 + 2 + 3" of {
 	_ -> quit } ; _ -> quit } ; _ -> quit } ; _ -> quit }
 quit = appendChan stdout "Test failed\n" abort done
 
--- $Id: Test.hs,v 1.1 1997/02/11 13:12:10 simonm Exp $
+-- $Id: Test.hs,v 1.1.1.1 1997/02/11 13:12:10 simonm Exp $
 
 {-
 	The stack is in the following order throughout the parse:

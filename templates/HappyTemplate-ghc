@@ -1,0 +1,96 @@
+-- $Id: HappyTemplate-ghc,v 1.1.1.1 1997/02/11 13:12:12 simonm Exp $
+
+{-
+	The stack is in the following order throughout the parse:
+
+	i	current token number
+	j	another copy of this to avoid messing with the stack
+	tk	current token semantic value
+	st	current state
+	sts	state stack
+	stk	semantic stack
+-}
+
+-----------------------------------------------------------------------------
+
+happyParse = happyNewToken action_0 [] []
+
+-- All this HappyState stuff is simply because we can't have recursive
+-- types in Haskell without an intervening data structure.
+
+data HappyState b c = HappyState
+	(Int# ->			-- token number
+	 Int# ->			-- token number (yes, again)
+	 b -> 				-- token semantic value
+	 HappyState b c ->		-- current state
+	 [HappyState b c] ->		-- state stack
+	 c)
+
+-----------------------------------------------------------------------------
+-- Accepting the parse
+
+happyAccept j tk st sts [ HappyAbsSyn1 ans ] = happyReturn ans
+happyAccept j tk st sts _                    = notHappyAtAll (-1)
+happyAccept 0# _ _ _ _ = error ""	-- typechecker hack
+
+-----------------------------------------------------------------------------
+-- Shifting a token
+
+happyShift new_state (-1#) tk@(ErrorTok (I# i) tk') st sts stk =
+--     _trace "shifting the error token" $
+     new_state i i tk' (HappyState new_state) (st:sts) (HappyTerminal tk:stk)
+
+happyShift new_state i tk st sts stk =
+     happyNewToken new_state (st:sts) (HappyTerminal tk:stk)
+
+-----------------------------------------------------------------------------
+-- Reducing
+
+-- happyReduce is specialised for the common cases.
+
+happySpecReduce_0 i fn j tk st@(HappyState action) sts stk
+     = action i j tk st (st:sts) (fn : stk)
+happySpecReduce_1 i fn j tk _ sts@(st@(HappyState action):_) (v1:stk')
+     = action i j tk st sts (fn v1 : stk')
+happySpecReduce_2 i fn j tk _ (_:sts@(st@(HappyState action):_)) (v1:v2:stk')
+     = action i j tk st sts (fn v1 v2 : stk')
+happySpecReduce_3 i fn j tk _ (_:_:sts@(st@(HappyState action):_)) 
+	(v1:v2:v3:stk')
+     = action i j tk st sts (fn v1 v2 v3 : stk')
+
+happyReduce k i fn j tk st sts stk = action i j tk st' sts' (fn stk)
+       where sts'@(st'@(HappyState action):_) = drop (I# k) (st:sts)
+
+happyMonadReduce k i c fn j tk st sts stk =
+	happyThen (fn stk) (\r -> action i j tk st' sts' (c r : stk'))
+       where sts'@(st'@(HappyState action):_) = drop (I# k) (st:sts)
+	     stk' = drop (I# k) stk
+
+-----------------------------------------------------------------------------
+-- Moving to a new state after a reduction
+
+happyGoto action j tk st = action j j tk (HappyState action)
+
+-----------------------------------------------------------------------------
+-- Error recovery (-1 is the error token)
+
+-- fail if we are in recovery and no more states to discard
+happyFail  (-1#) tk st' [] stk = happyError
+
+-- discard a state
+happyFail  (-1#) tk st' (st@(HappyState action):sts) stk =
+--	_trace "discarding state" $
+	action (-1#) (-1#) tk st sts stk
+
+-- Enter error recovery: generate an error token,
+-- 			 save the old token and carry on.
+happyFail  i tk st@(HappyState action) sts stk =
+--	_trace "entering error recovery" $
+	action (-1#) (-1#) (ErrorTok (I# i) tk) st sts stk
+
+-- Internal happy errors:
+
+notHappyAtAll = error "Internal Happy error\n"
+
+-- end of Happy Template.
+
