@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.5 1999/10/08 12:00:37 simonmar Exp $
+# $Id: Makefile,v 1.6 2001/02/12 12:11:44 simonmar Exp $
 
 TOP = ../..
 include $(TOP)/mk/boilerplate.mk
@@ -23,33 +23,46 @@ all :: $(TEMPLATES)
 
 override datadir = $(libdir)/happy
 
-HappyTemplate : $(GENERIC_TEMPLATE)
-	$(HC) -E -cpp $(GENERIC_TEMPLATE) > $@
+ghc_411_at_least = $(shell expr "$(GhcMinVersion)" \>= 11)
 
-HappyTemplate-ghc : $(GENERIC_TEMPLATE)
-	$(HC) -E -cpp -DHAPPY_GHC $(GENERIC_TEMPLATE) > $@
+ifeq "$(ghc_411_at_least)" "1"
+CPP_IT = $(GHC) -E -cpp -o
+else
+CPP_IT = $(GHC) -E -cpp >
+endif
 
-HappyTemplate-coerce : $(GENERIC_TEMPLATE)
-	$(HC) -E -cpp -DHAPPY_GHC -DHAPPY_COERCE $(GENERIC_TEMPLATE) > $@
+HappyTemplate.hspp : $(GENERIC_TEMPLATE)
+	$(CPP_IT) $@ $(GENERIC_TEMPLATE)
 
-HappyTemplate-arrays : $(GENERIC_TEMPLATE)
-	$(HC) -E -cpp -DHAPPY_ARRAY $(GENERIC_TEMPLATE) > $@
+HappyTemplate-ghc.hspp : $(GENERIC_TEMPLATE)
+	$(CPP_IT) $@ -DHAPPY_GHC $(GENERIC_TEMPLATE)
 
-HappyTemplate-arrays-ghc : $(GENERIC_TEMPLATE)
-	$(HC) -E -cpp -DHAPPY_GHC -DHAPPY_ARRAY $(GENERIC_TEMPLATE) > $@
+HappyTemplate-coerce.hspp : $(GENERIC_TEMPLATE)
+	$(CPP_IT) $@ -DHAPPY_GHC -DHAPPY_COERCE $(GENERIC_TEMPLATE)
 
-HappyTemplate-arrays-coerce : $(GENERIC_TEMPLATE)
-	$(HC) -E -cpp -DHAPPY_GHC -DHAPPY_ARRAY -DHAPPY_COERCE $(GENERIC_TEMPLATE) > $@
+HappyTemplate-arrays.hspp : $(GENERIC_TEMPLATE)
+	$(CPP_IT) $@ -DHAPPY_ARRAY $(GENERIC_TEMPLATE)
 
-HappyTemplate-arrays-debug : $(GENERIC_TEMPLATE)
-	$(HC) -E -cpp -DHAPPY_ARRAY -DHAPPY_DEBUG $(GENERIC_TEMPLATE) > $@
+HappyTemplate-arrays-ghc.hspp : $(GENERIC_TEMPLATE)
+	$(CPP_IT) $@ -DHAPPY_GHC -DHAPPY_ARRAY $(GENERIC_TEMPLATE)
 
-HappyTemplate-arrays-ghc-debug : $(GENERIC_TEMPLATE)
-	$(HC) -E -cpp -DHAPPY_GHC -DHAPPY_ARRAY -DHAPPY_DEBUG $(GENERIC_TEMPLATE) > $@
+HappyTemplate-arrays-coerce.hspp : $(GENERIC_TEMPLATE)
+	$(CPP_IT) $@ -DHAPPY_GHC -DHAPPY_ARRAY -DHAPPY_COERCE $(GENERIC_TEMPLATE)
 
-HappyTemplate-arrays-coerce-debug : $(GENERIC_TEMPLATE)
-	$(HC) -E -cpp -DHAPPY_GHC -DHAPPY_ARRAY -DHAPPY_COERCE -DHAPPY_DEBUG $(GENERIC_TEMPLATE) > $@
+HappyTemplate-arrays-debug.hspp : $(GENERIC_TEMPLATE)
+	$(CPP_IT) $@ -DHAPPY_ARRAY -DHAPPY_DEBUG $(GENERIC_TEMPLATE)
 
-CLEAN_FILES += $(TEMPLATES)
+HappyTemplate-arrays-ghc-debug.hspp : $(GENERIC_TEMPLATE)
+	$(CPP_IT) $@ -DHAPPY_GHC -DHAPPY_ARRAY -DHAPPY_DEBUG $(GENERIC_TEMPLATE)
+
+HappyTemplate-arrays-coerce-debug.hspp : $(GENERIC_TEMPLATE)
+	$(CPP_IT) $@ -DHAPPY_GHC -DHAPPY_ARRAY -DHAPPY_COERCE -DHAPPY_DEBUG $(GENERIC_TEMPLATE)
+
+# hack to turn cpp-style '# 27 "GenericTemplate.hs"' into 
+# '{-# LINE 27 "GenericTemplate.hs" #-}'.
+% : %.hspp
+	perl -pe 's/^#\s+(\d+)\s+(\"[^\"]*\")/{-# LINE \1 \2 #-}/g' < $< > $@
+
+CLEAN_FILES += $(TEMPLATES) $(patsubst %, %.hspp, $(TEMPLATES))
 
 include $(TOP)/mk/target.mk
