@@ -1,9 +1,11 @@
 {-# OPTIONS -cpp #-}
+{-# LINE 13 "Scan.x" #-}
 module Scan(lexer, AlexPosn(..), Token(..), Tkn(..), tokPosn) where
 
 import Data.Char
 import ParseMonad
 --import Debug.Trace
+
 #if __GLASGOW_HASKELL__ >= 503
 import Data.Array
 import Data.Char (ord)
@@ -25,6 +27,7 @@ alex_deflt :: Array Int Int
 alex_deflt = listArray (0,72) [-1,-1,-1,-1,5,5,-1,-1,-1,10,10,-1,19,-1,19,-1,-1,-1,19,19,-1,-1,21,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,59,-1,59,59,-1,-1,65,-1,65,65,-1,-1,-1,-1,-1,-1,-1]
 
 alex_accept = listArray (0::Int,72) [[],[],[],[(AlexAcc 0 (alex_action_0) Nothing Nothing)],[(AlexAcc 0 (alex_action_0) Nothing Nothing)],[(AlexAcc 0 (alex_action_0) Nothing Nothing)],[],[(AlexAcc 4 (alex_action_4) Nothing Nothing)],[(AlexAcc 1 (alex_action_1) Nothing Nothing)],[(AlexAcc 10 (alex_action_10) Nothing Nothing)],[],[(AlexAcc 2 (alex_action_2) Nothing Nothing)],[(AlexAcc 2 (alex_action_2) Nothing Nothing)],[],[],[(AlexAcc 10 (alex_action_10) Nothing Nothing)],[],[],[],[],[],[(AlexAcc 3 (alex_action_3) Nothing Nothing)],[(AlexAcc 4 (alex_action_4) Nothing Nothing)],[(AlexAcc 4 (alex_action_4) Nothing Nothing)],[(AlexAcc 4 (alex_action_4) Nothing Nothing)],[(AlexAcc 5 (alex_action_5) Nothing Nothing)],[],[],[],[],[],[],[],[(AlexAcc 6 (alex_action_6) Nothing Nothing)],[(AlexAcc 6 (alex_action_6) Nothing Nothing)],[(AlexAcc 10 (alex_action_10) Nothing Nothing)],[(AlexAcc 7 (alex_action_7) Nothing Nothing)],[(AlexAcc 9 (alex_action_9) Nothing Nothing)],[(AlexAcc 8 (alex_action_8) Nothing Nothing)],[(AlexAcc 9 (alex_action_9) Nothing Nothing)],[(AlexAcc 9 (alex_action_9) Nothing Nothing)],[(AlexAcc 10 (alex_action_10) Nothing Nothing)],[(AlexAcc 10 (alex_action_10) Nothing Nothing)],[(AlexAcc 11 (alex_action_11) Nothing Nothing)],[(AlexAcc 11 (alex_action_11) Nothing Nothing)],[(AlexAcc 11 (alex_action_11) Nothing Nothing)],[],[],[],[(AlexAcc 12 (alex_action_12) Nothing Nothing)],[(AlexAcc 12 (alex_action_12) Nothing Nothing)],[(AlexAcc 12 (alex_action_12) Nothing Nothing)],[],[],[],[(AlexAcc 13 (alex_action_13) Nothing Nothing)],[(AlexAcc 13 (alex_action_13) Nothing Nothing)],[],[],[],[],[(AlexAcc 14 (alex_action_14) Nothing Nothing)],[(AlexAcc 14 (alex_action_14) Nothing Nothing)],[],[],[],[],[(AlexAcc 15 (alex_action_15) Nothing Nothing)],[(AlexAcc 16 (alex_action_16) Nothing Nothing)],[(AlexAcc 17 (alex_action_17) Nothing Nothing)],[(AlexAcc 17 (alex_action_17) Nothing Nothing)],[(AlexAcc 18 (alex_action_18) Nothing Nothing)],[(AlexAcc 19 (alex_action_19) Nothing Nothing)]]
+{-# LINE 69 "Scan.x" #-}
 
 -- -----------------------------------------------------------------------------
 -- Token type
@@ -151,10 +154,10 @@ lexToken = do
   inp <- getInput
   sc <- getStartCode
   case alexScan inp sc of
-    Nothing -> case inp of
+    Left _ -> case inp of
 		 (p,_,"")   -> return (T p EOFT)
 		 (p,_,rest) -> lexError "lexical error"
-    Just (inp1,len,t) -> do
+    Right (inp1,len,t) -> do
 	setInput inp1
 	t inp len
 
@@ -165,6 +168,7 @@ skip _ _ = lexToken
 
 andBegin :: Action -> StartCode -> Action
 andBegin act sc inp len = setStartCode sc >> act inp len
+
 
 startcodes :: Int
 startcodes = 1
@@ -231,17 +235,7 @@ alexIndexShortOffAddr arr off = arr ! off
 
 -- alexScan :: AlexInput -> StartCode -> Maybe (AlexInput,Int,act)
 alexScan input (sc)
-  = case alex_scan_tkn (alexInputPrevChar input) (0) input sc AlexNone of
-	AlexNone ->
-
-
-
-	  Nothing
-	AlexLastAcc k input' len -> 
-
-
-
-	  Just (input', len, k)
+  = alex_scan_tkn (alexInputPrevChar input) (0) input sc AlexNone
 
 -- Push the input through the DFA, remembering the most recent accepting
 -- state it encountered.
@@ -249,8 +243,19 @@ alexScan input (sc)
 alex_scan_tkn lc len input s last_acc =
   input `seq` -- strict in the input
   case s of 
-    (-1) -> last_acc
+    (-1) -> finish last_acc input
     _ -> alex_scan_tkn' lc len input s last_acc
+
+finish AlexNone input = 
+
+
+
+	Left input
+finish (AlexLastAcc k input' len) _ =
+
+
+
+	Right (input', len, k)
 
 alex_scan_tkn' lc len input s last_acc =
   let 
@@ -258,7 +263,7 @@ alex_scan_tkn' lc len input s last_acc =
   in
   new_acc `seq`
   case alexGetChar input of
-     Nothing -> new_acc
+     Nothing -> finish new_acc input
      Just (c, new_input) -> 
 
 
@@ -293,8 +298,8 @@ alex_scan_tkn' lc len input s last_acc =
 		   Just (sn) ->
 		      let c = alexInputPrevChar input in c `seq` 
 		      case alex_scan_tkn c (0) input sn AlexNone of
-			  AlexNone      -> fail
-			  AlexLastAcc{} -> ok
+			  Left{}  -> fail
+			  Right{} -> ok
 			-- TODO: there's no need to find the longest
 			-- match when checking the right context, just
 			-- the first match will do.
