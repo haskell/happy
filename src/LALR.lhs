@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: LALR.lhs,v 1.22 2001/09/26 13:07:59 simonmar Exp $
+$Id: LALR.lhs,v 1.23 2002/06/11 09:24:43 simonmar Exp $
 
 Generation of LALR parsing tables.
 
@@ -388,7 +388,8 @@ the spontaneous lookaheads in the right form to begin with (ToDo).
 >	where
 
 >         rebuildArray :: [(Int, Lr0Item, Set Name)] -> Array Int [(Lr0Item, Set Name)]
->         rebuildArray xs = array (bounds prop) [ (a,[(b,c)|(a',b,c) <- xs, a==a']) | (a,_,_) <- xs ]
+>         rebuildArray xs = accumArray (++) [] (0,n_states-1)
+>			      [ (a, [(b,c)]) | (a,b,c) <- xs ]
 
 >	  propagate (las,new) = 
 >		let
