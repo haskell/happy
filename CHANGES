@@ -1,4 +1,27 @@
 -----------------------------------------------------------------------------
+Changes from version 1.8 to 1.9
+
+	* A grammar may now contain several entry points, allowing
+	  several parsers to share parts of the grammar.
+
+	* Some bugfixes.
+
+-----------------------------------------------------------------------------
+Changes from version 1.6 to 1.8
+
+      * Parser table compression, and more efficient
+        table encoding when used with GHC.  Large grammars
+        can now be compiled in much less time/space than
+        before using GHC.
+
+      * Yacc-style operator precedence, thanks to patches
+        from Hermann Oliveira Rodrigues <hermann@dcc.ufmg.br>
+        and Josef Svenningsson <josefs@cs.chalmers.se>.
+
+      * A debug option which causes the generated parser to
+        print tracing information at each step during parsing.
+
+-----------------------------------------------------------------------------
 Changes from version 1.5 to 1.6
 
 * Now written in, and generates, Haskell 98.
