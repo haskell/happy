@@ -8,7 +8,7 @@ License.
 -----------------------------------------------------------------------------
 
 > module Set (
->        Set,
+>        Set, member,
 >        fromList, toAscList, empty, singleton,
 >        union,
 >        null,
@@ -22,6 +22,9 @@ License.
 > type Set a = [a] 
 
 This is where we order the list and remove duplicates.
+
+> member :: Ord a => a -> Set a -> Bool
+> member x xs = x `elem` xs
 
 > empty :: Ord a => Set a
 > empty =  []

@@ -55,12 +55,17 @@ using a memo table so that no work is repeated.
 >		Just c  -> c
 >  where
 >
+>	info' :: [(Name, RuleList)]
 >	info' = map (\(n,rules) -> (n,map (\rule -> (rule,0)) rules)) info
+
+>	info :: [(Name, Set Int)]
 >	info = mkClosure (==) (\f -> map (follow f) f)
 >			(map (\nt -> (nt,lookupProdsOfName g nt)) nts)
 
->	follow f (nt,rules) = (nt, foldr Set.union rules (map (followNT f) rules))
+>	follow :: [(Name, [Int])] -> (Name, Set Int) -> (Name, Set Int)
+>	follow f (nt,rules) = (nt, foldr Set.union rules (map (followNT f) (Set.toAscList rules)))
 
+>	followNT :: [(Name, [Int])] -> Int -> [Int]
 >	followNT f rule = 
 >		case findRule g rule 0 of
 >			Just nt	| nt >= firstStartTok && nt < fst_term ->
@@ -73,7 +78,7 @@ using a memo table so that no work is repeated.
 >	fst_term = first_term g
 
 > closure0 :: Grammar -> (Name -> RuleList) -> Set Lr0Item -> Set Lr0Item
-> closure0 g closureOfNT set = Set.fromList (foldr addRules Set.empty set)
+> closure0 g closureOfNT set = Set.fold addRules Set.empty set
 >    where
 > 	fst_term = first_term g
 >	addRules rule set = Set.union (Set.fromList (rule : closureOfRule rule)) set
@@ -132,8 +137,8 @@ Stamp on overloading with judicious use of type signatures...
 >			LT -> i : result
 >			GT -> carry_on
 >			EQ -> case Set.difference as' as of
->				[] -> result
->				bs -> (rule,dot,bs) : result
+>				bs | Set.null bs -> result
+>				   | otherwise -> (rule,dot,bs) : result
 >  where
 >	carry_on = subtract_item items i result
 
@@ -274,23 +279,29 @@ calcLookaheads pass.
 
 >     (s,p) = unzip (zipWith propLASet sets [0..])
 
+>     propLASet :: (Set Lr0Item, [(Name, Int)]) -> Int -> ([(Int, Lr0Item, Set Name)],(Int,[(Lr0Item, Int, Lr0Item)]))
 >     propLASet (set,goto) i = (start_spont ++ concat s, (i, concat p))
 >	where
 
 >	  (s,p) = unzip (map propLAItem (Set.toAscList set))
 
 >	  -- spontaneous EOF lookaheads for each start state & rule...
+>	  start_info :: [(String, Name, Name, Bool)]
 >	  start_info = starts gram	
+
+>	  start_spont :: [(Int, Lr0Item ,Set Name)]
 >	  start_spont	= [ (start, (start,0), 
 >			     Set.singleton (startLookahead gram partial))
 >			  | (start, (_,_,_,partial)) <- 
 >				zip [ 0 .. length start_info - 1] start_info]
 
+>	  propLAItem :: Lr0Item -> ([(Int, Lr0Item, Set Name)], [(Lr0Item, Int, Lr0Item)])
 >	  propLAItem item@(rule,dot) = (spontaneous, propagated)
 >	    where
 
 >		j = closure1 gram first [(rule,dot,Set.singleton dummyTok)]
 
+>		spontaneous :: [(Int, Lr0Item, Set Name)]
 >		spontaneous = concat [ 
 >		 (case findRule gram rule dot of
 >		     Nothing -> []
@@ -302,6 +313,7 @@ calcLookaheads pass.
 >					   ts' -> [(k, (rule, dot+1), ts')])
 >			| (rule,dot,ts) <- j ]
 
+>		propagated :: [(Lr0Item, Int, Lr0Item)]
 >		propagated = concat [
 >		 (case findRule gram rule dot of
 >		     Nothing -> []
@@ -378,8 +390,8 @@ the spontaneous lookaheads in the right form to begin with (ToDo).
 > get_new' l [] new = l : new
 > get_new' l@(i,item,s) (m@(item',s') : las) new
 >	| item == item' =
->		let s'' = filter (`notElem` s') s in
->		if null s'' then new else
+>		let s'' = Set.filter (\x -> not (Set.member x s')) s in
+>		if Set.null s'' then new else
 >		((i,item,s''):new)
 >	| otherwise = 
 >		get_new' l las new
@@ -529,7 +541,7 @@ Generate the action table
 >		      [ (startLookahead g partial, LR'Accept{-'-}) ]
 >                  | otherwise   
 >		   -> case lookupProdNo g rule of
->                          (_,_,_,p) -> zip la (repeat (LR'Reduce rule p))
+>                          (_,_,_,p) -> zip (Set.toAscList la) (repeat (LR'Reduce rule p))
 >               _ -> []
 
 >	possActions goto coll = 
