@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.37 2000/07/13 14:27:23 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.38 2000/08/06 04:57:46 reid Exp $
 
 The code generator.
 
@@ -41,6 +41,9 @@ The code generator.
 
 > type STUArray s ix e = STArray s ix e
 > type UArray ix e = Array ix e
+> readArray  :: Ix ix => STUArray s ix e -> ix -> ST s e
+> writeArray :: Ix ix => STUArray s ix e -> ix -> e -> ST s ()
+> freeze :: Ix ix => STUArray s ix e -> ST s (UArray ix e)
 > readArray  = readSTArray
 > writeArray = writeSTArray
 > freeze     = freezeSTArray

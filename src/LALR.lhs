@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: LALR.lhs,v 1.16 2000/07/12 16:21:44 simonmar Exp $
+$Id: LALR.lhs,v 1.17 2000/08/06 04:57:46 reid Exp $
 
 Generation of LALR parsing tables.
 
@@ -378,15 +378,17 @@ the spontaneous lookaheads in the right form to begin with (ToDo).
 
 > calcLookaheads
 >	:: Int					-- number of states
->	-> [(Int, Lr0Item, Name)]		-- spontaneous lookaheads
+>	-> [(Int, Lr0Item, Set Name)]		-- spontaneous lookaheads
 >	-> Array Int [(Lr0Item, Int, Lr0Item)]	-- propagated lookaheads
->	-> [(Int, Lr0Item, Set Name)]
+>	-> Array Int [(Lr0Item, Set Name)]
 
 > calcLookaheads n_states spont prop
->	= fst (mkClosure (\(_,new) _ -> null new) propagate
->	   ([], foldr addLookahead []
->	   	[ (i,item,singletonSet t) | (i,item,t) <- spont]))
+>	= rebuildArray $ fst (mkClosure (\(_,new) _ -> null new) propagate
+>	   ([], foldr addLookahead [] spont))
 >	where
+
+>         rebuildArray :: [(Int, Lr0Item, Set Name)] -> Array Int [(Lr0Item, Set Name)]
+>         rebuildArray xs = array (bounds prop) [ (a,[(b,c)|(a',b,c) <- xs, a==a']) | (a,_,_) <- xs ]
 
 >	  propagate (las,new) = 
 >		let

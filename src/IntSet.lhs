@@ -33,6 +33,8 @@ import Word
 -- host architecture.
 
 type WordRep = Word32
+
+word_size :: Int
 word_size = 32
 
 newtype IntSet = IntSet [WordRep]
