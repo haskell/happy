@@ -1,0 +1,238 @@
+{------------------------------------------------------------------------------
+				DFA GENERATION
+
+This module generates a DFA from a scanner by first converting it to an NFA and
+then converting the NFA with the subset construction.
+
+See the chapter on `Finite Automata and Lexical Analysis' in the dragon book
+for an excellent overview of the algorithms in this module.
+
+Chris Dornan, Aug-95, 10-Jul-96, 29-Aug-96, 29-Sep-97
+------------------------------------------------------------------------------}
+
+module DFA(scanner2dfa) where
+
+import Array
+import Char
+import Sort
+import Map
+import Alex
+import RExp
+import NFA
+
+
+
+{- 			  Defined in the Scan Module
+
+-- (This section should logically belong to the DFA module but it has been
+-- placed here to make this module self-contained.)
+--  
+-- `DFA' provides an alternative to `Scanner' (described in the RExp module);
+-- it can be used directly to scan text efficiently.  Additionally it has an
+-- extra place holder for holding action functions for generating
+-- application-specific tokens.  When this place holder is not being used, the
+-- unit type will be used.
+--  
+-- Each state in the automaton consist of a list of `Accept' values, descending
+-- in priority, and an array mapping characters to new states.  As the array
+-- may only cover a sub-range of the characters, a default state number is
+-- given in the third field.  By convention, all transitions to the -1 state
+-- represent invalid transitions.
+--  
+-- A list of accept states is provided for as the original specification may
+-- have been ambiguous, in which case the highest priority token should be
+-- taken (the one appearing earliest in the specification); this can not be
+-- calculated when the DFA is generated in all cases as some of the tokens may
+-- be associated with leading or trailing context or start codes.
+--  
+-- `scan_token' (see above) can deal with unconditional accept states more
+-- efficiently than those associated with context; to save it testing each time
+-- whether the list of accept states contains an unconditional state, the flag
+-- in the first field of `St' is set to true whenever the list contains an
+-- unconditional state.
+--  
+-- The `Accept' structure contains the priority of the token being accepted
+-- (lower numbers => higher priorities), the name of the token, a place holder
+-- that can be used for storing the `action' function for constructing the
+-- token from the input text and thge scanner's state, a list of start codes
+-- (listing the start codes that the scanner must be in for the token to be
+-- accepted; empty => no restriction), the leading and trailing context (both
+-- `Nothing' if there is none).
+--  
+-- The leading context consists simply of a character predicate that will
+-- return true if the last character read is acceptable.  The trailing context
+-- consists of an alternative starting state within the DFA; if this `sub-dfa'
+-- turns up any accepting state when applied to the residual input then the
+-- trailing context is acceptable (see `scan_token' above).
+
+type DFA a = Array SNum (State a)
+
+type SNum = Int
+
+data State a = St Bool [Accept a] SNum (Array Char SNum)
+
+data Accept a = Acc Int String a [StartCode] (MB(Char->Bool)) (MB SNum)
+
+type StartCode = Int
+-}
+
+
+-- Scanners are converted to DFAs by converting them to NFAs first.  Converting
+-- an NFA to a DFA works by identifying the states of the DFA with subsets of
+-- the NFA.  The PartDFA is used to construct the DFA; it is essentially a DFA
+-- in which the states are represented directly by state sets of the NFA.
+-- `nfa2pdfa' constructs the partial DFA from the NFA by searching for all the
+-- transitions from a given list of state sets, initially containing the start
+-- state of the partial DFA, until all possible state sets have been considered
+-- The final DFA is then constructed with a `mk_dfa'.
+
+scanner2dfa:: Scanner -> DFA ()
+scanner2dfa = nfa2dfa . scanner2nfa
+
+nfa2dfa:: NFA -> DFA ()
+nfa2dfa nfa = mk_dfa (nfa2pdfa pdfa [start_pdfa pdfa])
+	where
+	pdfa = new_pdfa nfa
+
+-- `nfa2pdfa' works by taking the next outstanding state set to be considered
+-- and and ignoring it if the state is already in the partial DFA, otherwise
+-- generating all possible transitions from it, adding the new state to the
+-- partial DFA and continuing the closure with the extra states.  Note the way
+-- it incorporates the trailing context references into the search (by
+-- including `rctx_ss' in the search).
+
+nfa2pdfa:: PartDFA -> [StateSet] -> PartDFA
+nfa2pdfa pdfa [] = pdfa
+nfa2pdfa pdfa (ss:umkd) =
+	if ss `in_pdfa` pdfa
+	   then nfa2pdfa pdfa umkd
+	   else nfa2pdfa pdfa' umkd'
+	where
+	pdfa' = add_pdfa ss (PDS accs ss_outs) pdfa
+
+	umkd' = rctx_sss ++ [ss|(_,ss)<-ss_outs] ++ umkd
+
+	ss_outs = [(ch, mk_ss pdfa ss')| 
+			ch<-dfa_alphabet,
+			ss'<-[[s'| (p,s')<-outs, p ch]],
+			not(null ss')]
+
+	rctx_sss = [mk_ss pdfa [s]| Acc _ _ _ _ _ (Just s)<-accs]
+
+	accs = sort_accs [acc| s<-ss, acc<-nst_accs(nfa!s)]
+	outs =           [out| s<-ss, out<-nst_outs(nfa!s)]
+
+	nfa = pdfa_nfa pdfa
+
+-- `sort_accs' sorts a list of accept values into decending order of priority,
+-- eliminating any elements that follow an unconditional accept value.
+
+sort_accs:: [Accept a] -> [Accept a]
+sort_accs accs = foldr chk [] (msort le accs)
+	where
+	chk acc@(Acc _ _ _ [] Nothing Nothing) rst = [acc]
+	chk acc                          rst = acc:rst
+
+	le (Acc n _ _ _ _ _) (Acc n' _ _ _ _ _) = n<=n'
+
+
+
+{------------------------------------------------------------------------------
+			  State Sets and Partial DFAs
+------------------------------------------------------------------------------}
+
+
+
+-- A `PartDFA' is a partially constructed DFA in which the states are
+-- represented by sets of states of the original NFA.  It is represented by a
+-- triple consisting of the start state of the partial DFA, the NFA from which
+-- it is derived and a map from state sets to states of the partial DFA.  The
+-- state set for a given list of NFA states is calculated by taking the epsilon
+-- closure of all the states, sorting the result with duplicates eliminated.
+
+type PartDFA = (StateSet,NFA,Map StateSet PDS)
+--	in new_pdfa, mk_ss, add_pdfa, in_pdfa, start_pdfa, pdfa_nfa, mk_dfa
+
+type StateSet = [Int]
+
+data PDS = PDS [Accept ()] [(Char,StateSet)]
+
+
+new_pdfa:: NFA -> PartDFA
+new_pdfa nfa = (msort (<=) (nst_cl(nfa!0)), nfa, empty (<))
+
+mk_ss:: PartDFA -> [Int] -> StateSet
+mk_ss (_,nfa,_) l = nub' (<=) [s'| s<-l, s'<-nst_cl(nfa!s)]
+
+add_pdfa:: StateSet -> PDS -> PartDFA -> PartDFA
+add_pdfa ss pst (st,nfa,mp) = (st,nfa,ins ss pst mp)
+
+in_pdfa:: StateSet -> PartDFA -> Bool
+in_pdfa ss (_,_,mp) = ss `elt` mp
+
+start_pdfa:: PartDFA -> StateSet
+start_pdfa (st,_,_) = st	
+
+pdfa_nfa:: PartDFA -> NFA
+pdfa_nfa (_,nfa,_) = nfa
+
+
+-- Constructing a DFA from a partial DFA is fairly straightforward.  Note the
+-- way the trailing context references have to be converted from a state in the
+-- NFA to the corresponding state in the DFA.
+
+mk_dfa:: PartDFA -> DFA ()
+mk_dfa pdfa@(st,_,mp) = listArray (0,card mp-1) (map cnv (rng mp))
+	where
+	cnv (PDS accs as) = mk_st (map cnv_acc accs) as'
+		where
+		as' = [(ch,app i_mp ss)| (ch,ss)<-as]
+
+		cnv_acc (Acc n act _ scs lctx rctx) =
+						Acc n act () scs lctx rctx'
+			where
+			rctx' =	case rctx of
+				  Nothing -> Nothing
+				  Just s -> Just(app i_mp (mk_ss pdfa [s]))
+
+	i_mp =  empty (map_lt mp) <+> (zip (st:dom(del st mp)) [0..])
+
+
+-- `mk_st' constructs a state node from the list of accept values and a list of
+-- transitions.  The transitions list all the valid transitions out of the
+-- node; all invalid transitions should be represented in the array by state
+-- -1.  `mk_st' has to work out whether the accept states contain an
+-- unconditional entry, in which case the first field of `St' should be true,
+-- and which default state to use in constructing the array (the array may span
+-- a sub-range of the character set, the state number given the third argument
+-- of `St' being taken as the default if an input character lies outside the
+-- range).  The default values is chosen to minimise the bounds of the array
+-- and so there are two candidates: the value that 0 maps to (in which case
+-- some initial segment of the array may be omitted) or the value that 255 maps
+-- to (in which case a final segment of the array may be omitted), hence the
+-- calculation of `(df,bds)'.
+--  
+-- Note that empty arrays are avoided as they can cause severe problems for
+-- some popular Haskell compilers.
+
+mk_st:: [Accept ()] -> [(Char,Int)] -> State ()
+mk_st accs as =
+	if null as
+	   then St clr accs (-1) (listArray ('0','0') [-1])
+	   else St clr accs df (listArray bds [arr!c| c<-range bds])
+	where
+	clr = not(null[()| Acc _ _ _ [] Nothing Nothing<-accs])
+
+	bds = if sz==0 then ('0','0') else bds0
+
+	(sz,df,bds0) = if sz1<sz2 then (sz1,df1,bds1) else (sz1,df2,bds2)
+
+	(sz1,df1,bds1) = mk_bds(arr!chr 0)
+	(sz2,df2,bds2) = mk_bds(arr!chr 255)
+
+	mk_bds df = (t-b+1,df,(chr b,chr (255-t)))
+		where
+		b = length(takeWhile id [arr!chr c==df| c<-[0..255]])
+		t = length(takeWhile id [arr!chr c==df| c<-[255,254..0]])
+
+	arr = listArray (chr 0,chr 255) (take 256 (repeat (-1))) // as
