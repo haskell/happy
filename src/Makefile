@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.49 2004/08/10 13:53:35 simonmar Exp $
+# $Id: Makefile,v 1.50 2004/08/10 13:56:17 simonmar Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -53,11 +53,7 @@ HAPPYLIB=$(FPTOOLS_TOP_ABS)/happy/templates
 HAPPYBIN=$(FPTOOLS_TOP_ABS)/happy/src/$(HS_PROG)
 endif
 
-# The script isn't installed on Windows; we run the binary directly
-ifeq "$(Windows)" "NO"
 INSTALLED_SCRIPT_PROG  = happy-$(ProjectVersion)
-endif
-
 INPLACE_SCRIPT_PROG    = happy-inplace
 
 ifeq "$(INSTALLING)" "1"
@@ -79,7 +75,11 @@ SCRIPT_SUBST_VARS = 	\
 	HAPPYLIB	\
 	HAPPYBIN
 
+# The script isn't installed on Windows; we run the binary directly
+ifeq "$(Windows)" "NO"
 INSTALL_SCRIPTS += $(SCRIPT_PROG)
+endif
+
 INSTALL_LIBEXECS = $(HS_PROG)
 
 # Hack to avoid automatic cleaning machinery from cleaning Parser.hs
