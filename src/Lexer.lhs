@@ -1,14 +1,8 @@
 -----------------------------------------------------------------------------
-$Id: Lexer.lhs,v 1.22 2005/01/14 14:47:18 simonmar Exp $
-
 The lexer.
 
 (c) 1993-2001 Andy Gill, Simon Marlow
 -----------------------------------------------------------------------------
-
-#if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ < 400
-#define isAlphaNum isAlphanum
-#endif
 
 > module Lexer (
 >       Token(..),

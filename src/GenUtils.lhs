@@ -1,6 +1,4 @@
 -----------------------------------------------------------------------------
-$Id: GenUtils.lhs,v 1.12 2004/10/28 00:32:06 paulcc Exp $
-
 Some General Utilities, including sorts, etc.
 This is realy just an extended prelude.
 All the code below is understood to be in the public domain.
@@ -51,34 +49,6 @@ HBC has it in one of its builtin modules
 > mapMaybe f (a:r) = case f a of
 >                       Nothing -> mapMaybe f r
 >                       Just b  -> b : mapMaybe f r
-
-#ifdef __GOFER__
-
- primitive primPrint "primPrint" :: Int -> a -> ShowS
-
-#endif
-
-#ifdef __GOFER__
-
- primitive primGenericEq "primGenericEq",
-           primGenericNe "primGenericNe",
-           primGenericLe "primGenericLe",
-           primGenericLt "primGenericLt",
-           primGenericGe "primGenericGe",
-           primGenericGt "primGenericGt"   :: a -> a -> Bool
-
- instance Show (Maybe a) where { showsPrec = primPrint } 
- instance Eq (Maybe a) where
-       (==) = primGenericEq 
-       (/=) = primGenericNe
-
- instance (Ord a) => Ord (Maybe a)
-   where 
-       Nothing  <=  _       = True
-       _        <=  Nothing = True
-       (Just a) <= (Just b) = a <= b
-
-#endif
 
 > maybeMap :: (a -> b) -> Maybe a -> Maybe b
 > maybeMap f (Just a) = Just (f a)

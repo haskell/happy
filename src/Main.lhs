@@ -31,12 +31,8 @@ GLR amendments (c) University of Durham, Ben Medlock 2001
 > import Foreign
 > import Foreign.C
 #endif
-#if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 400
-# if __GLASGOW_HASKELL__ >= 503
+#if defined(__GLASGOW_HASKELL__)
 > import GHC.Prim ( unsafeCoerce# )
-# else
-> import PrelGHC (unsafeCoerce#)
-# endif
 #define sCC _scc_
 > coerceParser = unsafeCoerce#
 #else
@@ -572,7 +568,7 @@ Extract various command-line options.
 > foreign import stdcall "GetModuleFileNameA" unsafe
 >   getModuleFileName :: Ptr () -> CString -> Int -> IO Int32
 #else
-> getBaseDir :: IO (Maybe String) = do return Nothing
+> getBaseDir = do return Nothing
 #endif
 > normalisePath :: String -> String
 > -- Just changes '\' to '/'

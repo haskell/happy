@@ -16,21 +16,10 @@ Generation of LALR parsing tables.
 > import qualified Set hiding ( Set )
 > import Grammar
 
-#if __GLASGOW_HASKELL__ >= 503
-
 > import Control.Monad.ST
 > import Data.Array.ST
 > import Data.Array hiding (bounds)
 > import Data.List (nub)
-
-#elif defined(__GLASGOW_HASKELL__)
-
-> import ST
-> import MArray
-> import Array 	hiding (bounds)
-> import List (nub)
-
-#endif
 
 > unionMap :: (Ord b) => (a -> Set b) -> Set a -> Set b
 > unionMap f = Set.fold (Set.union . f) Set.empty
@@ -333,9 +322,7 @@ part of the input: it accepts when the error token is found.
 -----------------------------------------------------------------------------
 Calculate lookaheads
 
-#if defined(__GLASGOW_HASKELL__)
-
-Special version using a mutable array for GHC.
+Special version using a mutable array:
 
 > calcLookaheads
 >	:: Int					-- number of states
@@ -404,53 +391,51 @@ the spontaneous lookaheads in the right form to begin with (ToDo).
 >	| i < i' = (i,item,s):m:las
 >	| otherwise = m : fold_lookahead l las
 
-#else /* not __GLASGOW_HASKELL */
+Normal version:
 
-> calcLookaheads
->	:: Int					-- number of states
->	-> [(Int, Lr0Item, Set Name)]		-- spontaneous lookaheads
->	-> Array Int [(Lr0Item, Int, Lr0Item)]	-- propagated lookaheads
->	-> Array Int [(Lr0Item, Set Name)]
+calcLookaheads
+      :: Int					-- number of states
+      -> [(Int, Lr0Item, Set Name)]		-- spontaneous lookaheads
+      -> Array Int [(Lr0Item, Int, Lr0Item)]	-- propagated lookaheads
+      -> Array Int [(Lr0Item, Set Name)]
 
-> calcLookaheads n_states spont prop
->	= rebuildArray $ fst (mkClosure (\(_,new) _ -> null new) propagate
->	   ([], foldr addLookahead [] spont))
->	where
+calcLookaheads n_states spont prop
+      = rebuildArray $ fst (mkClosure (\(_,new) _ -> null new) propagate
+         ([], foldr addLookahead [] spont))
+      where
 
->         rebuildArray :: [(Int, Lr0Item, Set Name)] -> Array Int [(Lr0Item, Set Name)]
->         rebuildArray xs = accumArray (++) [] (0,n_states-1)
->			      [ (a, [(b,c)]) | (a,b,c) <- xs ]
+        rebuildArray :: [(Int, Lr0Item, Set Name)] -> Array Int [(Lr0Item, Set Name)]
+        rebuildArray xs = accumArray (++) [] (0,n_states-1)
+      		      [ (a, [(b,c)]) | (a,b,c) <- xs ]
 
->	  propagate (las,new) = 
->		let
->		   items = [ (i,item'',s) | (j,item,s) <- new, 
->				       (item',i,item'') <- prop ! j,
->				       item == item' ]
->		   new_new = foldr (\i new -> getNew i las new) [] items
->		   new_las = foldr addLookahead las new
->		in
->		(new_las, new_new)
+        propagate (las,new) = 
+      	let
+      	   items = [ (i,item'',s) | (j,item,s) <- new, 
+      			       (item',i,item'') <- prop ! j,
+      			       item == item' ]
+      	   new_new = foldr (\i new -> getNew i las new) [] items
+      	   new_las = foldr addLookahead las new
+      	in
+      	(new_las, new_new)
 
-> addLookahead :: (Int,Lr0Item,Set Name) -> [(Int,Lr0Item,Set Name)]
->		-> [(Int,Lr0Item,Set Name)]
-> addLookahead l [] = [l]
-> addLookahead l@(i,item,s) (m@(i',item',s'):las)
->  	| i == i' && item == item' = (i,item, s `Set.union` s'):las
->	| i < i' = (i,item,s):m:las
->	| otherwise = m : addLookahead l las
+addLookahead :: (Int,Lr0Item,Set Name) -> [(Int,Lr0Item,Set Name)]
+      	-> [(Int,Lr0Item,Set Name)]
+addLookahead l [] = [l]
+addLookahead l@(i,item,s) (m@(i',item',s'):las)
+ 	| i == i' && item == item' = (i,item, s `Set.union` s'):las
+      | i < i' = (i,item,s):m:las
+      | otherwise = m : addLookahead l las
 
-> getNew :: (Int,Lr0Item,Set Name) -> [(Int,Lr0Item,Set Name)]
->	-> [(Int,Lr0Item,Set Name)] -> [(Int,Lr0Item,Set Name)]
-> getNew l [] new = l:new
-> getNew l@(i,item,s) (m@(i',item',s'):las) new
->  	| i == i' && item == item' = 
->		let s'' = filter (`notElem` s') s in
->		if null s'' then new else
->		((i,item,s''):new)
->	| i < i'    = (i,item,s):new
->	| otherwise = getNew l las new
-
-#endif
+getNew :: (Int,Lr0Item,Set Name) -> [(Int,Lr0Item,Set Name)]
+      -> [(Int,Lr0Item,Set Name)] -> [(Int,Lr0Item,Set Name)]
+getNew l [] new = l:new
+getNew l@(i,item,s) (m@(i',item',s'):las) new
+ 	| i == i' && item == item' = 
+      	let s'' = filter (`notElem` s') s in
+      	if null s'' then new else
+      	((i,item,s''):new)
+      | i < i'    = (i,item,s):new
+      | otherwise = getNew l las new
 
 -----------------------------------------------------------------------------
 Merge lookaheads

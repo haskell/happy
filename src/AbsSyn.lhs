@@ -1,6 +1,4 @@
 -----------------------------------------------------------------------------
-$Id: AbsSyn.lhs,v 1.12 2005/01/14 14:47:16 simonmar Exp $
-
 Abstract syntax for grammar files.
 
 (c) 1993-2001 Andy Gill, Simon Marlow

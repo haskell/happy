@@ -1,5 +1,3 @@
-# -----------------------------------------------------------------------------
-
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
 
@@ -18,12 +16,6 @@ endif
 HS_PROG = happy$(HS_PROG_EXT)
 
 SRC_HC_OPTS += -cpp -fglasgow-exts $(HappyHcOpts)
-
-ghc_lt_503 = $(shell if (test $(GhcCanonVersion) -lt 503); then echo YES; else echo NO; fi)
-ifeq "$(ghc_lt_503)" "YES"
-SRC_HC_OPTS += -package lang
-endif
-
 Parser_HC_OPTS      = -Onot
 
 ifeq "$(Windows)" "YES"

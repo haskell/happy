@@ -3,7 +3,7 @@ import ParseMonad
 import AbsSyn
 import Lexer
 
--- parser produced by Happy Version 1.14
+-- parser produced by Happy Version 1.15
 
 data HappyAbsSyn 
 	= HappyTerminal Token
@@ -27,7 +27,7 @@ type HappyReduction m =
 	-> [HappyState (Token) (HappyStk HappyAbsSyn -> m HappyAbsSyn)] 
 	-> HappyStk HappyAbsSyn 
 	-> m HappyAbsSyn
-
+{- HAND-EDITED: Hugs doesn't like the types below...
 action_0,
  action_1,
  action_2,
@@ -132,7 +132,7 @@ happyReduce_1,
  happyReduce_35,
  happyReduce_36,
  happyReduce_37 :: () => HappyReduction (P)
-
+-}
 action_0 (30) = happyShift action_3
 action_0 (4) = happyGoto action_4
 action_0 (16) = happyGoto action_2
@@ -707,22 +707,13 @@ happySeq = happyDontSeq
 happyError :: P a
 happyError s l = failP (show l ++ ": Parse error\n") s l
 {-# LINE 1 "GenericTemplate.hs" #-}
--- $Id: Parser.hs,v 1.22 2005/01/14 14:47:18 simonmar Exp $
+{-# LINE 1 "<eingebaut>" #-}
+{-# LINE 1 "<Kommandozeile>" #-}
+{-# LINE 1 "GenericTemplate.hs" #-}
+-- Id: GenericTemplate.hs,v 1.26 2005/01/14 14:47:22 simonmar Exp 
 
-{-# LINE 15 "GenericTemplate.hs" #-}
-
-
-
-
-
-
-
-
-
-
-
-
-
+{-# LINE 16 "GenericTemplate.hs" #-}
+{-# LINE 28 "GenericTemplate.hs" #-}
 
 
 
@@ -786,8 +777,7 @@ happyAccept j tk st sts (HappyStk ans _) =
 -----------------------------------------------------------------------------
 -- Arrays only: do the next action
 
-{-# LINE 154 "GenericTemplate.hs" #-}
-
+{-# LINE 155 "GenericTemplate.hs" #-}
 
 -----------------------------------------------------------------------------
 -- HappyState data type (not arrays)
@@ -864,14 +854,7 @@ happyDropStk n (x `HappyStk` xs) = happyDropStk (n - ((1)::Int)) xs
 -----------------------------------------------------------------------------
 -- Moving to a new state after a reduction
 
-
-
-
-
-
-
-
-
+{-# LINE 239 "GenericTemplate.hs" #-}
 happyGoto action j tk st = action j j tk (HappyState action)
 
 
@@ -928,14 +911,7 @@ happyDontSeq a b = b
 -- of deciding to inline happyGoto everywhere, which increases the size of
 -- the generated parser quite a bit.
 
-
-
-
-
-
-
-
-
+{-# LINE 303 "GenericTemplate.hs" #-}
 {-# NOINLINE happyShift #-}
 {-# NOINLINE happySpecReduce_0 #-}
 {-# NOINLINE happySpecReduce_1 #-}

@@ -1,6 +1,4 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.67 2005/01/18 10:30:59 simonmar Exp $
-
 The code generator.
 
 (c) 1993-2001 Andy Gill, Simon Marlow
@@ -19,53 +17,12 @@ The code generator.
 > import Char
 > import List
 
-#if __GLASGOW_HASKELL__ >= 503
-
 > import Control.Monad.ST
 > import Array              ( Array )
 > import Data.Array.ST      ( STUArray )
 > import Data.Array.Unboxed ( UArray )
 > import Data.Array.MArray
 > import Data.Array.IArray 
-> 
-> marray_indices a = Data.Array.MArray.indices a
-
-#elif __GLASGOW_HASKELL__ > 408
-
-> import ST
-> import MArray
-> import IArray
-> marray_indices a = MArray.indices a
-
-#elif __GLASGOW_HASKELL__ == 408
-
-> import MArray hiding (assocs, indices, elems)
-> import IArray
-> marray_indices a = MArray.indices a	-- add args to avoid MR :-(
-> newArray bounds val = do 
->   a <- marray bounds
->   sequence_ [ put a i val | i <- marray_indices a ]
->   return a
-> readArray  a ix   = get a ix
-> writeArray a ix e = put a ix e
-
-#else
-
-> import Array
-
-> type STUArray s ix e = STArray s ix e
-> type UArray ix e = Array ix e
-> newArray   :: Ix ix => (ix,ix) -> e -> ST s (STUArray s ix e)
-> readArray  :: Ix ix => STUArray s ix e -> ix -> ST s e
-> writeArray :: Ix ix => STUArray s ix e -> ix -> e -> ST s ()
-> freeze     :: Ix ix => STUArray s ix e -> ST s (UArray ix e)
-> newArray   = newSTArray
-> readArray  = readSTArray
-> writeArray = writeSTArray
-> freeze     = freezeSTArray
-> marray_indices arr = range (boundsSTArray arr)
-
-#endif
 
 %-----------------------------------------------------------------------------
 Produce the complete output file.

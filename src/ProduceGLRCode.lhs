@@ -5,9 +5,6 @@ This module is designed as an extension to the Haskell parser generator Happy.
 	-- initial code, for structure parsing 
 (c) University of Durham, Paul Callaghan 2004
 	-- extension to semantic rules, and various optimisations
-
-$Id: ProduceGLRCode.lhs,v 1.15 2005/01/14 14:47:21 simonmar Exp $
-
 %-----------------------------------------------------------------------------
 
 > module ProduceGLRCode ( produceGLRParser
@@ -21,24 +18,11 @@ $Id: ProduceGLRCode.lhs,v 1.15 2005/01/14 14:47:21 simonmar Exp $
 > import GenUtils ( fst3, thd3, mapDollarDollar )
 > import GenUtils ( str, char, nl, brack, brack', interleave, maybestr )
 > import Grammar
-
-#if __GLASGOW_HASKELL__ >= 503
-
 > import System.IO
 > import Data.Array
 > import Data.Maybe ( fromJust )
 > import Data.Char ( isUpper, isSpace )
 > import Data.List ( nub, (\\), sort )
-
-#else
-
-> import IOExts
-> import Array
-> import Maybe ( fromJust )
-> import Char ( isUpper, isSpace )
-> import List ( nub, (\\), sort )
-
-#endif
 
 %-----------------------------------------------------------------------------
 File and Function Names

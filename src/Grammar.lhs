@@ -1,6 +1,4 @@
 -----------------------------------------------------------------------------
-$Id: Grammar.lhs,v 1.24 2005/01/14 14:47:16 simonmar Exp $
-
 The Grammar data type.
 
 (c) 1993-2001 Andy Gill, Simon Marlow
