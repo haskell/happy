@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.49 2003/12/12 10:49:08 simonmar Exp $
+$Id: Main.lhs,v 1.50 2004/05/28 20:17:54 mthomas Exp $
 
 The main driver.
 
@@ -27,7 +27,11 @@ The main driver.
 > import IO
 > import Array( assocs, elems, (!) )
 > import List( nub, isSuffixOf )
-
+#if defined(mingw32_HOST_OS)
+> import Foreign.Marshal.Array
+> import Foreign
+> import Foreign.C
+#endif
 #if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 400
 # if __GLASGOW_HASKELL__ >= 503
 > import GHC.Prim ( unsafeCoerce# )
@@ -456,7 +460,7 @@ Extract various command-line options.
 
 > getTemplate def cli
 > 	= case [ s | (OptTemplate s) <- cli ] of
->		[]	   -> return def
+>		[]	   -> def
 >		f:fs       -> return (last (f:fs))
 
 > getMagicName cli
@@ -489,7 +493,42 @@ Extract various command-line options.
 > usageHeader :: String -> String
 > usageHeader prog = "Usage: " ++ prog ++ " [OPTION...] file\n"
 
-> template_dir :: String
-> template_dir = "/usr/local/lib/happy"
+> template_dir :: IO String
+> template_dir =  do maybe_exec_dir <- getBaseDir -- Get directory of executable
+> 		     case maybe_exec_dir of
+>				 Nothing  -> return "/usr/local/lib/happy"
+>				 Just dir -> return dir
+
+
+> getBaseDir :: IO (Maybe String)
+#if defined(mingw32_HOST_OS)
+> getBaseDir = do let len = (2048::Int) -- plenty, PATH_MAX is 512 under Win32.
+> 		  buf <- mallocArray len
+>                 ret <- getModuleFileName nullPtr buf len
+>                 if ret == 0 then free buf >> return Nothing
+>                             else do s <- peekCString buf
+>                                     free buf
+>                                     return (Just (rootDir s))
+>   where
+>     rootDir s = reverse (dropList "/happy.exe" (reverse (normalisePath s)))
+
+> foreign import stdcall "GetModuleFileNameA" unsafe
+>   getModuleFileName :: Ptr () -> CString -> Int -> IO Int32
+#else
+> getBaseDir :: IO (Maybe String) = do return Nothing
+#endif
+> normalisePath :: String -> String
+> -- Just changes '\' to '/'
+
+#if defined(mingw32_HOST_OS)
+> normalisePath xs = subst '\\' '/' xs
+> subst a b ls = map (\ x -> if x == a then b else x) ls
+#else
+> normalisePath xs   = xs
+#endif
+> dropList :: [b] -> [a] -> [a]
+> dropList [] xs    = xs
+> dropList _  xs@[] = xs
+> dropList (_:xs) (_:ys) = dropList xs ys
 
 -----------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.47 2004/05/21 06:38:13 mthomas Exp $
+# $Id: Makefile,v 1.48 2004/05/28 20:17:55 mthomas Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -24,6 +24,10 @@ SRC_HC_OPTS += -cpp -fglasgow-exts -package lang $(HappyHcOpts)
 
 Parser_HC_OPTS      = -Onot
 Version_HC_OPTS	    = -DHAPPY_VERSION=$(ProjectVersion)
+
+ifeq "$(HOSTPLATFORM)" "i386-unknown-mingw32"
+Main_HC_OPTS += -Dmingw32_HOST_OS=1
+endif
 
 # GHC opts are not a good idea for a source distribution
 GHC_HAPPY_OPTS      =
