@@ -1575,7 +1575,9 @@ happy [ <emphasis>options</emphasis> ] <emphasis>filename</emphasis> [ <emphasis
 </programlisting>
 
     <para>All the command line options are optional (!) and may occur
-    either before or after the input file name.</para>
+    either before or after the input file name. Options that take
+    arguments may be given multiple times, and the last occurrence
+    will be the value used.</para>
 
     <para>There are two types of grammar files,
     <filename>file.y</filename> and <filename>file.ly</filename>, with
@@ -1594,82 +1596,20 @@ happy [ <emphasis>options</emphasis> ] <emphasis>filename</emphasis> [ <emphasis
     <variablelist>
 
       <varlistentry>
-	<term> <literal>-a | --arrays</literal> </term> 
+	<term><option>-o</option> <replaceable>file</replaceable></term>
+	<term><option>--outfile</option>=<replaceable>file</replaceable></term>
 	<listitem>
-	  <indexterm>
-	    <primary>arrays</primary>
-	  </indexterm>
-	  <indexterm>
-	    <primary>back-ends</primary>
-	    <secondary>arrays</secondary>
-	  </indexterm>
-	  <para> Instructs <application>Happy</application> to generate a parser
-          using an array-based shift reduce parser.  When used in
-          conjunction with <literal>-g</literal>, the arrays will be
-          encoded as strings, resulting in faster parsers.  Without
-          <literal>-g</literal>, standard Haskell arrays will be
-          used.</para>
+	  <para>Specifies the destination of the generated parser module.
+	  If omitted, the parser will be placed in
+          <replaceable>file</replaceable><literal>.hs</literal>,
+	  where <replaceable>file</replaceable> is the name of the input
+          file with any extension removed.</para>
 	</listitem>
       </varlistentry>
 
       <varlistentry>
-	<term> <literal>-g | --ghc</literal> </term>
-	<listitem>
-	  <indexterm>
-	    <primary>GHC</primary>
-	  </indexterm>
-	  <indexterm>
-	    <primary>back-ends</primary>
-	    <secondary>GHC</secondary>
-	  </indexterm>
-	  <para>Instructs <application>Happy</application> to generate a parser
-	  that uses GHC-specific extensions to obtain faster
-	  code.</para>
-	</listitem>
-      </varlistentry>
-
-      <varlistentry>
-	<term> <literal>-c | --coerce</literal> </term>
-	<listitem>
-	  <indexterm>
-	    <primary>coerce</primary>
-	  </indexterm>
-	  <indexterm>
-	    <primary>back-ends</primary>
-	    <secondary>coerce</secondary>
-	  </indexterm>
-	  <para> Use GHC's <literal>unsafeCoerce#</literal> extension to
-          generate smaller faster parsers.  Type-safety isn't
-          compromised.</para>
-
-	  <para>This option may only be used in conjuction with
-          <literal>-g</literal>.</para>
-	</listitem>
-      </varlistentry>
-
-      <varlistentry>
-	<term> <literal>-d | --debug</literal> </term>
-	<listitem>
-	  <indexterm>
-	    <primary>debug</primary>
-	  </indexterm>
-	  <indexterm>
-	    <primary>back-ends</primary>
-	    <secondary>debug</secondary>
-	  </indexterm>
-	  <para>Generate a parser that will print debugging
-	  information to <literal>stderr</literal> at run-time,
-	  including all the shifts, reductions, state transitions and
-	  token inputs performed by the parser.</para>
-
-	  <para>This option can only be used in conjunction with
-	  <literal>-a</literal>.</para>
-	</listitem>
-      </varlistentry>
-
-      <varlistentry>
-	<term> <literal>-i[&lt;filename&gt;] |
-	--info[=&lt;filename&gt;]</literal> </term>
+	<term><option>-i</option><optional><replaceable>file</replaceable></optional></term>
+	<term><option>--info</option><optional>=<replaceable>file</replaceable></optional></term>
 	<listitem>
 	  <indexterm>
 	    <primary>info file</primary>
@@ -1681,36 +1621,43 @@ happy [ <emphasis>options</emphasis> ] <emphasis>filename</emphasis> [ <emphasis
           optional (note that there's no space between
           <literal>-i</literal> and the filename in the short
           version), and if omitted the info file will be written to
-          <literal>&lt;file&gt;.info</literal> (where <literal>&lt;file&gt</literal>; is
-          the input file name with any extension removed). </para>
+          <replaceable>file</replaceable><literal>.info</literal> (where
+          <replaceable>file</replaceable> is the input file name with any
+          extension removed).</para>
 	</listitem>
       </varlistentry>
 
       <varlistentry>
-	<term> <literal>-o <replaceable>filename</replaceable> |
-	--outfile=<replaceable>filename</replaceable></literal> </term>
+	<term><option>-t</option> <replaceable>dir</replaceable></term>
+	<term><option>--template</option>=<replaceable>dir</replaceable></term> 
 	<listitem>
-	  <para>Specifies the destination of the generated parser
-          module.  If omitted, the parser will be placed in
-          <literal><replaceable>file</replaceable>.hs</literal>, where
-          <replaceable>file</replaceable> is the name of the input
-          file with any extension removed.</para>
+	  <indexterm>
+	    <primary>template files</primary>
+	  </indexterm>
+	  <para>Instructs <application>Happy</application> to use this directory
+          when looking for template files: these files contain the
+          static code that <application>Happy</application> includes in every
+          generated parser.  You shouldn't need to use this option if
+          <application>Happy</application> is properly configured for your
+          computer.</para>
 	</listitem>
       </varlistentry>
 
       <varlistentry>
-	<term> <literal>-m <replaceable>name</replaceable> | --magic-name=<replaceable>name</replaceable></literal> </term>
+	<term><option>-m</option> <replaceable>name</replaceable></term>
+	<term><option>--magic-name</option>=<replaceable>name</replaceable></term>
 	<listitem>
 	  <para> <application>Happy</application> prefixes all the symbols it uses internally
           with either <literal>happy</literal> or <literal>Happy</literal>.  To use a
           different string, for example if the use of <literal>happy</literal>
           is conflicting with one of your own functions, specify the
-          prefix using the <literal>-m</literal> option.</para>
+          prefix using the <option>-m</option> option.</para>
 	</listitem>
       </varlistentry>
 
       <varlistentry>
-	<term> <literal>-s | --strict</literal> </term>
+	<term><option>-s</option></term>
+	<term><option>--strict</option></term>
 	<listitem>
 	  <para>NOTE: the <option>--strict</option> option is
 	  experimental and may cause unpredictable results.</para>
@@ -1727,38 +1674,105 @@ happy [ <emphasis>options</emphasis> ] <emphasis>filename</emphasis> [ <emphasis
       </varlistentry>
 
       <varlistentry>
-	<term> <literal>-v | --version</literal> </term>
+	<term><option>-g</option></term>
+	<term><option>--ghc</option></term>
 	<listitem>
-	  <para>Print version information on standard output then exit
+	  <indexterm>
+	    <primary>GHC</primary>
+	  </indexterm>
+	  <indexterm>
+	    <primary>back-ends</primary>
+	    <secondary>GHC</secondary>
+	  </indexterm>
+	  <para>Instructs <application>Happy</application> to generate a parser
+	  that uses GHC-specific extensions to obtain faster code.</para>
+	</listitem>
+      </varlistentry>
+
+      <varlistentry>
+	<term><option>-c</option></term>
+	<term><option>--coerce</option></term>
+	<listitem>
+	  <indexterm>
+	    <primary>coerce</primary>
+	  </indexterm>
+	  <indexterm>
+	    <primary>back-ends</primary>
+	    <secondary>coerce</secondary>
+	  </indexterm>
+	  <para> Use GHC's <literal>unsafeCoerce#</literal> extension to
+          generate smaller faster parsers.  Type-safety isn't
+          compromised.</para>
+
+	  <para>This option may only be used in conjuction with
+          <option>-g</option>.</para>
+	</listitem>
+      </varlistentry>
+
+      <varlistentry>
+	<term><option>-a</option></term>
+	<term><option>--arrays</option></term> 
+	<listitem>
+	  <indexterm>
+	    <primary>arrays</primary>
+	  </indexterm>
+	  <indexterm>
+	    <primary>back-ends</primary>
+	    <secondary>arrays</secondary>
+	  </indexterm>
+	  <para> Instructs <application>Happy</application> to generate a parser
+          using an array-based shift reduce parser.  When used in
+          conjunction with <option>-g</option>, the arrays will be
+          encoded as strings, resulting in faster parsers.  Without
+          <option>-g</option>, standard Haskell arrays will be
+          used.</para>
+	</listitem>
+      </varlistentry>
+
+      <varlistentry>
+	<term><option>-d</option></term>
+	<term><option>--debug</option></term>
+	<listitem>
+	  <indexterm>
+	    <primary>debug</primary>
+	  </indexterm>
+	  <indexterm>
+	    <primary>back-ends</primary>
+	    <secondary>debug</secondary>
+	  </indexterm>
+	  <para>Generate a parser that will print debugging
+	  information to <literal>stderr</literal> at run-time,
+	  including all the shifts, reductions, state transitions and
+	  token inputs performed by the parser.</para>
+
+	  <para>This option can only be used in conjunction with
+	  <option>-a</option>.</para>
+	</listitem>
+      </varlistentry>
+
+      <varlistentry>
+	<term><option>-?</option></term>
+	<term><option>--help</option></term>
+	<listitem>
+	  <para>Print usage information on standard output then exit
 	  successfully.</para>
 	</listitem>
       </varlistentry>
 
       <varlistentry>
-	<term> <literal>-t <replaceable>directory</replaceable> | --template
-<replaceable>directory</replaceable></literal> </term> 
+	<term><option>-V</option></term>
+	<term><option>--version</option></term>
 	<listitem>
-	  <indexterm>
-	    <primary>template files</primary>
-	  </indexterm>
-	  <para>Instructs <application>Happy</application> to use this directory
-          when looking for template files: these files contain the
-          static code that <application>Happy</application> includes in every
-          generated parser.  You shouldn't need to use this option if
-          <application>Happy</application> is properly configured for your
-          computer.</para>
+	  <para>Print version information on standard output then exit
+	  successfully. Note that for legacy reasons <option>-v</option>
+	  is supported, too, but the use of it is deprecated.
+	  <option>-v</option> will be used for verbose mode when it is
+	  actually implemented.</para>
 	</listitem>
       </varlistentry>
       
     </variablelist>
 
-    <para>
-      Options that take arguments may be given multiple times, and the
-      last occurrence will be the value used, except that for
-      <literal>--target</literal>, all the values supplied must be the
-      same.
-    </para>
-    
   </chapter>
 
   <chapter id="sec-grammar-files">

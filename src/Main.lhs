@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.46 2002/10/24 15:11:24 sof Exp $
+$Id: Main.lhs,v 1.47 2003/08/27 12:26:08 panne Exp $
 
 The main driver.
 
@@ -21,12 +21,12 @@ The main driver.
 > import Target (Target(..))
 > import GetOpt
 > import Set
-
+> import Monad ( liftM )
 > import System
 > import Char
 > import IO
 > import Array( assocs, elems, (!) )
-> import List( nub )
+> import List( nub, isSuffixOf )
 
 #if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ >= 400
 # if __GLASGOW_HASKELL__ >= 503
@@ -54,17 +54,20 @@ Read and parse the CLI arguments.
 Read and parse the CLI arguments.
 
 >       case getOpt Permute argInfo (constArgs ++ args) of
->         	(cli,[fl_name],[]) -> runParserGen cli fl_name
->               (cli,[],[]) | DumpVersion `elem` cli -> copyright
->		(_,_,errors) -> die (concat errors ++ 
->				     usageInfo usageHeader argInfo)
+>               (cli,_,[]) | DumpVersion `elem` cli ->
+>                  bye copyright
+>               (cli,_,[]) | DumpHelp `elem` cli -> do
+>                  prog <- getProgramName
+>                  bye (usageInfo (usageHeader prog) argInfo)
+>               (cli,[fl_name],[]) ->
+>                  runParserGen cli fl_name
+>               (_,_,errors) -> do
+>                  prog <- getProgramName
+>                  die (concat errors ++ 
+>                       usageInfo (usageHeader prog) argInfo)
 
 >  where 	
 >    runParserGen cli fl_name =
-
-Print out the copyright message if we are in version mode.
-
->       optIO (elem DumpVersion cli) copyright		>>
 
 Open the file.
 
@@ -226,11 +229,20 @@ Successfully Finished.
 
 -----------------------------------------------------------------------------
 
+> getProgramName :: IO String
+> getProgramName = liftM (`withoutSuffix` ".bin") getProgName
+>    where str `withoutSuffix` suff
+>             | suff `isSuffixOf` str = take (length str - length suff) str
+>             | otherwise             = str
+
+> bye :: String -> IO a
+> bye s = putStr s >> exitWith ExitSuccess
+
 > die :: String -> IO a
 > die s = hPutStr stderr s >> exitWith (ExitFailure 1)
 
 > dieHappy :: String -> IO a
-> dieHappy s = getProgName >>= \prog -> die (prog ++ ": " ++ s)
+> dieHappy s = getProgramName >>= \prog -> die (prog ++ ": " ++ s)
 
 > optIO :: Bool -> IO a -> IO a
 > optIO fg io = if fg then io  else return (error "optIO")
@@ -302,6 +314,7 @@ The command line arguments.
 >		| DumpLA
 >		
 >               | DumpVersion
+>               | DumpHelp
 >		| OptInfoFile (Maybe String)
 >		| OptTemplate String
 >		| OptMagicName String
@@ -317,26 +330,28 @@ The command line arguments.
 
 > argInfo :: [OptDescr CLIFlags]
 > argInfo  = [
->    Option ['a'] ["array"] (NoArg OptArrayTarget)
->	"Generate an array-based parser",
->    Option ['c'] ["coerce"] (NoArg OptUseCoercions)
->	"Use type coercions (only available with -g)",
->    Option ['d'] ["debug"] (NoArg OptDebugParser)
->	"Produce a debugging parser (only with -a)",
->    Option ['g'] ["ghc"]    (NoArg OptGhcTarget)
->	"Use GHC extensions",
->    Option ['i'] ["info"] (OptArg OptInfoFile "FILE")
->	"Put detailed grammar info in FILE",
->    Option ['m'] ["magic-name"] (ReqArg OptMagicName "NAME")
->	"Use NAME as the symbol prefix instead of \"happy\"",
 >    Option ['o'] ["outfile"] (ReqArg OptOutputFile "FILE")
->	"Write the output to FILE (default: file.hs)",
->    Option ['s'] ["strict"] (NoArg OptStrict)
->	"Evaluate semantic values strictly (experimental)",
+>	"write the output to FILE (default: file.hs)",
+>    Option ['i'] ["info"] (OptArg OptInfoFile "FILE")
+>	"put detailed grammar info in FILE",
 >    Option ['t'] ["template"] (ReqArg OptTemplate "DIR")
->	"Look in DIR for template files",
->    Option ['v'] ["version"] (NoArg DumpVersion)
->       "Print out version info"
+>	"look in DIR for template files",
+>    Option ['m'] ["magic-name"] (ReqArg OptMagicName "NAME")
+>	"use NAME as the symbol prefix instead of \"happy\"",
+>    Option ['s'] ["strict"] (NoArg OptStrict)
+>	"evaluate semantic values strictly (experimental)",
+>    Option ['g'] ["ghc"]    (NoArg OptGhcTarget)
+>	"use GHC extensions",
+>    Option ['c'] ["coerce"] (NoArg OptUseCoercions)
+>	"use type coercions (only available with -g)",
+>    Option ['a'] ["array"] (NoArg OptArrayTarget)
+>	"generate an array-based parser",
+>    Option ['d'] ["debug"] (NoArg OptDebugParser)
+>	"produce a debugging parser (only with -a)",
+>    Option ['?'] ["help"] (NoArg DumpHelp)
+>	"display this help and exit",
+>    Option ['V','v'] ["version"] (NoArg DumpVersion)   -- ToDo: -v is deprecated
+>       "output version information and exit"
 
 #ifdef DEBUG
 
@@ -454,16 +469,18 @@ Extract various command-line options.
 
 ------------------------------------------------------------------------------
 
-> copyright :: IO ()
-> copyright = putStr (unlines  [
+> copyright :: String
+> copyright = unlines [
 >  "Happy Version " ++ version ++ " Copyright (c) 1993-1996 Andy Gill, Simon Marlow (c) 1997-2002 Simon Marlow","",
 >  "Happy is a Yacc for Haskell, and comes with ABSOLUTELY NO WARRANTY.",
 >  "This program is free software; you can redistribute it and/or modify",
 >  "it under the terms given in the file 'LICENSE' distributed with",
->  "the Happy sources.\n"])
+>  "the Happy sources."]
 
-> usageHeader = "happy [OPTION...] file"
+> usageHeader :: String -> String
+> usageHeader prog = "Usage: " ++ prog ++ " [OPTION...] file\n"
 
+> template_dir :: String
 > template_dir = "/usr/local/lib/happy"
 
 -----------------------------------------------------------------------------
