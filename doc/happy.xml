@@ -1547,6 +1547,14 @@ close : '}'                  { () }
   </chapter>
 
   <chapter id="sec-glr">
+
+    <chapterinfo>
+      <copyright>
+        <year>2004</year>
+        <holder>University of Durham, Paul Callaghan, Ben Medlock</holder>
+      </copyright>
+    </chapterinfo>
+
     <title>Generalized LR Parsing</title>
 
     <para>This chapter explains how to use the GLR parsing extension,
@@ -1568,13 +1576,6 @@ close : '}'                  { () }
     extended and improved by Callaghan. 
     Bug reports, comments, questions etc should be sent to 
     <email>P.C.Callaghan@durham.ac.uk</email>. 
-    </para>
-
-    <para>
-	<copyright>
-	<year>2004</year>
-	<holder>University of Durham, Paul Callaghan, Ben Medlock</holder>
-	</copyright>
     </para>
 
     <sect1 id="sec-glr-intro">
