@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.44 2001/01/15 11:03:18 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.45 2001/01/15 11:18:13 simonmar Exp $
 
 The code generator.
 
@@ -756,7 +756,7 @@ See notes under "Action Tables" above for some subtleties in this function.
 
 > getDefault actions =
 >   -- pick out the action for the error token, if any
->   case [ act | (errorTok, act) <- actions ] of
+>   case [ act | (e, act) <- actions, e == errorTok ] of
 >
 >	-- use error reduction as the default action, if there is one.
 >	act@(LR'Reduce _ _) : _ 		-> act
@@ -764,10 +764,10 @@ See notes under "Action Tables" above for some subtleties in this function.
 >
 >	-- if the error token is shifted or otherwise, don't generate
 >	--  a default action.  This is *important*!
->	(_ : _) -> LR'Fail
+>	(act : _) | act /= LR'Fail -> LR'Fail
 >
 >	-- no error actions, pick a reduce to be the default.
->	[]      -> case reduces of
+>	_      -> case reduces of
 >		      [] -> LR'Fail
 >		      (act:_) -> act	-- pick the first one we see for now
 >
