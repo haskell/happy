@@ -1,4 +1,4 @@
--- $Id: HappyTemplate-ghc,v 1.4 1997/03/27 14:14:58 simonm Exp $
+-- $Id: HappyTemplate-ghc,v 1.5 1997/03/27 14:30:00 simonm Exp $
 
 {-
 	The stack is in the following order throughout the parse:
@@ -36,9 +36,9 @@ happyAccept 0# _ _ _ _ = error ""	-- typechecker hack
 -----------------------------------------------------------------------------
 -- Shifting a token
 
-happyShift new_state (-1#) tk@(ErrorTok (I# i) tk') st sts stk =
+happyShift new_state (-1#) tk st sts stk@(HappyErrorToken (I# i) : _) =
 --     _trace "shifting the error token" $
-     new_state i i tk' (HappyState new_state) (st:sts) (HappyTerminal tk:stk)
+     new_state i i tk (HappyState new_state) (st:sts) stk
 
 happyShift new_state i tk st sts stk =
      happyNewToken new_state (st:sts) (HappyTerminal tk:stk)
@@ -86,7 +86,7 @@ happyFail  (-1#) tk st' (st@(HappyState action):sts) stk =
 -- 			 save the old token and carry on.
 happyFail  i tk st@(HappyState action) sts stk =
 --	_trace "entering error recovery" $
-	action (-1#) (-1#) (ErrorTok (I# i) tk) st sts stk
+	action (-1#) (-1#) tk st sts (HappyErrorToken (I# i) : stk)
 
 -- Internal happy errors:
 
