@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.35 2000/07/13 08:54:10 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.36 2000/07/13 09:36:32 simonmar Exp $
 
 The code generator.
 
@@ -566,13 +566,13 @@ action array indexed by (terminal * last_state) + state
 >	
 >	    . str "happyCheck :: Array Int Int\n"
 >	    . str "happyCheck = listArray (0," 
->		. shows (n_states * n_terminals) . str ") (["
+>		. shows table_size . str ") (["
 >	    . interleave' "," (map shows check)
 >	    . str "\n\t])\n\n"
 >	
 >	    . str "happyTable :: Array Int Int\n"
 >	    . str "happyTable = listArray (0," 
->		. shows (n_states * n_terminals) . str ") (["
+>		. shows table_size . str ") (["
 >	    . interleave' "," (map shows table)
 >	    . str "\n\t])\n\n"
 >	
@@ -583,6 +583,7 @@ action array indexed by (terminal * last_state) + state
 >
 >    (act_offs,goto_offs,table,defaults,check) 
 >	= mkTables action goto n_terminals (n_nonterminals+1)
+>    table_size = length table - 1
 >
 >    actionArrElems actions = map (actionVal) 
 >				 (e : drop (n_nonterminals + 1) line)
@@ -790,9 +791,11 @@ vars used in this piece of code.
 >  where 
 >
 >	 (table,check,act_offs,goto_offs,max_off) 
->		 = runST (genTables (length actions) 
->				n_terminals n_nonterminals sorted_actions)
+>		 = runST (genTables (length actions) max_token sorted_actions)
 >	 
+>	 -- the maximum token number used in the parser
+>	 max_token = max n_terminals n_nonterminals - 1
+>
 >	 def_actions = map (\(_,_,def,_,_,_) -> def) actions
 >
 >	 actions :: [TableEntry]
@@ -815,7 +818,7 @@ vars used in this piece of code.
 >	 -- adjust terminals by -(n_nonterminals+2), so they start at zero
 >	 --  (see ARRAY_NOTES)  (n_nonterminals includes %start)
 >	 adjust token | token == errorTok = 0
->		      | otherwise         = token - (n_nonterminals + 2)
+>		      | otherwise         = token - (n_nonterminals+2)
 >
 >	 mkActVals assocs default_act = 
 >		 [ (adjust token, actionVal act) 
@@ -855,8 +858,7 @@ vars used in this piece of code.
 
 > genTables
 >	 :: Int				-- number of actions
->	 -> Int				-- number of terminals
->	 -> Int				-- number of nonterminals
+>	 -> Int				-- maximum token no.
 >	 -> [TableEntry]			-- entries for the table
 >	 -> ST s (UArray Int Int,	-- table
 >		  UArray Int Int,	-- check
@@ -865,16 +867,16 @@ vars used in this piece of code.
 >		  Int 	   		-- highest offset in table
 >	    )
 >
-> genTables n_actions n_terminals n_nonterminals entries = do
+> genTables n_actions max_token entries = do
 >
 >   table      <- fillNewArray (0, mAX_TABLE_SIZE) 0
 >   check      <- fillNewArray (0, mAX_TABLE_SIZE) (-1)
 >   act_offs   <- fillNewArray (0, n_actions) 0
 >   goto_offs  <- fillNewArray (0, n_actions) 0
->   off_arr    <- fillNewArray (negate (max n_terminals n_nonterminals), 
->				  mAX_TABLE_SIZE) 0
+>   off_arr    <- fillNewArray (-max_token, mAX_TABLE_SIZE) 0
 >
->   max_off <- genTables' table check act_offs goto_offs off_arr entries
+>   max_off <- genTables' table check act_offs goto_offs 
+>			off_arr entries max_token
 >
 >   table'     <- freeze table
 >   check'     <- freeze check
@@ -884,10 +886,10 @@ vars used in this piece of code.
 
 >   where
 >	 n_states = n_actions - 1
->	 mAX_TABLE_SIZE = n_states * n_terminals
+>	 mAX_TABLE_SIZE = n_states * (max_token + 1)
 
 
-> genTables' table check act_offs goto_offs off_arr entries
+> genTables' table check act_offs goto_offs off_arr entries max_token
 >	= fit_all entries 0 1
 >   where
 >
@@ -923,10 +925,9 @@ vars used in this piece of code.
 >	   off <- findFreeOffset (-t+fst_zero) table off_arr state
 >	   let new_max_off | furthest_right > max_off = furthest_right
 >			   | otherwise                = max_off
->	       (last_tok,_) = last state
->	       furthest_right = last_tok + off
+>	       furthest_right = off + max_token
 >
->  --trace ("fit: state " ++ show state_no ++ ", off " ++ show off ++ ", elems " ++ show state) $ do
+>  	   -- trace ("fit: state " ++ show state_no ++ ", off " ++ show off ++ ", elems " ++ show state) $ do
 >
 >	   writeArray (which_off act_or_goto) state_no off
 >	   addState off table check state
