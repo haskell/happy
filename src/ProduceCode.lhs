@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.30 1999/11/24 10:41:49 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.31 2000/07/11 09:25:48 simonmar Exp $
 
 The code generator.
 
@@ -15,11 +15,38 @@ The code generator.
 > import Target			( Target(..) )
 
 > import Maybe 			( isJust )
-> import Array
 > import Char
 > import ST
 > import IOExts
 > import List
+
+#if __GLASGOW_HASKELL__ > 408
+
+> import MArray
+> import IArray
+> marray_indices a = MArray.indices a
+
+#elif __GLASGOW_HASKELL__ == 408
+
+> import MArray hiding (assocs, indices, elems)
+> import IArray
+> marray_indices a = MArray.indices a	-- add args to avoid MR :-(
+> readArray  a ix   = get a ix
+> writeArray a ix e = put a ix e
+> newArray b  = marray b
+
+#else
+
+> import Array
+
+> type STUArray s ix e = STArray s ix e
+> type UArray ix e = Array ix e
+> readArray  = readSTArray
+> writeArray = writeSTArray
+> freeze     = freezeSTArray
+> marray_indices arr = range (boundsSTArray arr)
+
+#endif
 
 %-----------------------------------------------------------------------------
 Produce the complete output file.
@@ -598,6 +625,7 @@ Note, this *could* introduce lack of polymophism,
 for types that have alphas in them. Maybe we should
 outlaw them inside { }
 
+>    nt_types_index :: Array Int Int
 >    nt_types_index = array (bounds nt_types) 
 >			[ (a, fn a b) | (a, b) <- assocs nt_types ]
 >     where
@@ -707,6 +735,18 @@ vars used in this piece of code.
 -- happyCheck
 --	Indicates whether we should use the default action for state
 
+
+-- the table is laid out such that the action for a given state & token
+-- can be found by:
+--
+--        off    = happyActOff ! state
+--	  off_i  = off + token
+--	  check  | off_i => 0 = happyCheck ! off_i
+--		 | otherwise  = False
+--	  action | check      = happyTable ! off_i
+--	         | otherwise  = happyDefAaction ! off_i
+
+
 -- figure out the default action for each state.  This will leave some
 -- states with no *real* actions left.
 
@@ -722,198 +762,226 @@ vars used in this piece of code.
 -- try to fit the actions into the check table, using the ordering
 -- from above.
 
-> mkTables 
->	:: ActionTable -> GotoTable -> Int -> Int -> 
->	([Int]		-- happyActOffsets
->	,[Int]		-- happyGotoOffsets
->	,[Int]		-- happyTable
->	,[Int]		-- happyDefAction
->	,[Int]		-- happyCheck
->	)
 
+> mkTables 
+>	 :: ActionTable -> GotoTable -> Int -> Int -> 
+>	 ([Int]		-- happyActOffsets
+>	 ,[Int]		-- happyGotoOffsets
+>	 ,[Int]		-- happyTable
+>	 ,[Int]		-- happyDefAction
+>	 ,[Int]		-- happyCheck
+>	 )
+>
 > mkTables action goto n_terminals n_nonterminals
 >  = ( elems act_offs, 
 >      elems goto_offs, 
 >      take max_off (elems table),
 >      def_actions, 
 >      take max_off (elems check)
->    )
+>   )
 >  where 
 >
->	(table,check,act_offs,goto_offs,max_off) = runST gen_tables	
->	
->	def_actions = map (\(_,def,_,_,_) -> def) actions
+>	 (table,check,act_offs,goto_offs,max_off) 
+>		 = runST (genTables (length actions) n_terminals
+>				 mAX_TABLE_SIZE sorted_actions)
+>	 
+>	 def_actions = map (\(_,_,def,_,_,_) -> def) actions
 >
->	actions :: [(Int{-stateno-},
->		    Int{-default-},
->		    Int{-width-},
->		    Int{-tally-},
->		    [(Int,Int)])]
->	actions = 
->		[ (state,
->		   actionVal default_act,
->		   if null acts'' then 0 
->			else fst (last acts'') - fst (head acts''),
->		   length acts'',
->		   acts'')
->		| (state, acts) <- assocs action,
->		  let (e:d:vec) = assocs acts
->		      vec' = drop n_nonterminals vec
->		      acts' = filter (notFail) (e:vec')
->		      default_act = getDefault acts'
->		      acts'' = mkActVals acts' default_act
->		]
+>	 actions :: [TableEntry]
+>	 actions = 
+>		 [ (ActionEntry,
+>		    state,
+>		    actionVal default_act,
+>		    if null acts'' then 0 
+>			 else fst (last acts'') - fst (head acts''),
+>		    length acts'',
+>		    acts'')
+>		 | (state, acts) <- assocs action,
+>		   let (e:d:vec) = assocs acts
+>		       vec' = drop n_nonterminals vec
+>		       acts' = filter (notFail) (e:vec')
+>		       default_act = getDefault acts'
+>		       acts'' = mkActVals acts' default_act
+>		 ]
 >
->	sorted_actions = sortBy cmp_state actions
->	cmp_state (_,_,width1,tally1,_) (_,_,width2,tally2,_)
->		| width1 < width2  = LT
->		| width1 == width2 = compare tally1 tally2
->		| otherwise = GT
+>	 -- adjust terminals by non_terminals-2, so they start at zero
+>	 --  (see ARRAY_NOTES)
+>	 adjust token | token == errorTok = 0
+>		      | otherwise         = token - n_nonterminals - 2
 >
->	-- reverse the states: we want the widest/densent first
->	actions' = reverse [(state,deflt,acts) | 
->		            (state,deflt,_,_,acts) <- sorted_actions ]
+>	 mkActVals assocs default_act = 
+>		 [ (adjust token, actionVal act) 
+>		 | (token, act) <- assocs
+>		 , act /= default_act ]
 >
->	gotos :: [(Int,Int,Int,Int,[(Int,Int)])]
->	gotos = [ (state, 0, 
->		   if null goto_vals then 0 
->			else fst (last goto_vals) - fst (head goto_vals),
->		   length goto_vals,
->		   goto_vals
->		  )
->		| (state, goto_arr) <- assocs goto,
->		let goto_vals = mkGotoVals (assocs goto_arr)
->		]
+>	 gotos :: [TableEntry]
+>	 gotos = [ (GotoEntry,
+>		    state, 0, 
+>		    if null goto_vals then 0 
+>			 else fst (last goto_vals) - fst (head goto_vals),
+>		    length goto_vals,
+>		    goto_vals
+>		   )
+>		 | (state, goto_arr) <- assocs goto,
+>		 let goto_vals = mkGotoVals (assocs goto_arr)
+>		 ]
 >
->	sorted_gotos = sortBy cmp_state gotos
->	gotos' = reverse [(state,deflt,goto_vals) | 
->		          (state,deflt,_,_,goto_vals) <- sorted_gotos ]
+>	 -- adjust nonterminals by -4, so they start at zero
+>	 --  (see ARRAY_NOTES)
+>	 mkGotoVals assocs =
+>		 [ (token-4, i) | (token, Goto i) <- assocs ]
 >
->	-- adjust terminals by non_terminals-2, so they start at zero
->	--  (see ARRAY_NOTES)
->	adjust token | token == errorTok = 0
->		     | otherwise         = token - n_nonterminals - 2
+>	 sorted_actions = reverse (sortBy cmp_state (actions++gotos))
+>	 cmp_state (_,_,_,width1,tally1,_) (_,_,_,width2,tally2,_)
+>		 | width1 < width2  = LT
+>		 | width1 == width2 = compare tally1 tally2
+>		 | otherwise = GT
 >
->	mkActVals assocs default_act = 
->		[ (adjust token, actionVal act) 
->		| (token, act) <- assocs
->		, act /= default_act ]
->
->	-- adjust nonterminals by -4, so they start at zero
->	--  (see ARRAY_NOTES)
->	mkGotoVals assocs =
->		[ (token-4, i) | (token, Goto i) <- assocs ]
->
->	notFail (t,LR'Fail) = False
->	notFail _           = True
->
->	n_states = length actions - 1
->	mAX_TABLE_SIZE = n_states * n_terminals
->
->	gen_tables :: ST s (Array Int Int, -- table
->			    Array Int Int, -- check
->			    Array Int Int, -- action offsets
->			    Array Int Int, -- goto offsets
->			    Int 	   -- highest offset in table
->			   )
->	gen_tables = do
->	   table      <- newSTArray (0, mAX_TABLE_SIZE) 0
->	   check      <- newSTArray (0, mAX_TABLE_SIZE) (-1) 
->	   act_offs   <- newSTArray (0, length actions) 0
->	   goto_offs  <- newSTArray (0, length actions) 0
->
->	   (max_off,off_list,fst_zero) 
->		<- fit_all table check act_offs [0] actions' 0 1
->	   (max_off',_,_) 
->		<- fit_all table check goto_offs off_list gotos' 
->			max_off fst_zero
->
->	   table'     <- freezeSTArray table
->	   check'     <- freezeSTArray check
->	   act_offs'  <- freezeSTArray act_offs
->	   goto_offs' <- freezeSTArray goto_offs
->	   return (table',check',act_offs',goto_offs',max_off'+1)
+>	 n_states = length actions - 1
+>	 mAX_TABLE_SIZE = n_states * n_terminals
 
-Pack a bunch of vectors into the array.
+> data ActionOrGoto = ActionEntry | GotoEntry
+> type TableEntry = (ActionOrGoto,
+>			Int{-stateno-},
+>			Int{-default-},
+>			Int{-width-},
+>			Int{-tally-},
+>			[(Int,Int)])
 
->	fit_all table check offsets off_list [] max_off fst_zero =
->	  return (max_off, off_list, fst_zero)
->	fit_all table check offsets off_list (s:ss) max_off fst_zero = do
->	  (off, new_max_off, new_fst_zero) 
->		<- fit table check offsets off_list s max_off fst_zero
->	  ss' <- same_states s ss offsets off
->	  fit_all table check offsets (off:off_list) ss' 
->		new_max_off new_fst_zero
->	  
->	-- try to merge identical states.  We only try the next state(s)
->	-- in the list, but the list is kind-of sorted so we shouldn't
->	-- miss too many.
->	same_states s [] offsets off = return []
->	same_states s@(_,_,acts) ss@((no,_,acts'):ss') offsets off
->	  | acts == acts' = do writeSTArray offsets no off
->		  	       same_states s ss' offsets off
->	  | otherwise = return ss
+> genTables
+>	 :: Int				-- number of actions
+>	 -> Int				-- number of terminals
+>	 -> Int				-- max table size (states * terminals)
+>	 -> [TableEntry]			-- entries for the table
+>	 -> ST s (UArray Int Int,	-- table
+>		  UArray Int Int,	-- check
+>		  UArray Int Int,	-- action offsets
+>		  UArray Int Int,	-- goto offsets
+>		  Int 	   		-- highest offset in table
+>	    )
+>
+> genTables n_actions n_terminals max_table_size entries = do
+>
+>   table      <- fillNewArray (0, max_table_size) 0
+>   check      <- fillNewArray (0, max_table_size) (-1)
+>   act_offs   <- fillNewArray (0, n_actions) 0
+>   goto_offs  <- fillNewArray (0, n_actions) 0
+>   off_arr    <- fillNewArray (-n_terminals, max_table_size) 0
+>
+>   max_off <- genTables' table check act_offs goto_offs off_arr entries
+>
+>   table'     <- freeze table
+>   check'     <- freeze check
+>   act_offs'  <- freeze act_offs
+>   goto_offs' <- freeze goto_offs
+>   return (table',check',act_offs',goto_offs',max_off+1)
 
-Try to fit a vector into the table.  Return the offset of the vector,
-the new maximum offset used in the table, and the offset of the first
-free entry in the table (used to speed up the lookups a bit).
 
->	fit table check offsets off_list (_,_,[]) max_off fst_zero = 
->	   return (0,max_off,fst_zero)
->	fit table check offsets off_list (state_no, deflt, state@((t,_):_)) 
->	   max_off fst_zero = do
->		-- start at offset 1 in the table: all the empty states
->		-- (states with just a default reduction) are mapped to
->		-- offset zero.
->	  off <- find_off (-t+fst_zero) table off_list state
->	  let new_max_off | furthest_right > max_off = furthest_right
->		          | otherwise                = max_off
->	      (last_tok,_) = last state
->	      furthest_right = last_tok + off
+> genTables' table check act_offs goto_offs off_arr entries
+>	= fit_all entries 0 1
+>   where
 >
->	  --trace ("fit: state " ++ show state_no ++ ", off " ++ show off ++ ", elems " ++ show state) $ do
+>	 fit_all [] max_off fst_zero = return max_off
+>	 fit_all (s:ss) max_off fst_zero = do
+>	   (off, new_max_off, new_fst_zero) <- fit s max_off fst_zero
+>	   ss' <- same_states s ss off
+>	   writeArray off_arr off 1
+>	   fit_all ss' new_max_off new_fst_zero
 >
->	  writeSTArray offsets state_no off
->	  add_state off table check state
+>	 -- try to merge identical states.  We only try the next state(s)
+>	 -- in the list, but the list is kind-of sorted so we shouldn't
+>	 -- miss too many.
+>	 same_states s [] off = return []
+>	 same_states s@(_,_,_,_,_,acts) ss@((e,no,_,_,_,acts'):ss') off
+>	   | acts == acts' = do writeArray (which_off e) no off
+>				same_states s ss' off
+>	   | otherwise = return ss
+>  
+>	 which_off ActionEntry = act_offs
+>	 which_off GotoEntry   = goto_offs
 >
->	  new_fst_zero <- do
->		let find_fst_zero n = do
->			i <- readSTArray table n
->			if i == 0 then return n
->				  else find_fst_zero (n+1)
->		find_fst_zero fst_zero
+>	 -- fit a vector into the table.  Return the offset of the vector,
+>	 -- the maximum offset used in the table, and the offset of the first
+>	 -- entry in the table (used to speed up the lookups a bit).
+>	 fit (_,_,_,_,_,[]) max_off fst_zero = return (0,max_off,fst_zero)
 >
->	  return (off, new_max_off, new_fst_zero)
+>	 fit (act_or_goto, state_no, deflt, _, _, state@((t,_):_)) 
+>	    max_off fst_zero = do
+>		 -- start at offset 1 in the table: all the empty states
+>		 -- (states with just a default reduction) are mapped to
+>		 -- offset zero.
+>	   off <- findFreeOffset (-t+fst_zero) table off_arr state
+>	   let new_max_off | furthest_right > max_off = furthest_right
+>			   | otherwise                = max_off
+>	       (last_tok,_) = last state
+>	       furthest_right = last_tok + off
 >
+>  --trace ("fit: state " ++ show state_no ++ ", off " ++ show off ++ ", elems " ++ show state) $ do
 >
->	find_off off table offs state = do
->	   -- don't use an offset we've used before
->	   if off `elem` offs
->		then find_off (off+1) table offs state
->		else do
->	   ok <- fits off state table
->	   if ok 
->		then return off
->		else find_off (off+1) table offs state
->	    
->	fits :: Int -> [(Int,Int)] -> STArray s Int Int -> ST s Bool
->	fits off [] table = return True
->	fits off ((t,_):rest) table = do
->	   i <- readSTArray table (off+t)
->	   if i /= 0 then return False
->		     else fits off rest table
+>	   writeArray (which_off act_or_goto) state_no off
+>	   addState off table check state
+>	   new_fst_zero <- findFstZero table fst_zero
+>	   return (off, new_max_off, new_fst_zero)
+
+
+> -- Find a valid offset in the table for this state.
+> findFreeOffset off table off_arr state = do
+>     -- offset 0 isn't allowed
+>   if off == 0 then try_next else do
 >
->	add_state off table check [] = return ()
->	add_state off table check ((t,val):state) = do
->	   writeSTArray table (off+t) val
->	   writeSTArray check (off+t) t
->	   add_state off table check state
+>     -- don't use an offset we've used before
+>   b <- readArray off_arr off
+>   if b /= 0 then try_next else do
+>
+>     -- check whether the actions for this state fit in the table
+>   ok <- fits off state table
+>   if not ok then try_next else return off
+>  where
+> 	try_next = findFreeOffset (off+1) table off_arr state
+
+
+> fits :: Int -> [(Int,Int)] -> STUArray s Int Int -> ST s Bool
+> fits off [] table = return True
+> fits off ((t,_):rest) table = do
+>   i <- readArray table (off+t)
+>   if i /= 0 then return False
+>	      else fits off rest table
+
+> addState off table check [] = return ()
+> addState off table check ((t,val):state) = do
+>    writeArray table (off+t) val
+>    writeArray check (off+t) t
+>    addState off table check state
+
+> notFail (t,LR'Fail) = False
+> notFail _           = True
+
+> findFstZero :: STUArray s Int Int -> Int -> ST s Int
+> findFstZero table n = do
+>	 i <- readArray table n
+>	 if i == 0 then return n
+>		   else findFstZero table (n+1)
+
+#if __GLASGOW_HASKELL__ >= 408
+
+> fillNewArray :: (Int,Int) -> Int -> ST s (STUArray s Int Int)
+> fillNewArray bounds val = do 
+>   a <- newArray bounds
+>   sequence_ [ writeArray a i val | i <- marray_indices a ]
+>   return a
+
+#else
+
+> fillNewArray :: (Int,Int) -> Int -> ST s (STUArray s Int Int)
+> fillNewArray = newSTArray
+
+#endif
 
 -----------------------------------------------------------------------------
-Misc.
+-- Misc.
 
 > comment = 
-> 	"-- parser produced by Happy Version " ++ version ++ "\n\n"
+>	  "-- parser produced by Happy Version " ++ version ++ "\n\n"
 
 > str = showString
 > char c = (c :)
@@ -944,12 +1012,12 @@ Misc.
 > mapDollarDollar "" = Nothing
 > mapDollarDollar ('$':'$':r) = -- only map first instance
 >    case mapDollarDollar r of
->	Just fn -> error "more that one $$ in pattern"
->	Nothing -> Just (\ s -> s ++ r)
+>	  Just fn -> error "more that one $$ in pattern"
+>	  Nothing -> Just (\ s -> s ++ r)
 > mapDollarDollar (c:r) =
 >    case mapDollarDollar r of
->	Just fn -> Just (\ s -> c : fn s)
->	Nothing -> Nothing
+>	  Just fn -> Just (\ s -> c : fn s)
+>	  Nothing -> Nothing
 
 > brack s = str ('(' : s) . char ')'
 > brack' s = char '(' . s . char ')'
