@@ -1735,6 +1735,13 @@ happy [ <emphasis>options</emphasis> ] <emphasis>filename</emphasis> [ <emphasis
       
     </variablelist>
 
+    <para>
+      Options that take arguments may be given multiple times, and the
+      last occurrence will be the value used, except that for
+      <literal>--target</literal>, all the values supplied must be the
+      same.
+    </para>
+    
   </chapter>
 
   <chapter id="sec-grammar-files">
