@@ -13,5 +13,5 @@
 #
 ProjectName       = Happy
 ProjectNameShort  = happy
-ProjectVersion    = 1.7
-ProjectVersionInt = 17
+ProjectVersion    = 1.8
+ProjectVersionInt = 18
