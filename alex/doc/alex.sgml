@@ -1,17 +1,17 @@
 <!DOCTYPE BOOK PUBLIC "-//OASIS//DTD DocBook V3.1//EN" [
 <!entity  the-index SYSTEM "genindex.sgml">
+<!entity  Alex "<application>Alex</application>">
 ]>
 
 <!-- Translation from the ".verb" to Docbook by Isaac Jones -->
 <!-- Still To Do: -->
 <!-- - Double check cross references -->
 <!-- - Decide between clean and markuped figures -->
-<!-- - change Alex into <emphasis>Alex</emphasis>? -->
 
 <book id="alex">
   <bookinfo>
     <date>2003-2-13</date>
-    <title>Alex User Guide</title>
+    <title>&Alex; User Guide</title>
     <author>
       <firstname>Chris</firstname>
       <surname>Dornan</surname>
@@ -26,7 +26,7 @@
 <!--       <holder>Simon Marlow</holder> -->
 <!--     </copyright> -->
     <abstract>
-      <para>The <application>Alex</application> package, like
+      <para>The &Alex; package, like
             <application>lex</application>, takes a description of
             tokens based on regular expres sions and generates a
             program module for scanning text efficiently.
@@ -42,17 +42,17 @@
   <chapter id="alex-introduction">
     <title>Introduction</title>
 
-    <para> The <application>Alex</application> package,
+    <para> The &Alex; package,
            like <application>Lex</application>, takes a description of
            tokens based on regular expressions and generates a program
            module for scanning text efficiently.  The difference is
-           that <application>Alex</application> generates Haskell
+           that &Alex; generates Haskell
            modules rather than C/Ratfor source files.  Although
-           <application>Alex</application> takes after
+           &Alex; takes after
            <application>lex</application>, it is intended for Haskell
            programmers and so departs quite radically from Lex in some
            respects.
-    <figure ID="fig-tokens" FLOAT="1"><TITLE>A simple Alex specification.</TITLE>
+    <figure ID="fig-tokens" FLOAT="1"><TITLE>A simple &Alex; specification.</TITLE>
 <programlisting>
 
 %{
@@ -103,7 +103,7 @@ tokens_scan = load_scan (tokens_acts,stop_act) tokens_lx
            <literal>%}</literal> provide a code scrap (some inlined
            Haskell code) to be placed in the output.  All such code
            fragments will be placed in order at the head of the module
-           with the <application>Alex</application>-generated tables appearing at the end.</para>
+           with the &Alex;-generated tables appearing at the end.</para>
 
     <para>The next two lines define the <literal>^d</literal> and
     <literal>^l</literal> macros for use in the token
@@ -129,7 +129,7 @@ tokens_scan = load_scan (tokens_acts,stop_act) tokens_lx
           in the script.  In this case the action functions are given
           in the code scraps to the right of the token definition but
           they could be specified anywhere.  Here
-          <application>Alex</application> differs from
+          &Alex; differs from
           <application>Lex</application>; while each action must be
           named in a code scrap, the programmer has more flexibility
           in laying out the script.  Like comments, code scraps may be
@@ -150,7 +150,7 @@ tokens_scan = load_scan (tokens_acts,stop_act) tokens_lx
           <literal>scan</literal>.  <literal>load_scan</literal>,
           <literal>Scan</literal> and <literal>scan</literal> were
           imported from the <literal>Scan</literal> module that comes
-          with the <application>Alex</application>
+          with the &Alex;
           distribution.</para>
 
     <para>While delegating the task of assembling the scanner to the
@@ -159,7 +159,7 @@ tokens_scan = load_scan (tokens_acts,stop_act) tokens_lx
           scanners.</para>
 
     <para>With this specification in <literal>Tokens.x</literal>,
-          <application>Alex</application> can be used to generate
+          &Alex; can be used to generate
           <literal>Tokens.hs</literal>:
 
 <programlisting>
@@ -205,7 +205,7 @@ alex Tokens.x
 <Title>Scripts, Macros and Scanners</title>
 
 
-    <para><application>Alex</application> scripts contain a list of
+    <para>&Alex; scripts contain a list of
           scanner specifications, optionally preceded by some global
           macro definitions.  Each scanner consists of a header with
           the Haskell identifiers to be bound in the output module, a
@@ -309,7 +309,7 @@ sc		-> "0" | ide
 <title>Sets of Characters</title>
 
     <para> A set is a special form of regular expression that matches
-          strings of length one.  Here <application>Alex</application>
+          strings of length one.  Here &Alex;
           differs markedly from Lex.</para>
 
 
@@ -400,7 +400,7 @@ chr		-> <varname>ch</varname> |<varname> ech</varname> | <varname>cch</varname>
           replacing the initial <literal>></literal> at the start of
           each line with a space.  This process is formalised in <xref
           linkend="sec-literate-scripts"> where the scanner used to
-          preprocess <application>Alex</application> scripts is given.
+          preprocess &Alex; scripts is given.
 </para>
 
     <para>All white space appearing in the script is ignored, except
@@ -436,9 +436,9 @@ chr		-> <varname>ch</varname> |<varname> ech</varname> | <varname>cch</varname>
 </tgroup>
 </informaltable>
 
-<para>The lexical syntax is formalised by the <application>Alex</application> script in <xref linkend="fig-lx">.</para>
+<para>The lexical syntax is formalised by the &Alex; script in <xref linkend="fig-lx">.</para>
       
-<figure ID="fig-lx" FLOAT="1"><TITLE>The <application>Alex</application> scanner.</TITLE>
+<figure ID="fig-lx" FLOAT="1"><TITLE>The &Alex; scanner.</TITLE>
 <programlisting><literal>
 { ^s = ^w#^n	  }					-- spaces + tabs, etc
 { ^d = 0-9        }					-- digits
@@ -491,7 +491,7 @@ chr		-> <varname>ch</varname> |<varname> ech</varname> | <varname>cch</varname>
 
     <para>The code in multi-line code scraps must follow the same
           layout conventions used for the tables generated by
-          <application>Alex</application>, namely that all top-level
+          &Alex;, namely that all top-level
           defintions start in the left-hand column for ordinary
           scripts, column two for literate scripts.
     </para>
@@ -510,18 +510,16 @@ chr		-> <varname>ch</varname> |<varname> ech</varname> | <varname>cch</varname>
     <title>General Scanners</title>
 
 <section>
-<title>The Alex Module</title>
+<title>The <classname>Alex</classname> Module</title>
 
-    <para>The <literal>Alex</literal> module contains the run-time
+    <para>The <classname>Alex</classname> module contains the run-time
           interface.  It is self-contained so only
-          <literal>Alex</literal> and the
-          <application>Alex</application> generated modules need to be
-          added to programs using a <application>Alex</application>
-          scanner.
+          <classname>Alex</classname> and the &Alex; generated modules need
+          to be added to programs using a &Alex; scanner.
     </para>
 
     <para>The <literal>Posn</literal> data type is the first product
-          of the <literal>Alex</literal> module.  It provides a
+          of the <classname>Alex</classname> module.  It provides a
           standard means of positioning tokens in the input stream.
     </para>
 
@@ -545,9 +543,9 @@ eof_pos = Pn (-1) (-1) (-1)
           by convention, will represent the end of file.
     </para>
 
-    <para>The <literal>Alex</literal> module provides two packages for
+    <para>The <classname>Alex</classname> module provides two packages for
           generating scanners from the tables generated by
-          <application>Alex</application>: the basic
+          &Alex;: the basic
           <literal>Scan</literal>/<literal>load_scan</literal>/<literal>scan</literal>
           package used for the <literal>Token</literal> module of
           Figure~\ref{fig-tokens}, and a more flexible
@@ -580,7 +578,7 @@ type StopAction t = Posn -> String -> [t]
 </literal></programlisting>
 
     <para><literal>load_scan</literal> combines the actions with the
-          dump generated by <application>Alex</application> to produce
+          dump generated by &Alex; to produce
           a <literal>Scan</literal> structure that can be passed to
           <literal>scan</literal>.  <literal>scan</literal> takes the
           scanner and the input text and generates a stream of tokens.
@@ -639,7 +637,7 @@ type GStopAction s r = Posn -> Char -> String -> (StartCode,s) -> r
 
 
     <para><literal>load_gscan</literal> combines the actions with the
-          dump generated by <application>Alex</application> to produce
+          dump generated by &Alex; to produce
           a <literal>GScan</literal> structure that can be passed to
           <literal>gscan</literal>.  <literal>gscan</literal> takes
           the scanner, the application-specific state and the input
@@ -684,7 +682,7 @@ gscan':: GScan s r -> Posn -> Char -> String -> (StartCode,s) -> r
     </para>
 
     <para>Consider the problem of collecting the code scraps from a
-          <application>Alex</application> script.  The code scraps
+          &Alex; script.  The code scraps
           could have been included in the grammar, forcing them to
           appear at certain points in the script and complicating the
           grammar and parser.  Instead, they are ignored by the parser
@@ -753,7 +751,7 @@ state_scan = load_gscan (state_acts,stop_act) state_lx
           characters.
     </para>
 
-    <para><application>Alex</application> itself uses such a
+    <para>&Alex; itself uses such a
           preprocessor to deal with literate scripts.  Recall that
           each line in a (Haskell) literate scripts is either a blank
           line, a code scrap line starting with a <literal>></literal>
@@ -898,7 +896,7 @@ pp_scan = load_gscan (pp_acts,stop_act) pp_lx
 <title>Context Specifications</title>
 
 
-    <para><application>Alex</application> retains the facilities of
+    <para>&Alex; retains the facilities of
           \lex\ for restricting token specifications to given
           contexts, albeit in a modified form.  Leading context is
           specified with the <literal>\</literal> operator, with its
@@ -932,7 +930,7 @@ pp_scan = load_gscan (pp_acts,stop_act) pp_lx
           start codes for the token to be selected.
     </para>
 
-<figure ID="fig-ctx" FLOAT="1"><TITLE>Specifying context in <application>Alex</application>.</TITLE>
+<figure ID="fig-ctx" FLOAT="1"><TITLE>Specifying context in &Alex;.</TITLE>
 <programlisting><literal>
 %{
 import Alex
@@ -1017,7 +1015,7 @@ foo = 1
     <para>The <literal>&lt;tricky></literal> definition would not work
           properly in \lex, the final <literal>x</literal> in the
           specification being included in the token.
-          <application>Alex</application> does not suffer from this
+          &Alex; does not suffer from this
           problem.
     </para>
 
@@ -1041,11 +1039,10 @@ foo = 1
     <title>Acknowledgements</title>
 
     <para>I would like to thank Tom Alardice for providing the
-          original motivation for writing
-          <application>Alex</application>, Henk Muller for suggestions
-          and encouragement, Ian Holyer for the various discussions
-          that have helped to shape it and Alastair Reid for feedback
-          and suggestions.
+    original motivation for writing &Alex;, Henk Muller for
+    suggestions and encouragement, Ian Holyer for the various
+    discussions that have helped to shape it and Alastair Reid for
+    feedback and suggestions.
     </para>
 
 </chapter> </book>
