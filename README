@@ -1,11 +1,11 @@
-This is Happy version 1.8, a parser generator for Haskell 98.
+This is Happy version 1.9, a parser generator for Haskell 98.
 
 WWW:	http://www.haskell.org/happy/
 
 Complete documentation can be found in the directory 'doc', in
-SGML/DocBook.  To format the documentation, the DocBook-Tools suite
-(see http://www.http://sourceware.cygnus.com/docbook-tools/) provides
-all the bits & pieces you need.  Alternatively, pre-formatted
+SGML/DocBook format.  To format the documentation, the DocBook-Tools
+suite (see http://www.http://sourceware.cygnus.com/docbook-tools/)
+provides all the bits & pieces you need.  Alternatively, pre-formatted
 documentation is available from Happy's homepage (URL above).
 
 The directory 'examples' contains some example parsers that use Happy,
