@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Grammar.lhs,v 1.13 2000/07/12 16:21:44 simonmar Exp $
+$Id: Grammar.lhs,v 1.14 2000/10/02 08:57:41 simonmar Exp $
 
 The Grammar data type.
 
@@ -176,7 +176,7 @@ This bit is a real mess, mainly because of the error message support.
 >       mapToName str = 
 >             case [ a | (a,r) <- env, r == str ] of
 >                [a] -> Succeeded a
->                []  -> Failed ["unknown identifer `" ++ str ++ "'"]
+>                []  -> Failed ["unknown identifier `" ++ str ++ "'"]
 >                _   -> Failed ["multiple use of `" ++ str ++ "'"]
 
 > 	transRule (nt, prods, ty)
