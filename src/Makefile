@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.20 1997/12/15 11:43:10 simonm Exp $
+# $Id: Makefile,v 1.21 1998/02/02 12:42:52 simonm Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -56,8 +56,9 @@ HAPPYLIB=$(FPTOOLS_TOP_ABS)/happy/templates
 HAPPYBIN=$(FPTOOLS_TOP_ABS)/happy/src/$(HS_PROG)
 endif
 
-SCRIPT_PROG=happy
+SCRIPT_PROG=happy-$(HappyProjectVersion)
 SCRIPT_OBJS=happy.sh
+SCRIPT_LINK=happy
 INTERP=$(SHELL)
 
 SCRIPT_SUBST_VARS = 	\
@@ -89,3 +90,11 @@ check ::
 	-rm -f ./happy_test
 
 include $(TOP)/mk/target.mk
+
+# Hack to re-create the in-situ build tree driver script after 
+# having installed it.
+#
+install ::
+	@$(RM) $(SCRIPT_PROG)
+	@$(MAKE) $(MFLAGS) BIN_DIST=0 $(SCRIPT_PROG)
+
