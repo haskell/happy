@@ -552,7 +552,7 @@ the grammar for someone else (and indeed yourself) reading the code.
 easier if Happy has inserted type signatures for you.  This is a
 slightly dubious benefit, since type errors in the generated module
 are still somewhat difficult to find.
-<item> Type errors generally help the Haskell compiler to compile the
+<item> Type signatures generally help the Haskell compiler to compile the
 parser faster.  This is important when really large grammar files are
 being used.
 </itemize>
