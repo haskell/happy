@@ -1,11 +1,11 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.4 2001/05/30 09:43:54 simonmar Exp $
+# $Id: Makefile,v 1.5 2001/09/26 13:41:54 simonmar Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
 
 TESTS = Test.ly TestMulti.ly TestPrecedence.ly bug001.ly \
-	monad001.y monad002.ly precedence001.ly
+	monad001.y monad002.ly precedence001.ly precedence002.y
 
 %.n.hs : %.ly
 	$(HAPPY_INPLACE) $< -o $@
