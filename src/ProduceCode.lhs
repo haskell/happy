@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.31 2000/07/11 09:25:48 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.32 2000/07/11 10:07:13 simonmar Exp $
 
 The code generator.
 
@@ -110,7 +110,7 @@ data HappyAbsSyn a t1 .. tn
 
 If we're using coercions, we need to generate the injections etc.
 
-	type HappyAbsSyn ti tj tk ... = ()
+	data HappyAbsSyn ti tj tk ... = HappyAbsSyn
 
 (where ti, tj, tk are type variables for the non-terminals which don't
  have type signatures).
@@ -140,7 +140,7 @@ If we're using coercions, we need to generate the injections etc.
 >		. mkHappyOut n . str " x = unsafeCoerce# x\n"
 >		. str "{-# INLINE " . mkHappyOut n . str " #-}"
 >	  in
->	    str "type " . happy_item . str " = ()\n"
+>	    str "data " . happy_item . str " = HappyAbsSyn\n"
 >	  . interleave "\n" 
 >	    [ inject n ty . nl . extract n ty | (n,ty) <- assocs nt_types ]
 >	  -- token injector
