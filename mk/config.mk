@@ -9,4 +9,4 @@ HappyBinDistDirs = happy
 HappyBinDistDocs = happy/doc
 HappyBinDistShScripts = happy
 
-include version.mk
+include $(HappyMainDir)/mk/version.mk

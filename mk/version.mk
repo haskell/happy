@@ -11,9 +11,9 @@
 #
 # happy project variable settings:
 #
-HappyProjectName       = Happy
-HappyProjectNameShort  = happy
-HappyProjectVersion    = 1.5
-HappyProjectVersionInt = 15
-HappyProjectPatchLevel = 0
+ProjectName       = Happy
+ProjectNameShort  = happy
+ProjectVersion    = 1.5
+ProjectVersionInt = 15
+ProjectPatchLevel = 0
 
