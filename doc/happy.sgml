@@ -2090,6 +2090,9 @@ any projection function.</para>
       <literal>\&dollar;</literal> (this isn't necessary inside a
       string or character literal).</para>
 
+      <para>Additionally, the sequence <literal>&dollar;&gt;</literal>
+      can be used to represent the value of the rightmost symbol.</para>
+
       <para>A semantic value of the form <literal>{% ... }</literal> is a
       <emphasis>monadic action</emphasis>, and is only valid when the grammar
       file contains a <literal>%monad</literal> directive (<xref
