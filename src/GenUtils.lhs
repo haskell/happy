@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: GenUtils.lhs,v 1.6 1997/09/09 16:31:42 simonm Exp $
+$Id: GenUtils.lhs,v 1.7 1998/01/09 13:09:32 sof Exp $
 
 Some General Utilities, including sorts, etc.
 This is realy just an extended prelude.
@@ -298,6 +298,3 @@ Here is the bi-directional version ...
 >	(a',b'',y)    = f a b' x
 >	(a'',b',ys) = mapAccumB f a' b xs
 
-
-> assert False x = error "assert Failed"
-> assert True  x = x
