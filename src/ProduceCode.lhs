@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.52 2001/05/22 10:03:02 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.53 2001/10/16 10:45:46 simonmar Exp $
 
 The code generator.
 
@@ -358,6 +358,7 @@ The token conversion function.
 >	. str "let cont i = " . doAction . str " sts stk tks in\n\t"
 >	. str "case tk of {\n\t"
 >	. interleave ";\n\t" (map doToken token_rep)
+>	. str "_ -> happyError tks\n\t"
 >	. str "}\n";
 
 >	Just (lexer,eof) ->
@@ -371,6 +372,7 @@ The token conversion function.
 >	. str (eof ++ " -> ")
 >    	. eofAction . str ";\n\t"
 >	. interleave ";\n\t" (map doToken token_rep)
+>	. str "_ -> happyError\n\t"
 >	. str "})\n"
 >	}
 
