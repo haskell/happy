@@ -1,4 +1,4 @@
--- $Id: GenericTemplate.hs,v 1.9 2000/12/16 16:31:13 simonmar Exp $
+-- $Id: GenericTemplate.hs,v 1.10 2001/03/30 14:08:23 simonmar Exp $
 
 #ifdef HAPPY_GHC
 #define ILIT(n) n#
@@ -27,11 +27,9 @@
 #endif
 
 #if defined(HAPPY_ARRAY)
-data Happy_IntList = HappyNil | HappyCons FAST_INT Happy_IntList
-#define NIL HappyNil
+data Happy_IntList = HappyCons FAST_INT Happy_IntList
 #define CONS(h,t) (HappyCons (h) (t))
 #else
-#define NIL []
 #define CONS(h,t) ((h):(t))
 #endif
 
@@ -68,18 +66,18 @@ happyTrace string expr = unsafePerformIO $ do
 #define DEBUG_TRACE(s)    {- nothing -}
 #endif
 
+infixr 9 `HappyStk`
+data HappyStk a = HappyStk a (HappyStk a)
+
 -----------------------------------------------------------------------------
 -- starting the parse
 
-happyParse start_state = happyNewToken start_state NIL []
+happyParse start_state = happyNewToken start_state notHappyAtAll notHappyAtAll
 
 -----------------------------------------------------------------------------
 -- Accepting the parse
 
-happyAccept j tk st sts [ ans ] = happyReturn1 ans
-happyAccept j tk st sts _       = IF_GHC(happyTcHack j 
-				         IF_ARRAYS(happyTcHack st))
-				  notHappyAtAll
+happyAccept j tk st sts (HappyStk ans _) = happyReturn1 ans
 
 -----------------------------------------------------------------------------
 -- Arrays only: do the next action
@@ -144,41 +142,35 @@ newtype HappyState b c = HappyState
 -----------------------------------------------------------------------------
 -- Shifting a token
 
-happyShift new_state ERROR_TOK tk st sts stk@(x : _) =
+happyShift new_state ERROR_TOK tk st sts stk@(x `HappyStk` _) =
      let i = GET_ERROR_TOKEN(x) in
 --     trace "shifting the error token" $
      DO_ACTION(new_state,i,tk,CONS(st,sts),stk)
 
 happyShift new_state i tk st sts stk =
-     happyNewToken new_state CONS(st,sts) (MK_TOKEN(tk):stk)
+     happyNewToken new_state CONS(st,sts) (MK_TOKEN(tk)`HappyStk`stk)
 
 -- happyReduce is specialised for the common cases.
 
 happySpecReduce_0 i fn ERROR_TOK tk st sts stk
      = happyFail ERROR_TOK tk st sts stk
 happySpecReduce_0 nt fn j tk st@(HAPPYSTATE(action)) sts stk
-     = GOTO(action) nt j tk st CONS(st,sts) (fn : stk)
+     = GOTO(action) nt j tk st CONS(st,sts) (fn `HappyStk` stk)
 
 happySpecReduce_1 i fn ERROR_TOK tk st sts stk
      = happyFail ERROR_TOK tk st sts stk
-happySpecReduce_1 nt fn j tk _ sts@(CONS(st@HAPPYSTATE(action),_)) (v1:stk')
-     = GOTO(action) nt j tk st sts (fn v1 : stk')
-happySpecReduce_1 _ _ _ _ _ _ _
-     = notHappyAtAll
+happySpecReduce_1 nt fn j tk _ sts@(CONS(st@HAPPYSTATE(action),_)) (v1`HappyStk`stk')
+     = GOTO(action) nt j tk st sts (fn v1 `HappyStk` stk')
 
 happySpecReduce_2 i fn ERROR_TOK tk st sts stk
      = happyFail ERROR_TOK tk st sts stk
-happySpecReduce_2 nt fn j tk _ CONS(_,sts@(CONS(st@HAPPYSTATE(action),_))) (v1:v2:stk')
-     = GOTO(action) nt j tk st sts (fn v1 v2 : stk')
-happySpecReduce_2 _ _ _ _ _ _ _
-     = notHappyAtAll
+happySpecReduce_2 nt fn j tk _ CONS(_,sts@(CONS(st@HAPPYSTATE(action),_))) (v1`HappyStk`v2`HappyStk`stk')
+     = GOTO(action) nt j tk st sts (fn v1 v2 `HappyStk` stk')
 
 happySpecReduce_3 i fn ERROR_TOK tk st sts stk
      = happyFail ERROR_TOK tk st sts stk
-happySpecReduce_3 nt fn j tk _ CONS(_,CONS(_,sts@(CONS(st@HAPPYSTATE(action),_)))) (v1:v2:v3:stk')
-     = GOTO(action) nt j tk st sts (fn v1 v2 v3 : stk')
-happySpecReduce_3 _ _ _ _ _ _ _
-     = notHappyAtAll
+happySpecReduce_3 nt fn j tk _ CONS(_,CONS(_,sts@(CONS(st@HAPPYSTATE(action),_)))) (v1`HappyStk`v2`HappyStk`v3`HappyStk`stk')
+     = GOTO(action) nt j tk st sts (fn v1 v2 v3 `HappyStk` stk')
 
 happyReduce k i fn ERROR_TOK tk st sts stk
      = happyFail ERROR_TOK tk st sts stk
@@ -188,12 +180,15 @@ happyReduce k nt fn j tk st sts stk = GOTO(action) nt j tk st1 sts1 (fn stk)
 happyMonadReduce k nt fn ERROR_TOK tk st sts stk
      = happyFail ERROR_TOK tk st sts stk
 happyMonadReduce k nt fn j tk st sts stk =
-        happyThen1 (fn stk) (\r -> GOTO(action) nt j tk st1 sts1 (r : drop_stk))
+        happyThen1 (fn stk) (\r -> GOTO(action) nt j tk st1 sts1 (r `HappyStk` drop_stk))
        where sts1@(CONS(st1@HAPPYSTATE(action),_)) = happyDrop k CONS(st,sts)
-             drop_stk = drop IBOX(k) stk
+             drop_stk = happyDropStk k stk
 
 happyDrop ILIT(0) l = l
 happyDrop n CONS(_,t) = happyDrop MINUS(n,ILIT(1)) t
+
+happyDropStk ILIT(0) l = l
+happyDropStk n (x `HappyStk` xs) = happyDropStk MINUS(n,ILIT(1)) xs
 
 -----------------------------------------------------------------------------
 -- Moving to a new state after a reduction
@@ -224,16 +219,16 @@ happyFail  ERROR_TOK tk old_st _ stk =
 
 -- discard a state
 happyFail  ERROR_TOK tk old_st CONS(HAPPYSTATE(action),sts) 
-						(saved_tok : _ : stk) =
+						(saved_tok `HappyStk` _ `HappyStk` stk) =
 --	trace ("discarding state, depth " ++ show (length stk))  $
-	DO_ACTION(action,ERROR_TOK,tk,sts,(saved_tok:stk))
+	DO_ACTION(action,ERROR_TOK,tk,sts,(saved_tok`HappyStk`stk))
 -}
 
 -- Enter error recovery: generate an error token,
 --                       save the old token and carry on.
 happyFail  i tk HAPPYSTATE(action) sts stk =
 --      trace "entering error recovery" $
-	DO_ACTION(action,ERROR_TOK,tk,sts, MK_ERROR_TOKEN(i) : stk)
+	DO_ACTION(action,ERROR_TOK,tk,sts, MK_ERROR_TOKEN(i) `HappyStk` stk)
 
 -- Internal happy errors:
 

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.48 2001/02/09 22:26:49 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.49 2001/03/30 14:08:23 simonmar Exp $
 
 The code generator.
 
@@ -257,12 +257,11 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 
 >     | isMonadProd
 >	= mkReductionHdr (showInt lt) "happyMonadReduce "
->	. char '(' . interleave " :\n\t" tokPatterns
+>	. char '(' . interleave " `HappyStk`\n\t" tokPatterns
 >	. str "happyRest)\n\t = happyThen ("
 >	. tokLets
 >	. str code'
 >	. str "\n\t) (\\r -> happyReturn (" . this_absSynCon . str " r))"
->       . defaultCase
 
 >     | specReduceFun lt
 >	= mkReductionHdr (shows lt) "happySpecReduce_"
@@ -280,12 +279,11 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 
 >     | otherwise
 > 	= mkReductionHdr (showInt lt) "happyReduce "
->	. char '(' . interleave " :\n\t" tokPatterns
+>	. char '(' . interleave " `HappyStk`\n\t" tokPatterns
 >	. str "happyRest)\n\t = "
 >	. tokLets
 >	. this_absSynCon . str "\n\t\t " 
->	. char '(' . str code'. str "\n\t) : happyRest"
->	. defaultCase
+>	. char '(' . str code'. str "\n\t) `HappyStk` happyRest"
 
 >       where 
 >		isMonadProd = case code of ('%' : code) -> True
@@ -304,11 +302,6 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 > 
 >		reductionFun = str "happyReduction_" . shows i
 >
->		defaultCase = if not (null toks)
->              			  then nl . reductionFun
->				   . str " _ = notHappyAtAll "
->              			  else id
-> 
 >		tokPatterns 
 >		 | coerce = reverse (map mkDummyVar [1 .. length toks])
 >		 | otherwise = reverse (zipWith tokPattern [1..] toks)
