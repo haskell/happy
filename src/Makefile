@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.43 2002/02/05 11:20:09 simonmar Exp $
+# $Id: Makefile,v 1.44 2002/02/07 10:18:11 simonmar Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -64,6 +64,10 @@ SCRIPT_SUBST_VARS = 	\
 
 INSTALL_SCRIPTS += $(SCRIPT_PROG)
 INSTALL_LIBEXECS = $(HS_PROG)
+
+# Hack to avoid automatic cleaning machinery from cleaning Parser.hs
+#
+DERIVED_HAPPY_SRCS = 
 
 # don't recurse on 'make install'
 #
