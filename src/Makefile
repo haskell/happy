@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.51 2004/08/12 11:53:55 simonmar Exp $
+# $Id: Makefile,v 1.52 2004/08/12 11:55:27 simonmar Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -28,7 +28,6 @@ SRC_HC_OPTS += -package lang
 endif
 
 Parser_HC_OPTS      = -Onot
-Version_HC_OPTS	    = -DHAPPY_VERSION=$(ProjectVersion)
 
 ifeq "$(Windows)" "YES"
 Main_HC_OPTS += -Dmingw32_HOST_OS=1
