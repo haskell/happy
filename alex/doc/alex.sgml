@@ -1,0 +1,295 @@
+<!DOCTYPE BOOK PUBLIC "-//OASIS//DTD DocBook V3.1//EN" [
+<!entity  the-index SYSTEM "genindex.sgml">
+]>
+
+<book id="alex">
+  <bookinfo>
+    <date>2003-2-13</date>
+    <title>Alex User Guide</title>
+    <author>
+      <firstname>Chris</firstname>
+      <surname>Dornan</surname>
+    </author>
+    <author>
+      <firstname>Isaac</firstname>
+      <surname>Jones</surname>
+    </author>
+    <address><email>ijones@syntaxpolice.org</email></address>
+<!--     <copyright> -->
+<!--       <year>1997-2001</year> -->
+<!--       <holder>Simon Marlow</holder> -->
+<!--     </copyright> -->
+    <abstract>
+      <para>The <application>Alex</application> package, like <application>lex</application>, takes a description of tokens based on regular
+expressions and generates a program module for scanning text efficiently.  
+	</para>
+    </abstract>
+  </bookinfo>
+
+  <!-- Table of contents -->
+  <toc></toc>
+
+<!-- Introduction --------------------------------------------------------- -->
+
+  <chapter id="alex-introduction">
+    <title>Introduction</title>
+
+    <para> The <application>Alex</application> package,
+           like <application>Lex</application>, takes a description of
+           tokens based on regular expressions and generates a program
+           module for scanning text efficiently.  The difference is
+           that <application>Alex</application> generates Haskell
+           modules rather than C/Ratfor source files.  Although
+           <application>Alex</application> takes after
+           <application>lex</application>, it is intended for Haskell
+           programmers and so departs quite radically from Lex in some
+           respects.
+    <figure ID="fig-tokens" FLOAT="1"><TITLE>A simple Alex specification.</TITLE>
+<programlisting>
+
+%{
+module Tokens where
+
+import Alex
+%}
+
+
+{ ^d = 0-9      }			-- digits
+{ ^l = [a-zA-Z] }			-- alphabetic characters
+
+"tokens_lx"/"tokens_acts":-
+
+  &lt;>     ::=  ^w+			-- white space
+  &lt;>     ::=  ^-^-.*			-- comments
+  &lt;let'> ::=  let			%{ let' p s = Let p          %}
+  &lt;in'>  ::=  in			%{ in'  p s = In  p          %}
+  &lt;int>  ::=  ^d+			%{ int  p s = Int p (read s) %}	
+  &lt;sym>  ::=  `=+-*/()'			%{ sym  p s = Sym p (head s) %}
+  &lt;var>  ::=  ^l[^l^d^_^']*		%{ var  p s = Var p s        %}
+
+
+%{
+data Token =
+	Let Posn		|
+	In  Posn		|
+	Sym Posn Char		|
+	Var Posn String		|
+	Int Posn Int		|
+	Err Posn
+	deriving (Eq,Text)
+
+
+tokens:: String -> [Token]
+tokens inp = scan tokens_scan inp
+
+tokens_scan:: Scan Token
+tokens_scan = load_scan (tokens_acts,stop_act) tokens_lx
+	where
+	stop_act p ""  = []
+	stop_act p inp = [Err p]
+%}
+</programlisting></figure>
+
+    <para> A sample specification is given in <xref linkend="fig-tokens">.
+           The first few lines between the <literal>%{</literal> and
+           <literal>%}</literal> provide a code scrap (some inlined
+           Haskell code) to be placed in the output.  All such code
+           fragments will be placed in order at the head of the module
+           with the \lx-generated tables appearing at the end.</para>
+
+    <para>The next two lines define the <literal>^d</literal> and
+    <literal>^l</literal> macros for use in the token
+    definitions.</para>
+
+    <para>The <literal>"tokens_lx"/"tokens_acts":-</literal> line
+          starts the definition of a scanner.  It is generated in two
+          parts: the main tables being placed in
+          <literal>token_lx</literal> and the actions for each token
+          being bound to <literal>tokens_acts</literal>.</para>
+
+     <para>The scanner is specified as a series of token definitions
+          where each token specification takes the form of</para>
+
+<programlisting>
+&lt;token-id> ::= rexp
+</programlisting>
+
+    <para>If <emphasis>token-id</emphasis> is omitted then the token will be
+          discarded (this is done for the first two white-space and
+          comment token definitions), otherwise a corresponding action
+          function for constructing the token must be given somewhere
+          in the script.  In this case the action functions are given
+          in the code scraps to the right of the token definition but
+          they could be specified anywhere.  Here
+          <application>Alex</application> differs from
+          <application>Lex</application>; while each action must be
+          named in a code scrap, the programmer has more flexibility
+          in laying out the script.  Like comments, code scraps may be
+          placed anywhere in the module.</para>
+
+    <para>The action function for each token takes the text matched
+          and its position and generates a token suitable for the
+          parser, of type <literal>Token</literal> in this case.</para>
+
+    <para>The remaining lines define the <literal>Token</literal> data
+          type and the scanner in two parts,
+          <literal>tokens_scan</literal> which uses
+          <literal>load_scan</literal> for amalgamating the token
+          actions, stop action (for stopping the scanner) and token
+          specification tables into a <literal>Scan</literal>
+          structure, and <literal>tokens</literal>, the scanner, which
+          simply passes the <literal>Scan</literal> structure to
+          <literal>scan</literal>.  <literal>load_scan</literal>,
+          <literal>Scan</literal> and <literal>scan</literal> were
+          imported from the <literal>Scan</literal> module that comes
+          with the <application>Alex</application>
+          distribution.</para>
+
+    <para>While delegating the task of assembling the scanner to the
+          programmer may seem a bit bothersome, the effort is rewarded
+          with a flexible and modular scheme for generating
+          scanners.</para>
+
+    <para>With this specification in <literal>Tokens.x</literal>,
+          <application>Alex</application> can be used to generate
+          <literal>Tokens.hs</literal>:
+
+<programlisting>
+alex Tokens.x
+</programlisting>
+
+
+    <para>If the module needed to be placed in different file,
+          <literal>tkns.hs</literal> for example, then a second
+          file-name can be specified on the command line:</para>
+
+<programlisting>alex Tokens.x tkns.hs</programlisting>
+
+    <para>The resulting module is Haskell~1.2 and Haskell~1.3
+          compatible.  It can also be readily used with a Happy
+          parser, with the catch that the <literal>Err</literal> token
+          must be declared.</para>
+
+    <para>If the script were written with literate conventions then
+          the <literal>.lx</literal> extension would be used instead
+          of <literal>.x</literal>.  (Literate scripts will be
+          described in Section~\ref{sec-lexical-syntax} on lexical
+          syntax.)</para>
+
+</chapter>
+
+<chapter id="syntax">
+<title>Syntax</title> <para>The syntax in this section is described
+    with an extended BNF in which optional phrases are enclosed in
+    square brackets <literal>([...])</literal> and repeated phrases in
+    braces <literal>({...})</literal>.  The terminal symbols
+    <emphasis>ide</emphasis>, <emphasis>tkn</emphasis>,
+    <emphasis>ch</emphasis>, <emphasis>ech</emphasis>,
+    <emphasis>cch</emphasis> <emphasis>smac</emphasis>,
+    <emphasis>rmac</emphasis> and <emphasis>quot</emphasis> are are
+    defined in Section~\ref{sec-lexical-syntax} on lexical syntax.</para>
+
+<section id="ScriptsMacrosScanners">
+<Title>Scripts, Macros and Scanners</title>
+
+
+    <para>Alex scripts contain a list of scanner specifications,
+          optionally preceded by some global macro definitions.  Each
+          scanner consists of a header with the Haskell identifiers to
+          be bound in the output module, a list of macro definitions
+          and a list of token definitions.  Macros may also be
+          specified on the right-hand-side of token definitions.</para>
+<programlisting>
+alex		-> { macdef } { scanner }
+
+macdef		-> { smac = <varname>set</varname> | rmac = <varname>rexp</varname> }
+
+scanner		-> ide [/ ide] :- { <varname>macdef</varname> } { <varname>def</varname> }
+def		-> tkn ::= { <varname>macdef</varname> } <varname>ctx</varname>
+ctx		-> { sc : } [set \] <varname>rexp</varname> [/ <varname>rexp</varname>]
+sc		-> "0" | ide
+</programlisting>
+
+    <para>Macros come in two flavours: regular expression macros and
+          character set macros.  A regular expression is more powerful
+          than a character set but it can be used in less contexts.
+          Regular expressions and character sets are described below.</para>
+
+    <para>Macros obey a static scoping discipline with each macro
+          scoping over the construction it precedes.  Thus macros at
+          the head of the script scope over the whole script, macros
+          preceding a scanner scope over the scanner and those on the
+          right-hand-side of a token definition will only be effective
+          for the token definition.  Because they are statically
+          scoped any macros mentioned in the body of a macro must be
+          defined in its defining environment and its meaning is then
+          fixed at the point of definition.  For example, the
+          definitions</para>
+
+<programlisting>
+{ ^g = ^a       }
+{ ^a = [a-zA-Z] }
+</programlisting>
+
+    <para>will bind <literal>^g</literal> to the contents of the
+          <literal>^a</literal> macro (which must be defined) and
+          rebind <literal>^a</literal> to match the alphabetic
+          characters.  After both definitions, <literal>^g</literal>
+          will be bound to the original value of the
+          <literal>^a</literal> macro.</para>
+
+    <para>The header line of a macro will usually give two
+          identifiers: the first one for binding the tables containing
+          the token specifications and the second for binding the
+          action list.  If the second identifier is omitted then the
+          action list will not be generated and the programmer need
+          not specify action functions for each named token; however,
+          to get a useful scanner with <literal>load_scan</literal>, a
+          hand-built action list will have to be supplied.  </para>
+
+
+    <para>Leading context, trailing context and start codes may be
+          specified with the <literal>:</literal>,
+          <literal>\</literal>, <literal>/</literal> operators.  These
+          features will be described in
+          Section~\ref{sec-context-specifications} on context
+          specifications.  </para>
+
+    <para>A token identifier may be bound to more than one
+          specification with the result that all the definitions will
+          be handled by the same action function.
+    </para>
+</section>
+<section id="regularExpressions">
+<title>Regular Expressions</title>
+<programlisting>
+
+<!-- hrm, this isn't very readable :( -->
+<varname>rexp</varname>     -> <varname>rexp</varname> { | <varname>rexp</varname><subscript>2</subscript> }
+<varname>rexp</varname><subscript>2</subscript>    -> <varname>rex</varname><subscript>1</subscript> { <varname>rex</varname><subscript>1</subscript> }
+<varname>rexp</varname><subscript>1</subscript>    -> <varname>rexp</varname><subscript>0</subscript> [ <literal>*</literal> | <literal>+</literal> | <literal>?</literal> | <varname>repeat</varname> ]
+<varname>repeat</varname>   -> { <varname>digit</varname> [, [<varname>digit</varname>] ] }
+<varname>rexp</varname><subscript>0</subscript>    -> <literal>$</literal> | rmac | <varname>set</varname> | ( <varname>rexp</varname> )
+<varname>digit</varname>    -> 0 | 1 | 2 | 3 | 4
+         |  5 | 6 | 7 | 8 | 9
+</programlisting>
+
+    <para>The regular expression syntax is similar to that of
+          <application>Lex</application>, with the addition of
+          <literal>$</literal> for $\epsilon$, matching the empty
+          string, and the <literal>%</literal>$\langle {\it
+          letter}\rangle$ syntax for regular-expression macros.</para>
+
+    <para>Here are some of the ways of repeating <literal>a</literal>s.</para>
+<programlisting>
+&lt;a_star>  ::= $ | a+		-- = a*, zero or more as
+&lt;a_plus>  ::= aa*		-- = a+, one or more as
+&lt;a_quest> ::= $ | a		-- = a?, zero or one as
+&lt;a_3>     ::= a{3}		-- = aaa
+&lt;a_3_5>   ::= a{3,5}		-- = a{3}a?a?
+&lt;a_3_>    ::= a{3,}		-- = a{3}a*
+</programlisting>
+
+</section>
+
+</chapter> </book>
