@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.44 2002/06/19 13:24:15 simonmar Exp $
+$Id: Main.lhs,v 1.45 2002/07/26 09:52:17 simonmar Exp $
 
 The main driver.
 
@@ -127,19 +127,18 @@ Report any unused rules and terminals
 >	let (unused_rules, unused_terminals) = find_redundancies g action
 >	in
 >	optIO (not (null unused_rules))
->	   (putStr ("unused rules: " ++ show (length unused_rules) ++ "\n")) >>
+>	   (hPutStrLn stderr ("unused rules: " ++ show (length unused_rules))) >>
 >	optIO (not (null unused_terminals))
->	   (putStr ("unused terminals: " ++ show (length unused_terminals) ++
->		"\n")) >>
+>	   (hPutStrLn stderr ("unused terminals: " ++ show (length unused_terminals))) >>
 
 Report any conflicts in the grammar.
 
 >	(if sr /= 0
->		then putStr ("shift/reduce conflicts:  " ++ show sr ++ "\n")
+>		then hPutStrLn stderr ("shift/reduce conflicts:  " ++ show sr)
 >		else return ())			>>
 
 >	(if rr /= 0
->		then putStr ("reduce/reduce conflicts: " ++ show rr ++ "\n")
+>		then hPutStrLn stderr ("reduce/reduce conflicts: " ++ show rr)
 >		else return ())			>>
 
 Print out the info file.
@@ -218,7 +217,8 @@ and generate the code.
 >		     filter_output 
 >       in
 
->       writeFile outfilename (magic_filter (outfile ++ templ))
+>       (if outfilename == "-" then putStr else writeFile outfilename)
+>		(magic_filter (outfile ++ templ))
 
 Successfully Finished.
 

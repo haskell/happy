@@ -114,6 +114,11 @@ Specifies the destination of the generated parser module.  If omitted,
 the parser will be placed in
 .IR FILE.hs ", where " FILE
 is the name of the input file with any extension removed.
+If
+.I FILE
+is
+.B -
+the generated parser is sent to the standard output.
 
 .TP
 \fB\-m\fR \fINAME\fR, \fB\-\-magic-name=\fINAME
