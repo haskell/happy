@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.31 2000/12/20 15:23:56 simonmar Exp $
+$Id: Main.lhs,v 1.32 2001/03/05 10:09:37 simonmar Exp $
 
 The main driver.
 
@@ -316,7 +316,7 @@ The command line arguments.
 >    Option ['c'] ["coerce"] (NoArg OptUseCoercions)
 >	"Use type coercions (only available with -g)",
 >    Option ['d'] ["debug"] (NoArg OptDebugParser)
->	"Produce a debugging parser (only available with -a)",
+>	"Produce a debugging parser (only with -a)",
 >    Option ['g'] ["ghc"]    (NoArg OptGhcTarget)
 >	"Use GHC extensions",
 >    Option ['i'] ["info"] (OptArg OptInfoFile "FILE")
