@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.8 1997/10/03 15:12:21 simonm Exp $
+$Id: ProduceCode.lhs,v 1.9 1997/11/21 12:54:56 simonm Exp $
 
 The code generator.
 
@@ -271,9 +271,14 @@ The token conversion function.
 >		= str (removeDollorDollor tok)
 >		. str " -> cont " 
 >		. showInt (tokIndex i)
+
+Use a variable rather than '_' to replace '$$', so we can use it on
+the left hand side of '@'.
+
 >	  removeDollorDollor xs = case mapDollorDollor xs of
 >				   Nothing -> xs
->				   Just fn -> fn "_"
+>				   Just fn -> fn "happy_dollar_dollar"
+
 >    mkHappyTerminalVar :: Int -> Int -> String -> String
 >    mkHappyTerminalVar i t = 
 >     case tok_str_fn of
