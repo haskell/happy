@@ -49,7 +49,7 @@ import Data.Char
 	STRING		{ T _ (StringT $$) }
 	BIND		{ T _ (BindT $$) }
 	ID		{ T _ (IdT $$) }
-	CODE		{ T _ (CodeT $$) }
+	CODE		{ T _ (CodeT _) }
 	CHAR		{ T _ (CharT $$) }
 	SMAC		{ T _ (SMacT _) }
 	RMAC		{ T _ (RMacT $$) }
@@ -58,11 +58,12 @@ import Data.Char
 	WRAPPER		{ T _ WrapperT }
 %%
 
-alex	:: { (Maybe Code, [Directive], Scanner, Maybe Code) }
+alex	:: { (Maybe (AlexPosn,Code), [Directive], Scanner, Maybe (AlexPosn,Code)) }
 	: maybe_code directives macdefs scanner maybe_code { ($1,$2,$4,$5) }
 
-maybe_code :: { Maybe Code }
-	: CODE				{ Just $1 }
+maybe_code :: { Maybe (AlexPosn,Code) }
+	: CODE				{ case $1 of T pos (CodeT code) -> 
+						Just (pos,code) }
 	| {- empty -}			{ Nothing }
 
 directives :: { [Directive] }
@@ -110,7 +111,7 @@ startcode :: { String }
 	| ID	 			{ $1 }
 
 rhs	:: { Code }
-	: CODE 				{ $1 }
+	: CODE 				{ case $1 of T _ (CodeT code) -> code }
 	| ';'	 			{ "" }
 
 context :: { Maybe CharSet, RExp, Maybe RExp }

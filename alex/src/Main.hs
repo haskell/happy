@@ -63,7 +63,7 @@ runAlex cli file = do
   alex cli file basename script
 
 parseScript :: FilePath -> String
-  -> IO (Maybe String, [Directive], Scanner, Maybe String)
+  -> IO (Maybe (AlexPosn,Code), [Directive], Scanner, Maybe (AlexPosn,Code))
 parseScript file prg =
   case runP prg initialParserEnv parse of
 	Left (Just (AlexPn _ line col),err) -> 
@@ -108,9 +108,7 @@ alex cli file basename script = do
    wrapper_name <- wrapperFile template_dir directives
 
    hPutStr out_h (optsToInject target cli)
-   case maybe_header of
-	Nothing   -> return ()
-	Just code -> hPutStr out_h code
+   injectCode maybe_header file out_h
 
    hPutStr out_h (importsToInject target cli)
 
@@ -120,9 +118,7 @@ alex cli file basename script = do
    put_info (infoDFA 1 nm dfa "")
    hPutStr out_h (outputDFA target 1 nm dfa "")
 
-   case maybe_footer of
-	Nothing   -> return ()
-	Just code -> hPutStr out_h code
+   injectCode maybe_footer file out_h
 
    hPutStr out_h (sc_hdr "")
    hPutStr out_h (actions "")
@@ -138,6 +134,13 @@ alex cli file basename script = do
 
    hClose out_h
    finish_info
+
+-- inject some code, and add a {-# LINE #-} pragma at the top
+injectCode :: Maybe (AlexPosn,Code) -> FilePath -> Handle -> IO ()
+injectCode Nothing _ _ = return ()
+injectCode (Just (AlexPn _ ln _,code)) filename hdl = do
+  hPutStrLn hdl ("{-# LINE " ++ show ln ++ " \"" ++ filename ++ "\" #-}")
+  hPutStrLn hdl code
 
 optsToInject :: Target -> [CLIFlags] -> String
 optsToInject target cli
