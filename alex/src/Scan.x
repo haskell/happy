@@ -13,12 +13,13 @@
 {
 module Scan(lexer, Posn(..), Token(..), Tkn(..), tokPosn) where
 
-import Array
 import Data.Char
 import Debug.Trace
 }
 
 $digit    = 0-9
+$hexdig   = [0-9 A-F a-f]
+$octal    = 0-7
 $lower    = a-z
 $upper    = A-Z
 $alpha    = [$upper $lower]
@@ -42,9 +43,11 @@ alex :-
   | \( | \) | \[ | \] | \^	{ special }
 <0> \{			{ brace }
 
-<0> \" (.#\")* \"		{ string }
+<0> \" [^\"]* \"		{ string }
 <0> %id %ws? \:\-		{ bind }
-<0> \\ $digit{1,3}		{ cch }
+<0> \\ $digit+			{ decch }
+<0> \\ x $hexdig+		{ hexch }
+<0> \\ o $octal+		{ octch }
 <0> \\ $printable		{ escape }
 <0> $alphanum			{ char }
 <0> %smac			{ smac }
@@ -98,7 +101,9 @@ zero    = mk_act (\p ln str -> T p ZeroT)
 string  = mk_act (\p ln str -> T p (StringT (extract ln str)))
 bind    = mk_act (\p ln str -> T p (BindT (takeWhile isIdChar str)))
 escape  = mk_act (\p ln str -> T p (CharT (esc str)))
-cch     = mk_act (\p ln str -> T p (CharT (do_cch ln str)))
+decch   = mk_act (\p ln str -> T p (CharT (do_ech 10 ln str)))
+hexch   = mk_act (\p ln str -> T p (CharT (do_ech 16 ln str)))
+octch   = mk_act (\p ln str -> T p (CharT (do_ech 8  ln str)))
 char    = mk_act (\p ln str -> T p (CharT (head str)))
 smac    = mk_act (\p ln str -> T p (SMacT (mac ln str)))
 rmac    = mk_act (\p ln str -> T p (RMacT (mac ln str)))
@@ -139,7 +144,7 @@ mk_act ac = \p _ str len cont st -> ac p len str:cont st
 
 extract ln str = take (ln-2) (tail str)
 		
-do_cch ln str = chr (str2int(take (ln-1) (tail str)))
+do_ech radix ln str = chr (parseInt radix (take (ln-1) (tail str)))
 
 mac ln (_ : str) = take (ln-1) str
 
@@ -156,8 +161,8 @@ esc (_ : x : _)  =
    'v' -> '\v'
    c   ->  c
 
-str2int:: String -> Int
-str2int = foldl (\n d-> n*10+ord d-ord '0') 0
+parseInt :: Int -> String -> Int
+parseInt radix ds = foldl1 (\n d -> n * radix + d) (map digitToInt ds)
 
 lexer :: String -> [Token]
 lexer = gscan stop (0::Int,"")

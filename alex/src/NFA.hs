@@ -102,10 +102,11 @@ scanner2nfa Scanner{scannerTokens = toks} startcodes
 		rctx_e <- case rctx of
 				  Nothing -> return Nothing
 				  Just re -> do 
-					rctx_e <- newState
-		 			rexp2nfa e rctx_e re
-					accept rctx_e rctxt_accept
-					return (Just rctx_e)
+					r_b <- newState
+					r_e <- newState
+		 			rexp2nfa r_b r_e re
+					accept r_e rctxt_accept
+					return (Just r_b)
 
 		let lctx' = case lctx of
 				  Nothing -> Nothing
@@ -209,4 +210,4 @@ accept state new_acc = N $ \s n -> (s, addAccept n state, ())
 
 
 rctxt_accept :: Accept Code
-rctxt_accept = Acc 0 "trailing context accept" Nothing Nothing
+rctxt_accept = Acc 0 "undefined" Nothing Nothing

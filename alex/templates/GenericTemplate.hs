@@ -113,18 +113,27 @@ scan_token (IBOX(startcode),_) p c inp
  = scan_tkn p c inp ILIT(0) startcode Nothing
 		-- the startcode is the initial state
 
--- This function performs most of the work of `scan_token'.  It pushes the
--- input through the DFA, remembering the accepting states it encounters on a
--- stack.  No context is checked here.  A space leak could result from a long
--- token with many valid prefixes, leading to a large stack.  This space leak
--- is avoided in most cases by discarding the stack if an unconditional state
--- is pushed on (no state below an unconditional state will be needed).
+-- This function performs most of the work of `scan_token'.  It pushes
+-- the input through the DFA, remembering the most recent accepting
+-- states it encountered.
 
 --scan_tkn:: Posn -> Char -> String -> Int -> SNum -> Maybe (Sv f) -> Maybe (Sv f)
-scan_tkn p c inp len (ILIT(-1)) stk = stk  	-- error or finished
+scan_tkn p c inp len (ILIT(-1)) stk = 
+#ifdef ALEX_DEBUG
+	(case stk of
+	  Nothing -> trace "error"
+	  Just _  -> trace "accept")
+#endif
+	stk  	-- error or finished
+
 scan_tkn p c inp len s stk =
   case inp of
-    [] -> stk'	-- end of input
+    [] -> 
+#ifdef ALEX_DEBUG
+	trace "EOF"
+#endif
+	stk'	-- end of input
+
     (c':inp') -> 
 #ifdef ALEX_DEBUG
 	trace ("State: " ++ show IBOX(s) ++ ", char: " ++ show c') $

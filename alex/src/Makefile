@@ -26,6 +26,9 @@ boot ::
 		(cd $(FPTOOLS_TOP)/ghc/driver && $(MAKE) boot); \
 	fi 
 
+Scan.hs : Scan.x
+	../src-OLD8/alex-inplace Scan.x
+
 cmp :: Scan.hs
 	./alex-inplace Scan.x -o Scan.hs-CMP
 	cmp Scan.hs Scan.hs-CMP
@@ -40,7 +43,7 @@ ALEXBIN=$(libexecdir)/$(HS_PROG)
 endif # BIN_DIST
 else
 ALEXLIB=$(FPTOOLS_TOP_ABS)/happy/alex/templates
-ALEXBIN=$(FPTOOLS_TOP_ABS)/happy/alex/src1/$(HS_PROG)
+ALEXBIN=$(FPTOOLS_TOP_ABS)/happy/alex/src/$(HS_PROG)
 endif
 
 INSTALLED_SCRIPT_PROG  = alex-$(ProjectVersion)

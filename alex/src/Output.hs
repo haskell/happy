@@ -77,12 +77,17 @@ outputDFA target n func_nm dfa
 	= str "Acc " . shows prio . space
 	. paren (str act) . space
 	. outputLCtx lctx . space
-	. shows rctx
+	. outputRCtx rctx
 
     outputLCtx Nothing
 	= str "Nothing"
     outputLCtx (Just set)
-	= str "Just " . paren (outputArr (charSetToArray set))
+	= paren (str "Just " . paren (outputArr (charSetToArray set)))
+
+    outputRCtx Nothing
+	= str "Nothing"
+    outputRCtx (Just set)
+	= paren (str "Just " . shows set)
 
     outputArr arr
 	= str "Array.array " . shows (bounds arr) . space
@@ -91,8 +96,12 @@ outputDFA target n func_nm dfa
 -- -----------------------------------------------------------------------------
 -- Generating arrays.
 
--- We want to generate:
+-- Here we use the table-compression algorithm described in section
+-- 3.9 of the dragon book, which is a common technique used by lexical
+-- analyser generators.
 
+-- We want to generate:
+--
 --    base :: Array SNum Int
 --		maps the current state to an offset in the main table
 --
@@ -109,11 +118,9 @@ outputDFA target n func_nm dfa
 --    accept :: Array SNum [Accept a]
 --		maps state to list of accept codes for this state
 --
-
 -- For each state, we decide what will be the default symbol (pick the
 -- most common).  We now have a mapping Char -> SNum, with one special
 -- state reserved as the default.
-
 
 
 mkTables :: DFA SNum a
