@@ -1474,11 +1474,9 @@ happy - [ options ] &lt;filename&gt; [ options ]
       </varlistentry>
 
       <varlistentry>
-	<term> <literal/-v | --verbose/ </term>
+	<term> <literal/-v | --version/ </term>
 	<listitem>
-	  <para>Causes <application/Happy/ to be more verbose.  At the moment this
-          just prints out the copyright message and has no effect on
-          anything else.</para>
+	  <para>Print version information on standard output then exit successfully.</para>
 	</listitem>
       </varlistentry>
 

@@ -45,9 +45,8 @@ a complete description, see the other documentation.
 .B \-h, \-\-help
 Show summary of options.
 .TP
-.B \-v, \-\-verbose
-Causes Happy to be more verbose.  At the moment this just prints out the
-copyright message and has no effect on anything else.
+.B \-v, \-\-version
+Print version information on standard output then exit successfully.
 .TP
 .B \-a, \-\-array
 Instructs Happy to generate a parser using an array-based shift reduce
