@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Lexer.lhs,v 1.9 1997/09/26 09:53:48 simonm Exp $
+$Id: Lexer.lhs,v 1.10 1998/02/02 15:21:16 simonm Exp $
 
 The lexer.
 
@@ -163,9 +163,6 @@ Utilities that read the rest of a token.
 >	|| c >= 'A' && c <= 'Z' 
 >	|| c >= '0' && c <= '9' 
 >	|| c == '_'
-
-> isNumPart :: Char -> Bool
-> isNumPart x = x >= '0' && x <= '9'
 
 > lexReadChar :: String -> (String -> String -> a) -> a
 > lexReadChar ('\'':r)      fn = fn "" r
