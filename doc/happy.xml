@@ -1802,6 +1802,12 @@ close : '}'                  { () }
 	       This is explained in more detail in
 	       <xref linkend="sec-glr-semantics-tree-monad"/>.
 	       </para>
+	       <para>
+	       <emphasis>Note</emphasis>: the generated parsers don't include
+	       Ashley Yakeley's monad context information yet. It is currently
+	       just ignored. 
+	       If this is a problem, email and I'll make the changes required.
+	       </para>
 	     </listitem>
 	   </varlistentry>
 	   <varlistentry>
@@ -1825,6 +1831,17 @@ close : '}'                  { () }
 	       <literal>()</literal> you may need to add type annotations.
 	       Similarly, if you don't supply code for the semantic rule 
 	       portion, then the value <literal>()</literal> is used.
+	       </para>
+	     </listitem>
+	   </varlistentry>
+	   <varlistentry>
+	     <term><literal>error</literal> symbol in grammars, and recovery
+		</term>
+	     <listitem>
+	       <para>
+	       No attempt to implement this yet. Any use of 
+	       <literal>error</literal> in grammars is thus ignored, and
+	       parse errors will eventually mean a parse will fail.
 	       </para>
 	     </listitem>
 	   </varlistentry>
