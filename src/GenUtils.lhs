@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: GenUtils.lhs,v 1.1 1997/02/11 13:12:07 simonm Exp $
+$Id: GenUtils.lhs,v 1.1.1.1 1997/02/11 13:12:07 simonm Exp $
 
 Some General Utilities, including sorts, etc.
 This is realy just an extended prelude.
