@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.4 1997/07/16 13:32:39 simonm Exp $
+$Id: ProduceCode.lhs,v 1.5 1997/08/25 13:37:39 simonm Exp $
 
 The code generator.
 
@@ -315,7 +315,9 @@ detected in a different state now.
 > 	= foldr (.) id (map produceActions (assocs acts))
 >	. foldr (.) id (map produceGotos   (assocs gotos))
 >	. mkActionName state
->	. str " _ = "
+>	. case target of
+>              TargetGhc ->   str " x = happyTcHack x "
+>              _         ->   str " _ = "
 >	. mkAction default_act
 >	. str "\n\n"
 >

@@ -1,4 +1,4 @@
--- $Id: HappyTemplate-ghc,v 1.7 1997/07/08 12:00:12 simonm Exp $
+-- $Id: HappyTemplate-ghc,v 1.8 1997/08/25 13:37:47 simonm Exp $
 
 {-
 	The stack is in the following order throughout the parse:
@@ -30,8 +30,7 @@ newtype HappyState b c = HappyState
 -- Accepting the parse
 
 happyAccept j tk st sts [ HappyAbsSyn1 ans ] = happyReturn ans
-happyAccept j tk st sts _                    = notHappyAtAll (-1)
-happyAccept 0# _ _ _ _ = error ""	-- typechecker hack
+happyAccept j tk st sts _ = happyTcHack j (notHappyAtAll (-1))
 
 -----------------------------------------------------------------------------
 -- Shifting a token
@@ -111,6 +110,10 @@ happyFail  i tk st@(HappyState action) sts stk =
 -- Internal happy errors:
 
 notHappyAtAll = error "Internal Happy error\n"
+
+happyTcHack :: Int# -> a -> a
+happyTcHack x y = y
+{-# INLINE happyTcHack #-}
 
 -- end of Happy Template.
 
