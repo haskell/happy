@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.12 1998/01/12 20:19:28 sof Exp $
+$Id: ProduceCode.lhs,v 1.13 1998/02/02 15:22:19 simonm Exp $
 
 The code generator.
 
@@ -405,7 +405,7 @@ action array indexed by (terminal * last_state) + state
 >		(map actionArrElems (elems action)))) False
 >	. str "\n\t])\n\n"
 >	
->    (first_state, last_state) 		= bounds action
+>    (_, last_state) = bounds action
 >    n_states = last_state + 1
 >    n_terminals = length terms
 >    n_nonterminals = length nonterms - 1 -- lose one for %start
@@ -476,16 +476,6 @@ outlaw them inside { }
 >			Nothing -> s
 >			Just (ty,_,_) -> str (ty++"(") . s . str ")"
 
->    mkMonadThen a b c  =
->		case monad of
->		    Nothing -> c
->		    Just (_,tn,r) -> str tn . str " (" . a . str ") (\\"
->					      . b  . str " -> " . c . str ")"
-
->    mkMonadReturn s = case monad of
->			Nothing -> s
->			Just (_,_,r) -> str (r++"(") . s . str ")"
-
 >    produceMonadStuff =
 >	(case monad of
 >	  Nothing -> 
@@ -528,8 +518,6 @@ outlaw them inside { }
 > mkAction LR'Fail 	 	= str "happyFail"
 > mkAction (LR'Reduce i) 	= str "happyReduce_" . shows i
 > mkAction (LR'Multiple as a)	= mkAction a
-
-> mkGoto (Goto i)		= str "happyGoto " . mkActionName i
 
 > mkActionName i		= str "action_" . shows i
 
