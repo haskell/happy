@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.22 1999/10/07 15:17:39 simonmar Exp $
+$Id: Main.lhs,v 1.23 1999/10/08 12:03:51 simonmar Exp $
 
 The main driver.
 
@@ -294,6 +294,7 @@ The command line arguments.
 >		| OptGhcTarget
 >		| OptArrayTarget
 >		| OptUseCoercions
+>		| OptDebugParser
 >		
 >		| OptOutputFile String
 >  deriving Eq
@@ -302,12 +303,14 @@ The command line arguments.
 > argInfo  = [
 >    Option ['a'] ["array"] (NoArg OptArrayTarget)
 >	"Generate an array-based parser",
->    Option ['i'] ["info"] (OptArg OptInfoFile "FILE")
->	"Put detailed grammar info in FILE",
 >    Option ['c'] ["coerce"] (NoArg OptUseCoercions)
 >	"Use type coercions (only available with -g)",
+>    Option ['d'] ["debug"] (NoArg OptDebugParser)
+>	"Produce a debugging parser (only available with -a)",
 >    Option ['g'] ["ghc"]    (NoArg OptGhcTarget)
->	"Use GHC extensions (not available with -a)",
+>	"Use GHC extensions",
+>    Option ['i'] ["info"] (OptArg OptInfoFile "FILE")
+>	"Put detailed grammar info in FILE",
 >    Option ['m'] ["magic-name"] (ReqArg OptMagicName "NAME")
 >	"Use NAME as the symbol prefix instead of \"happy\"",
 >    Option ['o'] ["outfile"] (ReqArg OptOutputFile "FILE")
@@ -344,22 +347,17 @@ How would we like our code to be generated?
 > optToTarget _			= Nothing
 
 > template_file temp_dir target cli coerce
->   = temp_dir ++ base
+>   = temp_dir ++ "/HappyTemplate" ++ array_extn ++ ghc_extn ++ debug_extn
 >  where  
->	base = case target of
->		 TargetHaskell 
->		     | OptGhcTarget `elem` cli ->
->			if OptUseCoercions `elem` cli 
->				then "/HappyTemplate-coerce"
->				else "/HappyTemplate-ghc"
->		     | otherwise -> "/HappyTemplate"
+>	 ghc_extn   | OptUseCoercions `elem` cli = "-coerce"
+>		    | OptGhcTarget    `elem` cli = "-ghc"
+>		    | otherwise                  = ""
 >
->		 TargetArrayBased
->		     | OptGhcTarget `elem` cli ->
->			if OptUseCoercions `elem` cli 
->				then "/HappyTemplate-arrays-coerce"
->				else "/HappyTemplate-arrays-ghc"
->		     | otherwise -> "/HappyTemplate-arrays"
+>	 array_extn | target == TargetArrayBased = "-arrays"
+>		    | otherwise 		 = ""
+>
+>	 debug_extn | OptDebugParser `elem` cli  = "-debug"
+>		    | otherwise			 = ""
 
 ------------------------------------------------------------------------------
 Extract various command-line options.
