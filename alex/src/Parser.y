@@ -49,14 +49,16 @@ import Data.Char
 	RMAC_DEF	{ T _ (RMacDefT $$) }
 %%
 
-alex	:: { [Def] }
-	: def alex			{ $1 : $2 }
-	| macdef alex			{ $2 }
-	| def				{ [$1] }
+alex	:: { (Maybe Code, Scanner, Maybe Code) }
+	: maybe_code macdefs scanner maybe_code { ($1,$3,$4) }
 
-def	:: { Def }
-	: scanner			{ DefScanner $1 }
-	| CODE				{ DefCode    $1 }
+maybe_code :: { Maybe Code }
+	: CODE				{ Just $1 }
+	| {- empty -}			{ Nothing }
+
+macdefs :: { () }
+	: macdef macdefs		{ () }
+	| {- empty -}			{ () }
 
 -- hack: the lexer looks for the '=' in a macro definition, because there
 -- doesn't seem to be a way to formulate the grammar here to avoid a

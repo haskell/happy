@@ -21,6 +21,7 @@ import Util
 
 import System.Console.GetOpt
 import Data.Char
+import Data.List
 import Data.FiniteMap
 import System.IO
 import Control.Monad
@@ -85,22 +86,65 @@ alex cli file basename script = do
    out_h <- openFile o_file WriteMode
    
    let
- 	 (script', scs, sc_hdr) = encode_start_codes "" script
+	 (maybe_header, scanner, maybe_footer) = script
+ 	 (scanner', scs, sc_hdr) = encode_start_codes "" scanner
  
- 	 go n (DefScanner scr) = do
- 		   let dfa = scanner2dfa scr scs
- 		       nm  = scannerName scr
- 		   put_info (infoDFA n nm dfa "")
- 		   hPutStr out_h (outputDFA target n nm dfa "")
- 	 go n (DefCode code) =
- 		   hPutStr out_h code
-   
-   zipWithM_ go [1..] script'
+   hPutStr out_h (optsToInject target)
+   case maybe_header of
+	Nothing   -> return ()
+	Just code -> hPutStr out_h code
+
+   hPutStr out_h (importsToInject target cli)
+
+   let dfa = scanner2dfa scanner' scs
+       nm  = scannerName scanner'
+
+   put_info (infoDFA 1 nm dfa "")
+   hPutStr out_h (outputDFA target 1 nm dfa "")
+
+   case maybe_footer of
+	Nothing   -> return ()
+	Just code -> hPutStr out_h code
+
    hPutStr out_h (sc_hdr "")
+
+   -- add the template
    tmplt <- readFile template_name
    hPutStr out_h tmplt
+
    hClose out_h
    finish_info
+
+optsToInject :: Target -> String
+optsToInject target 
+   | GhcTarget <- target = "{-# OPTIONS -fglasgow-exts -cpp #-}\n"
+   | otherwise           = ""
+
+importsToInject :: Target -> [CLIFlags] -> String
+importsToInject tgt cli = debug_imports ++ glaexts_import
+  where
+	glaexts_import | OptGhcTarget `elem` cli    = import_glaexts
+		       | otherwise                  = ""
+
+	debug_imports  | OptDebugParser `elem` cli = import_debug
+		       | otherwise		   = ""
+
+-- CPP is turned on for -fglasogw-exts, so we can use conditional compilation:
+
+import_glaexts = "#if __GLASGOW_HASKELL__ >= 503\n\ 
+		   \import GHC.Exts\n\ 
+		   \#else\n\ 
+		   \import GlaExts\n\ 
+		   \#endif\n"
+
+import_debug = "#if __GLASGOW_HASKELL__ >= 503\n\ 
+		   \import System.IO\n\ 
+		   \import System.IO.Unsafe\n\ 
+		   \import Debug.Trace\n\ 
+		   \#else\n\ 
+		   \import IO\n\ 
+		   \import IOExts\n\ 
+		   \#endif\n"
 
 templateFile target cli
   = dir ++ "/AlexTemplate" ++ maybe_ghc ++ maybe_debug
@@ -114,8 +158,8 @@ templateFile target cli
 	  | otherwise            = ""
 
 	maybe_debug
-	  | OptDebug `elem` cli  = "-debug"
-	  | otherwise		 = ""
+	  | OptDebugParser `elem` cli  = "-debug"
+	  | otherwise		       = ""
 
 infoStart x_file info_file = do
   h <- openFile info_file WriteMode
@@ -141,7 +185,7 @@ initREEnv = emptyFM
 -- Command-line flags
 
 data CLIFlags 
-  = OptDebug
+  = OptDebugParser
   | OptGhcTarget
   | OptOutputFile FilePath
   | OptInfoFile (Maybe FilePath)
@@ -151,7 +195,7 @@ data CLIFlags
 
 argInfo :: [OptDescr CLIFlags]
 argInfo  = [
-   Option ['d'] ["debug"] (NoArg OptDebug)
+   Option ['d'] ["debug"] (NoArg OptDebugParser)
 	"Produce a debugging scanner",
    Option ['g'] ["ghc"]    (NoArg OptGhcTarget)
 	"Use GHC extensions",

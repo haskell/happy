@@ -10,9 +10,7 @@
 -- ----------------------------------------------------------------------------}
 
 module AbsSyn (
-  Script,
   Code,
-  Def(..),
   Scanner(..),
   RECtx(..),
   RExp(..),
@@ -33,14 +31,7 @@ infixl 5 :%%
 -- -----------------------------------------------------------------------------
 -- Abstract Syntax for Alex scripts
 
-type Script = [Def]
-
 type Code = String
-
-data Def
-  = DefScanner Scanner
-  | DefCode Code
-  deriving Show
 
 -- TODO: update this comment
 --
@@ -200,14 +191,10 @@ bar_ar sc sc' inp = sc inp ++ sc' inp
 
 -- Map the available start codes onto [1..]
 
-encode_start_codes:: String -> Script -> (Script,[StartCode],ShowS)
-encode_start_codes ind defs = (defs', 0 : map snd name_code_pairs, sc_hdr)
+encode_start_codes:: String -> Scanner -> (Scanner,[StartCode],ShowS)
+encode_start_codes ind scan = (scan', 0 : map snd name_code_pairs, sc_hdr)
 	where
-	defs' = map do_scanner defs
-		where do_scanner (DefCode c) = DefCode c
-		      do_scanner (DefScanner s) = 
-			DefScanner s{ scannerTokens = 
-					map mk_re_ctx (scannerTokens s) }
+	scan' = scan{ scannerTokens = map mk_re_ctx (scannerTokens scan) }
 
 	mk_re_ctx (RECtx scs lc re rc code)
 	  = RECtx (map mk_sc scs) lc re rc code
@@ -229,8 +216,7 @@ encode_start_codes ind defs = (defs', 0 : map snd name_code_pairs, sc_hdr)
 
 	name_code_pairs = zip (nub' (<=) nms) [1..]
 
-	nms = [nm | DefScanner scr <- defs,
-		    RECtx{reCtxStartCodes = scs} <- scannerTokens scr,
+	nms = [nm | RECtx{reCtxStartCodes = scs} <- scannerTokens scan,
 		    (nm,_) <- scs, nm /= "0"]
 
 -- -----------------------------------------------------------------------------

@@ -15,7 +15,7 @@ import AbsSyn
 import Util
 import CharSet
 
-import Data.Char	( ord )
+import Data.Char	( ord, chr )
 import Control.Monad.ST
 import Data.List
 import Data.FiniteMap
@@ -38,34 +38,28 @@ outputDFA target n func_nm dfa
     table_size = length table - 1
     n_states   = length base - 1
 
-    base_nm   = func_nm ++ "_base"
-    table_nm  = func_nm ++ "_table"
-    check_nm  = func_nm ++ "_check"
-    deflt_nm  = func_nm ++ "_deflt"
-    accept_nm = func_nm ++ "_accept"
+    base_nm   = "alex_base"
+    table_nm  = "alex_table"
+    check_nm  = "alex_check"
+    deflt_nm  = "alex_deflt"
+    accept_nm = "alex_accept"
 
-    outputBase
-	= str base_nm . str " :: Array Int Int\n"
-	. str base_nm . str " = listArray (0," . shows n_states
-	. str ") [" . interleave_shows (char ',') (map shows base)
-	. str "]\n"
+    outputBase    = do_array base_nm  n_states   base
+    outputTable   = do_array table_nm table_size table
+    outputCheck   = do_array check_nm table_size check
+    outputDefault = do_array deflt_nm n_states   deflt
 
-    outputTable
-	= str table_nm . str " :: Array Int Int\n"
-	. str table_nm . str " = listArray (0," . shows table_size
-	. str ") [" . interleave_shows (char ',') (map shows table)
-	. str "]\n"
+    do_array nm upper_bound ints
+	| GhcTarget <- target
+	= str nm . str " :: AlexAddr\n"
+	. str nm . str " = AlexA# \""
+	. str (hexChars ints)
+	. str "\"#\n"
 
-    outputCheck
-	= str check_nm . str " :: Array Int Int\n"
-	. str check_nm . str " = listArray (0," . shows table_size
-	. str ") [" . interleave_shows (char ',') (map shows check)
-	. str "]\n"
-
-    outputDefault
-	= str deflt_nm . str " :: Array Int Int\n"
-	. str deflt_nm . str " = listArray (0," . shows n_states
-	. str ") [" . interleave_shows (char ',') (map shows deflt)
+	| otherwise
+	= str nm . str " :: Array Int Int\n"
+	. str nm . str " = listArray (0," . shows upper_bound
+	. str ") [" . interleave_shows (char ',') (map shows ints)
 	. str "]\n"
 
     outputAccept
@@ -107,7 +101,7 @@ outputDFA target n func_nm dfa
 --
 --    check :: Array Int SNum
 --		maps (base!state + char) to state if table entry is valid,
---		otherwise we use the default for this (state,char) combo
+--		otherwise we use the default for this state
 --
 --    default :: Array SNum SNum
 --		default production for this state
@@ -245,7 +239,7 @@ genTables' base table check off_arr entries max_token
 			   | otherwise                = max_off
 	       furthest_right = off + max_token
 
- 	   trace ("fit: state " ++ show state_no ++ ", off " ++ show off ++ ", elems " ++ show state) $ do
+ 	   --trace ("fit: state " ++ show state_no ++ ", off " ++ show off ++ ", elems " ++ show state) $ do
 
 	   writeArray base state_no off
 	   addState off table check state
@@ -286,3 +280,19 @@ findFstFreeSlot table n = do
 	 i <- readArray table n
 	 if i == -1 then return n
 		    else findFstFreeSlot table (n+1)
+
+-----------------------------------------------------------------------------
+-- Convert an integer to a 16-bit number encoded in \xNN\xNN format suitable
+-- for placing in a string (copied from Happy's ProduceCode.lhs)
+
+hexChars :: [Int] -> String
+hexChars acts = concat (map hexChar acts)
+
+hexChar :: Int -> String
+hexChar i | i < 0 = hexChar (i + 2^16)
+hexChar i =  toHex (i `mod` 256) ++ toHex (i `div` 256)
+
+toHex i = ['\\','x', hexDig (i `div` 16), hexDig (i `mod` 16)]
+
+hexDig i | i <= 9      = chr (i + ord '0')
+	   | otherwise = chr (i - 10 + ord 'a')

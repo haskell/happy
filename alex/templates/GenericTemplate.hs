@@ -1,3 +1,61 @@
+#ifdef ALEX_GHC
+#define ILIT(n) n#
+#define IBOX(n) (I# (n))
+#define FAST_INT Int#
+#define LT(n,m) (n <# m)
+#define GTE(n,m) (n >=# m)
+#define EQ(n,m) (n ==# m)
+#define PLUS(n,m) (n +# m)
+#define MINUS(n,m) (n -# m)
+#define TIMES(n,m) (n *# m)
+#define NEGATE(n) (negateInt# (n))
+#define IF_GHC(x) (x)
+#else
+#define ILIT(n) (n)
+#define IBOX(n) (n)
+#define FAST_INT Int
+#define LT(n,m) (n < m)
+#define GTE(n,m) (n >= m)
+#define EQ(n,m) (n == m)
+#define PLUS(n,m) (n + m)
+#define MINUS(n,m) (n - m)
+#define TIMES(n,m) (n * m)
+#define NEGATE(n) (negate (n))
+#define IF_GHC(x)
+#endif
+
+#ifdef ALEX_GHC
+#undef __GLASGOW_HASKELL__
+#define ALEX_IF_GHC_GT_500 #if __GLASGOW_HASKELL__ > 500
+#define ALEX_IF_GHC_GE_503 #if __GLASGOW_HASKELL__ >= 503
+#define ALEX_ELIF_GHC_500 #elif __GLASGOW_HASKELL__ == 500
+#define ALEX_ELSE #else
+#define ALEX_ENDIF #endif
+#endif
+
+#ifdef ALEX_GHC
+data AlexAddr = AlexA# Addr#
+
+indexShortOffAddr (AlexA# arr) off =
+ALEX_IF_GHC_GT_500
+	narrow16Int# i
+ALEX_ELIF_GHC_500
+	intToInt16# i
+ALEX_ELSE
+	(i `iShiftL#` 16#) `iShiftRA#` 16#
+ALEX_ENDIF
+  where
+ALEX_IF_GHC_GE_503
+	i = word2Int# ((high `uncheckedShiftL#` 8#) `or#` low)
+ALEX_ELSE
+	i = word2Int# ((high `shiftL#` 8#) `or#` low)
+ALEX_ENDIF
+	high = int2Word# (ord# (indexCharOffAddr# arr (off' +# 1#)))
+	low  = int2Word# (ord# (indexCharOffAddr# arr off'))
+	off' = off *# 2#
+#else
+indexShortOffAddr arr off = arr ! off
+#endif
 
 -- -----------------------------------------------------------------------------
 -- Token positions
@@ -51,7 +109,8 @@ gscan' stop p c inp sc_s =
 type Sv t = (Posn,Char,String,Int,Accept t)
 
 --scan_token:: (StartCode,s) -> Posn -> Char -> String -> Maybe (Sv f)
-scan_token (startcode,_) p c inp = scan_tkn p c inp 0 startcode Nothing
+scan_token (IBOX(startcode),_) p c inp
+ = scan_tkn p c inp ILIT(0) startcode Nothing
 		-- the startcode is the initial state
 
 -- This function performs most of the work of `scan_token'.  It pushes the
@@ -62,25 +121,30 @@ scan_token (startcode,_) p c inp = scan_tkn p c inp 0 startcode Nothing
 -- is pushed on (no state below an unconditional state will be needed).
 
 --scan_tkn:: Posn -> Char -> String -> Int -> SNum -> Maybe (Sv f) -> Maybe (Sv f)
-scan_tkn p c inp      len (-1) stk = stk  	-- error or finished
-scan_tkn p c []       len s    stk = stk	-- end of input (correct?)
-scan_tkn p c inp@(c':inp') len s    stk =
+scan_tkn p c inp len (ILIT(-1)) stk = stk  	-- error or finished
+scan_tkn p c inp len s stk =
+  case inp of
+    [] -> stk'	-- end of input
+    (c':inp') -> 
 #ifdef ALEX_DEBUG
-  trace ("State: " ++ show s ++ ", char: " ++ show c') $
+	trace ("State: " ++ show IBOX(s) ++ ", char: " ++ show c') $
 #endif
-  stk' `seq` scan_tkn p' c' inp' (len+1) s' stk'
-  where
-	p' = move_pos p c'
+	stk' `seq` scan_tkn p' c' inp' PLUS(len,ILIT(1)) s' stk'
+      	where
+		p' = move_pos p c'
 
-	base   = alex_base!s
-	offset = base + ord c'
+		base   = indexShortOffAddr alex_base s
+		IBOX(ord_c) = ord c'
+		offset = PLUS(base,ord_c)
+		check  = indexShortOffAddr alex_check offset
 	
-	s' = if offset >= 0 && alex_check!offset == ord c'
-		then alex_table!offset
-		else alex_deflt!s
-
-	svs  =	[ (p,c,inp,len,acc)
-		| acc <- alex_accept!s, 
+		s' = 
+		     if GTE(offset,ILIT(0)) && EQ(check,ord_c)
+			then indexShortOffAddr alex_table offset
+			else indexShortOffAddr alex_deflt s
+   where
+	svs  =	[ (p,c,inp,IBOX(len),acc)
+		| acc <- alex_accept!IBOX(s),
 		  check_ctx acc ]
 
 	stk' = case svs of
@@ -93,20 +157,17 @@ scan_tkn p c inp@(c':inp') len s    stk =
 		chk_lctx (Just st) = st!c
 
 		chk_rctx Nothing   = True
-		chk_rctx (Just sn) = case scan_tkn p c inp 0 sn Nothing of
-					Nothing -> False
-					Just _  -> True
+		chk_rctx (Just (IBOX(sn))) = 
+			case scan_tkn p c inp ILIT(0) sn Nothing of
+				Nothing -> False
+				Just _  -> True
 			-- TODO: there's no need to find the longest
 			-- match when checking the right context, just
 			-- the first match will do.
 
 type SNum = Int
 
-data Accept a 
-  = Acc { accPrio       :: Int,
-	  accAction     :: a,
-	  accLeftCtx    :: Maybe (Array Char Bool),
-	  accRightCtx   :: Maybe SNum
-    }
+data Accept a = Acc Int a (Maybe (Array Char Bool)) (Maybe SNum)
 
 type StartCode = Int
+
