@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.28 1999/10/11 17:13:58 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.29 1999/11/03 15:21:51 simonmar Exp $
 
 The code generator.
 
@@ -226,7 +226,7 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >	. str "happyRest)\n\t = happyThen ("
 >	. tokLets
 >	. str code'
->	. str ") (\\r -> happyReturn (" . this_absSynCon . str " r))"
+>	. str "\n\t) (\\r -> happyReturn (" . this_absSynCon . str " r))"
 >       . defaultCase
 
 >     | specReduceFun lt
@@ -234,7 +234,8 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >	. interleave "\n\t" tokPatterns
 >	. str " =  "
 >	. tokLets
->	. this_absSynCon . str "\n\t\t " . brack' (str code')
+>	. this_absSynCon . str "\n\t\t " 
+>	. char '(' . str code' . str "\n\t)"
 >	. (if coerce || null toks || null vars_used then
 >		  id
 >	   else
@@ -247,8 +248,8 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >	. char '(' . interleave " :\n\t" tokPatterns
 >	. str "happyRest)\n\t = "
 >	. tokLets
->	. this_absSynCon . str "\n\t\t " . brack' (str code') 
->	. str " : happyRest"
+>	. this_absSynCon . str "\n\t\t " 
+>	. char '(' . str code'. str "\n\t) : happyRest"
 >	. defaultCase
 
 >       where 

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Lexer.lhs,v 1.14 1999/08/04 11:04:43 simonmar Exp $
+$Id: Lexer.lhs,v 1.15 1999/11/03 15:21:50 simonmar Exp $
 
 The lexer.
 
@@ -117,11 +117,7 @@ followed by a special identifier.
 > lexCode cont rest = lexReadCode rest 0 "" cont
 
 > cleanupCode s = 
->    dropWhile isSpaceOrTab (reverse (dropWhile isSpaceOrTab (reverse s)))
-
-> isSpaceOrTab ' ' = True
-> isSpaceOrTab '\t' = True
-> isSpaceOrTab _ = False
+>    dropWhile isSpace (reverse (dropWhile isSpace (reverse s)))
 
 This has to match for @}@ that are {\em not} in strings.  The code
 here is a bit tricky, but should work in most cases.
