@@ -35,7 +35,7 @@ Authors:
 %build
 autoconf
 ./configure --prefix=%{prefix}
-make all
+make
 ( cd happy/doc ; make happy.{dvi,ps,html} ; gzip -9 *.dvi *.ps )
 
 %install
