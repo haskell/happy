@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Lexer.lhs,v 1.5 1997/07/16 13:32:37 simonm Exp $
+$Id: Lexer.lhs,v 1.6 1997/08/25 13:46:38 simonm Exp $
 
 The lexer.
 
@@ -32,12 +32,10 @@ The lexer.
 
 > data TokenId 
 >       = TokId                 -- words and symbols
->	| TokSym		-- symbols
 >       | TokSpecId_TokenType   -- %tokentype
 >       | TokSpecId_Token       -- %token
 >       | TokSpecId_Name        -- %name
 >       | TokSpecId_Lexer       -- %lexer
->       | TokSpecId_Whitespace  -- %whitespace
 >       | TokSpecId_Monad	-- %monad
 >       | TokCodeQuote          -- stuff inside { .. }
 >       | TokColon              -- :
@@ -93,7 +91,6 @@ ToDo: proper text instance here, for use in parser error messages.
 >	  | isSpace c -> lexer cont
 >	  |  c >= 'a' && c <= 'z' 
 >	     || c >= 'A' && c <= 'Z' -> lexId cont c
->  	  | c `elem` "=/" -> cont (TokenInfo [c] TokSym)
 >	c       -> lexError ("lexical error before `" ++ c : "'")
 
 Percents come in two forms, in pairs, or 
