@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.57 2002/03/05 15:43:18 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.58 2002/05/23 09:24:27 simonmar Exp $
 
 The code generator.
 
@@ -543,28 +543,28 @@ action array indexed by (terminal * last_state) + state
 
 >    produceActionArray
 >	| ghc
->	    = str "happyActOffsets :: Addr\n"
->	    . str "happyActOffsets = A# \"" --"
+>	    = str "happyActOffsets :: HappyAddr\n"
+>	    . str "happyActOffsets = HappyA# \"" --"
 >	    . str (hexChars act_offs)
 >	    . str "\"#\n\n" --"
 >	
->	    . str "happyGotoOffsets :: Addr\n"
->	    . str "happyGotoOffsets = A# \"" --"
+>	    . str "happyGotoOffsets :: HappyAddr\n"
+>	    . str "happyGotoOffsets = HappyA# \"" --"
 >	    . str (hexChars goto_offs)
 >	    . str "\"#\n\n"  --"
 >
->	    . str "happyDefActions :: Addr\n"
->	    . str "happyDefActions = A# \"" --"
+>	    . str "happyDefActions :: HappyAddr\n"
+>	    . str "happyDefActions = HappyA# \"" --"
 >	    . str (hexChars defaults)
 >	    . str "\"#\n\n" --"
 >	
->	    . str "happyCheck :: Addr\n"
->	    . str "happyCheck = A# \"" --"
+>	    . str "happyCheck :: HappyAddr\n"
+>	    . str "happyCheck = HappyA# \"" --"
 >	    . str (hexChars check)
 >	    . str "\"#\n\n" --"
 >	
->	    . str "happyTable :: Addr\n"
->	    . str "happyTable = A# \"" --"
+>	    . str "happyTable :: HappyAddr\n"
+>	    . str "happyTable = HappyA# \"" --"
 >	    . str (hexChars table)
 >	    . str "\"#\n\n" --"
 

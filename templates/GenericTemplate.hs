@@ -1,4 +1,4 @@
--- $Id: GenericTemplate.hs,v 1.22 2002/05/21 09:14:07 simonmar Exp $
+-- $Id: GenericTemplate.hs,v 1.23 2002/05/23 09:24:27 simonmar Exp $
 
 #ifdef HAPPY_GHC
 #define ILIT(n) n#
@@ -122,7 +122,7 @@ happyDoAction i tk st
 #endif
 
 #ifdef HAPPY_GHC
-indexShortOffAddr (A# arr) off =
+indexShortOffAddr (HappyA# arr) off =
 HAPPY_IF_GHC_GT_500
 	narrow16Int# i
 HAPPY_ELIF_GHC_500
@@ -144,10 +144,7 @@ indexShortOffAddr arr off = arr ! off
 #endif
 
 #ifdef HAPPY_GHC
-HAPPY_IF_GHC_GE_503
--- Addr has gone away in 5.03 (ToDo: should be HappyAddr)
-data Addr = A# Addr#
-HAPPY_ENDIF
+data HappyAddr = HappyA# Addr#
 #endif
 
 #endif {- HAPPY_ARRAY -}
