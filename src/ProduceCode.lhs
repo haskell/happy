@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.7 1997/09/26 09:56:38 simonm Exp $
+$Id: ProduceCode.lhs,v 1.8 1997/10/03 15:12:21 simonm Exp $
 
 The code generator.
 
@@ -175,7 +175,7 @@ where n is the non-terminal number, and m is the rule number.
 >	. interleave "\n\t" tokPatterns
 >	. str " =  "
 >	. makeAbsSynCon nt . str "\n\t\t " . brack code
->	. (if null toks || (null vars_used && all (not.is_term) toks) then
+>	. (if null toks || null vars_used then
 >		  id
 >	   else
 >		  str ";\n  reduction " 
@@ -207,7 +207,7 @@ where n is the non-terminal number, and m is the rule number.
 >		tokPatterns = reverse (zipWith tokPattern [1 :: Int ..] toks)
 > 
 >		tokPattern n _ | n `notElem` vars_used = str "_"
->             	tokPattern n t | is_term t
+>             	tokPattern n t | t >= 0 && t < first_term
 >	      		= str "("
 >			. makeAbsSynCon t . str "  "
 >			. mkHappyVar n
@@ -217,8 +217,6 @@ where n is the non-terminal number, and m is the rule number.
 >			. mkHappyTerminalVar n t
 >			. str ")"
 > 
->		is_term t = t >= 0 && t < first_term
->
 >		(code,vars_used) = expandVars sem
 > 
 >		lt = length toks
