@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Lexer.lhs,v 1.11 1998/06/19 13:41:02 simonm Exp $
+$Id: Lexer.lhs,v 1.12 1999/03/11 17:15:59 simonm Exp $
 
 The lexer.
 
@@ -14,7 +14,7 @@ The lexer.
 > import ParseMonad        
 > import GenUtils
 
-> import Char ( isSpace, isAlphanum )
+> import Char ( isSpace, isAlphaNum )
 
 > data Token 
 >       = TokenInfo String TokenId
@@ -136,7 +136,7 @@ here is a bit tricky, but should work in most cases.
 > 	'"'{-"-}:r -> lexReadString r (\ str r' -> 
 >         	      lexReadCode r' n ('"' : (reverse str) ++ '"' : c))
 >
-> 	a: '\'':r | isAlphanum a -> lexReadCode r n ('\'':a:c)
+> 	a: '\'':r | isAlphaNum a -> lexReadCode r n ('\'':a:c)
 >
 > 	'\'' :r	-> lexReadChar r (\ str r' -> 
 >         	   lexReadCode r' n ('\'' : (reverse str) ++ '\'' : c))

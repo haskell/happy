@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: GenUtils.lhs,v 1.8 1998/06/19 13:40:58 simonm Exp $
+$Id: GenUtils.lhs,v 1.9 1999/03/11 17:15:57 simonm Exp $
 
 Some General Utilities, including sorts, etc.
 This is realy just an extended prelude.
@@ -19,8 +19,7 @@ All the code below is understood to be in the public domain.
 >       joinMaybe,
 >       mkClosure,
 >       foldb,
->       sortWith,
->       sort,
+>	listArray',
 >       cjustify,
 >       ljustify,
 >       rjustify,
@@ -33,8 +32,9 @@ All the code below is understood to be in the public domain.
 >	thd3
 >        ) where
 
+> import List
 > import Ix    ( Ix(..) )
-> import Array ( listArray, array, (!) )
+> import Array ( Array, listArray, array, (!) )
 
 %------------------------------------------------------------------------------
 
@@ -106,39 +106,6 @@ This will never terminate.
 >       foldb' (x:y:xs) = f x y : foldb' xs
 >       foldb' xs = xs
 
-Merge two ordered lists into one ordered list. 
-
-> mergeWith               :: (a -> a -> Bool) -> [a] -> [a] -> [a] 
-> mergeWith _ []     ys      = ys
-> mergeWith _ xs     []      = xs
-> mergeWith le (x:xs) (y:ys)
->        | x `le` y  = x : mergeWith le xs (y:ys)
->        | otherwise = y : mergeWith le (x:xs) ys
-
-> insertWith              :: (a -> a -> Bool) -> a -> [a] -> [a]
-> insertWith _ x []          = [x]
-> insertWith le x (y:ys)
->        | x `le` y     = x:y:ys
->        | otherwise    = y:insertWith le x ys
-
-Sorting is something almost every program needs, and this is the
-quickest sorting function I know of.
-
-> sortWith :: (a -> a -> Bool) -> [a] -> [a]
-> sortWith le [] = []
-> sortWith le lst = foldb (mergeWith le) (splitList lst)
->   where
->       splitList (a1:a2:a3:a4:a5:xs) = 
->                insertWith le a1 
->               (insertWith le a2 
->               (insertWith le a3
->               (insertWith le a4 [a5]))) : splitList xs
->       splitList [] = []
->       splitList (r:rs) = [foldr (insertWith le) [r] rs]
-
-> sort :: (Ord a) => [a] -> [a]
-> sort = sortWith (<=)
-
 > returnMaybe :: a -> Maybe a
 > returnMaybe = Just
 
@@ -182,7 +149,7 @@ Gofer-like stuff:
 
 > combinePairs :: (Ord a) => [(a,b)] -> [(a,[b])]
 > combinePairs xs = 
->	combine [ (a,[b]) | (a,b) <- sortWith (\ (a,_) (b,_) -> a <= b) xs]
+>	combine [ (a,[b]) | (a,b) <- sortBy (\ (a,_) (b,_) -> compare a b) xs]
 >  where
 >	combine [] = []
 >	combine ((a,b):(c,d):r) | a == c = combine ((a,b++d) : r)
@@ -195,9 +162,8 @@ Gofer-like stuff:
 >                        (val:vs) -> Succeeded val
 > 
 
-Now some utilties involving arrays.
-Here is a version of @elem@ that uses partual application
-to optimise lookup.
+Now some utilties involving arrays.  Here is a version of @elem@ that
+uses partial application to optimise lookup.
 
 > arrElem :: (Ix a) => [a] -> a -> Bool
 > arrElem obj = \x -> inRange size x && arr ! x 
@@ -222,44 +188,7 @@ will give a very efficent variation of the fib function.
 > memoise bds f = (!) arr
 >   where arr = array bds [ (t, f t) | t <- range bds ]
 
-> mapAccumR :: (acc -> x -> (acc, y))         -- Function of elt of input list
->                                     -- and accumulator, returning new
->                                     -- accumulator and elt of result list
->         -> acc                      -- Initial accumulator
->         -> [x]                      -- Input list
->         -> (acc, [y])               -- Final accumulator and result list
->
-> mapAccumR f b []     = (b, [])
-> mapAccumR f b (x:xs) = (b'', x':xs') where
->                                       (b'', x') = f b' x
->                                       (b', xs') = mapAccumR f b xs
-
-> mapAccumL :: (acc -> x -> (acc, y)) 	-- Function of elt of input list
->					-- and accumulator, returning new
->					-- accumulator and elt of result list
->	    -> acc 			-- Initial accumulator
->	    -> [x] 			-- Input list
->	    -> (acc, [y])		-- Final accumulator and result list
->
-> mapAccumL f b []     = (b, [])
-> mapAccumL f b (x:xs) = (b'', x':xs') where
->					  (b', x') = f b x
->					  (b'', xs') = mapAccumL f b' xs
-
-Here is the bi-directional version ...
-
-> mapAccumB :: (accl -> accr -> x -> (accl, accr,y))
->					-- Function of elt of input list
->					-- and accumulator, returning new
->					-- accumulator and elt of result list
->	    -> accl 			-- Initial accumulator from left
->	    -> accr 			-- Initial accumulator from right
->	    -> [x] 			-- Input list
->	    -> (accl, accr, [y])	-- Final accumulator and result list
->
-> mapAccumB f a b []     = (a,b,[])
-> mapAccumB f a b (x:xs) = (a'',b'',y:ys)
->    where
->	(a',b'',y)    = f a b' x
->	(a'',b',ys) = mapAccumB f a' b xs
-
+> listArray' :: (Int,Int) -> [a] -> Array Int a
+> listArray' (low,up) elems = 
+>	if length elems /= up-low+1 then error "wibble" else
+>	listArray (low,up) elems

@@ -1,51 +1,104 @@
------------------------------------------------------------------------------
-$Id: IntSet.lhs,v 1.2 1997/03/27 14:14:41 simonm Exp $
+%
+% (c) The GHC Team, 1998
+%
+\section[IntSet]{An implementation of fast integer sets using bitmaps}
 
-Efficient implementation of small integer sets.
+IntSets are useful for storing sets of small integers.  Most
+operations are O(n) where n is the largest element in the set, but the
+overhead is small because the set is stored as a bitmap and (for
+example) union is bitwise-or.
 
-(c) 1996 Simon Marlow
------------------------------------------------------------------------------
+\begin{code}
+module IntSet (
+	IntSet,		-- abstract type
+	mkIS,		-- :: [Int] -> IntSet
+	listIS,		-- :: IntSet -> [Int]
+	emptyIS,	-- :: IntSet
+	isEmptyIS,	-- :: IntSet -> Bool
+	elemIS,		-- :: Int -> IntSet -> Bool
+	unitIS,		-- :: Int -> IntSet
+	unionIS,	-- :: IntSet -> IntSet -> IntSet
+	minusIS, 	-- :: IntSet -> IntSet -> IntSet
+	intersectIS, 	-- :: IntSet -> IntSet -> IntSet
+	intsIS		-- :: IntSet -> [Int]
+    ) where
 
-> module IntSet (IntSet(..), emptyIntSet, singletonIntSet, addToIntSet,
->		 unionIntSets, intSetToSetInt) where
+import Bits
+import Word
 
-> import Word
+-- other possible representations:
+--	data IntSet = EmptyIS | IS Word# IntSet
 
-> data IntSet = [Word]
+-- use Word32 internally; probably should use natural word size for the
+-- host architecture.
 
-> emptyIntSet :: IntSet
-> emptyIntSet = []
+type WordRep = Word32
+word_size = 32
 
-> singletonIntSet :: Int -> IntSet
-> singletonIntSet i = addToIntSet i emptyIntSet
+newtype IntSet = IntSet [WordRep]
 
-> addToIntSet :: Int -> IntSet -> IntSet
-> addToIntSet j s
->	| m < ls = 
->		let (before, x:after) = splitAt m s in
->		(before, (x `bitOr` (i `bitLsh` n)) : after)
->	| otherwise = take m (s ++ repeat 0) : (i `bitShr` n)
->  where
->	i = 
->	m = i `div` 32
->	n = i `mod` 32
->	ls = length s
+instance Eq IntSet where
+	(IntSet is) == (IntSet js) = is == js
 
-> unionIntSets :: IntSet -> IntSet -> IntSet
-> unionIntSets [] [] = []
-> unionIntSets [] (t:ts) = t : unionIntSets [] ts
-> unionIntSets (s:ss) [] = s : unionIntSets ss []
-> unionIntSets (s:ss) (t:ts) = t `bitOr` s : unionIntSets ss ts
+emptyIS :: IntSet
+emptyIS = IntSet []
 
------------------------------------------------------------------------------
+isEmptyIS :: IntSet -> Bool
+isEmptyIS (IntSet []) = True
+isEmptyIS (IntSet _ ) = False
 
-> masks = zip (map (1 `bitShl`) [0..31]) [0..31]
+unitIS :: Int -> IntSet
+unitIS e = IntSet (addIS e [])
 
-> intSetToSetInt :: IntSet -> [Int]
-> intSetToSetInt s = toSetInt 0 s
+mkIS :: [Int] -> IntSet
+mkIS ints = IntSet (foldr addIS [] ints)
 
-> toSetInt :: Int -> IntSet -> [Int]
-> toSetInt _ [] = []
-> toSetInt i (s:ss) =
->	map (+i) [ j | (o,j) <- masks, o `bitAnd` s > 0 ]
->	++ toSetInt (i+32) ss
+intsIS  :: IntSet -> [Int]
+intsIS (IntSet is) = map toInt is
+
+addIS :: Int -> [WordRep] -> [WordRep]
+addIS i [] = addIS i [0]
+addIS i (w:ws)
+  | i < word_size = (w .|. (1 `shiftL` i)) : ws
+  | otherwise     = w : addIS (i-word_size) ws
+
+elemIS :: Int -> IntSet -> Bool
+elemIS i is = not (isEmptyIS (is `intersectIS` unitIS i))
+
+unionIS :: IntSet -> IntSet -> IntSet 
+unionIS (IntSet is) (IntSet js)  = IntSet (go is js)
+  where go [] is = is
+	go is [] = is
+	go (i:is) (j:js) = (i .|. j) : go is js
+
+minusIS :: IntSet -> IntSet -> IntSet
+minusIS (IntSet is) (IntSet js)  = IntSet (canonIS (go is js))
+  where go [] js = []
+	go is [] = is
+	go (i:is) (j:js) = (i .&. complement j) : go is js
+
+intersectIS :: IntSet -> IntSet -> IntSet
+intersectIS (IntSet is) (IntSet js) = IntSet (canonIS (go is js))
+  where go [] js = []
+	go is [] = []
+	go (i:is) (j:js) = (i .&. j) : go is js
+
+canonIS :: [WordRep] -> [WordRep]
+canonIS []  = []
+canonIS (0:ws) = case canonIS ws of
+			[]  -> []
+			ws' -> 0:ws'
+canonIS (w:ws) = w : canonIS ws
+
+listIS  :: IntSet -> [Int]            
+listIS (IntSet is) = listify_wds is 0
+    where 
+	listify_wds [] n = []
+	listify_wds (w:ws) n = listify_one w n (listify_wds ws (n+word_size))
+
+	listify_one 0 n r = r
+	listify_one w n r = let rest = listify_one (w `shiftR` 1) (n + 1) r
+			    in if (w .&. 1 == 0) 
+				then rest 
+				else n : rest
+\end{code}

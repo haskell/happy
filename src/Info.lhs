@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Info.lhs,v 1.7 1998/06/19 13:41:00 simonm Exp $
+$Id: Info.lhs,v 1.8 1999/03/11 17:15:58 simonm Exp $
 
 Generating info files.
 
@@ -9,7 +9,7 @@ Generating info files.
 > module Info (genInfoFile) where
 
 > import Version		( version )
-> import LALR 			( Lr0Item(..) )
+> import LALR 			( Lr0Item )
 > import GenUtils
 > import Set
 > import AbsSyn
@@ -22,9 +22,8 @@ Generating info files.
 Produce a file of parser information, useful for debugging the parser.
 
 > genInfoFile
->	:: Array Int String
->	-> [Set Lr0Item]
->	-> GrammarInfo
+>	:: [Set Lr0Item]
+>	-> Grammar
 >	-> ActionTable
 >	-> GotoTable
 >	-> [(Int,String)]
@@ -34,9 +33,16 @@ Produce a file of parser information, useful for debugging the parser.
 >	-> [String]			-- unused terminals
 >	-> String
 
-> genInfoFile env items 
-> 	(GrammarInfo prods lookupProdNo lookupProdsOfName nonterms terms eof
->		first_term)
+> genInfoFile items 
+> 	(Grammar { productions = prods
+>		 , lookupProdNo = lookupProd
+>		 , lookupProdsOfName = lookupProdNos
+>		 , non_terminals = nonterms
+>		 , terminals = terms
+>                , token_names = env
+>		 , eof_term = eof
+>		 , first_term = fst_term
+>		 })
 >	 action goto tokens conflictArray filename unused_rules unused_terminals
 > 	= (showHeader
 >	. showConflicts
@@ -127,7 +133,7 @@ Produce a file of parser information, useful for debugging the parser.
 >		. interleave " " (map showName afterDot))
 >	. str "   (rule " . shows rule . str ")"
 >	where
->		(nt, toks, sem) = lookupProdNo rule
+>		(nt, toks, sem) = lookupProd rule
 >		(beforeDot, afterDot) = splitAt dot toks
 
 >   showAction (t, LR'Fail)
@@ -184,7 +190,7 @@ Produce a file of parser information, useful for debugging the parser.
 >		then str "rule  "
 >		else str "rules ")
 >	. foldr1 (\a b -> a . str ", " . b) nt_rules
->	where nt_rules = map shows (lookupProdsOfName nt)
+>	where nt_rules = map shows (lookupProdNos nt)
 
 >   showStats 
 >	= banner "Grammar Totals"

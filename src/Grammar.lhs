@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Grammar.lhs,v 1.10 1998/06/19 13:40:59 simonm Exp $
+$Id: Grammar.lhs,v 1.11 1999/03/11 17:15:57 simonm Exp $
 
 The Grammar data type.
 
@@ -16,28 +16,25 @@ Here is our mid-section datatype
 >	
 >	LRAction(..), ActionTable, Goto(..), GotoTable,
 >	
->	GrammarInfo(..),
->	getProds, lookupProdNo, lookupProdsOfName, getNonTerminals,
->	getTerminals, getEOF, getNames, mkProdInfo, getFirstTerm,
-
->	errorName, errorTok, startName, startTok, eofName, epsilonTok
+>	errorName, errorTok, startName, startTok, dummyTok,
+>	firstNT, eofName, epsilonTok
 >	) where
 
 > import GenUtils
 > import AbsSyn
 
 > import Array
+> import IOExts
 
-epsilon		= -2
-error		= -1
-%start 		= 0
-non-terminals 	= 1..n
+epsilon		= 0
+error		= 1
+dummy		= 2
+%start 		= 3
+non-terminals 	= 4..n
 terminals 	= n..m
 %eof 		= m
 
 > type Name = Int
-
-> isEmpty n    = n == epsilonTok
 
 > type Production = (Name,[Name],String)
 > type Productions = Array Int Production
@@ -45,37 +42,60 @@ terminals 	= n..m
 > type NonTerminals = [Name]
 
 > data Grammar 
->       = Grammar
->               GrammarInfo
->               [Directive Name]
->               Terminals
->               NonTerminals
->		(Array Int (Maybe String))	-- types
->               (Array Int String)		-- token names
->               Name                    	-- eof
+>       = Grammar {
+>		productions 	:: [Production],
+>		lookupProdNo 	:: Int -> Production,
+>		lookupProdsOfName :: Name -> [Int],
+>               directives 	:: [Directive Name],
+>               terminals 	:: Terminals,
+>               non_terminals 	:: NonTerminals,
+>		types 		:: Array Int (Maybe String),
+>               token_names 	:: Array Int String,
+>		first_term 	:: Name,
+>               eof_term	:: Name
+>	}
+
+> getNames :: Grammar -> [Name]
+> getNames  (Grammar {terminals = ts, non_terminals = nts}) = ts ++ nts
 
 #ifdef DEBUG
 
 > instance Show Grammar where
->       showsPrec _ (Grammar p d t n tys e eof) = 
->               shows (getProds p) . showString "\n" .
->		shows (getFirstTerm p) . showString "\n" .
+>       showsPrec _ (Grammar 
+>		{ productions		= p
+>               , directives		= d
+>               , terminals		= ts
+>               , non_terminals		= nts
+>		, types			= tys
+>               , token_names		= e
+>		, first_term		= ft
+>               , eof_term		= eof
+>	 	})
+>	 =      shows p . showString "\n" .
 >               shows d . showString "\n" .
->               shows t . showString "\n" .
->               shows n . showString "\n" .
+>               shows ts . showString "\n" .
+>               shows nts . showString "\n" .
 >               shows tys . showString "\n" .
 >               shows e . showString "\n" .
+>		shows ft . showString "\n" .
 >               shows eof . showString "\n"
 
 #endif
 
-> startName = "%start"			-- Token 0
+> startName = "%start"			-- Token 2
 > eofName   = "%eof"			
-> errorName = "error"			-- Token -1
+> errorName = "error"			-- Token 1
 
-> startTok   = 0
-> errorTok   = (-1)
-> epsilonTok = (-2)
+> startTok, dummyTok, firstNT, errorTok, epsilonTok :: Name
+> firstNT    = startTok+1
+> startTok   = 3
+> dummyTok   = 2
+> errorTok   = 1
+> epsilonTok = 0
+
+> isEmpty :: Name -> Bool
+> isEmpty 0 = True
+> isEmpty _ = False
 
 %-----------------------------------------------------------------------------
 The Mangler.
@@ -109,10 +129,11 @@ This bit is a real mess, mainly because of the error mesasge support.
 
 >	let
 >       term     = concat (map getTerm dirs) ++ [eofName]
->       nonterm' = [0..l_nt]
->       term'    = [l_nt+1..l_nt+l_t]
+>       nonterm' = [ firstNT .. l_nt+firstNT-1 ]
+>       term'    = [ l_nt+firstNT .. l_nt+l_t+firstNT-1 ]
 >       env      = (errorTok, errorName) :
->		   zip (nonterm'++term') (startName : nts ++ term)
+>		   (startTok, startName) :
+>		   zip (nonterm'++term') (nts ++ term)
 >	l_nt     = length nts
 >	l_t      = length term
 
@@ -137,22 +158,41 @@ This bit is a real mess, mainly because of the error mesasge support.
 >	foldr (mightFails transRule) (Succeeded []) rules  `thenE` \rules' ->
 
 >	let
->	tys   = listArray (1, l_nt) [ ty | (nm,_,ty) <- rules ]
+>	tys   = listArray' (firstNT, l_nt+firstNT-1) 
+>			[ ty | (nm,_,ty) <- rules ]
 
 >	env_array :: Array Int String
->	env_array = array (-1, l_nt + l_t) [ (a,b) | (a,b) <- env ]
-
->	rules'' = mkProdInfo
->		  ((startTok, [1], "no code") : concat rules')
->		  nonterm' (errorTok : term') (head term')
-
+>	env_array = array (errorTok, l_nt+l_t+firstNT-1) env
 >	in
 
 >       foldr (mightFails (fixDir mapToName)) (Succeeded []) dirs
 >							`thenE` \dirs' ->	
 
->	Succeeded (Grammar rules'' dirs' term' nonterm' tys 
->		env_array (last term' {- EOF -}))
+>	let
+>	   ass = combinePairs [ (a,no) | ((a,_,_),no) <- zip prod [0..] ]
+>	   arr = array (startTok, length ass - 1 + startTok) ass
+
+>	   first_term = head term'
+
+>	   lookup_prods :: Name -> [Int]
+>	   lookup_prods x | x >= startTok && x < first_term = arr ! x
+>	   lookup_prods _ = error "looking up production failure"
+>
+>	   prod = (startTok, [firstNT], "no code") : concat rules'
+>	in
+
+>	Succeeded (Grammar {
+>		productions 		= prod,
+>		lookupProdNo	  	= (listArray' (0,length prod-1) prod !),
+>		lookupProdsOfName 	= lookup_prods,
+>               directives		= dirs',
+>               terminals		= (errorTok : term'),
+>               non_terminals		= (startTok : nonterm'),
+>		types			= tys,
+>               token_names		= env_array,
+>		first_term		= first_term,
+>               eof_term		= last term'
+>	})
 
 For combining actions with possible error messages.
 
@@ -235,50 +275,4 @@ So is this.
 >	)	
 
 > type GotoTable = Array Int{-state-} (Array Int{-nonterminal #-} Goto)
-
-%------------------------------------------------------------------------------
-
-Production info is a cache of useful info about the grammar for whom
-we are generating a parser for.
-
-> data GrammarInfo = GrammarInfo
->	[Production]		-- all productions
->	(Int -> Production)	-- lookup production #
->	(Name -> [Int])		-- get (the number behind) all prod called Name
->	[Name]			-- NonTerminals
->	[Name]			-- Terminals
->	Name			-- eof terminal
->	Name			-- first terminal
-
-
-> getProds          (GrammarInfo x _ _ _ _ _ _) = x
-> lookupProdNo 	    (GrammarInfo _ x _ _ _ _ _) = x
-> lookupProdsOfName (GrammarInfo _ _ x _ _ _ _) = x
-> getNonTerminals   (GrammarInfo _ _ _ x _ _ _) = x
-> getTerminals      (GrammarInfo _ _ _ _ x _ _) = x
-> getEOF	    (GrammarInfo _ _ _ _ _ x _) = x
-> getFirstTerm	    (GrammarInfo _ _ _ _ _ _ x) = x
-
-> getNames :: GrammarInfo -> [Name]
-> getNames          (GrammarInfo _ _ _ c d _ _) = c ++ d
-
-> mkProdInfo :: [Production] -> [Name] -> [Name] -> Int -> GrammarInfo
-> mkProdInfo prod nonterm term first_term =
->	GrammarInfo
->		prod
->		(arr !)
->		fn'
->		nonterm
->		term
->		eof
->		first_term
->     where
->	eof = last term
->	arr = listArray (0,length prod-1) prod
->	ass = combinePairs [ (a,no) | ((a,_,_),no) <- zip prod [0..] ]
->	arr' = array (0,(length ass-1)) 
->		[ (n,num) | (n,num) <- ass ]
->	fn' :: Name -> [Int]
->	fn' x | x >= 0 && x < first_term = arr' ! x
->	fn' _ = error "looking up production failure"
 

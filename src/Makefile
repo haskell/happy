@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.25 1998/08/27 14:17:19 simonm Exp $
+# $Id: Makefile,v 1.26 1999/03/11 17:16:01 simonm Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -16,6 +16,7 @@ HS_SRCS = \
 Version.hs \
 GenUtils.lhs \
 Set.lhs \
+IntSet.lhs \
 ParseMonad.lhs \
 Lexer.lhs \
 AbsSyn.lhs \

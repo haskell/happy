@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: First.lhs,v 1.4 1997/08/25 12:31:38 simonm Exp $
+$Id: First.lhs,v 1.5 1999/03/11 17:15:57 simonm Exp $
 
 Implementation of FIRST
 
@@ -32,28 +32,29 @@ Does the Set include the $\epsilon$ symbol ?
 
 \subsection{Implementation of FIRST}
 
-> mkFirst :: GrammarInfo -> [Name] -> Set Name
-> mkFirst prod = 
->       joinSymSets (\ h -> case lookup h env of
+> mkFirst :: Grammar -> [Name] -> Set Name
+> mkFirst (Grammar { first_term = fst_term
+>		   , lookupProdNo = prodNo
+>		   , lookupProdsOfName = prodsOfName
+>		   , non_terminals = nts
+>		   })
+>       = joinSymSets (\ h -> case lookup h env of
 >                               Nothing -> singletonSet h
 >                               Just ix -> ix)
 >   where
->       env = mkClosure (==) (getNext first_term prodNo prodsOfName)
->               [ (name,emptySet) | name <- getNonTerminals prod ]
->	first_term 	= getFirstTerm prod
->	prodNo 		= lookupProdNo prod
->	prodsOfName 	= lookupProdsOfName prod
+>       env = mkClosure (==) (getNext fst_term prodNo prodsOfName)
+>               [ (name,emptySet) | name <- nts ]
 
-> getNext first_term prodNo prodsOfName env = 
+> getNext fst_term prodNo prodsOfName env = 
 >		[ (nm, next nm) | (nm,_) <- env ]
 >    where 
->    	fn t | t == -1 || t >= first_term = singletonSet t
+>    	fn t | t == errorTok || t >= fst_term = singletonSet t
 >    	fn x = case lookup x env of
 >           	        Just t -> t
 >                       Nothing -> error "attempted FIRST(e) :-("
 
 > 	next :: Name -> Set Name
-> 	next t | t >= first_term = singletonSet t
+> 	next t | t >= fst_term = singletonSet t
 > 	next n = 
 >       	foldb union_Int 
 >               	[ joinSymSets fn (snd3 (prodNo rl)) | 

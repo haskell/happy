@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.15 1998/06/19 13:41:06 simonm Exp $
+$Id: ProduceCode.lhs,v 1.16 1999/03/11 17:16:02 simonm Exp $
 
 The code generator.
 
@@ -21,7 +21,7 @@ The code generator.
 %-----------------------------------------------------------------------------
 Produce the complete output file.
 
-> produceParser :: GrammarInfo 			-- grammar info
+> produceParser :: Grammar 			-- grammar info
 >		-> ActionTable 			-- action table
 >		-> GotoTable 			-- goto table
 >		-> Maybe (String,String)	-- lexer
@@ -36,13 +36,18 @@ Produce the complete output file.
 >		-> Bool				-- use coercions
 >		-> String
 
-> produceParser
-> 	(GrammarInfo prods lookupProd lookupProdNos nonterms terms eof 
->		first_term) 
->	 action goto lexer token_rep token_type nt_types
-> 	 name monad module_header module_trailer target coerce = (
->	 
-> 	  str comment
+> produceParser (Grammar 
+>		{ productions = prods
+>		, lookupProdNo = lookupProd
+>		, lookupProdsOfName = lookupProdNos
+>		, non_terminals = nonterms
+>		, terminals = terms
+>		, eof_term = eof
+>		, first_term = fst_term
+>		})
+>	 	action goto lexer token_rep token_type nt_types
+>		name monad module_header module_trailer target coerce 
+>     =	( str comment
 >	. maybestr module_header . str "\n"
 > 	. produceAbsSynDecl . str "\n"
 >    	. produceTypes
@@ -143,7 +148,7 @@ based parsers -- types aren't as important there).
 >	  		Nothing -> str "[" . token . str "] -> "
 >	  		Just _ -> id
 >	      result = mkMonadTy (str res_type)
-> 	      (Just res_type) = nt_types ! 1
+> 	      (Just res_type) = nt_types ! firstNT
 
 %-----------------------------------------------------------------------------
 Next, the reduction functions.   Each one has the following form:
@@ -221,7 +226,7 @@ where n is the non-terminal number, and m is the rule number.
 >		 | otherwise = reverse (zipWith tokPattern [1..] toks)
 > 
 >		tokPattern n _ | n `notElem` vars_used = str "_"
->             	tokPattern n t | t >= 0 && t < first_term
+>             	tokPattern n t | t >= startTok && t < fst_term
 >	      		= if coerce 
 >				then mkHappyVar n
 >			  	else str "("
@@ -236,7 +241,7 @@ where n is the non-terminal number, and m is the rule number.
 >				   . str ")"
 >
 >		tokLets 
->		   | coerce = 
+>		   | coerce && not (null toks) = 
 >		          str "let {\n\t" 
 >			. interleave "; \n\t"
 >				[ tokPattern n t . str " = " . 

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.18 1998/06/19 13:46:07 simonm Exp $
+$Id: Main.lhs,v 1.19 1999/03/11 17:15:59 simonm Exp $
 
 The main driver.
 
@@ -22,6 +22,7 @@ The main driver.
 > import Target (Target(..))
 > import GetOpt
 > import Set
+> import IntSet
 
 > import System
 > import Char
@@ -31,6 +32,7 @@ The main driver.
 
 #ifdef __GLASGOW_HASKELL__
 > import PrelGHC (unsafeCoerce#)
+> import IOExts
 #define sCC _scc_
 > coerceParser = unsafeCoerce#
 #else
@@ -80,9 +82,13 @@ Mangle the syntax into something useful.
 >		Failed s -> die (unlines s ++ "\n");
 >		Succeeded g -> 
 
->	let gram@(Grammar gram_info dir term nonterm tys env eof) = g
-> 	    term_dir = [ (a,b) | (a,b) <- getTokenSpec dir, a >= first_term]
->	    first_term = getFirstTerm gram_info
+>	let gram@(Grammar { directives  = dirs
+>			  , token_names = env
+>			  , types = tys
+>			  , eof_term = eof
+>			  , first_term = fst_term
+>			  })  = g
+> 	    term_dir = [ (a,b) | (a,b) <- getTokenSpec dirs, a >= fst_term]
 >       in
 
 
@@ -93,15 +99,15 @@ Mangle the syntax into something useful.
 #endif
 
 
->       let first  	= sCC "First" (mkFirst gram_info)
->	    closures    = sCC "Closures" (precalcClosure0 gram_info)
->           sets  	= sCC "LR0 Sets" (genLR0items gram_info closures)
->	    lainfo@(spont,prop) = sCC "Prop" (propLookaheads gram_info sets first)
+>       let first  	= sCC "First" (mkFirst g)
+>	    closures    = sCC "Closures" (precalcClosure0 g)
+>           sets  	= sCC "LR0 Sets" (genLR0items g closures)
+>	    lainfo@(spont,prop) = sCC "Prop" (propLookaheads g sets first)
 >	    la 		= sCC "Calc" (calcLookaheads (length sets)
->					((0,(0,0),[eof]):spont) prop)
+>					((0,(0,0),singletonSet eof):spont) prop)
 >	    items2	= sCC "Merge" (mergeLookaheadInfo la sets)
->           goto   	= sCC "Goto" (genGotoTable gram_info sets)
->           action 	= sCC "Action" (genActionTable gram_info first items2)
+>           goto   	= sCC "Goto" (genGotoTable g sets)
+>           action 	= sCC "Action" (genActionTable g first items2)
 >	    (conflictArray,(sr,rr))   = sCC "Conflict" (countConflicts action)
 >       in
 
@@ -117,8 +123,7 @@ Mangle the syntax into something useful.
 
 Report any unused rules and terminals
 
->	let (unused_rules, unused_terminals) = 
->		find_redundancies gram_info env action
+>	let (unused_rules, unused_terminals) = find_redundancies g action
 >	in
 >	optIO (not (null unused_rules))
 >	   (putStr ("unused rules: " ++ show (length unused_rules) ++ "\n")) >>
@@ -140,9 +145,8 @@ Print out the info file.
 
 >	getInfoFileName name cli		>>= \info_filename ->
 >	let info = genInfoFile
->			env
 >			(map fst sets)
->			gram_info
+>			g
 >			action
 >			goto
 >			term_dir
@@ -174,15 +178,15 @@ and generate the code.
 
 >	getMagicName cli				>>= \ magic_name ->
 >       let outfile = produceParser 
->                       gram_info
+>                       g
 >                       action
 >                       goto
->                       (getLexer dir)
+>                       (getLexer dirs)
 >                       term_dir
->                       (getTokenType dir)
+>                       (getTokenType dirs)
 >			tys
->			(getParserName dir)
->			(getMonad dir)
+>			(getParserName dirs)
+>			(getMonad dirs)
 >                       hd
 >                       tl
 >			target
@@ -232,24 +236,19 @@ Successfully Finished.
 -----------------------------------------------------------------------------
 Find unused rules and tokens
 
-> find_redundancies 
->	:: GrammarInfo 
->	-> Array Name String
->	-> ActionTable
->	-> ([Int], [String])
->
-> find_redundancies g env action_table = 
+> find_redundancies :: Grammar -> ActionTable -> ([Int], [String])
+> find_redundancies g action_table = 
 >	(unused_rules, map (env !) unused_terminals)
 >    where
 >	actions		 = concat (map assocs (elems action_table))
 >	used_rules       = 0 : nub [ r | (_,LR'Reduce{-'-} r) <- actions ]
 >	used_tokens      = errorTok : eof : 
 >			       nub [ t | (t,LR'Shift{-'-} _ ) <- actions ]
->	terminals        = getTerminals g
->	non_terminals    = getNonTerminals g
->	eof		 = getEOF g
->	n_prods		 = length (getProds g)
->	unused_terminals = filter (`notElem` used_tokens) terminals
+>	terms            = terminals g
+>	env              = token_names g
+>	eof		 = eof_term g
+>	n_prods		 = length (productions g)
+>	unused_terminals = filter (`notElem` used_tokens) terms
 >	unused_rules     = filter (`notElem` used_rules ) [0..n_prods-1]
 
 ------------------------------------------------------------------------------
@@ -322,16 +321,16 @@ The command line arguments.
 Various debugging/dumping options...
 
 >    ,
->    Option [] ['mangle'] (NoArg DumpMangle)
+>    Option [] ["mangle"] (NoArg DumpMangle)
 >	"Dump mangled input",
->    Option [] ['lr0'] (NoArg DumpLR0)
+>    Option [] ["lr0"] (NoArg DumpLR0)
 >	"Dump LR0 item sets",
->    Option [] ['action'] (NoArg DumpAction)
+>    Option [] ["action"] (NoArg DumpAction)
 >	"Dump action table",
->    Option [] ['goto'] (NoArg DumpGoto)
+>    Option [] ["goto"] (NoArg DumpGoto)
 >	"Dump goto table",
->    Option [] ['lookaheads'] (NoArg DumpLA)
->	"Dump lookahead info",
+>    Option [] ["lookaheads"] (NoArg DumpLA)
+>	"Dump lookahead info"
 
 #endif
 
