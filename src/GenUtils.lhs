@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: GenUtils.lhs,v 1.11 2004/08/11 15:39:30 paulcc Exp $
+$Id: GenUtils.lhs,v 1.12 2004/10/28 00:32:06 paulcc Exp $
 
 Some General Utilities, including sorts, etc.
 This is realy just an extended prelude.
@@ -30,7 +30,10 @@ All the code below is understood to be in the public domain.
 >	fst3,
 >	snd3,
 >	thd3,
->	mapDollarDollar
+>	mapDollarDollar,
+>	str, char, nl, brack, brack',
+>	interleave, interleave',
+>	strspace, maybestr
 >        ) where
 
 > import Char  (isAlphaNum)
@@ -215,4 +218,23 @@ Replace $$ with an arbitrary string, being careful to avoid ".." and '.'.
 >		'\\':'$':r -> go r ('$':acc)
 >		'$':'$':r  -> Just (\repl -> reverse acc ++ repl ++ r)
 >		c:r  -> go r (c:acc)
+
+
+%-------------------------------------------------------------------------------
+Fast string-building functions. 
+
+> str = showString
+> char c = (c :)
+> interleave s = foldr (\a b -> a . str s . b) id
+> interleave' s = foldr1 (\a b -> a . str s . b) 
+
+> strspace = char ' '
+> nl = char '\n'
+
+> maybestr (Just s)	= str s
+> maybestr _		= id
+
+> brack s = str ('(' : s) . char ')'
+> brack' s = char '(' . s . char ')'
+
 

@@ -1,17 +1,19 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.61 2004/08/12 11:53:55 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.62 2004/10/28 00:32:06 paulcc Exp $
 
 The code generator.
 
 (c) 1993-2001 Andy Gill, Simon Marlow
 -----------------------------------------------------------------------------
 
-> module ProduceCode (produceParser, str, interleave, interleave') where
+> module ProduceCode (produceParser) where
 
 > import Version		( version )
 > import Grammar
 > import Target			( Target(..) )
-> import GenUtils		( mapDollarDollar )
+> import GenUtils		( mapDollarDollar, str, char, nl, strspace,
+>                                 interleave, interleave', maybestr, 
+>                                 brack, brack' )
 
 > import Maybe 			( isJust, isNothing )
 > import Char
@@ -1101,14 +1103,6 @@ slot is free or not.
 > comment = 
 >	  "-- parser produced by Happy Version " ++ version ++ "\n\n"
 
-> str = showString
-> char c = (c :)
-> interleave s = foldr (\a b -> a . str s . b) id
-> interleave' s = foldr1 (\a b -> a . str s . b) 
-
-> strspace = char ' '
-> nl = char '\n'
-
 > mkAbsSynCon fx t    	= str "HappyAbsSyn"   . shows (fx ! t)
 > mkHappyVar n     	= str "happy_var_"    . shows n
 > mkReduceFun n 	= str "happyReduce_"  . shows n
@@ -1122,12 +1116,6 @@ slot is free or not.
 > type_param n (Just ty) = brack ty
 
 > specReduceFun 	= (<= (3 :: Int))
-
-> maybestr (Just s)	= str s
-> maybestr _		= id
-
-> brack s = str ('(' : s) . char ')'
-> brack' s = char '(' . s . char ')'
 
 -----------------------------------------------------------------------------
 -- Convert an integer to a 16-bit number encoded in \xNN\xNN format suitable

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Info.lhs,v 1.12 2001/04/27 10:10:23 simonmar Exp $
+$Id: Info.lhs,v 1.13 2004/10/28 00:32:06 paulcc Exp $
 
 Generating info files.
 
@@ -10,10 +10,9 @@ Generating info files.
 
 > import Version		( version )
 > import LALR 			( Lr0Item )
-> import GenUtils
+> import GenUtils               ( str, interleave, interleave', ljustify )
 > import Set
 > import Grammar
-> import ProduceCode		( str, interleave, interleave' )
 
 > import Array
 > import List (nub)
