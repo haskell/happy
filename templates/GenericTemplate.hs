@@ -1,4 +1,4 @@
--- $Id: GenericTemplate.hs,v 1.2 1999/10/08 12:00:36 simonmar Exp $
+-- $Id: GenericTemplate.hs,v 1.3 1999/10/08 16:10:59 simonmar Exp $
 
 #ifdef HAPPY_GHC
 #define ILIT(n) n#
@@ -180,10 +180,10 @@ happyRedcue k i fn ERROR_TOK tk st sts stk
 happyReduce k nt fn j tk st sts stk = GOTO(action) nt j tk st1 sts1 (fn stk)
        where sts1@(CONS(st1@HAPPYSTATE(action),_)) = happyDrop k CONS(st,sts)
 
-happyMonadReduce k nt c fn ERROR_TOK tk st sts stk
+happyMonadReduce k nt fn ERROR_TOK tk st sts stk
      = happyFail ERROR_TOK tk st sts stk
-happyMonadReduce k nt c fn j tk st sts stk =
-        happyThen (fn stk) (\r -> GOTO(action) nt j tk st1 sts1 (c r : drop_stk))
+happyMonadReduce k nt fn j tk st sts stk =
+        happyThen (fn stk) (\r -> GOTO(action) nt j tk st1 sts1 (r : drop_stk))
        where sts1@(CONS(st1@HAPPYSTATE(action),_)) = happyDrop k CONS(st,sts)
              drop_stk = drop IBOX(k) stk
 
@@ -245,6 +245,8 @@ happyTcHack x y = y
 
 #if defined(HAPPY_ARRAY)
 {-# NOINLINE happyDoAction #-}
+{-# NOINLINE happyActionArr #-}
+{-# NOINLINE happyGotoArr #-}
 #endif
 {-# NOINLINE happyShift #-}
 {-# NOINLINE happySpecReduce_0 #-}

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.26 1999/10/08 12:02:34 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.27 1999/10/08 16:10:57 simonmar Exp $
 
 The code generator.
 
@@ -199,22 +199,35 @@ happyReduce_n_m = happyReduce n m reduction where {
 
 where n is the non-terminal number, and m is the rule number.
 
+NOTES on monad productions.  These look like
+
+	happyReduce_275 = happyMonadReduce 0# 119# happyReduction_275
+	happyReduction_275 (happyRest)
+	 	=  happyThen (code) (\r -> happyReturn (HappyAbsSyn r))
+
+why can't we pass the HappyAbsSyn constructor to happyMonadReduce and
+save duplicating the happyThen/happyReturn in each monad production?
+Because this would require happyMonadReduce to be polymorphic in the
+result type of the monadic action, and since in array-based parsers
+the whole thing is one recursive group, we'd need a type signature on
+happyMonadReduce to get polymorphic recursion.  Sigh.
+
 >    produceReductions =
 > 	interleave "\n\n" (zipWith produceReduction (tail prods) [ 1 .. ])
 
 >    produceReduction (nt, toks, sem) i
 
 >     | isMonadProd
->	= mkReductionHdr (showInt lt) 
->		"happyMonadReduce " (strspace . this_absSynCon)
+>	= mkReductionHdr (showInt lt) "happyMonadReduce "
 >	. char '(' . interleave " :\n\t" tokPatterns
->	. str "happyRest)\n\t = "
+>	. str "happyRest)\n\t = happyThen ("
 >	. tokLets
 >	. str code'
+>	. str ") (\\r -> happyReturn (" . this_absSynCon . str " r))"
 >       . defaultCase
 
 >     | specReduceFun lt
->	= mkReductionHdr (shows lt) "happySpecReduce_" id
+>	= mkReductionHdr (shows lt) "happySpecReduce_"
 >	. interleave "\n\t" tokPatterns
 >	. str " =  "
 >	. tokLets
@@ -227,7 +240,7 @@ where n is the non-terminal number, and m is the rule number.
 >		. str " = notHappyAtAll ")
 
 >     | otherwise
-> 	= mkReductionHdr (showInt lt) "happyReduce "  id
+> 	= mkReductionHdr (showInt lt) "happyReduce "
 >	. char '(' . interleave " :\n\t" tokPatterns
 >	. str "happyRest)\n\t = "
 >	. tokLets
@@ -239,9 +252,9 @@ where n is the non-terminal number, and m is the rule number.
 >		isMonadProd = case sem of ('%' : code) -> True
 >			 		  _            -> False
 > 
->		mkReductionHdr lt s arg = 
+>		mkReductionHdr lt s = 
 >			mkReduceFun i . str " = "
->			. str s . lt . strspace . showInt nt . arg
+>			. str s . lt . strspace . showInt nt
 >			. strspace . reductionFun . nl 
 >			. reductionFun . strspace
 > 
@@ -643,6 +656,80 @@ vars used in this piece of code.
 >   where reduces = [ act | (_,act@(LR'Reduce{-'-} _)) <- actions ]
 >   		    ++ [ act | (_,(LR'Multiple{-'-} _ 
 >					act@(LR'Reduce{-'-} _))) <- actions ]
+
+-----------------------------------------------------------------------------
+-- Generate packed parsing tables.
+
+-- happyActOff ! state
+--     Offset within happyTable of actions for state
+
+-- happyGotoOff ! state
+--     Offset within happyTable of gotos for state
+
+-- happyTable
+--	Combined action/goto table
+
+-- happyDefAction ! state
+-- 	Default action for state
+
+-- happyCheck
+--	Indicates whether we should use the default action for state
+
+-- figure out the default action for each state.  This will leave some
+-- states with no *real* actions left.
+
+-- for each state with one or more real actions, sort states by
+-- width/spread of tokens with real actions, then by number of
+-- elements with actions, so we get the widest/densest states
+-- first. (I guess the rationale here is that we can use the
+-- thin/sparse states to fill in the holes later).
+
+-- try to pair up states with identical sets of real actions.
+
+-- try to fit the actions into the check table, using the ordering
+-- from above.
+
+action table:   Array Int{-state-} (Array Int{-terminal#-} LRAction
+
+> {-
+> mkTables 
+>	:: ActionTable -> GotoTable ->
+>	([Int]		-- happyActOff
+>	,[Int]		-- happyGotoOff
+>	,[Int]		-- happyTable
+>	,[Int]		-- happyDefAction
+>	,[Int]		-- happyCheck
+>	)
+
+> mkTables action goto
+>	 
+>  where 
+>
+>	 action_vals = 
+>		[ (state, getDefault (elems acts), 
+>			  mkVals (assocs acts) default_act)
+>		| (state,acts) <- assocs action
+>		, let default_act = 
+>		]
+>
+>	 mkVals assocs default_act = 
+>		[ (token, actionVal act) 
+>		| (token, act) <- assocs
+>		, act /= default_act ]
+>
+>	 (happyTable,happyCheck,happyActOff) = 
+>		foldr try_to_fit ([],[],[]) action_vals
+>
+
+> try_to_fit (state,default_act,vals) (table,check,act_off)
+>	= (new_table, new_check, off:act_off)
+>	(off,new_check) = findFreeOffset check vals
+>	new_table       = mergeActs table off vals
+
+> findFreeOffset check vals  = findFreePatch 0 sparse vals
+>
+>   where (full,sparse) = splitAt (=/ 0) check
+> -}
 
 -----------------------------------------------------------------------------
 Misc.
