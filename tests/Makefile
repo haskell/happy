@@ -1,12 +1,12 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.6 2002/05/21 09:15:42 simonmar Exp $
+# $Id: Makefile,v 1.7 2003/09/08 11:27:52 simonmar Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
 
 TESTS = Test.ly TestMulti.ly TestPrecedence.ly bug001.ly \
 	monad001.y monad002.ly precedence001.ly precedence002.y \
-	bogus-token.y
+	bogus-token.y bug002.y
 
 TEST_HAPPY_OPTS = --strict 
 

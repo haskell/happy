@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Grammar.lhs,v 1.19 2001/09/24 15:48:54 simonmar Exp $
+$Id: Grammar.lhs,v 1.20 2003/09/08 11:27:50 simonmar Exp $
 
 The Grammar data type.
 
@@ -262,9 +262,12 @@ Deal with priorities...
 
 Translate the rules from string to name-based.
 
+>	convNT (nt, prods, ty) 
+>	  = mapToName nt `thenE` \nt' ->
+>	    Succeeded (nt', prods, ty)
+>
 > 	transRule (nt, prods, ty)
->   	  = mapToName nt `thenE` \nt' ->
->	    parEs (map (finishRule nt') prods)
+>   	  = parEs (map (finishRule nt) prods)
 >
 >	finishRule nt (lhs,code,line,prec)
 >	  = failMap (addLine line) $
@@ -287,10 +290,12 @@ Translate the rules from string to name-based.
 >                           Just p -> Right p
 >	in
 
->	parEs (map transRule rules) `thenE` \rules' ->
+>       parEs (map convNT rules)    `thenE` \rules1 ->
+>	parEs (map transRule rules1) `thenE` \rules2 ->
 
 >	let
->	tys = listArray' (first_nt, last_nt) [ ty | (nm,_,ty) <- rules ]
+>	tys = accumArray (\a b -> b) Nothing (first_nt, last_nt) 
+>			[ (nm, Just ty) | (nm, _, Just ty) <- rules1 ]
 
 >	env_array :: Array Int String
 >	env_array = array (errorTok, last_t) name_env
@@ -312,9 +317,8 @@ Get the token specs in terms of Names.
 >	   lookup_prods x | x >= firstStartTok && x < first_t = arr ! x
 >	   lookup_prods _ = error "lookup_prods"
 >
->	   productions = start_prods ++ concat rules'
+>	   productions = start_prods ++ concat rules2
 >	   prod_array  = listArray' (0,length productions-1) productions
-
 >	in
 
 >	Succeeded (Grammar {
