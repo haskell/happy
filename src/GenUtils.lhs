@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: GenUtils.lhs,v 1.4 1997/07/16 13:32:34 simonm Exp $
+$Id: GenUtils.lhs,v 1.5 1997/09/01 13:41:07 simonm Exp $
 
 Some General Utilities, including sorts, etc.
 This is realy just an extended prelude.
@@ -193,8 +193,6 @@ Gofer-like stuff:
 >                        [] -> Failed "assoc: "
 >                        (val:vs) -> Succeeded val
 > 
-
-> deSucc (Succeeded e) = e
 
 Now some utilties involving arrays.
 Here is a version of @elem@ that uses partual application
