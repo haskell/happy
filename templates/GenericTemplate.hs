@@ -1,4 +1,4 @@
--- $Id: GenericTemplate.hs,v 1.16 2001/09/22 12:31:12 ken Exp $
+-- $Id: GenericTemplate.hs,v 1.17 2001/09/25 09:51:51 simonmar Exp $
 
 #ifdef HAPPY_GHC
 #define ILIT(n) n#
@@ -114,14 +114,17 @@ happyDoAction i tk st
 
 #ifdef HAPPY_GHC
 #undef __GLASGOW_HASKELL__
-#define HAPPY_IF_GHC_501 #if __GLASGOW_HASKELL__ >= 501
+#define HAPPY_IF_GHC_GT_500 #if __GLASGOW_HASKELL__ > 500
+#define HAPPY_ELSIF_GHC_500 #elsif __GLASGOW_HASKELL__ == 500
 #define HAPPY_ELSE #else
 #define HAPPY_ENDIF #endif
 indexShortOffAddr (A# arr) off =
-HAPPY_IF_GHC_501
+HAPPY_IF_GHC_GT_500
 	narrow16Int# i
-HAPPY_ELSE
+HAPPY_ELSIF_GHC_500
 	intToInt16# i
+HAPPY_ELSE
+	(i `iShiftL#` 16#) `iShiftRA#` 16#
 HAPPY_ENDIF
   where
 	i = word2Int# ((high `shiftL#` 8#) `or#` low)
