@@ -1,4 +1,4 @@
--- $Id: GenericTemplate.hs,v 1.5 2000/07/12 16:21:44 simonmar Exp $
+-- $Id: GenericTemplate.hs,v 1.6 2000/08/09 10:01:02 simonmar Exp $
 
 #ifdef HAPPY_GHC
 #define ILIT(n) n#
@@ -184,7 +184,7 @@ happySpecReduce_3 nt fn j tk _ CONS(_,CONS(_,sts@(CONS(st@HAPPYSTATE(action),_))
 happySpecReduce_3 _ _ _ _ _ _ _
      = notHappyAtAll
 
-happyRedcue k i fn ERROR_TOK tk st sts stk
+happyReduce k i fn ERROR_TOK tk st sts stk
      = happyFail ERROR_TOK tk st sts stk
 happyReduce k nt fn j tk st sts stk = GOTO(action) nt j tk st1 sts1 (fn stk)
        where sts1@(CONS(st1@HAPPYSTATE(action),_)) = happyDrop k CONS(st,sts)
