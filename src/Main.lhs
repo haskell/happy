@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.33 2001/04/27 10:10:23 simonmar Exp $
+$Id: Main.lhs,v 1.34 2001/06/07 15:04:39 rrt Exp $
 
 The main driver.
 
@@ -21,6 +21,7 @@ The main driver.
 > import Target (Target(..))
 > import GetOpt
 > import Set
+> import Maybe (isJust)
 
 > import System
 > import Char
@@ -398,29 +399,26 @@ Extract various command-line options.
 
 > getOutputFileName ip_file cli
 > 	= case [ s | (OptOutputFile s) <- cli ] of
->		[]  -> return (base ++ ".hs")
->			where (base,ext) = break (== '.') ip_file
->		[f] -> return f
->		_   -> dieHappy "multiple -o options\n"
+>		[]   -> return (base ++ ".hs")
+>			 where (base,ext) = break (== '.') ip_file
+>		f:fs -> return (last (f:fs))
 
 > getInfoFileName base cli
 > 	= case [ s | (OptInfoFile s) <- cli ] of
 >		[]	   -> return Nothing
->		[Nothing]  -> return (Just (base ++ ".info"))
->		[Just f]   -> return (Just f)
->		_   -> dieHappy "multiple -i options\n"
+>		f:fs       -> case last (filter isJust (f:fs)) of
+>			        Nothing -> return (Just (base ++ ".info"))
+>				Just j  -> return (Just j)
 
 > getTemplate def cli
 > 	= case [ s | (OptTemplate s) <- cli ] of
 >		[]	   -> return def
->		[f]        -> return f
->		_          -> dieHappy "multiple templates specified\n"
+>		f:fs       -> return (last (f:fs))
 
 > getMagicName cli
 > 	= case [ s | (OptMagicName s) <- cli ] of
 >		[]	   -> return Nothing
->		[f]        -> return (Just (map toLower f))
->		_          -> dieHappy "multiple --magic-name options\n"
+>		f:fs       -> return (Just (map toLower (last (f:fs))))
 
 > getCoerce target cli
 >	= if OptUseCoercions `elem` cli 
