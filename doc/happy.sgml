@@ -514,11 +514,11 @@ main = getContents >>= print . calc . lexer
     </indexterm>
 
     <para>To generate the Haskell module for this parser, type the
-    command <command>happy example.ly</command> (where
-    <filename>example.ly</filename> is the name of the grammar file).
+    command <command>happy example.y</command> (where
+    <filename>example.y</filename> is the name of the grammar file).
     The Haskell module will be placed in a file named
     <filename>example.hs</filename>.  Additionally, invoking the
-    command <command>happy example.ly -i</command> will produce the
+    command <command>happy example.y -i</command> will produce the
     file <filename>example.info</filename> which contains detailed information
     about the parser, including states and reduction rules (see <xref
     linkend="sec-info-files">).  This can be invaluable for debugging
@@ -1577,11 +1577,14 @@ happy [ <emphasis>options</emphasis> ] <emphasis>filename</emphasis> [ <emphasis
     <para>All the command line options are optional (!) and may occur
     either before or after the input file name.</para>
 
-    <para>There are two types of grammar files, <filename>file.y</filename> and
-    <filename>file.ly</filename>, with the latter observing the reverse comment
-    bird track convention (i.e. each code line must begin with '>').
-    The examples distributed with <application>Happy</application> are all of the .ly
-    form.</para>
+    <para>There are two types of grammar files,
+    <filename>file.y</filename> and <filename>file.ly</filename>, with
+    the latter observing the reverse comment (or literate) convention
+    (i.e. each code line must begin with the character
+    <literal>&gt;</literal>, lines which don't begin with
+    <literal>&gt;</literal> are treated as comments).  The examples
+    distributed with <application>Happy</application> are all of the
+    .ly form.</para>
     <indexterm>
       <primary>literate grammar files</primary>
     </indexterm>
