@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.54 2001/12/05 14:49:59 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.55 2001/12/05 15:02:55 simonmar Exp $
 
 The code generator.
 
@@ -147,7 +147,7 @@ If we're using coercions, we need to generate the injections etc.
 >		. mkHappyOut n . str " x = unsafeCoerce# x\n"
 >		. str "{-# INLINE " . mkHappyOut n . str " #-}"
 >	  in
->	    str "type " . happy_item . str " = () -> ()\n"
+>	    str "type " . happy_item . str " = () -> ()\n" -- see NOTE below
 >	  . interleave "\n" 
 >	    [ inject n ty . nl . extract n ty | (n,ty) <- assocs nt_types ]
 >	  -- token injector
@@ -157,7 +157,16 @@ If we're using coercions, we need to generate the injections etc.
 >	  . str "happyOutTok :: " . bhappy_item . str " -> " . str token_type
 >	  . str "\nhappyOutTok x = unsafeCoerce# x\n{-# INLINE happyOutTok #-}\n"
 
-Otherwise, output the declaration in full...
+NOTE: in the coerce case we always coerce all the semantic values to
+HappyAbsSyn which is declared to be a synonym for () -> ().  Why don't
+we just use (), or declare a new type with a single constructor?
+Because when the --strict flag is used, we need to seq these values,
+and GHC can be persuaded to use a polymorphic seq if it thinks the
+thing it is seqing has function type - otherwise it might use a
+vectored return, which will lead to disaster if the object in question
+doesn't have a vectored return convention.
+
+... Otherwise, output the declaration in full...
 
 >     | otherwise
 >	= str "data HappyAbsSyn " . str_tyvars
