@@ -1,0 +1,16 @@
+From: Ian Lynagh [igloo@earth.li]
+Subject: happy and line numbers
+Date: Thu 12/02/2004 18:48
+
+I think it would be nice to have an example of how to have a nice
+position tracking monadic parser calling a lexer per token in the
+examples directory. I've attached a cut-down parser of mine that does it
+well enough for me. The only slight niggle is that parse errors are
+reported at the end of the token rather than the start, but that hasn't
+bothered me enough to look into fixing it yet.
+
+The cut down parser doesn't use start codes, but I've left the machinery
+in to make it easier for people to see how to use them.
+
+Naturally any suggestions for improving it would be gladly received!
+
