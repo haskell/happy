@@ -12,7 +12,7 @@ License.
 >        fromList, toAscList, empty, singleton,
 >        union,
 >        null,
->        concatMapSet, filter,
+>        filter, fold,
 >	 difference
 >    ) where
 
@@ -73,12 +73,11 @@ This is where we order the list and remove duplicates.
 > null []    = True
 > null other = False
 
-> concatMapSet :: (Ord b) => (a -> Set b) -> Set a -> Set b
-> concatMapSet f [] = empty
-> concatMapSet f a  = foldb union (map f a)
-
 > filter :: (Ord a) => (a -> Bool) -> Set a -> Set a
 > filter p xs = [ x | x <- xs, p x]
+
+> fold :: (a -> b -> b) -> b -> Set a -> b
+> fold = foldr
 
 > difference :: (Ord a) => Set a -> Set a -> Set a
 > difference a b = subtract_l (<) (==) a b

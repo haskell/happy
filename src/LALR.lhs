@@ -32,6 +32,9 @@ Generation of LALR parsing tables.
 
 #endif
 
+> unionMap :: (Ord b) => (a -> Set b) -> Set a -> Set b
+> unionMap f = Set.fold (Set.union . f) Set.empty
+
 This means rule $a$, with dot at $b$ (all starting at 0)
 
 > type Lr0Item = (Int,Int)			-- (rule, dot)
@@ -103,7 +106,7 @@ Generating the closure of a set of LR(1) items
 >		    case lookupProdNo g rule of { (name,lhs,_,_) ->
 >		    case drop dot lhs of
 >			(b:beta) | b >= firstStartTok && b < fst_term ->
->			    let terms = Set.concatMapSet 
+>			    let terms = unionMap 
 >						(\a -> first (beta ++ [a])) as
 >			    in
 >			    [ (rule,0,terms) | rule <- lookupProdsOfName g b ]
@@ -159,7 +162,7 @@ a token X (terminal or non-terminal.  Output will be the set of kernel
 items for the set of items goto(I,X)
 
 > gotoClosure :: Grammar -> Set Lr0Item -> Name -> Set Lr0Item
-> gotoClosure gram i x = Set.concatMapSet fn i
+> gotoClosure gram i x = unionMap fn i
 >    where
 >       fn (rule_no,dot) =
 >          case findRule gram rule_no dot of
