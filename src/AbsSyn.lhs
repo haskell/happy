@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: AbsSyn.lhs,v 1.5 1997/09/26 09:52:51 simonm Exp $
+$Id: AbsSyn.lhs,v 1.6 2000/07/12 16:21:44 simonmar Exp $
 
 Abstract syntax for grammar files.
 
@@ -11,6 +11,7 @@ Here is the abstract syntax of the language we parse.
 > module AbsSyn 
 > 	(AbsSyn(..), Directive(..),
 > 	 getTokenType, getTokenSpec, getParserName, getLexer, getMonad,
+>        getPrios, getNames,
 >	
 >	 Maybe) where
 
@@ -18,7 +19,7 @@ Here is the abstract syntax of the language we parse.
 >     = AbsSyn
 >         (Maybe String)					-- header
 >         [Directive String]      				-- directives
->         [(String,[([String],String,Int)],Maybe String)]	-- productions
+>         [(String,[([String],String,Int,Maybe String)],Maybe String)]	-- productions
 >         (Maybe String)					-- footer
 
 #ifdef DEBUG
@@ -39,6 +40,9 @@ generate some error messages.
 >       | TokenName   String              -- %name
 >       | TokenLexer String String        -- %lexer
 >	| TokenMonad String String String -- %monad
+>	| TokenNonassoc [String]	  -- %nonassoc
+>	| TokenRight [String]		  -- %right
+>	| TokenLeft [String]		  -- %left
 
 #ifdef DEBUG
 
@@ -72,3 +76,14 @@ generate some error messages.
 
 > getTokenSpec ds = concat [ t | (TokenSpec t) <- ds ]
 
+> getPrios ds = [ d | d <- ds,
+>                 case d of
+>		    TokenNonassoc _ -> True
+>		    TokenLeft _ -> True
+>		    TokenRight _ -> True
+>		    _ -> False
+>               ]
+
+> getNames (TokenNonassoc s) = s
+> getNames (TokenLeft s) = s
+> getNames (TokenRight s) = s

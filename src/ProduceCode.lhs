@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.33 2000/07/11 14:54:15 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.34 2000/07/12 16:21:44 simonmar Exp $
 
 The code generator.
 
@@ -248,7 +248,7 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >    produceReductions =
 > 	interleave "\n\n" (zipWith produceReduction (tail prods) [ 1 .. ])
 
->    produceReduction (nt, toks, sem) i
+>    produceReduction (nt, toks, sem, _) i
 
 >     | isMonadProd
 >	= mkReductionHdr (showInt lt) "happyMonadReduce "
@@ -494,7 +494,7 @@ machinery to discard states in the parser...
 >	where gotos = goto ! state
 >	
 >	      produceActions (t, LR'Fail{-'-}) = id
->	      produceActions (t, action@(LR'Reduce{-'-} _))
+>	      produceActions (t, action@(LR'Reduce{-'-} _ _))
 >	      	 | action == default_act = id
 >		 | otherwise = actionFunction t
 >			     . mkAction action . str "\n"
@@ -644,17 +644,21 @@ outlaw them inside { }
 >    produceMonadStuff =
 >	(case monad of
 >	  Nothing -> 
->            str "happyThen = \\m k -> k m\n" .
->	     str "happyReturn = " .
->            (case lexer of 
+>            str "happyThen = \\m k -> k m\n"
+>	   . str "happyReturn = "
+>          . (case lexer of 
 >		  Nothing -> str "\\a tks -> a"
 >		  _       -> str "\\a -> a")
+>          . str "happyThen1 = happyThen\n"
+>	   . str "happyReturn1 = happyReturn\n"
 >	  Just (ty,tn,rtn) ->
 >	     case lexer of
 >		Nothing ->
->		   str "happyThen m k tks = (" . str tn 
+>                  str "happyThen = (" . str tn . str ")\n"
+>	         . str "happyReturn = (" . str rtn . str ")\n"
+>		 . str "happyThen1 m k tks = (" . str tn 
 >		 . str ") m (\\a -> k a tks)\n"
->		 . str "happyReturn = \\a tks -> " . brack rtn
+>		 . str "happyReturn1 = \\a tks -> " . brack rtn
 >		 . str " a\n"
 >		_ ->
 >                  let pty = str ty in
@@ -663,6 +667,8 @@ outlaw them inside { }
 >	         . str " b) -> " . pty . str " b\n"
 >                . str "happyThen = " . brack tn . char '\n'
 >                . str "happyReturn = " . brack rtn
+>            	 . str "happyThen1 = happyThen\n"
+>	     	 . str "happyReturn1 = happyReturn\n"
 >	)
 >	. str "\n"
 
@@ -687,35 +693,37 @@ vars used in this piece of code.
 >	(code,vars) = expandVars r
 
 > actionVal :: LRAction -> Int
-> actionVal (LR'Shift  state) 	= state + 1
-> actionVal (LR'Reduce rule)  	= -(rule + 1)
+> actionVal (LR'Shift  state _)	= state + 1
+> actionVal (LR'Reduce rule _) 	= -(rule + 1)
 > actionVal  LR'Accept		= -1
 > actionVal (LR'Multiple _ a)	= actionVal a
 > actionVal LR'Fail		= 0
+> actionVal LR'MustFail		= 0
 
 > gotoVal :: Goto -> Int
 > gotoVal (Goto i)		= i
 > gotoVal NoGoto		= 0
   
-> mkAction (LR'Shift i)	 	= str "happyShift " . mkActionName i
+> mkAction (LR'Shift i _) 	= str "happyShift " . mkActionName i
 > mkAction LR'Accept 	 	= str "happyAccept"
 > mkAction LR'Fail 	 	= str "happyFail"
-> mkAction (LR'Reduce i) 	= str "happyReduce_" . shows i
+> mkAction LR'MustFail 	 	= str "happyFail"
+> mkAction (LR'Reduce i _) 	= str "happyReduce_" . shows i
 > mkAction (LR'Multiple as a)	= mkAction a
 
 > mkActionName i		= str "action_" . shows i
 
 > getDefault actions =
->   case [ act | (errorTok, act@(LR'Reduce{-'-} _)) <- actions ] of
+>   case [ act | (errorTok, act@(LR'Reduce{-'-} _ _)) <- actions ] of
 >	(act:_) -> act	-- use error reduction if there is one.
 >	[] ->
 >	    case reduces of
 >		 [] -> LR'Fail
 >		 (act:_) -> act	-- pick the first one we see for now
 >
->   where reduces = [ act | (_,act@(LR'Reduce{-'-} _)) <- actions ]
+>   where reduces = [ act | (_,act@(LR'Reduce{-'-} _ _)) <- actions ]
 >   		    ++ [ act | (_,(LR'Multiple{-'-} _ 
->					act@(LR'Reduce{-'-} _))) <- actions ]
+>					act@(LR'Reduce{-'-} _ _))) <- actions ]
 
 -----------------------------------------------------------------------------
 -- Generate packed parsing tables.

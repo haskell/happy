@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.26 2000/03/28 14:30:04 panne Exp $
+$Id: Main.lhs,v 1.27 2000/07/12 16:21:44 simonmar Exp $
 
 The main driver.
 
@@ -253,7 +253,7 @@ Find unused rules and tokens
 >	(unused_rules, map (env !) unused_terminals)
 >    where
 >	actions		 = concat (map assocs (elems action_table))
->	used_rules       = 0 : nub [ r | (_,LR'Reduce{-'-} r) <- actions ]
+>	used_rules       = 0 : nub [ r | (_,LR'Reduce{-'-} r _) <- actions ]
 >	used_tokens      = errorTok : eof : 
 >			       nub [ t | (t,a) <- actions, is_shift a ]
 >	terms            = terminals g
@@ -263,8 +263,8 @@ Find unused rules and tokens
 >	unused_terminals = filter (`notElem` used_tokens) terms
 >	unused_rules     = filter (`notElem` used_rules ) [0..n_prods-1]
 
-> is_shift (LR'Shift _) = True
-> is_shift (LR'Multiple _ (LR'Shift _)) = True
+> is_shift (LR'Shift _ _) = True
+> is_shift (LR'Multiple _ (LR'Shift _ _)) = True
 > is_shift _ = False
 
 ------------------------------------------------------------------------------

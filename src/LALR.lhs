@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: LALR.lhs,v 1.15 2000/04/19 12:52:15 simonmar Exp $
+$Id: LALR.lhs,v 1.16 2000/07/12 16:21:44 simonmar Exp $
 
 Generation of LALR parsing tables.
 
@@ -106,7 +106,7 @@ Generating the closure of a set of LR(1) items
 
 >		fn :: Lr1Item -> [Lr1Item]
 >		fn (rule,dot,as) =
->		    case lookupProdNo g rule of { (name,lhs,_) ->
+>		    case lookupProdNo g rule of { (name,lhs,_,_) ->
 >		    case drop dot lhs of
 >			(b:beta) | b >= startTok && b < fst_term ->
 >			    let terms = concatMapSet 
@@ -478,6 +478,7 @@ Generate the action table
 >	fst_term = first_term g
 >	terms = terminals g
 >	eof = eof_term g
+>       prios = priorities g
 
 >       term_lim = (head terms,last terms)
 >       actionTable = array (0,length sets-1)
@@ -491,16 +492,22 @@ Generate the action table
 >               Just t | t >= fst_term || t == errorTok -> 
 >			case lookup t goto of
 >                       	Nothing -> []
->                               Just j  -> [ (t,LR'Shift j{-'-}) ]
+>                               Just j  ->
+>                                 case lookup t prios of
+>                                       Nothing -> [ (t,LR'Shift j{-'-} No) ]
+>                                       Just p  -> [ (t,LR'Shift j{-'-} p) ]
 >               Nothing -> if rule == 0 
 >                  then [ (eof,LR'Accept{-'-}) ]
->                  else [ (a,b) | (a,b) <- 
->				zip la (repeat (LR'Reduce rule)) ]
+>                  else case lookupProdNo g rule of
+>                         (_,_,_,p) -> [ (a,b) | (a,b) <- 
+>                             zip la (repeat (LR'Reduce rule p)) ]
 >               _ -> []
 
 >	possActions goto coll = 
 >		(concat [ possAction goto coll item |
 >				item <- closure1 g first coll ])
+
+These comments are now out of date! /JS
 
 Here's how we resolve conflicts, leaving a complete record of the
 conflicting actions in an LR'Multiple structure for later output in
@@ -511,15 +518,36 @@ reduce/reduce conflicts are resolved as a reduce action using the rule
 with the lowest number (i.e. the rule that comes first in the grammar
 file.)
 
+NOTES on LR'MustFail: this was introduced as part of the precedence
+parsing changes.  The problem with LR'Fail is that it is a soft
+failure: we sometimes substitute an LR'Fail for an LR'Reduce (eg. when
+computing default actions), on the grounds that an LR'Fail in this
+state will also be an LR'Fail in the goto state, so we'll fail
+eventually.  This may not be true with precedence parsing, though.  If
+there are two non-associative operators together, we must fail at this
+point rather than reducing.  Hence the use of LR'MustFail.
+
 >       res LR'Fail x = x
 >       res x LR'Fail = x
+>	res LR'MustFail x = LR'MustFail
+>	res x LR'MustFail = LR'MustFail
 >	res x x' | x == x' = x
 >	res (LR'Multiple as x) x' = LR'Multiple (x':as) (res x x')
 >       res (LR'Accept) _ = LR'Accept
 >       res _ (LR'Accept) = LR'Accept
->       res a@(LR'Shift s) b@(LR'Reduce s') = LR'Multiple [a,b] a
->       res a@(LR'Reduce s) b@(LR'Shift s') = LR'Multiple [a,b] b
->	res a@(LR'Reduce r) b@(LR'Reduce r')
+>       res a@(LR'Shift s p) b@(LR'Reduce s' p') = res b a
+>       res a@(LR'Reduce s p) b@(LR'Shift s' p')
+>               | p < p'    = b
+>               | p > p'    = a
+>               | otherwise = case (p,p') of
+>                              (No,No) -> LR'Multiple [a,b] b
+>                              (Prio c _,_) -> case c of
+>                                             LeftAssoc  -> a
+>                                             RightAssoc -> b
+>                                             None       -> LR'MustFail
+>       res a@(LR'Reduce r p) b@(LR'Reduce r' p')
+>               | p < p'    = b
+>               | p > p'    = a
 >		| r < r'    = LR'Multiple [a,b] a
 >		| otherwise = LR'Multiple [a,b] b
 >       res _ _ = error "confict in resolve"
@@ -542,9 +570,9 @@ Count the conflicts
 >	    countMultiples (LR'Multiple as a) (sr,rr) 
 >	    	= (sr + sr', rr + rr')
 >	    	where sr' = foldr (\a b -> case a of
->						LR'Shift _ -> 1
+>						LR'Shift _ _ -> 1
 >						_ -> b) 0 as
->		      rr' = if (length [ () | (LR'Reduce _) <- as ] > 1)
+>		      rr' = if (length [ () | (LR'Reduce _ _) <- as ] > 1)
 >		      		then 1
 >				else 0
 >	    countMultiples _ c = c
@@ -554,6 +582,6 @@ Count the conflicts
 > findRule :: Grammar -> Int -> Int -> Maybe Name
 > findRule g rule dot = 
 >	case lookupProdNo g rule of
->	   (_,lhs,_) -> case drop dot lhs of
->		         (a:_) -> Just a
->      			 _     -> Nothing
+>	   (_,lhs,_,_) -> case drop dot lhs of
+>		            (a:_) -> Just a
+>      			    _     -> Nothing

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: First.lhs,v 1.5 1999/03/11 17:15:57 simonm Exp $
+$Id: First.lhs,v 1.6 2000/07/12 16:21:44 simonmar Exp $
 
 Implementation of FIRST
 
@@ -57,5 +57,9 @@ Does the Set include the $\epsilon$ symbol ?
 > 	next t | t >= fst_term = singletonSet t
 > 	next n = 
 >       	foldb union_Int 
->               	[ joinSymSets fn (snd3 (prodNo rl)) | 
+>               	[ joinSymSets fn (snd4 (prodNo rl)) | 
 >				rl <- prodsOfName n ]
+
+My little hack
+
+> snd4 (_,b,_,_) = b

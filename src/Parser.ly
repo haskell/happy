@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Parser.ly,v 1.8 1999/10/07 15:17:39 simonmar Exp $
+$Id: Parser.ly,v 1.9 2000/07/12 16:21:44 simonmar Exp $
 
 The parser.
 
@@ -12,8 +12,6 @@ The parser.
 > import GenUtils
 > import AbsSyn
 > import Lexer
-> import Array
-> import Int
 
 > #ifdef __GLASGOW_HASKELL__
 > import GlaExts
@@ -29,6 +27,10 @@ The parser.
 >	spec_name	{ TokenKW     TokSpecId_Name }
 >	spec_lexer	{ TokenKW     TokSpecId_Lexer }
 >	spec_monad	{ TokenKW     TokSpecId_Monad }
+>       spec_nonassoc	{ TokenKW     TokSpecId_Nonassoc }
+>       spec_left	{ TokenKW     TokSpecId_Left }
+>       spec_right	{ TokenKW     TokSpecId_Right }
+>       spec_prec	{ TokenKW     TokSpecId_Prec }
 >	codequote	{ TokenInfo $$ TokCodeQuote }
 >	":"		{ TokenKW     TokColon }
 >	";"		{ TokenKW     TokSemiColon }
@@ -45,23 +47,27 @@ The parser.
 >	: optCode tokInfos "%%" rules optCode
 >				{ AbsSyn $1 (reverse $2) (reverse $4) $5 }
 
-> rules :: { [(String, [([String],String,Int)], Maybe String)] }
+> rules :: { [(String, [([String],String,Int,Maybe String)], Maybe String)] }
 > 	: rules rule	{ $2 : $1 }
 >	| rule		{ [$1] }
 
-> rule :: { (String, [([String],String,Int)], Maybe String) }
+> rule :: { (String, [([String],String,Int,Maybe String)], Maybe String) }
 > 	: id "::" code ":" prods		{ ($1,$5,Just $3) }
 >	| id "::" code id ":" prods		{ ($1,$6,Just $3) }
 >  	| id ":" prods				{ ($1,$3,Nothing) }
 
 
-> prods :: { [([String],String,Int)] }
+> prods :: { [([String],String,Int,Maybe String)] }
 > 	: prod "|" prods			{ $1 : $3 }
 >	| prod					{ [$1] }
 
-> prod :: { ([String],String,Int) }
-> 	: ids code ";"	{% \s l -> returnP ($1,$2,l) s l }
->	| ids code 	{% \s l -> returnP ($1,$2,l) s l }
+> prod :: { ([String],String,Int,Maybe String) }
+> 	: ids prec code ";"	{% \s l -> returnP ($1,$3,l,$2) s l }
+>	| ids prec code		{% \s l -> returnP ($1,$3,l,$2) s l }
+
+> prec :: { Maybe String }
+>       : spec_prec id	{ Just $2 }
+>       |            	{ Nothing }
 
 > tokInfos :: { [Directive String] } 
 >	: tokInfos tokInfo			{ $2 : $1 }
@@ -74,6 +80,9 @@ The parser.
 >	| spec_lexer code code			{ TokenLexer $2 $3 }
 >	| spec_monad code		        { TokenMonad $2 ">>=" "return" }
 >	| spec_monad code code code		{ TokenMonad $2 $3 $4 }
+>	| spec_nonassoc ids			{ TokenNonassoc $2 }
+>	| spec_right ids			{ TokenRight $2 }
+>	| spec_left ids				{ TokenLeft $2 }
 
 > tokenSpecs :: { [(String,String)] }
 >	: tokenSpec tokenSpecs

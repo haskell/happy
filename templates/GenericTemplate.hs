@@ -1,4 +1,4 @@
--- $Id: GenericTemplate.hs,v 1.4 1999/10/11 17:13:57 simonmar Exp $
+-- $Id: GenericTemplate.hs,v 1.5 2000/07/12 16:21:44 simonmar Exp $
 
 #ifdef HAPPY_GHC
 #define ILIT(n) n#
@@ -140,7 +140,7 @@ newtype HappyState b c = HappyState
 -----------------------------------------------------------------------------
 -- Accepting the parse
 
-happyAccept j tk st sts [ ans ] = happyReturn HAPPY_FINAL_ABSSYN(ans)
+happyAccept j tk st sts [ ans ] = happyReturn1 HAPPY_FINAL_ABSSYN(ans)
 happyAccept j tk st sts _       = IF_GHC(happyTcHack j 
 				         IF_ARRAYS(happyTcHack st))
 				  notHappyAtAll
@@ -192,7 +192,7 @@ happyReduce k nt fn j tk st sts stk = GOTO(action) nt j tk st1 sts1 (fn stk)
 happyMonadReduce k nt fn ERROR_TOK tk st sts stk
      = happyFail ERROR_TOK tk st sts stk
 happyMonadReduce k nt fn j tk st sts stk =
-        happyThen (fn stk) (\r -> GOTO(action) nt j tk st1 sts1 (r : drop_stk))
+        happyThen1 (fn stk) (\r -> GOTO(action) nt j tk st1 sts1 (r : drop_stk))
        where sts1@(CONS(st1@HAPPYSTATE(action),_)) = happyDrop k CONS(st,sts)
              drop_stk = drop IBOX(k) stk
 

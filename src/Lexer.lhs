@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Lexer.lhs,v 1.15 1999/11/03 15:21:50 simonmar Exp $
+$Id: Lexer.lhs,v 1.16 2000/07/12 16:21:44 simonmar Exp $
 
 The lexer.
 
@@ -42,6 +42,10 @@ The lexer.
 >       | TokSpecId_Name        -- %name
 >       | TokSpecId_Lexer       -- %lexer
 >       | TokSpecId_Monad	-- %monad
+>       | TokSpecId_Nonassoc    -- %nonassoc
+>       | TokSpecId_Left        -- %left
+>       | TokSpecId_Right       -- %right
+>       | TokSpecId_Prec        -- %prec
 >       | TokCodeQuote          -- stuff inside { .. }
 >       | TokColon              -- :
 >       | TokSemiColon          -- ;
@@ -99,6 +103,14 @@ followed by a special identifier.
 > 		cont (TokenKW TokSpecId_Monad) rest
 > 	'l':'e':'x':'e':'r':rest ->
 > 		cont (TokenKW TokSpecId_Lexer) rest
+>       'n':'o':'n':'a':'s':'s':'o':'c':rest ->
+>               cont (TokenKW TokSpecId_Nonassoc) rest
+>       'l':'e':'f':'t':rest ->
+>               cont (TokenKW TokSpecId_Left) rest
+>       'r':'i':'g':'h':'t':rest ->
+>               cont (TokenKW TokSpecId_Right) rest
+>       'p':'r':'e':'c':rest ->
+>               cont (TokenKW TokSpecId_Prec) rest
 >	_ -> lexError ("unrecognised directive: %" ++ 
 >				takeWhile (not.isSpace) s) s
 

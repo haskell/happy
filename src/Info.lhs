@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Info.lhs,v 1.8 1999/03/11 17:15:58 simonm Exp $
+$Id: Info.lhs,v 1.9 2000/07/12 16:21:44 simonmar Exp $
 
 Generating info files.
 
@@ -101,7 +101,7 @@ Produce a file of parser information, useful for debugging the parser.
 >	. interleave "\n" (zipWith showProduction prods [ 0 :: Int .. ])
 >	. str "\n"
   
->   showProduction (nt, toks, sem) i
+>   showProduction (nt, toks, sem, prec) i
 > 	= ljuststr 50 (
 >	  str "\t"
 >	. showName nt
@@ -133,7 +133,7 @@ Produce a file of parser information, useful for debugging the parser.
 >		. interleave " " (map showName afterDot))
 >	. str "   (rule " . shows rule . str ")"
 >	where
->		(nt, toks, sem) = lookupProd rule
+>		(nt, toks, sem, prec) = lookupProd rule
 >		(beforeDot, afterDot) = splitAt dot toks
 
 >   showAction (t, LR'Fail)
@@ -144,12 +144,14 @@ Produce a file of parser information, useful for debugging the parser.
 >	. showAction' act
 >	. str "\n"
 
->   showAction' (LR'Shift n)
+>   showAction' LR'MustFail
+>   	= str "fail"
+>   showAction' (LR'Shift n _)
 >   	= str "shift, and enter state "
 >	. shows n
 >   showAction' LR'Accept
 >   	= str "accept"
->   showAction' (LR'Reduce n)
+>   showAction' (LR'Reduce n _)
 >   	= str "reduce using rule "
 >	. shows n
 >   showAction' (LR'Multiple as a)

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Grammar.lhs,v 1.12 1999/05/14 14:26:15 simonm Exp $
+$Id: Grammar.lhs,v 1.13 2000/07/12 16:21:44 simonmar Exp $
 
 The Grammar data type.
 
@@ -14,7 +14,8 @@ Here is our mid-section datatype
 >	Production,  Productions, Terminals, NonTerminals,
 >	Grammar(..), mangler, fixDir, getTerm, checkRules, 
 >	
->	LRAction(..), ActionTable, Goto(..), GotoTable,
+>	LRAction(..), ActionTable, Goto(..), GotoTable, Priority(..),
+>       Assoc(..),
 >	
 >	errorName, errorTok, startName, startTok, dummyTok,
 >	firstNT, eofName, epsilonTok
@@ -40,7 +41,7 @@ ProduceCode.lhs and the various HappyTemplates.
 
 > type Name = Int
 
-> type Production = (Name,[Name],String)
+> type Production = (Name,[Name],String,Priority)
 > type Productions = Array Int Production
 > type Terminals = [Name]
 > type NonTerminals = [Name]
@@ -56,11 +57,28 @@ ProduceCode.lhs and the various HappyTemplates.
 >		types 		:: Array Int (Maybe String),
 >               token_names 	:: Array Int String,
 >		first_term 	:: Name,
->               eof_term	:: Name
+>               eof_term	:: Name,
+>               priorities      :: [(Name,Priority)]
 >	}
 
-> getNames :: Grammar -> [Name]
-> getNames  (Grammar {terminals = ts, non_terminals = nts}) = ts ++ nts
+> data Assoc = LeftAssoc | RightAssoc | None
+> data Priority = No | Prio Assoc Int
+
+> instance Eq Priority where
+>   No == No = True
+>   Prio _ i == Prio _ j = i == j
+>   _ == _ = False
+
+> instance Ord Priority where
+>   No <= _ = True
+>   Prio _ _ <= No = False
+>   Prio _ i <= Prio _ j = i <= j
+
+> mkPrio :: Int -> Directive a -> Priority
+> mkPrio i (TokenNonassoc _) = Prio None i
+> mkPrio i (TokenRight _) = Prio RightAssoc i
+> mkPrio i (TokenLeft _) = Prio LeftAssoc i
+> mkPrio i _ = error "Panic: impossible case in mkPrio"
 
 #ifdef DEBUG
 
@@ -108,7 +126,7 @@ We are allowed to use the facts that the start symbol is always
 non-terminal zero, and the first non-terminal in the grammar file is
 non-terminal 1.
 
-This bit is a real mess, mainly because of the error mesasge support.
+This bit is a real mess, mainly because of the error message support.
 
 > m `thenE` k 
 > 	= case m of
@@ -141,6 +159,20 @@ This bit is a real mess, mainly because of the error mesasge support.
 >	l_nt     = length nts
 >	l_t      = length term
 
+>       priodir = zip [1..] (getPrios dirs)
+>
+>       prios = [ (name,mkPrio i dir)
+>               | (i,dir) <- priodir
+>               , nm <- AbsSyn.getNames dir
+>		, name <- [a|(a,r)<-env,r==nm]
+>		]
+
+>       prioByString = [ (name, mkPrio i dir)
+>                      | (i,dir) <- priodir
+>                      , name <- AbsSyn.getNames dir
+>                      ]
+
+
 >       mapToName str = 
 >             case [ a | (a,r) <- env, r == str ] of
 >                [a] -> Succeeded a
@@ -150,11 +182,28 @@ This bit is a real mess, mainly because of the error mesasge support.
 > 	transRule (nt, prods, ty)
 >   	  = mapToName nt				       `thenE` \nt' ->
 >	    foldr (mightFails transProds) (Succeeded []) prods `thenE` \prods ->
->	    Succeeded [ (nt', lhs, code) | (lhs, code) <- prods ]
+>	    foldr (mightFails (finishRule nt')) (Succeeded []) prods
+>
+>	finishRule nt (lhs,code,prec)
+>	  = case mkPrec lhs prec of
+>		Left s  -> Failed ["Undeclared precedence token: " ++ s]
+>		Right p -> Succeeded (nt, lhs, code, p)
+>
+>       mkPrec :: [Name] -> Maybe String -> Either String Priority
+>       mkPrec lhs prio =
+>             case prio of
+>               Nothing -> case filter (flip elem term') lhs of
+>                            [] -> Right No
+>                            xs -> case lookup (last xs) prios of
+>                                    Nothing -> Right No
+>                                    Just p  -> Right p
+>               Just s -> case lookup s prioByString of
+>                           Nothing -> Left s
+>                           Just p -> Right p
 
-> 	transProds (lhs, code, line)
+> 	transProds (lhs, code, line, prec)
 >   	  = case foldr (mightFails mapToName) (Succeeded []) lhs of
->   		Succeeded lhs' -> Succeeded (lhs', code)
+>   		Succeeded lhs' -> Succeeded (lhs', code, prec)
 >		Failed s -> Failed (map (("line " ++ show line ++ ": ") ++) s)
 
 >	in
@@ -170,10 +219,10 @@ This bit is a real mess, mainly because of the error mesasge support.
 >	in
 
 >       foldr (mightFails (fixDir mapToName)) (Succeeded []) dirs
->							`thenE` \dirs' ->	
+>							`thenE` \dirs' ->
 
 >	let
->	   ass = combinePairs [ (a,no) | ((a,_,_),no) <- zip prod [0..] ]
+>	   ass = combinePairs [ (a,no) | ((a,_,_,_),no) <- zip prod [0..] ]
 >	   arr = array (startTok, length ass - 1 + startTok) ass
 
 >	   first_term = head term'
@@ -182,7 +231,8 @@ This bit is a real mess, mainly because of the error mesasge support.
 >	   lookup_prods x | x >= startTok && x < first_term = arr ! x
 >	   lookup_prods _ = error "looking up production failure"
 >
->	   prod = (startTok, [firstNT], "no code") : concat rules'
+>	   prod = (startTok, [firstNT], "no code", No) : concat rules'
+
 >	in
 
 >	Succeeded (Grammar {
@@ -195,7 +245,8 @@ This bit is a real mess, mainly because of the error mesasge support.
 >		types			= tys,
 >               token_names		= env_array,
 >		first_term		= first_term,
->               eof_term		= last term'
+>               eof_term		= last term',
+>               priorities              = prios
 >	})
 
 For combining actions with possible error messages.
@@ -223,6 +274,9 @@ This is horrible.
 >			(Succeeded []) stuff `thenE` \stuff' ->
 >	  Succeeded (TokenSpec stuff')
 > fixDir f (TokenMonad ty tn rt) = Succeeded (TokenMonad ty tn rt)
+> fixDir f (TokenNonassoc str) = Succeeded (TokenNonassoc str)
+> fixDir f (TokenRight str)    = Succeeded (TokenRight str)
+> fixDir f (TokenLeft str)     = Succeeded (TokenLeft str)
 
 > getTerm (TokenSpec stuff) = map fst stuff
 > getTerm _                 = []
@@ -240,10 +294,11 @@ So is this.
 %-----------------------------------------------------------------------------
 \subsection{Internal Reduction Datatypes}
 
-> data LRAction = LR'Shift Int          -- state number
->               | LR'Reduce Int         -- rule no
+> data LRAction = LR'Shift Int Priority -- state number and priority
+>               | LR'Reduce Int Priority-- rule no and priority
 >               | LR'Accept             -- :-)
 >               | LR'Fail               -- :-(
+>               | LR'MustFail           -- :-(
 >		| LR'Multiple [LRAction] LRAction	-- conflict
 >       deriving(Eq
 
@@ -258,8 +313,8 @@ So is this.
 > type ActionTable = Array Int{-state-} (Array Int{-terminal#-} LRAction)
 
  instance Text LRAction where 
-   showsPrec _ (LR'Shift i)    = showString ("s" ++ show i)
-   showsPrec _ (LR'Reduce i) 
+   showsPrec _ (LR'Shift i _)  = showString ("s" ++ show i)
+   showsPrec _ (LR'Reduce i _) 
        = showString ("r" ++ show i)
    showsPrec _ (LR'Accept)     = showString ("acc")
    showsPrec _ (LR'Fail)       = showString (" ")
