@@ -24,7 +24,27 @@ TARGETHIDDEN=General Application Destination
 
 [FileGroups]
 group0=Help Files
-group1=Program Executable Files
+group1=HTML Help Files
+group2=Program Executable Files
+
+[HTML Help Files]
+LINKTYPE=Dynamic Link
+INFOTYPE=Standard
+UNINSTALLABLE=Yes
+FILETYPE=No
+SELFREGISTERING=No
+POTENTIALLY=No
+COMPRESS=Yes
+OPERATINGSYSTEM=
+LANGUAGE=
+COMMENT=
+COMPRESSDLL=
+HTTPLOCATION=
+FTPLOCATION=
+MISC=
+INSTALLATION=ALWAYSOVERWRITE
+TARGET=<TARGETDIR>
+TARGETHIDDEN=General Application Destination
 
 [Program Executable Files]
 LINKTYPE=Static Link

@@ -296,7 +296,6 @@ function ProcessAfterDataMove()
   // Our task is made considerably harder since the
   // the free version of InstallShield doesn't support
   // functions such as StrGetTokens() or ParsePath().
-  //
 
   MyParsePath ( szPath );
   nResult = ListGetFirstString ( listPath, szPathEntry);
@@ -789,8 +788,6 @@ function MyParsePath(szPath)
    listPath = ListCreate( STRINGLIST );
 
    // Man, all I want is map. Please? :-)
-   // Tortuous piece of code to convert backslashes into
-   // forward ones.
    nPos = StrFind ( szPth, ";");
    while ( nPos > 0 )
     StrSub ( szTmp, szPth, 0, nPos);

@@ -32,6 +32,7 @@ _NO_SPLIT=
 _NO_SPLIT_BEFORE=
 VOLATILE=
 filegroup0=Help Files
+filegroup1=HTML Help Files
 HANDLERONInstalling=
 HANDLERONInstalled=
 HANDLERONUnInstalling=

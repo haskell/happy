@@ -15,7 +15,7 @@ SubDir1=lib
 
 [bin]
 fulldirectory=C:\ISRelease\fptools\bin
-file0=C:\TEMP\fptools-happy\fptools\happy\src\happy-1.9
+file0=C:\TEMP\fptools-happy\fptools\happy\src\happy-1.10
 
 [lib]
 fulldirectory=C:\ISRelease\fptools\lib
