@@ -13,6 +13,7 @@ Packager:     simonmar@microsoft.com
 URL:          http://www.haskell.org/happy/
 Source:       http://www.haskell.org/happy/dist/%{version}/happy-%{version}-src.tar.gz
 Summary:      The LALR(1) Parser Generator for Haskell
+BuildRoot:    /var/tmp/%{name}-%{version}-buildroot
 %description
 Happy is a parser generator system for Haskell, similar to the tool `yacc' for
 C. Like `yacc', it takes a file containing an annotated BNF specification of a
@@ -39,7 +40,7 @@ make
 ( cd happy/doc ; make happy.{dvi,ps,html} ; gzip -9 *.dvi *.ps )
 
 %install
-make install
+make prefix=$RPM_BUILD_ROOT%{prefix} install
 
 %files
 %doc happy/ANNOUNCE
