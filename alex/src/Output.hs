@@ -261,7 +261,7 @@ findFreeOffset off check off_arr state = do
   if off == 0 then try_next else do
 
     -- don't use an offset we've used before
-  b <- unsafeRead off_arr off
+  b <- readArray off_arr off
   if b /= 0 then try_next else do
 
     -- check whether the actions for this state fit in the table
