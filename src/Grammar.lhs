@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Grammar.lhs,v 1.20 2003/09/08 11:27:50 simonmar Exp $
+$Id: Grammar.lhs,v 1.21 2003/11/19 14:43:58 simonmar Exp $
 
 The Grammar data type.
 
@@ -379,6 +379,12 @@ So is this.
 >				 []      -> go r ('\'':acc) used
 >				 (c,r):_ -> go r (reverse (show c) ++ acc) used
 >		'\\':'$':r -> go r ('$':acc) used
+>
+>		'$':'>':r -- the "rightmost token"
+>			| arity == 0 -> Failed [ "$> in empty rule" ] 
+>			| otherwise  -> go r (reverse (mkHappyVar arity) ++ acc)
+>					 (arity : used)
+>
 >		'$':r@(i:_) | isDigit i -> 
 >			case reads r :: [(Int,String)] of
 >			  (j,r):_ -> 
