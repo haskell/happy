@@ -33,7 +33,7 @@ Authors:
 %setup -n happy-%{version}
 
 %build
-autoconf
+test -f configure || autoreconf
 ./configure --prefix=%{prefix}
 make
 ( cd happy/doc ; make happy.{dvi,ps,html} ; gzip -9 *.dvi *.ps )
