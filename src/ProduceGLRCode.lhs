@@ -6,7 +6,7 @@ This module is designed as an extension to the Haskell parser generator Happy.
 (c) University of Durham, Paul Callaghan 2004
 	-- extension to semantic rules, and various optimisations
 
-$Id: ProduceGLRCode.lhs,v 1.9 2004/11/08 15:53:31 paulcc Exp $
+$Id: ProduceGLRCode.lhs,v 1.10 2004/12/03 17:11:54 paulcc Exp $
 
 %-----------------------------------------------------------------------------
 
@@ -17,6 +17,7 @@ $Id: ProduceGLRCode.lhs,v 1.9 2004/11/08 15:53:31 paulcc Exp $
 >                       , Options
 >                       ) where
 
+> import IOExts
 > import Version ( version )
 > import GenUtils ( fst3, thd3, mapDollarDollar )
 > import GenUtils ( str, char, nl, brack, brack', interleave, maybestr )
@@ -168,9 +169,9 @@ the driver and data strs (large template).
 >     . nl
 >     . sem_def          .nl
 >     . nl
->     . mkSemObjects  options (monad g) sem_info      .nl
+>     . mkSemObjects  options (monad_sub g) sem_info      .nl
 >     . nl
->     . mkDecodeUtils options (monad g) sem_info      .nl 
+>     . mkDecodeUtils options (monad_sub g) sem_info      .nl 
 >     . nl
 >     . str ("type UserDefTok = " ++ token_type g)    .nl
 >     . nl
@@ -227,7 +228,9 @@ that will be used for them in the GLR parser.
 
 > mkGSymMap :: Grammar -> [(Name,String)]
 > mkGSymMap g
->  = 	[ (i, prefix ++ (token_names g) ! i) 
+>  = 	[ -- (errorTok, prefix ++ "Error") 
+>       ]
+>    ++ [ (i, prefix ++ (token_names g) ! i) 
 >	| i <- user_non_terminals g ]	-- Non-terminals
 >    ++ [ (i, "HappyTok (" ++ mkMatch tok ++ ")")
 >	| (i,tok) <- token_specs g ]	-- Tokens (terminals)
@@ -263,6 +266,9 @@ It also shares identical reduction values as CAFs
 >    = filter (/="") $ map (mkLine i) (assocs arr)
 >
 >   mkLine state (symInt,action)
+>    | symInt == errorTok 	-- skip error productions
+>    = ""			-- NB see ProduceCode's handling of these
+>    | otherwise
 >    = case action of
 >       LR'Fail     -> ""
 >       LR'MustFail -> ""
@@ -382,7 +388,7 @@ Creating a type for storing semantic rules
 > mkGSemType (TreeDecode,_,_) g 
 >  = (def, map snd syms)
 >  where
->   mtype s = case monad g of
+>   mtype s = case monad_sub g of
 >               Nothing       -> s
 >               Just (ty,_,_) -> ty ++ ' ' : brack s ""
 
@@ -479,6 +485,11 @@ Creates the appropriate semantic values.
  - for tree-decode, these are the code abstracted over the children's values
 
 > type MonadInfo = Maybe (String,String,String)
+> monad_sub :: Grammar -> MonadInfo
+> monad_sub g = monad g
+> -- monad_sub g = fmap (\(_,_,ty,bd,ret) -> (ty,bd,ret)) $ monad g
+>    -- TMP: ignore the monad context info
+
 > mkSemObjects :: Options -> MonadInfo -> SemInfo -> ShowS 
 > mkSemObjects (LabelDecode,filter_opt,_) ignore_monad_info sem_info
 >  = interleave "\n" 
@@ -508,10 +519,11 @@ Creates the appropriate semantic values.
 >      . str (nodes filter_opt)
 >    | (ty, c_name, mask, prod_info) <- sem_info
 >    , (ij, (pats,code), _) <- prod_info 
+>    , let indent c = init $ unlines $ map (replicate 2 '\t'++) $ lines c
 >    , let mcode = case monad_info of
 >                    Nothing -> code
 >                    Just (_,_,rtn) -> case code of 
->                                        '%':code -> code 
+>                                        '%':code -> "\n" ++ indent code
 >                                        other    -> rtn ++ " (" ++ code ++ ")"
 >    , let sem = foldr (\v t -> mk_lambda pats (v + 1) "" ++ t) mcode mask
 >    , let pat | null mask = ""
@@ -628,8 +640,8 @@ form the various monad-related defs.
 >    , "happy_ap = ($)"
 >    , "happy_return = id"]
 > monad_defs (Just (ty,tn,rtn)) 
->  = [ "happy_join x = " ++ tn ++ " x id"
->    , "happy_ap f a = " ++ tn ++ " f (\\f -> " ++ tn ++ " a (\\a -> " ++ rtn ++ "(f a)))"
+>  = [ "happy_join x = (" ++ tn ++ ") x id"
+>    , "happy_ap f a = (" ++ tn ++ ") f (\\f -> (" ++ tn ++ ") a (\\a -> " ++ rtn ++ "(f a)))"
 >    , "type Decode_Result a = " ++ brack ty " a"
 >    , "happy_return = " ++ rtn ++ " :: a -> Decode_Result a"
 >    ]
