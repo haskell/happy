@@ -1,6 +1,4 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.57 2005/01/14 15:01:40 simonmar Exp $
-
 The main driver.
 
 (c) 1993-2003 Andy Gill, Simon Marlow
@@ -21,7 +19,7 @@ GLR amendments (c) University of Durham, Ben Medlock 2001
 > import ProduceGLRCode 
 > import Info (genInfoFile)
 > import Target (Target(..))
-> import GetOpt
+> import System.Console.GetOpt
 > import Monad ( liftM )
 > import System
 > import Char
