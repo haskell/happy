@@ -1,0 +1,65 @@
+1. Add in a simple lexical analyser
+
+2. Add in choice for lexical analyis
+
+%lexerstyle original		-- the default
+%lexerstyle auto	
+%lexerstyle monadic
+
+---[1] :: [Token] -> a ---------------------------------------------------------
+
+ As things are now :-(
+	
+---[2] :: String -> a ----------------------------------------------------------
+
+ Using the special lexer, as defined using
+
+  %macro letter		( [A-Z][a-z] )
+  %autotoken
+	id		( {letter}({digit}|{letter}) )
+
+---[3] :: ParseM Token -> ParseM a ---------------------------------------------
+
+    This presumes the exsitance of the defintions:
+
+	type ParseM a b c = a -> ParseR a b
+	data ParseR a b c = ParseSucc a b | ParseFail c
+	thenPM :: a -> ParseM a b c
+	returnPM :: ParseM a b c -> (a -> ParseM d b c) -> ParseM d b c -> 
+
+    and is intended for *serious* parsers, like our Haskell parser.
+
+
+    You need to give a %eof 
+
+--------------------------------------------------------------------------------
+
+3. Add a new style of  %name
+
+OLD:
+
+	%name foo
+
+NEW:
+
+	%multiname 
+		foo Exp		-- means that Exp is the parsed object, rather
+				-- than the default, first one
+	
+		bar Exp'	-- while bar is another parser
+
+
+Lets you have several parsers in one world.
+
+-----------------------------------------------------------------------------
+
+4. Add error recovery
+
+******************************************************************************
+
+ToAdd:
+
+	--magic-name Sad
+
+	allows other names to be used as the *Magic* name, currently
+	only Happy.
