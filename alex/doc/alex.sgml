@@ -292,4 +292,51 @@ sc		-> "0" | ide
 
 </section>
 
+<section id="setsOfChars">
+<title>Sets of Characters</title>
+A set is a special form of regular expression that matches strings of length
+one.  Here Alex differs markedly from Lex.
+
+
+<programlisting>
+set		-> set_0 [ @#@ set_0 ]
+set_0		-> @~@ set_0
+		|  chr [ @-@ chr ]
+		|  {\sf smac}
+		|  @[@ \{set\} @]@
+		|  {\sf quot}
+chr		-> {\sf ch} | {\sf ech} | {\sf cch}
+</programlisting>
+
+The simplest set, <emph>chr</emph>, contains a single character.  The
+letters and digits represent themselves while symbolic characters can
+be escaped with a <literal>^</literal>.  Any character can be
+generated with a <literal>^</literal> followed by its decimal code,
+though this is not portable.
+
+A range of characters can be expressed by separating the characters
+with a <literal>-</literal>; all the characters with codes in the
+given range are included in the set.  Character ranges can also be
+non-portable.
+
+The union of a number of sets may be taken by enumerating them in
+square brackets <literal>([...])</literal>, the complement of a set
+can be taken with <literal>~</literal> and the difference of two sets
+can be taken with the <literal>#</literal> operator.  Finding a good
+use for <literal>[]</literal> is left as an exercise for the devious
+reader.
+
+A quoted set of characters can be expressed by enclosing it in quotes
+(<literal>`...'</literal>).  Note that the quoted set starts with a
+back-quote and finishes with a single-quote.  A <literal>'</literal>
+character may not be included in such sets.
+
+A set macro is expressed by a <literal>.</literal> or by a
+<literal>^</literal> followed by a letter.  The standard macros are
+listed in Figure~3.  Most of them consist of bindings for the Haskell
+@\@$\langle letter \rangle$ character escape codes.  The
+<literal>^w</literal> and <literal>^p</literal> correspond to the
+prelude @isSpace@ and @isPrint@ prelude functions.
+
+
 </chapter> </book>
