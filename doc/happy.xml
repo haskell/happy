@@ -1726,6 +1726,18 @@ close : '}'                  { () }
 	program. 
         </para>
         <para>
+	An alternative to using Happy directly is to use the 
+	<ulink url="http://www.cs.chalmers.se/~markus/BNFC/">
+	<application>BNF Converter</application></ulink> tool by
+	Markus Forsberg, Peter Gammie, Michael Pellauer and Aarne Ranta.
+	This tool creates an abstract syntax, grammar, pretty-printer
+	and other useful items from a single grammar formalism, thus
+	it saves a lot of work and improves maintainability. 
+	The current output of BNFC can be used with GLR mode now
+	with just a few small changes, but from January 2005 we expect
+	to have a fully-compatible version of BNFC. 
+        </para>
+        <para>
 	Most of the features of <application>Happy</application> still
 	work, but note the important points below.
         </para>
