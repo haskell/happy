@@ -33,7 +33,8 @@ JMAKE_DEFINES =
 
 JMAKESRC = $(TOP)/mkworld
 
-JMAKE_CMD = $(NEWTOP)$(JMAKE) -I$(NEWTOP)$(JMAKESRC) $(BOOTSTRAPCFLAGS) -DTopDir=$(TOP) -DCurDir=$(CURRENT_DIR) $(BOOT_DEFINES)
+# The -Imkworld picks up Happy-specific Jmake files
+JMAKE_CMD = $(NEWTOP)$(JMAKE) -I$(NEWTOP)$(JMAKESRC) -Imkworld $(BOOTSTRAPCFLAGS) -DTopDir=$(TOP) -DCurDir=$(CURRENT_DIR) $(BOOT_DEFINES)
 
 ###########################################################################
 
