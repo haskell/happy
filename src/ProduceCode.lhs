@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.50 2001/03/30 14:15:12 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.51 2001/04/03 13:00:28 simonmar Exp $
 
 The code generator.
 
@@ -259,17 +259,17 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >	= mkReductionHdr (showInt lt) "happyMonadReduce "
 >	. char '(' . interleave " `HappyStk`\n\t" tokPatterns
 >	. str "happyRest)\n\t = happyThen ("
->	. tokLets
->	. str code'
+>	. tokLets (str code')
 >	. str "\n\t) (\\r -> happyReturn (" . this_absSynCon . str " r))"
 
 >     | specReduceFun lt
 >	= mkReductionHdr (shows lt) "happySpecReduce_"
 >	. interleave "\n\t" tokPatterns
 >	. str " =  "
->	. tokLets
->	. this_absSynCon . str "\n\t\t " 
->	. char '(' . str code' . str "\n\t)"
+>	. tokLets (
+>	    this_absSynCon . str "\n\t\t " 
+>	    . char '(' . str code' . str "\n\t)"
+>	  )
 >	. (if coerce || null toks || null vars_used then
 >		  id
 >	   else
@@ -282,8 +282,9 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >	. char '(' . interleave " `HappyStk`\n\t" tokPatterns
 >	. str "happyRest)\n\t = "
 >	. tokLets
->	. this_absSynCon . str "\n\t\t " 
->	. char '(' . str code'. str "\n\t) `HappyStk` happyRest"
+>	   ( this_absSynCon . str "\n\t\t " 
+>	   . char '(' . str code'. str "\n\t) `HappyStk` happyRest"
+>	   )
 
 >       where 
 >		isMonadProd = case code of ('%' : code) -> True
@@ -320,17 +321,16 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >				   . mkHappyTerminalVar n t
 >				   . char ')'
 >		
->		tokLets 
->		   | coerce && not (null lines) = str "let {\n\t" 
->				   		. interleave "; \n\t" lines
->				   		. str "} in\n\t\t"
->		   | otherwise = id
+>		tokLets code
+>		   | coerce && not (null cases) 
+>			= interleave "\n\t" cases
+>			. code . str (take (length cases) (repeat '}'))
+>		   | otherwise = code
 >
->		   where lines = [ tokPattern n t . str " = " . 
->				   extract t . strspace .
->				   mkDummyVar n
->				 | (n,t) <- zip [1..] toks,
->				   n `elem` vars_used ]
+>		cases = [ str "case " . extract t . strspace . mkDummyVar n
+>			. str " of { " . tokPattern n t . str " -> "
+>			| (n,t) <- zip [1..] toks,
+>			  n `elem` vars_used ]
 >
 >		extract t | t >= firstStartTok && t < fst_term = mkHappyOut t
 >			  | otherwise			  = str "happyOutTok"
