@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.62 2004/10/28 00:32:06 paulcc Exp $
+$Id: ProduceCode.lhs,v 1.63 2004/11/08 15:02:19 simonmar Exp $
 
 The code generator.
 
@@ -102,8 +102,10 @@ Produce the complete output file.
 >	 	action goto top_options module_header module_trailer 
 >		target coerce ghc strict
 >     =	( top_opts
+>	. maybestr module_header . nl
 >	. str comment
->	. maybestr real_header . nl
+>		-- comment goes *after* the module header, so that we
+>		-- don't screw up any OPTIONS pragmas in the header.
 > 	. produceAbsSynDecl . nl
 >    	. produceTypes
 >	. produceActionTable target
@@ -114,33 +116,16 @@ Produce the complete output file.
 >	. produceStrict strict
 >	. maybestr module_trailer . nl
 >	) ""
->   where
->     -- combine happy-introduced OPTIONS with ones in
->     -- in the grammar. Brittle, only works if the OPTIONS
->     -- appear at the top.
+>  where
+>    n_starts = length starts
+>
 >    top_opts = 
 >      case top_options of
 >          "" -> str ""
->          _  -> str (unwords [ opt_prefix
+>          _  -> str (unwords [ "{-# OPTIONS"
 >                             , top_options
->                             , if not (null header_opts)
->                                then header_opts 
->                                else "#-}"
+>                             , "#-}"
 >                             ]) . nl
->
->    (header_opts,real_header) = 
->       case module_header of
->         Nothing -> ("", module_header)
->         Just s 
->          | opt_prefix `isPrefixOf` s -> 
->              case break (=='\n') (drop (length opt_prefix) s) of
->                (_,[])  -> ("", module_header)
->                (xs,ys) -> (xs, Just ys)
->          | otherwise ->   ("", module_header)
->
->    opt_prefix = "{-# OPTIONS"
-
->    n_starts = length starts
 
 %-----------------------------------------------------------------------------
 Make the abstract syntax type declaration, of the form:
