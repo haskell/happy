@@ -1561,7 +1561,7 @@ close : '}'                  { () }
     which allows <application>Happy</application> to parse ambiguous 
     grammars and produce useful results.
     This extension is triggered with the <option>--glr</option> flag, 
-    which causes <application>Happy</application>,
+    which causes <application>Happy</application>
     to use a different driver for the LALR(1) parsing
     tables. The result of parsing is a structure which encodes compactly
     <emphasis>all</emphasis> of the possible parses. 
@@ -1576,6 +1576,11 @@ close : '}'                  { () }
     extended and improved by Callaghan. 
     Bug reports, comments, questions etc should be sent to 
     <email>P.C.Callaghan@durham.ac.uk</email>. 
+    Further information can be found on Callaghan's
+    <ulink url="http://www.dur.ac.uk/p.c.callaghan/happy-glr">GLR parser
+    page</ulink>.
+
+	
     </para>
 
     <sect1 id="sec-glr-intro">
@@ -1660,7 +1665,8 @@ close : '}'                  { () }
       running the example will produce a file which can be viewed with
       the <emphasis>daVinci</emphasis> graph visualization tool.
       (See <ulink url="http://www.b-novative.com/products/daVinci/daVinci.html"/>
-       for more information. It is free for academic use.)  
+       for more information. Educational use licenses are currently 
+	available without charge.)  
       </para>
 
       <para>
@@ -1780,7 +1786,7 @@ close : '}'                  { () }
 	       (see <xref linkend="sec-glr-semantics-tree"/>) can use the
 	       information given in the <literal>%monad</literal> 
 	       declaration to monadify the decoding process. 
-	       This is explained in more detail at
+	       This is explained in more detail in
 	       <xref linkend="sec-glr-semantics-tree-monad"/>.
 	       </para>
 	     </listitem>
@@ -1920,10 +1926,10 @@ close : '}'                  { () }
         </para>
         <para>
         You can also use the <option>--ghc</option> flag to trigger certain
-	<application>ghc</application>-specific optimizations. At present,
+	<application>GHC</application>-specific optimizations. At present,
 	this just causes use of unboxed types in the tables and in some key
 	code. 
-	Using this flag causes relevant <application>ghc</application>
+	Using this flag causes relevant <application>GHC</application>
 	option pragmas to be inserted into the generated code, so you shouldn't
 	have to use any strange flags (unless you want to...).
         </para>
@@ -2177,12 +2183,13 @@ close : '}'                  { () }
       <sect2 id="sec-glr-misc-graphs">
         <title>Viewing forests as graphs</title>
         <para>
-	If you run the examples with <application>ghc</application>, each
+	If you run the examples with <application>GHC</application>, each
 	run will produce a file <literal>out.daVinci</literal>. This is a
 	graph in the format expected by the <emphasis>daVinci</emphasis> 
 	graph visualization tool. 
 	(See <ulink url="http://www.b-novative.com/products/daVinci/daVinci.html"/>
-	for more information. It is free for academic use.) 
+	for more information. Educational use licenses are currently
+	available without charge.) 
         </para>
 	<para>
 	We highly recommend looking at graphs of parse results - it really 
@@ -2350,7 +2357,7 @@ close : '}'                  { () }
 	<para>
 	The solution to this is not surprising. Problematic recursions 
 	are detected as zero-span reductions in a state which has a 
-	<literal>goto</literal> table looping to itself. A special 
+	<literal>goto</literal> table entry looping to itself. A special 
 	symbol is pushed to the stack on the first such reduction, 
 	and such reductions are done at most once for any token 
 	alternative for any input position.
@@ -2378,7 +2385,7 @@ close : '}'                  { () }
       </sect2>
 
       <sect2 id="sec-glr-misc-filter">
-        <title>The <option>--filter</option></title>
+        <title>The <option>--filter</option> option</title>
         <para>
 	You might have noticed this GLR-related option. It is an experimental
 	feature intended to restrict the amount of structure retained in the 
@@ -2410,6 +2417,9 @@ close : '}'                  { () }
 	please contact Paul
 	Callaghan. There are some changes I am considering, and some 
 	views and/or encouragement from users will be much appreciated. 
+	Further information can be found on Callaghan's
+	<ulink url="http://www.dur.ac.uk/p.c.callaghan/happy-glr">GLR parser
+	page</ulink>.
         </para>
       </sect2>
 
