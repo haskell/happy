@@ -40,7 +40,7 @@ Authors:
 test -f configure || autoreconf
 ./configure --prefix=%{prefix}
 make
-( cd happy/doc ; make dvi ps html ; gzip -f -9 *.dvi *.ps )
+make html
 
 %install
 make prefix=${RPM_BUILD_ROOT}%{prefix} install
@@ -56,8 +56,6 @@ rm -rf ${RPM_BUILD_ROOT}
 %doc happy/README
 %doc happy/TODO
 %doc happy/doc/happy
-%doc happy/doc/happy.dvi.gz
-%doc happy/doc/happy.ps.gz
 %doc happy/examples
 %{prefix}/bin/happy
 %{prefix}/bin/happy-%{version}
