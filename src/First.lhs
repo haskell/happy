@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: First.lhs,v 1.3 1997/07/16 13:32:33 simonm Exp $
+$Id: First.lhs,v 1.4 1997/08/25 12:31:38 simonm Exp $
 
 Implementation of FIRST
 
@@ -21,7 +21,7 @@ Implementation of FIRST
 >                   h' = f h
 >                 in
 >                    if incEmpty h'
->                    then filterSet (not. isEmpty) h' `union` b
+>                    then filterSet (not. isEmpty) h' `union_Int` b
 >                    else h')
 >        (singletonSet epsilonTok)
 
@@ -55,6 +55,6 @@ Does the Set include the $\epsilon$ symbol ?
 > 	next :: Name -> Set Name
 > 	next t | t >= first_term = singletonSet t
 > 	next n = 
->       	unionManySets 
+>       	foldb union_Int 
 >               	[ joinSymSets fn (snd3 (prodNo rl)) | 
 >				rl <- prodsOfName n ]
