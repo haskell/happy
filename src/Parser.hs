@@ -544,7 +544,7 @@ ourParser = happyParse
 happyError :: P a
 happyError s l = failP (show l ++ ": Parse error\n") s l
 
--- $Id: Parser.hs,v 1.4 1997/03/27 14:41:22 simonm Exp $
+-- $Id: Parser.hs,v 1.5 1997/03/28 14:56:28 simonm Exp $
 
 {-
 	The stack is in the following order throughout the parse:
@@ -596,8 +596,10 @@ happyShift new_state i tk st sts stk =
 -- don't allow reductions when we're in error recovery, because this can
 -- lead to an infinite loop.
 
-happySpecReduce_0 i fn (-1) tk _ (st@(HappyState action):sts) stk
-     = action (-1) (-1) tk st sts stk
+happySpecReduce_0 i fn (-1) tk _ sts stk
+     = case sts of
+	st@(HappyState action):sts -> action (-1) (-1) tk st sts stk
+	_ -> happyError
 happySpecReduce_0 i fn j tk st@(HappyState action) sts stk
      = action i j tk st (st:sts) (fn : stk)
 
