@@ -543,7 +543,7 @@ ourParser = happyParse
 happyError :: P a
 happyError s l = failP (show l ++ ": Parse error\n") s l
 
--- $Id: Parser.hs,v 1.1 1997/02/11 13:12:09 simonm Exp $
+-- $Id: Parser.hs,v 1.1.1.1 1997/02/11 13:12:09 simonm Exp $
 
 happyParse = happyNewToken action_0 [] []
 

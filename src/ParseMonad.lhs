@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ParseMonad.lhs,v 1.1 1997/02/11 13:12:09 simonm Exp $
+$Id: ParseMonad.lhs,v 1.1.1.1 1997/02/11 13:12:09 simonm Exp $
 
 The parser monad.
 

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.1 1997/02/11 13:12:09 simonm Exp $
+$Id: ProduceCode.lhs,v 1.1.1.1 1997/02/11 13:12:09 simonm Exp $
 
 The code generator.
 
