@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.48 2004/05/28 20:17:55 mthomas Exp $
+# $Id: Makefile,v 1.49 2004/08/10 13:53:35 simonmar Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -10,7 +10,7 @@ HC = $(WithHappyHc)
 
 HAPPY    = happy
 
-ifeq "$(TARGETPLATFORM)" "i386-unknown-mingw32"
+ifeq "$(Windows)" "YES"
 HS_PROG_EXT = .exe
 else
 HS_PROG_EXT = .bin
@@ -25,7 +25,7 @@ SRC_HC_OPTS += -cpp -fglasgow-exts -package lang $(HappyHcOpts)
 Parser_HC_OPTS      = -Onot
 Version_HC_OPTS	    = -DHAPPY_VERSION=$(ProjectVersion)
 
-ifeq "$(HOSTPLATFORM)" "i386-unknown-mingw32"
+ifeq "$(Windows)" "YES"
 Main_HC_OPTS += -Dmingw32_HOST_OS=1
 endif
 
@@ -53,7 +53,11 @@ HAPPYLIB=$(FPTOOLS_TOP_ABS)/happy/templates
 HAPPYBIN=$(FPTOOLS_TOP_ABS)/happy/src/$(HS_PROG)
 endif
 
+# The script isn't installed on Windows; we run the binary directly
+ifeq "$(Windows)" "NO"
 INSTALLED_SCRIPT_PROG  = happy-$(ProjectVersion)
+endif
+
 INPLACE_SCRIPT_PROG    = happy-inplace
 
 ifeq "$(INSTALLING)" "1"
