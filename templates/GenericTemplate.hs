@@ -1,4 +1,4 @@
--- $Id: GenericTemplate.hs,v 1.6 2000/08/09 10:01:02 simonmar Exp $
+-- $Id: GenericTemplate.hs,v 1.7 2000/09/04 13:33:43 simonmar Exp $
 
 #ifdef HAPPY_GHC
 #define ILIT(n) n#
@@ -219,15 +219,21 @@ happyGoto action j tk st = action j j tk (HappyState action)
 -- Error recovery (ERROR_TOK is the error token)
 
 -- parse error if we are in recovery and we fail again
-happyFail  ERROR_TOK tk old_st NIL stk =
+happyFail  ERROR_TOK tk old_st _ stk =
 --	trace "failing" $ 
     	happyError
+
+
+{-  We don't need state discarding for our restricted implementation of
+    "error".  In fact, it can cause some bogus parses, so I've disabled it
+    for now --SDM
 
 -- discard a state
 happyFail  ERROR_TOK tk old_st CONS(HAPPYSTATE(action),sts) 
 						(saved_tok : _ : stk) =
 --	trace ("discarding state, depth " ++ show (length stk))  $
 	DO_ACTION(action,ERROR_TOK,tk,sts,(saved_tok:stk))
+-}
 
 -- Enter error recovery: generate an error token,
 --                       save the old token and carry on.
