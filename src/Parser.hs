@@ -1,9 +1,9 @@
+-- parser produced by Happy Version 1.13
+
 module Parser (ourParser,AbsSyn) where
 import ParseMonad
 import AbsSyn
 import Lexer
-
--- parser produced by Happy Version 1.14
 
 data HappyAbsSyn 
 	= HappyTerminal Token
@@ -662,8 +662,6 @@ happyNewToken action sts stk
 	_ -> happyError
 	})
 
-happyError_ tk = happyError
-
 happyThen :: P a -> (a -> P b) -> P b
 happyThen = (thenP)
 happyReturn :: a -> P a
@@ -678,7 +676,7 @@ happySeq = happyDontSeq
 happyError :: P a
 happyError s l = failP (show l ++ ": Parse error\n") s l
 {-# LINE 1 "GenericTemplate.hs" #-}
--- $Id: Parser.hs,v 1.20 2004/12/13 12:19:40 simonmar Exp $
+-- $Id: Parser.hs,v 1.21 2004/12/23 00:02:39 ralf Exp $
 
 {-# LINE 15 "GenericTemplate.hs" #-}
 
@@ -848,7 +846,8 @@ happyGoto action j tk st = action j j tk (HappyState action)
 -- parse error if we are in recovery and we fail again
 happyFail  (1) tk old_st _ stk =
 --	trace "failing" $ 
-    	happyError_ tk
+    	happyError
+
 
 {-  We don't need state discarding for our restricted implementation of
     "error".  In fact, it can cause some bogus parses, so I've disabled it
