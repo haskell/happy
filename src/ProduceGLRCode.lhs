@@ -6,7 +6,7 @@ This module is designed as an extension to the Haskell parser generator Happy.
 (c) University of Durham, Paul Callaghan 2004
 	-- extension to semantic rules, and various optimisations
 
-$Id: ProduceGLRCode.lhs,v 1.6 2004/09/10 06:52:36 paulcc Exp $
+$Id: ProduceGLRCode.lhs,v 1.7 2004/10/27 23:01:58 paulcc Exp $
 
 %-----------------------------------------------------------------------------
 
@@ -459,7 +459,7 @@ TODO: FILTERING: should really GC the dropped ones!
 > mkSemObjects (TreeDecode,filter_opt,_) sem_info
 >  = unlines 
 >  $ [ mkSemFn_Name ij ++ " ns@(" ++ pat ++ "happy_rest) = " 
->      ++ " Branch (" ++ c_name ++ " (" ++ sem ++ "))" 
+>      ++ " Branch (" ++ c_name ++ " (" ++ sem ++ ")) " 
 >      ++ nodes filter_opt
 >    | (ty, c_name, mask, prod_info) <- sem_info
 >    , (ij, (pats,code), _) <- prod_info 
