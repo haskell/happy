@@ -2,6 +2,6 @@
 
 # needs the following variables:
 #	HAPPYLIB
-#	HAPPY
+#	HAPPYBIN
 
-$HAPPY --template $HAPPYLIB $*
+$HAPPYBIN --template $HAPPYLIB $*

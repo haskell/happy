@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.18 1997/10/03 15:15:41 simonm Exp $
+# $Id: Makefile,v 1.19 1997/10/13 08:48:49 simonm Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -48,14 +48,14 @@ boot ::
 ifeq "$(INSTALLING)" "1"
 ifeq "$(BIN_DIST)"   "1"
 HAPPYLIB=$$\"\"libdir/happy
-HAPPY=$$\"\"libexecdir/$(HS_PROG)
+HAPPYBIN=$$\"\"libexecdir/$(HS_PROG)
 else
 HAPPYLIB=$(libdir)/happy
-HAPPY=$(libexecdir)/$(HS_PROG)
+HAPPYBIN=$(libexecdir)/$(HS_PROG)
 endif # BIN_DIST
 else
 HAPPYLIB=$(FPTOOLS_TOP_ABS)/happy/templates
-HAPPY=$(FPTOOLS_TOP_ABS)/happy/src/$(HS_PROG)
+HAPPYBIN=$(FPTOOLS_TOP_ABS)/happy/src/$(HS_PROG)
 endif
 
 SCRIPT_PROG=happy
@@ -64,7 +64,7 @@ INTERP=$(SHELL)
 
 SCRIPT_SUBST_VARS = 	\
 	HAPPYLIB	\
-	HAPPY
+	HAPPYBIN
 
 INSTALL_SCRIPTS += $(SCRIPT_PROG)
 INSTALL_LIBEXECS = $(HS_PROG)
