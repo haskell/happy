@@ -1,4 +1,4 @@
--- $Id: GenericTemplate.hs,v 1.12 2001/06/09 01:29:38 sof Exp $
+-- $Id: GenericTemplate.hs,v 1.13 2001/07/23 23:24:10 ken Exp $
 
 #ifdef HAPPY_GHC
 #define ILIT(n) n#
@@ -114,7 +114,7 @@ happyDoAction i tk st
 
 #ifdef HAPPY_GHC
 indexShortOffAddr (A# arr) off =
-	(i `iShiftL#` 16#) `iShiftRA#` 16#
+	intToInt16# i
   where
 	i = word2Int# ((high `shiftL#` 8#) `or#` low)
 	high = int2Word# (ord# (indexCharOffAddr# arr (off' +# 1#)))
