@@ -765,8 +765,8 @@ Exp   : let var '=' Exp in Exp  { Let $2 $4 $6 }
       grammar, then we would probably give their precedence as:</para>
 
 <programlisting>...
-%nonassoc '>' '&lt;'
 %right in
+%nonassoc '>' '&lt;'
 %left '+' '-'
 %left '*' '/'
 %%
@@ -837,8 +837,8 @@ Exp   : let var '=' Exp in Exp  { Let $2 $4 $6 }
 
 	<para>We can implement this in Happy as follows:</para>
 
-<programlisting>%nonassoc '>' '&lt;'
-%right in
+<programlisting>%right in
+%nonassoc '>' '&lt;'
 %left '+' '-'
 %left '*' '/'
 %left NEG
@@ -2028,6 +2028,34 @@ any projection function.</para>
 
 	<para>Precedence declarations are described in more detail in
 	<xref linkend="sec-Precedences"/>.</para>
+      </sect2>
+      
+      <sect2 id="sec-expect">
+      	<title>Expect declarations</title>
+<programlisting>
+%expect &lt;number&gt;
+</programlisting>
+	<indexterm>
+	  <primary><literal>%expect</literal> directive</primary>
+	</indexterm>
+	
+	<para>(optional) More often than not the grammar you write
+	will have conflicts. These conflicts generate warnings. But
+	when you have checked the warnings and made sure that Happy
+	handles them correctly these warnings are just annoying. The
+	<literal>%expect</literal> directive gives a way of avoiding
+	them. Declaring <literal>%expect
+	<replaceable>n</replaceable></literal> is a way of telling
+	Happy &ldquo;There are exactly <replaceable>n</replaceable>
+	shift/reduce conflicts and zero reduce/reduce conflicts in
+	this grammar. I promise I have checked them and they are
+	resolved correctly&rdquo;.  When processing the grammar, Happy
+	will check the actual number of conflicts against the
+	<literal>%expect</literal> declaration if any, and if there is
+	a discrepancy then an error will be reported.</para>
+	
+	<para>Happy's <literal>%expect</literal> directive works
+	exactly like that of yacc.</para>
       </sect2>
     </sect1>
 
