@@ -5,6 +5,7 @@ import ParseMonad
 import AbsSyn
 import Lexer
 
+
 data HappyAbsSyn 
 	= HappyTerminal Token
 	| HappyErrorToken Int
@@ -637,7 +638,7 @@ happySeq = happyDontSeq
 happyError :: P a
 happyError s l = failP (show l ++ ": Parse error\n") s l
 {-# LINE 1 "GenericTemplate.hs" #-}
--- $Id: Parser.hs,v 1.18 2004/09/02 13:08:15 simonmar Exp $
+-- $Id: Parser.hs,v 1.19 2004/10/06 16:37:48 panne Exp $
 
 {-# LINE 15 "GenericTemplate.hs" #-}
 
