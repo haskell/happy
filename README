@@ -1,7 +1,7 @@
-This is Happy version 1.2.
+This is Happy version 1.3, the parser generator for Haskell 1.4.
 
 The source for Happy is in the subdirectory 'src'.  To install Happy,
-read the instructions in src/Makefile (even if you are using Gofer).
+read the instructions in src/Makefile.
 
 Complete documentation can be found in the directory 'doc', in texinfo,
 postscript, dvi and info formats.
