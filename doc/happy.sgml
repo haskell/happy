@@ -14,7 +14,7 @@
 <date>11 December 1997
 <abstract>
 This document describes Happy, the Haskell Parser Generator, version
-1.5.
+1.6.
 </abstract>
 
 <!-- Table of contents -->
@@ -1049,44 +1049,46 @@ to obtain faster code.  When compiling the resulting Haskell module,
 remember to use ghc with the <tt/-fglasgow-exts/ option, and to add
 the declaration <tt/import GlaExts/ to the module header.
 
-<tag> <tt/-i [ &lt;filename&gt; ] | --info [ &lt;filename&gt; ]/ </tag> <p>
+<tag> <tt/-c | --coerce/ </tag> <p> 
+Use GHC's <tt/unsafeCoerce#/ extension to generate smaller faster
+parsers.  One drawback is that some type safety is lost, which means
+that a parser generated with <tt/-c/ may compile fine but crash at
+run-time.  Be sure to compile your grammar without <tt/-c/ first to
+ensure it is type-correct.
+
+This option quite a significant effect on the performance of the
+resulting parser, but remember that parsers generated this way can
+only be compiled by GHC 3.02.  This option may only be used in
+conjuction with <tt/-g/.
+
+<tag> <tt/-i[&lt;filename&gt;] | --info[=&lt;filename&gt;]/ </tag> <p>
 Directs Happy to produce an info file containing detailed information
 about the grammar, parser states, parser actions, and conflicts.  Info
 files are vital during the debugging of grammars.  The filename
 argument is optional, and if omitted the info file will be written to
 <tt/&lt;file&gt;.info/ (where <tt/&lt;file&gt/; is the input file name
-with any extension removed). Because this filename is optional, watch
-out for:
+with any extension removed). 
 
-<tscreen> <verb>
-happy --info foo.ly
-</verb> </tscreen>
-
-which will use foo.ly as the name of the information file, and
-complain that you have not specified a input file name.  This can be
-solved by using:
-
-<tscreen> <verb>
-happy foo.ly --info
-</verb> </tscreen>
-
-<tag> <tt/-o &lt;filename&gt; | --outfile &lt;filename&gt;/ </tag> <p>
+<tag> <tt/-o &lt;filename&gt; | --outfile=&lt;filename&gt;/ </tag> <p>
 Specifies the destination of the generated parser module.  If omitted,
 the parser will be placed in <tt/&lt;file&gt;.hs/, where <tt/&lt;file&gt;/
 is the name of the input file with any extension removed.
+
+<tag> <tt/-m &lt;name&gt; | --magic-name=&lt;name&gt;/ </tag> <p>
+Happy prefixes all the symbols it uses internally with either
+<tt/happy/ or <tt/Happy/.  To use a different string, for example if
+the use of <tt/happy/ is conflicting with one of your own functions,
+specify the prefix using the <tt/-m/ option.
 
 <tag> <tt/-v | --verbose/ </tag>
 Causes Happy to be more verbose.  At the moment this just prints out the
 copyright message and has no effect on anything else.
 
-<tag> <tt/-1.2/ </tag>
-Instructs Happy to produce a Haskell 1.2-compatible module.  It may be
-used in conjuction with any of the other options. This option will
-almost certainly be removed in the future.
-
-<tag> <tt/--template &lt;directory&gt;/ </tag>
-Instructs Happy to use this directory when looking for the template
-to including in the output.
+<tag> <tt/-t &lt;directory&gt; | --template &lt;directory&gt;/ </tag>
+Instructs Happy to use this directory when looking for template files:
+these files contain the static code that Happy includes in every
+generated parser.  You shouldn't need to use this option if Happy is
+properly configured for your computer.
 
 </descrip>
 
@@ -1346,9 +1348,11 @@ How to make your parser go faster:
 
 <itemize>
 
-<item> If you are using ghc, generate parsers using the <tt/-g/
+<item> If you are using GHC, generate parsers using the <tt/-g/
 option, and compile them using ghc with the <tt/-fglasgow-exts/
-option.  This is worth about 10-20%.
+option.  This is worth about 10-20%.  Use the <tt/-c/ option when you
+are sure your grammar is type-correct: this is worth at least another
+25%, in code size, execution time and space usage.
 
 <item> The lexical analyser is usually the most performance critical
 part of a parser, so it's worth spending some time optimising this.
@@ -1391,6 +1395,9 @@ everything, this one).
 
 <item> GHC versions from around 2.06 onwards are reputedly better at
 compiling Happy-generated parsers.
+
+<item> Using Happy's <tt/-g/ option when generating parsers to be
+compiled with GHC will help considerably.
 
 </itemize>
 
