@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.20 1999/05/14 14:26:16 simonm Exp $
+$Id: ProduceCode.lhs,v 1.21 1999/05/14 15:18:16 simonm Exp $
 
 The code generator.
 
@@ -618,7 +618,7 @@ vars used in this piece of code.
 > mkActionName i		= str "action_" . shows i
 
 > getDefault actions =
->   case [ act | (-1,act@(LR'Reduce{-'-} _)) <- actions ] of
+>   case [ act | (errorTok, act@(LR'Reduce{-'-} _)) <- actions ] of
 >	(act:_) -> act	-- use error reduction if there is one.
 >	[] ->
 >	    case reduces of
