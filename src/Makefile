@@ -1,19 +1,19 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.6 1997/07/08 12:07:25 simonm Exp $
+# $Id: Makefile,v 1.7 1997/09/01 09:59:21 simonm Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
 
 HAPPY    = happy-new
 
+# must compile with GHC 2.xx
 ifeq ($(Ghc2_0),NO)
-HC       = ghc-0.29
-MKDEPENDHS      = $(MKDEPENDHS_1_2)
-else
-MKDEPENDHS      := $(HC)
+HC       = ../../ghc/driver/ghc
 endif
 
-VERSION  = 1.2-alpha
+MKDEPENDHS      := $(HC)
+
+VERSION  = 1.3
 HAPPYLIB = $(FPTOOLS_TOP_ABS)/happy/templates
 
 # Todo: install templates properly, building new Version.hs when
