@@ -294,49 +294,86 @@ sc		-> "0" | ide
 
 <section id="setsOfChars">
 <title>Sets of Characters</title>
-A set is a special form of regular expression that matches strings of length
-one.  Here Alex differs markedly from Lex.
+
+    <para> A set is a special form of regular expression that matches
+    strings of length one.  Here Alex differs markedly from Lex.</para>
 
 
-<programlisting>
-set		-> set_0 [ @#@ set_0 ]
-set_0		-> @~@ set_0
-		|  chr [ @-@ chr ]
-		|  {\sf smac}
-		|  @[@ \{set\} @]@
-		|  {\sf quot}
-chr		-> {\sf ch} | {\sf ech} | {\sf cch}
-</programlisting>
+<programlisting><literal>
+set		-> set<subscript>0</subscript> [ <literal>#</literal> set<subscript>0</subscript> ]
+set<subscript>0</subscript>		-> <literal>~</literal> set_0
+		|  chr [ <literal>-</literal> chr ]
+		|  <varname>smac</varname>
+		|  <literal>[{set}]</literal>
+		|  <varname>quot</varname>
+chr		-> <varname>ch</varname> |<varname> ech</varname> | <varname>cch</varname>
+</literal></programlisting>
 
-The simplest set, <emph>chr</emph>, contains a single character.  The
-letters and digits represent themselves while symbolic characters can
-be escaped with a <literal>^</literal>.  Any character can be
-generated with a <literal>^</literal> followed by its decimal code,
-though this is not portable.
+    <para>The simplest set, <emphasis>chr</emphasis>, contains a
+    single character.  The letters and digits represent themselves
+    while symbolic characters can be escaped with a
+    <literal>^</literal>.  Any character can be generated with a
+    <literal>^</literal> followed by its decimal code, though this is
+    not portable.</para>
 
-A range of characters can be expressed by separating the characters
-with a <literal>-</literal>; all the characters with codes in the
-given range are included in the set.  Character ranges can also be
-non-portable.
+    <para>A range of characters can be expressed by separating the
+    characters with a <literal>-</literal>; all the characters with
+    codes in the given range are included in the set.  Character
+    ranges can also be non-portable.</para>
 
-The union of a number of sets may be taken by enumerating them in
-square brackets <literal>([...])</literal>, the complement of a set
-can be taken with <literal>~</literal> and the difference of two sets
-can be taken with the <literal>#</literal> operator.  Finding a good
-use for <literal>[]</literal> is left as an exercise for the devious
-reader.
+    <para>The union of a number of sets may be taken by enumerating
+    them in square brackets <literal>([...])</literal>, the complement
+    of a set can be taken with <literal>~</literal> and the difference
+    of two sets can be taken with the <literal>#</literal> operator.
+    Finding a good use for <literal>[]</literal> is left as an
+    exercise for the devious reader.</para>
 
-A quoted set of characters can be expressed by enclosing it in quotes
-(<literal>`...'</literal>).  Note that the quoted set starts with a
-back-quote and finishes with a single-quote.  A <literal>'</literal>
-character may not be included in such sets.
+    <para>A quoted set of characters can be expressed by enclosing it
+    in quotes (<literal>`...'</literal>).  Note that the quoted set
+    starts with a back-quote and finishes with a single-quote.  A
+    <literal>'</literal> character may not be included in such
+    sets.</para>
 
-A set macro is expressed by a <literal>.</literal> or by a
-<literal>^</literal> followed by a letter.  The standard macros are
-listed in Figure~3.  Most of them consist of bindings for the Haskell
-@\@$\langle letter \rangle$ character escape codes.  The
-<literal>^w</literal> and <literal>^p</literal> correspond to the
-prelude @isSpace@ and @isPrint@ prelude functions.
+    <para>A set macro is expressed by a <literal>.</literal> or by a
+    <literal>^</literal> followed by a letter.  The standard macros
+    are listed in Figure~3.  Most of them consist of bindings for the
+    Haskell <literal>\&lt;letter></literal> character escape codes.
+    The <literal>^w</literal> and <literal>^p</literal> correspond to
+    the prelude <varname>isSpace</varname> and
+    <varname>isPrint</varname> prelude functions.</para>
 
+
+<programlisting><literal>
+
+  &lt;lls>      ::= a-z		   -- little letters
+  &lt;not_lls>  ::= ~a-z		   -- anything but little letters
+  &lt;ls_ds>    ::= [a-zA-Z0-9]	   -- letters and digits
+  &lt;sym>	     ::= `!@#$'            -- the symbols !, @@, # and $
+  &lt;sym_q_nl> ::= [`!#@$'^'^n]	    -- the above symbols with ' and newline
+  &lt;quotable> ::= ^p#^'		   -- any graphic character except '
+  &lt;del>      ::= ^127		   -- ASCII DEL
+</literal></programlisting>
+
+
+<figure ID="fig-standard-macros" FLOAT="1"><TITLE>The standard macros (for Unix sytems).</TITLE>
+<programlisting><literal>
+	{ ^a = ^7             }	  -- alarm
+	{ ^b = ^8             }	  -- back space
+	{ ^t = ^9             }	  -- form feed
+	{ ^n = ^10            }   -- newline
+	{ ^v = ^11            }	  -- vertical tab
+	{ ^f = ^12            }	  -- form feed
+	{ ^r = ^13            }	  -- carriage return
+	{ ^w = [^t^n^v^f^r^ ] }	  -- white space
+	{ ^p = ^32-^126       }	  -- printable/graphic characters
+	{ .  = ^0-^255 # ^n   }	  -- non-newline characters
+</literal></programlisting>
+</figure>
+</section>
+
+<section id="sec-lexical-syntax">
+<title>Lexical Syntax</title>
+<para>...</para>
+</section>
 
 </chapter> </book>
