@@ -1,4 +1,4 @@
--- $Id: GenericTemplate.hs,v 1.24 2003/06/03 09:41:51 ross Exp $
+-- $Id: GenericTemplate.hs,v 1.25 2004/12/03 09:55:33 simonmar Exp $
 
 #ifdef HAPPY_GHC
 #define ILIT(n) n#
@@ -241,8 +241,7 @@ happyGoto action j tk st = action j j tk (HappyState action)
 -- parse error if we are in recovery and we fail again
 happyFail  ERROR_TOK tk old_st _ stk =
 --	trace "failing" $ 
-    	happyError
-
+    	happyError_ tk
 
 {-  We don't need state discarding for our restricted implementation of
     "error".  In fact, it can cause some bogus parses, so I've disabled it

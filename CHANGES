@@ -1,4 +1,11 @@
 -----------------------------------------------------------------------------
+Changes from version 1.14 to 1.15
+
+	* New %expect directive
+	* the list of tokens passed to happyError now includes the current
+          token (not %lexer).
+
+-----------------------------------------------------------------------------
 Changes from version 1.13 to 1.14
 
 	* New meta-veriable $> represents the rightmost token.
