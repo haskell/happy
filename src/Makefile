@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.42 2001/11/27 04:30:14 sof Exp $
+# $Id: Makefile,v 1.43 2002/02/05 11:20:09 simonmar Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -11,31 +11,11 @@ HC = $(WithHappyHc)
 HAPPY    = happy
 
 HS_PROG = happy.bin
-HS_SRCS = \
-Version.hs \
-GenUtils.lhs \
-Set.lhs \
-IntSet.lhs \
-ParseMonad.lhs \
-Lexer.lhs \
-AbsSyn.lhs \
-Grammar.lhs \
-Parser.hs \
-First.lhs \
-LALR.lhs \
-Target.lhs \
-ProduceCode.lhs \
-Info.lhs \
-GetOpt.lhs \
-Main.lhs 
+EXCLUDED_SRCS = TestLexer.lhs IntSet.lhs
 
 SRC_HC_OPTS += -cpp -fglasgow-exts -package lang $(HappyHcOpts)
 
 Parser_HC_OPTS      = -Onot
-Grammar_HC_OPTS     = -H8m
-LALR_HC_OPTS        = -H12m
-ProduceCode_HC_OPTS = -H16m
-Main_HC_OPTS        = -H10m
 Version_HC_OPTS	    = -DHAPPY_VERSION=$(ProjectVersion)
 
 # This is not a good idea for a source distribution
