@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.29 2000/12/03 16:21:51 simonmar Exp $
+$Id: Main.lhs,v 1.30 2000/12/16 16:13:19 simonmar Exp $
 
 The main driver.
 
@@ -81,6 +81,7 @@ Mangle the syntax into something useful.
 >		Succeeded g -> 
 
 >	let gram@(Grammar { token_specs = token_specs
+>			  , starts = starts
 >			  , eof_term = eof
 >			  })  = g
 >       in
@@ -97,8 +98,11 @@ Mangle the syntax into something useful.
 >	    closures    = sCC "Closures" (precalcClosure0 g)
 >           sets  	= sCC "LR0 Sets" (genLR0items g closures)
 >	    lainfo@(spont,prop) = sCC "Prop" (propLookaheads g sets first)
+>		-- spontaneous EOF lookaheads for each start state & rule...
+>	    start_spont	= [ (start, (start,0), singletonSet eof) 
+>			  | start <- [ 0 .. length starts - 1] ]
 >	    la 		= sCC "Calc" (calcLookaheads (length sets)
->					((0,(0,0),singletonSet eof):spont) prop)
+>					(start_spont ++ spont) prop)
 >	    items2	= sCC "Merge" (mergeLookaheadInfo la sets)
 >           goto   	= sCC "Goto" (genGotoTable g sets)
 >           action 	= sCC "Action" (genActionTable g first items2)
@@ -246,7 +250,7 @@ Find unused rules and tokens
 >	        } = g
 
 >	actions		 = concat (map assocs (elems action_table))
->	start_rules	 = [ 0 .. (length starts) ]
+>	start_rules	 = [ 0 .. (length starts - 1) ]
 >	used_rules       = start_rules ++
 >			   nub [ r | (_,LR'Reduce{-'-} r _) <- actions ]
 >	used_tokens      = errorTok : eof : 
