@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.47 2003/08/27 12:26:08 panne Exp $
+$Id: Main.lhs,v 1.48 2003/09/08 11:26:44 simonmar Exp $
 
 The main driver.
 
@@ -403,8 +403,8 @@ GHC version-dependent stuff in it.
 > importsToInject :: Target -> [CLIFlags] -> String
 > importsToInject tgt cli = "\n" ++ 
 >  	concat [ "import "++s++"\n" 
->	       | s <- array_import ++ debug_imports ]
->	++ glaexts_import
+>	       | s <- array_import ]
+>	++ glaexts_import ++ debug_imports
 >   where
 >	glaexts_import | OptGhcTarget `elem` cli    = import_glaexts
 >		       | otherwise                  = ""
@@ -412,7 +412,7 @@ GHC version-dependent stuff in it.
 >	array_import   | tgt == TargetArrayBased   = ["Array"]
 >		       | otherwise                 = []
 >
->	debug_imports  | OptDebugParser `elem` cli = ["IO", "IOExts"]
+>	debug_imports  | OptDebugParser `elem` cli = import_debug
 >		       | otherwise		   = []
 
 CPP is turned on for -fglasogw-exts, so we can use conditional compilation:
@@ -421,6 +421,15 @@ CPP is turned on for -fglasogw-exts, so we can use conditional compilation:
 > 		   \import GHC.Exts\n\ 
 >		   \#else\n\ 
 >		   \import GlaExts\n\ 
+>		   \#endif\n"
+
+> import_debug = "#if __GLASGOW_HASKELL__ >= 503\n\ 
+> 		   \import System.IO\n\ 
+> 		   \import System.IO.Unsafe\n\ 
+> 		   \import Debug.Trace\n\ 
+>		   \#else\n\ 
+>		   \import IO\n\ 
+>		   \import IOExts\n\ 
 >		   \#endif\n"
 
 ------------------------------------------------------------------------------
