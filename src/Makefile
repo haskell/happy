@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.52 2004/08/12 11:55:27 simonmar Exp $
+# $Id: Makefile,v 1.53 2004/08/31 12:44:08 simonmar Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -52,7 +52,7 @@ EXTRA_SRCS += $(VERSION_HS)
 
 boot :: $(VERSION_HS)
 
-Version.hs : ../mk/version.mk
+Version.hs : $(TOP)/mk/version.mk
 	@$(RM) -f $(VERSION_HS)
 	@echo "Creating $(VERSION_HS) ... "
 	@echo "module Version where" >>$(VERSION_HS)
