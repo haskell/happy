@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.5 1997/06/09 22:48:32 sof Exp $
+# $Id: Makefile,v 1.6 1997/07/08 12:07:25 simonm Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -13,8 +13,11 @@ else
 MKDEPENDHS      := $(HC)
 endif
 
-VERSION  = 1.1
+VERSION  = 1.2-alpha
 HAPPYLIB = $(FPTOOLS_TOP_ABS)/happy/templates
+
+# Todo: install templates properly, building new Version.hs when
+# 'make install' is requested.
 
 HS_PROG = happy
 HS_SRCS = \
