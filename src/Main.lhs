@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.43 2002/05/21 09:18:29 simonmar Exp $
+$Id: Main.lhs,v 1.44 2002/06/19 13:24:15 simonmar Exp $
 
 The main driver.
 
@@ -332,7 +332,7 @@ The command line arguments.
 >    Option ['o'] ["outfile"] (ReqArg OptOutputFile "FILE")
 >	"Write the output to FILE (default: file.hs)",
 >    Option ['s'] ["strict"] (NoArg OptStrict)
->	"Semantic values are evaluated eagerly during parsing",
+>	"Evaluate semantic values strictly (experimental)",
 >    Option ['t'] ["template"] (ReqArg OptTemplate "DIR")
 >	"Look in DIR for template files",
 >    Option ['v'] ["version"] (NoArg DumpVersion)
