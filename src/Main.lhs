@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.19 1999/03/11 17:15:59 simonm Exp $
+$Id: Main.lhs,v 1.20 1999/03/12 16:07:48 simonm Exp $
 
 The main driver.
 
@@ -184,7 +184,6 @@ and generate the code.
 >                       (getLexer dirs)
 >                       term_dir
 >                       (getTokenType dirs)
->			tys
 >			(getParserName dirs)
 >			(getMonad dirs)
 >                       hd

@@ -214,30 +214,21 @@ happyReduce_1 = happyReduce 5# 4# (unsafeCoerce# reduction) where {
 	happy_var_5 = (unsafeCoerce# happy_x_5); 
 	} in
 		
-		 (AbsSyn happy_var_1 (reverse happy_var_2) (reverse happy_var_4) happy_var_5) : happyRest;
+		 ((AbsSyn happy_var_1 (reverse happy_var_2) (reverse happy_var_4) happy_var_5) :: AbsSyn) : happyRest;
   reduction _ = notHappyAtAll }
 
 happyReduce_2 = happySpecReduce_2 5# (unsafeCoerce# reduction) where {
   reduction
-	happy_x_2
-	happy_x_1
-	 =  let {
-	happy_var_1 = (unsafeCoerce# happy_x_1); 
-	happy_var_2 = (unsafeCoerce# happy_x_2); 
-	} in
-		
-		 (happy_var_2 : happy_var_1);
-  reduction _ _  = notHappyAtAll }
+	happy_var_2
+	happy_var_1
+	 =  
+		 ((happy_var_2 : happy_var_1) :: [(String, [([String],String,Int)], Maybe String)])}
 
 happyReduce_3 = happySpecReduce_1 5# (unsafeCoerce# reduction) where {
   reduction
-	happy_x_1
-	 =  let {
-	happy_var_1 = (unsafeCoerce# happy_x_1); 
-	} in
-		
-		 ([happy_var_1]);
-  reduction _  = notHappyAtAll }
+	happy_var_1
+	 =  
+		 (([happy_var_1]) :: [(String, [([String],String,Int)], Maybe String)])}
 
 happyReduce_4 = happyReduce 5# 6# (unsafeCoerce# reduction) where {
   reduction
@@ -255,7 +246,7 @@ happyReduce_4 = happyReduce 5# 6# (unsafeCoerce# reduction) where {
 	happy_var_5 = (unsafeCoerce# happy_x_5); 
 	} in
 		
-		 ((happy_var_1,happy_var_5,Just happy_var_3)) : happyRest;
+		 (((happy_var_1,happy_var_5,Just happy_var_3)) :: (String, [([String],String,Int)], Maybe String)) : happyRest;
   reduction _ = notHappyAtAll }
 
 happyReduce_5 = happyReduce 6# 6# (unsafeCoerce# reduction) where {
@@ -276,46 +267,30 @@ happyReduce_5 = happyReduce 6# 6# (unsafeCoerce# reduction) where {
 	happy_var_6 = (unsafeCoerce# happy_x_6); 
 	} in
 		
-		 ((happy_var_1,happy_var_6,Just happy_var_3)) : happyRest;
+		 (((happy_var_1,happy_var_6,Just happy_var_3)) :: (String, [([String],String,Int)], Maybe String)) : happyRest;
   reduction _ = notHappyAtAll }
 
 happyReduce_6 = happySpecReduce_3 6# (unsafeCoerce# reduction) where {
   reduction
-	happy_x_3
-	happy_x_2
-	happy_x_1
-	 =  let {
-	happy_var_1 = (unsafeCoerce# happy_x_1); 
-	_ = (unsafeCoerce# happy_x_2); 
-	happy_var_3 = (unsafeCoerce# happy_x_3); 
-	} in
-		
-		 ((happy_var_1,happy_var_3,Nothing));
-  reduction _ _ _  = notHappyAtAll }
+	happy_var_3
+	_
+	happy_var_1
+	 =  
+		 (((happy_var_1,happy_var_3,Nothing)) :: (String, [([String],String,Int)], Maybe String))}
 
 happyReduce_7 = happySpecReduce_3 7# (unsafeCoerce# reduction) where {
   reduction
-	happy_x_3
-	happy_x_2
-	happy_x_1
-	 =  let {
-	happy_var_1 = (unsafeCoerce# happy_x_1); 
-	_ = (unsafeCoerce# happy_x_2); 
-	happy_var_3 = (unsafeCoerce# happy_x_3); 
-	} in
-		
-		 (happy_var_1 : happy_var_3);
-  reduction _ _ _  = notHappyAtAll }
+	happy_var_3
+	_
+	happy_var_1
+	 =  
+		 ((happy_var_1 : happy_var_3) :: [([String],String,Int)])}
 
 happyReduce_8 = happySpecReduce_1 7# (unsafeCoerce# reduction) where {
   reduction
-	happy_x_1
-	 =  let {
-	happy_var_1 = (unsafeCoerce# happy_x_1); 
-	} in
-		
-		 ([happy_var_1]);
-  reduction _  = notHappyAtAll }
+	happy_var_1
+	 =  
+		 (([happy_var_1]) :: [([String],String,Int)])}
 
 happyReduce_9 = happyMonadReduce 3# 8# unsafeCoerce# (unsafeCoerce# reduction) where {
   reduction
@@ -328,7 +303,7 @@ happyReduce_9 = happyMonadReduce 3# 8# unsafeCoerce# (unsafeCoerce# reduction) w
 	happy_var_2 = (unsafeCoerce# happy_x_2); 
 	_ = (unsafeCoerce# happy_x_3); 
 	} in
-		 \s l -> returnP (happy_var_1,happy_var_2,l) s l;
+		( \s l -> returnP (happy_var_1,happy_var_2,l) s l) :: P(([String],String,Int));
   reduction _ = notHappyAtAll }
 
 happyReduce_10 = happyMonadReduce 2# 8# unsafeCoerce# (unsafeCoerce# reduction) where {
@@ -340,92 +315,57 @@ happyReduce_10 = happyMonadReduce 2# 8# unsafeCoerce# (unsafeCoerce# reduction) 
 	happy_var_1 = (unsafeCoerce# happy_x_1); 
 	happy_var_2 = (unsafeCoerce# happy_x_2); 
 	} in
-		 \s l -> returnP (happy_var_1,happy_var_2,l) s l;
+		( \s l -> returnP (happy_var_1,happy_var_2,l) s l) :: P(([String],String,Int));
   reduction _ = notHappyAtAll }
 
 happyReduce_11 = happySpecReduce_2 9# (unsafeCoerce# reduction) where {
   reduction
-	happy_x_2
-	happy_x_1
-	 =  let {
-	happy_var_1 = (unsafeCoerce# happy_x_1); 
-	happy_var_2 = (unsafeCoerce# happy_x_2); 
-	} in
-		
-		 (happy_var_2 : happy_var_1);
-  reduction _ _  = notHappyAtAll }
+	happy_var_2
+	happy_var_1
+	 =  
+		 ((happy_var_2 : happy_var_1) :: [Directive String])}
 
 happyReduce_12 = happySpecReduce_1 9# (unsafeCoerce# reduction) where {
   reduction
-	happy_x_1
-	 =  let {
-	happy_var_1 = (unsafeCoerce# happy_x_1); 
-	} in
-		
-		 ([happy_var_1]);
-  reduction _  = notHappyAtAll }
+	happy_var_1
+	 =  
+		 (([happy_var_1]) :: [Directive String])}
 
 happyReduce_13 = happySpecReduce_2 10# (unsafeCoerce# reduction) where {
   reduction
-	happy_x_2
-	happy_x_1
-	 =  let {
-	_ = (unsafeCoerce# happy_x_1); 
-	happy_var_2 = (unsafeCoerce# happy_x_2); 
-	} in
-		
-		 (TokenType happy_var_2);
-  reduction _ _  = notHappyAtAll }
+	happy_var_2
+	_
+	 =  
+		 ((TokenType happy_var_2) :: Directive String)}
 
 happyReduce_14 = happySpecReduce_2 10# (unsafeCoerce# reduction) where {
   reduction
-	happy_x_2
-	happy_x_1
-	 =  let {
-	_ = (unsafeCoerce# happy_x_1); 
-	happy_var_2 = (unsafeCoerce# happy_x_2); 
-	} in
-		
-		 (TokenSpec happy_var_2);
-  reduction _ _  = notHappyAtAll }
+	happy_var_2
+	_
+	 =  
+		 ((TokenSpec happy_var_2) :: Directive String)}
 
 happyReduce_15 = happySpecReduce_2 10# (unsafeCoerce# reduction) where {
   reduction
-	happy_x_2
-	happy_x_1
-	 =  let {
-	_ = (unsafeCoerce# happy_x_1); 
-	happy_var_2 = (unsafeCoerce# happy_x_2); 
-	} in
-		
-		 (TokenName happy_var_2);
-  reduction _ _  = notHappyAtAll }
+	happy_var_2
+	_
+	 =  
+		 ((TokenName happy_var_2) :: Directive String)}
 
 happyReduce_16 = happySpecReduce_3 10# (unsafeCoerce# reduction) where {
   reduction
-	happy_x_3
-	happy_x_2
-	happy_x_1
-	 =  let {
-	_ = (unsafeCoerce# happy_x_1); 
-	happy_var_2 = (unsafeCoerce# happy_x_2); 
-	happy_var_3 = (unsafeCoerce# happy_x_3); 
-	} in
-		
-		 (TokenLexer happy_var_2 happy_var_3);
-  reduction _ _ _  = notHappyAtAll }
+	happy_var_3
+	happy_var_2
+	_
+	 =  
+		 ((TokenLexer happy_var_2 happy_var_3) :: Directive String)}
 
 happyReduce_17 = happySpecReduce_2 10# (unsafeCoerce# reduction) where {
   reduction
-	happy_x_2
-	happy_x_1
-	 =  let {
-	_ = (unsafeCoerce# happy_x_1); 
-	happy_var_2 = (unsafeCoerce# happy_x_2); 
-	} in
-		
-		 (TokenMonad happy_var_2 ">>=" "return");
-  reduction _ _  = notHappyAtAll }
+	happy_var_2
+	_
+	 =  
+		 ((TokenMonad happy_var_2 ">>=" "return") :: Directive String)}
 
 happyReduce_18 = happyReduce 4# 10# (unsafeCoerce# reduction) where {
   reduction
@@ -441,94 +381,63 @@ happyReduce_18 = happyReduce 4# 10# (unsafeCoerce# reduction) where {
 	happy_var_4 = (unsafeCoerce# happy_x_4); 
 	} in
 		
-		 (TokenMonad happy_var_2 happy_var_3 happy_var_4) : happyRest;
+		 ((TokenMonad happy_var_2 happy_var_3 happy_var_4) :: Directive String) : happyRest;
   reduction _ = notHappyAtAll }
 
 happyReduce_19 = happySpecReduce_2 11# (unsafeCoerce# reduction) where {
   reduction
-	happy_x_2
-	happy_x_1
-	 =  let {
-	happy_var_1 = (unsafeCoerce# happy_x_1); 
-	happy_var_2 = (unsafeCoerce# happy_x_2); 
-	} in
-		
-		 (happy_var_1:happy_var_2);
-  reduction _ _  = notHappyAtAll }
+	happy_var_2
+	happy_var_1
+	 =  
+		 ((happy_var_1:happy_var_2) :: [(String,String)])}
 
 happyReduce_20 = happySpecReduce_1 11# (unsafeCoerce# reduction) where {
   reduction
-	happy_x_1
-	 =  let {
-	happy_var_1 = (unsafeCoerce# happy_x_1); 
-	} in
-		
-		 ([happy_var_1]);
-  reduction _  = notHappyAtAll }
+	happy_var_1
+	 =  
+		 (([happy_var_1]) :: [(String,String)])}
 
 happyReduce_21 = happySpecReduce_2 12# (unsafeCoerce# reduction) where {
   reduction
-	happy_x_2
-	happy_x_1
-	 =  let {
-	happy_var_1 = (unsafeCoerce# happy_x_1); 
-	happy_var_2 = (unsafeCoerce# happy_x_2); 
-	} in
-		
-		 ((happy_var_1,happy_var_2));
-  reduction _ _  = notHappyAtAll }
+	happy_var_2
+	happy_var_1
+	 =  
+		 (((happy_var_1,happy_var_2)) :: (String,String))}
 
 happyReduce_22 = happySpecReduce_2 13# (unsafeCoerce# reduction) where {
   reduction
-	happy_x_2
-	happy_x_1
-	 =  let {
-	happy_var_1 = (unsafeCoerce# happy_x_1); 
-	happy_var_2 = (unsafeCoerce# happy_x_2); 
-	} in
-		
-		 (happy_var_1 : happy_var_2);
-  reduction _ _  = notHappyAtAll }
+	happy_var_2
+	happy_var_1
+	 =  
+		 ((happy_var_1 : happy_var_2) :: [String])}
 
 happyReduce_23 = happySpecReduce_0 13# (unsafeCoerce# reduction) where {
   reduction
 	 =  
-		 ([])}
+		 (([]) :: [String])}
 
 happyReduce_24 = happySpecReduce_1 14# (unsafeCoerce# reduction) where {
   reduction
-	happy_x_1
-	 =  let {
-	(TokenInfo happy_var_1 TokId) = (unsafeCoerce# happy_x_1); 
-	} in
-		
-		 (happy_var_1);
-  reduction _  = notHappyAtAll }
+	(TokenInfo happy_var_1 TokId)
+	 =  
+		 ((happy_var_1) :: String)}
 
 happyReduce_25 = happySpecReduce_1 15# (unsafeCoerce# reduction) where {
   reduction
-	happy_x_1
-	 =  let {
-	happy_var_1 = (unsafeCoerce# happy_x_1); 
-	} in
-		
-		 (Just happy_var_1);
-  reduction _  = notHappyAtAll }
+	happy_var_1
+	 =  
+		 ((Just happy_var_1) :: Maybe String)}
 
 happyReduce_26 = happySpecReduce_0 15# (unsafeCoerce# reduction) where {
   reduction
 	 =  
-		 (Nothing)}
+		 ((Nothing) :: Maybe String)}
 
 happyReduce_27 = happySpecReduce_1 16# (unsafeCoerce# reduction) where {
   reduction
-	happy_x_1
-	 =  let {
-	(TokenInfo happy_var_1 TokCodeQuote) = (unsafeCoerce# happy_x_1); 
-	} in
-		
-		 (happy_var_1);
-  reduction _  = notHappyAtAll }
+	(TokenInfo happy_var_1 TokCodeQuote)
+	 =  
+		 ((happy_var_1) :: String)}
 
 happyNewToken action sts stk
 	= lexer(\tk -> 
@@ -559,7 +468,7 @@ ourParser = happyParse
 happyError :: P a
 happyError s l = failP (show l ++ ": Parse error\n") s l
 
--- $Id: Parser.hs,v 1.9 1999/03/11 17:16:01 simonm Exp $
+-- $Id: Parser.hs,v 1.10 1999/03/12 16:07:48 simonm Exp $
 
 {-
 	The stack is in the following order throughout the parse:
@@ -587,16 +496,18 @@ newtype HappyState b c = HappyState
 	 [HappyState b c] ->		-- state stack
 	 c)
 
+type HappyItem = ()
+
 -----------------------------------------------------------------------------
 -- Accepting the parse
 
 happyAccept j tk st sts [ ans ] = happyReturn ans
-happyAccept j tk st sts _ = happyTcHack j (notHappyAtAll (-1))
+happyAccept j tk st sts _ = happyTcHack j notHappyAtAll
 
 -----------------------------------------------------------------------------
 -- Shifting a token
 
-happyShift new_state (-1#) tk st sts stk@((I# i) : _) =
+happyShift new_state 1# tk st sts stk@((I# i) : _) =
 --     _trace "shifting the error token" $
      new_state i i tk (HappyState new_state) (st:sts) stk
 
@@ -611,43 +522,43 @@ happyShift new_state i tk st sts stk =
 -- don't allow reductions when we're in error recovery, because this can
 -- lead to an infinite loop.
 
-happySpecReduce_0 i fn (-1#) tk _ sts stk
+happySpecReduce_0 i fn 1# tk _ sts stk
      = case sts of
-	st@(HappyState action):sts -> action (-1#) (-1#) tk st sts stk
+	st@(HappyState action):sts -> action 1# 1# tk st sts stk
 	_ -> happyError
 happySpecReduce_0 i fn j tk st@(HappyState action) sts stk
      = action i j tk st (st:sts) (fn : stk)
 
-happySpecReduce_1 i fn (-1#) tk _ (st@(HappyState action):sts) stk
-     = action (-1#) (-1#) tk st sts stk
+happySpecReduce_1 i fn 1# tk _ (st@(HappyState action):sts) stk
+     = action 1# 1# tk st sts stk
 happySpecReduce_1 i fn j tk _ sts@(st@(HappyState action):_) (v1:stk')
      = action i j tk st sts (fn v1 : stk')
 happySpecReduce_1 _ _ _ _ _ _ _
      = notHappyAtAll
 
-happySpecReduce_2 i fn (-1#) tk _ (st@(HappyState action):sts) stk
-     = action (-1#) (-1#) tk st sts stk
+happySpecReduce_2 i fn 1# tk _ (st@(HappyState action):sts) stk
+     = action 1# 1# tk st sts stk
 happySpecReduce_2 i fn j tk _ (_:sts@(st@(HappyState action):_)) (v1:v2:stk')
      = action i j tk st sts (fn v1 v2 : stk')
 happySpecReduce_2 _ _ _ _ _ _ _
      = notHappyAtAll
 
-happySpecReduce_3 i fn (-1#) tk _ (st@(HappyState action):sts) stk
-     = action (-1#) (-1#) tk st sts stk
+happySpecReduce_3 i fn 1# tk _ (st@(HappyState action):sts) stk
+     = action 1# 1# tk st sts stk
 happySpecReduce_3 i fn j tk _ (_:_:sts@(st@(HappyState action):_)) 
 	(v1:v2:v3:stk')
      = action i j tk st sts (fn v1 v2 v3 : stk')
 happySpecReduce_3 _ _ _ _ _ _ _
      = notHappyAtAll
 
-happyReduce k i fn (-1#) tk _ (st@(HappyState action):sts) stk
-     = action (-1#) (-1#) tk st sts stk
+happyReduce k i fn 1# tk _ (st@(HappyState action):sts) stk
+     = action 1# 1# tk st sts stk
 happyReduce k i fn j tk st sts stk = action i j tk st' sts' (fn stk)
        where sts'@(st'@(HappyState action):_) = drop (I# k) (st:sts)
 
-happyMonadReduce k i c fn (-1#) tk _ sts stk
+happyMonadReduce k i c fn 1# tk _ sts stk
       = case sts of
-	     (st@(HappyState action):sts) -> action (-1#) (-1#) tk st sts stk
+	     (st@(HappyState action):sts) -> action 1# 1# tk st sts stk
 	     [] -> happyError
 happyMonadReduce k i c fn j tk st sts stk =
 	happyThen (fn stk) (\r -> action i j tk st' sts' (c r : stk'))
@@ -663,18 +574,18 @@ happyGoto action j tk st = action j j tk (HappyState action)
 -- Error recovery (-1 is the error token)
 
 -- fail if we are in recovery and no more states to discard
-happyFail  (-1#) tk st' [] stk = happyError
+happyFail  1# tk st' [] stk = happyError
 
 -- discard a state
-happyFail  (-1#) tk st' (st@(HappyState action):sts) stk =
+happyFail  1# tk st' (st@(HappyState action):sts) stk =
 --	_trace "discarding state" $
-	action (-1#) (-1#) tk st sts stk
+	action 1# 1# tk st sts stk
 
 -- Enter error recovery: generate an error token,
 -- 			 save the old token and carry on.
 happyFail  i tk st@(HappyState action) sts stk =
 --	_trace "entering error recovery" $
-	action (-1#) (-1#) tk st sts ((I# i) : stk)
+	action 1# 1# tk st sts ((I# i) : stk)
 
 -- Internal happy errors:
 

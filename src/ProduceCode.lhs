@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.16 1999/03/11 17:16:02 simonm Exp $
+$Id: ProduceCode.lhs,v 1.17 1999/03/12 16:07:49 simonm Exp $
 
 The code generator.
 
@@ -27,7 +27,6 @@ Produce the complete output file.
 >		-> Maybe (String,String)	-- lexer
 >		-> [(Int,String)]		-- token reps
 >		-> String			-- token type
->		-> Array Int (Maybe String)     -- types of NonTerminals
 >		-> String			-- parser name
 >		-> (Maybe (String,String,String)) -- optional monad
 >		-> Maybe String			-- module header
@@ -42,18 +41,20 @@ Produce the complete output file.
 >		, lookupProdsOfName = lookupProdNos
 >		, non_terminals = nonterms
 >		, terminals = terms
+>		, types = nt_types
+>		, token_names = names
 >		, eof_term = eof
 >		, first_term = fst_term
 >		})
->	 	action goto lexer token_rep token_type nt_types
+>	 	action goto lexer token_rep token_type
 >		name monad module_header module_trailer target coerce 
 >     =	( str comment
->	. maybestr module_header . str "\n"
-> 	. produceAbsSynDecl . str "\n"
+>	. maybestr module_header . nl
+> 	. produceAbsSynDecl . nl
 >    	. produceTypes
 >	. produceActionTable target
 >	. produceReductions
->	. produceTokenConverter . str "\n"
+>	. produceTokenConverter . nl
 >	. produceMonadStuff
 >	. (if (not . null) name 
 >		then (str name . str " = happyParse\n\n") 
@@ -145,7 +146,7 @@ based parsers -- types aren't as important there).
 >	      token = brack token_type
 >	      tokens = 
 >     		case lexer of
->	  		Nothing -> str "[" . token . str "] -> "
+>	  		Nothing -> char '[' . token . str "] -> "
 >	  		Just _ -> id
 >	      result = mkMonadTy (str res_type)
 > 	      (Just res_type) = nt_types ! firstNT
@@ -173,35 +174,34 @@ where n is the non-terminal number, and m is the rule number.
 >     | isMonadProd
 >	= mkReductionHdr (showInt lt) 
 >		"happyMonadReduce " (strspace . this_absSynCon)
->	. str "(" . interleave " :\n\t" tokPatterns
+>	. char '(' . interleave " :\n\t" tokPatterns
 >	. str "happyRest)\n\t = "
 >	. tokLets
->	. str (tail code)
+>	. typed_code
 >       . defaultCase
->	. str "}"
+>	. char '}'
 
 >     | specReduceFun lt
 >	= mkReductionHdr (shows lt) "happySpecReduce_" id
 >	. interleave "\n\t" tokPatterns
 >	. str " =  "
->	. tokLets
->	. this_absSynCon . str "\n\t\t " . brack code
->	. (if null toks || null vars_used then
+>	. this_absSynCon . str "\n\t\t " . brack' typed_code
+>	. (if coerce || null toks || null vars_used then
 >		  id
 >	   else
 >		  str ";\n  reduction " 
 > 		. interleave " " (map str (take (length toks) (repeat "_")))
 >		. str " = notHappyAtAll ")
->	. str "}"
+>	. char '}'
 
 >     | otherwise
 > 	= mkReductionHdr (showInt lt) "happyReduce "  id
->	. str "(" . interleave " :\n\t" tokPatterns
+>	. char '(' . interleave " :\n\t" tokPatterns
 >	. str "happyRest)\n\t = "
 >	. tokLets
->	. this_absSynCon . str "\n\t\t " . brack code . str " : happyRest"
+>	. this_absSynCon . str "\n\t\t " . brack' typed_code . str " : happyRest"
 >	. defaultCase
->	. str "}"
+>	. char '}'
 
 >       where 
 >		isMonadProd = case sem of ('%' : code) -> True
@@ -222,39 +222,57 @@ where n is the non-terminal number, and m is the rule number.
 >              			else id
 > 
 >		tokPatterns 
->		 | coerce = reverse (map mkDummyVar [1 .. length toks])
+>		 | coerce && (isMonadProd || not (specReduceFun lt)) = 
+>			reverse (map mkDummyVar [1 .. length toks])
 >		 | otherwise = reverse (zipWith tokPattern [1..] toks)
 > 
->		tokPattern n _ | n `notElem` vars_used = str "_"
+>		tokPattern n _ | n `notElem` vars_used = char '_'
 >             	tokPattern n t | t >= startTok && t < fst_term
 >	      		= if coerce 
 >				then mkHappyVar n
->			  	else str "("
->				   . makeAbsSynCon t . str "  "
->				   . mkHappyVar n
->				   . str ")"
+>			  	else brack' (
+>				     makeAbsSynCon t . str "  " . mkHappyVar n
+>				     )
 >		tokPattern n t
 >			= if coerce
 >				then mkHappyTerminalVar n t
 >				else str "(HappyTerminal " 
 >				   . mkHappyTerminalVar n t
->				   . str ")"
->
+>				   . char '}'
+>		
 >		tokLets 
 >		   | coerce && not (null toks) = 
 >		          str "let {\n\t" 
 >			. interleave "; \n\t"
 >				[ tokPattern n t . str " = " . 
 >				  str "(unsafeCoerce# " .
->				  mkDummyVar n  . str ")"
+>				  mkDummyVar n  . char ')'
 >				| (n,t) <- zip [1..] toks ]
 >			. str "} in\n\t\t"
 >
 >		   | otherwise = id
 >
->		
->		
 >		(code,vars_used) = expandVars sem
+>
+>		code' 
+>		    | isMonadProd = tail code  -- drop the '%'
+>		    | otherwise   = code
+>
+>		maybe_ty = nt_types ! nt
+>		has_ty = isJust maybe_ty
+>		(Just ty) = maybe_ty
+>
+>		item_ty 
+>		    | isMonadProd = mkMonadTy (str ty)
+>		    | otherwise   = str ty
+>
+>		-- add a type signature if we're using coercions
+>		typed_code
+>		   | coerce = 
+>			if has_ty then brack code' . str " :: " . item_ty
+>				  else error ("Missing type signature for `" ++
+>					      names ! nt ++ "'")
+>		   | otherwise = str code'
 > 
 >		lt = length toks
 
@@ -299,7 +317,7 @@ The token conversion function.
 >	    (case target of
 >	    	TargetArrayBased ->
 >	   	  str "happyDoAction " . eofTok . eofError . str " action"
->	    	_ ->  str "action "	. eofTok . str " " . eofTok . eofError
+>	    	_ ->  str "action "	. eofTok . strspace . eofTok . eofError
 >		    . str " (HappyState action)")
 >	     . str " sts stk"
 >	  eofError = str " (error \"reading EOF!\")"
@@ -516,7 +534,7 @@ outlaw them inside { }
 
 >    mkMonadTy s = case monad of
 >			Nothing -> s
->			Just (ty,_,_) -> str (ty++"(") . s . str ")"
+>			Just (ty,_,_) -> str (ty++"(") . s . char ')'
 
 >    produceMonadStuff =
 >	(case monad of
@@ -541,7 +559,7 @@ outlaw them inside { }
 
 >    reduceArrElem n
 >      = str "\t(" . shows n . str " , "
->      . str "happyReduce_" . shows n . str ")"
+>      . str "happyReduce_" . shows n . char ')'
 
 -----------------------------------------------------------------------------
 Replace all the $n variables with happy_vars, and return a list of all the
@@ -597,9 +615,12 @@ Misc.
 > 	"-- parser produced by Happy Version " ++ version ++ "\n\n"
 
 > str = showString
-> strspace = str " "
+> char c = (c :)
 > interleave s = foldr (\a b -> a . str s . b) id
 > interleave' s = foldr1 (\a b -> a . str s . b) 
+
+> strspace = char ' '
+> nl = char '\n'
 
 > mkAbsSynCon fx t    	= str "HappyAbsSyn"   . shows (fx ! t)
 > mkHappyVar n     	= str "happy_var_"    . shows n
@@ -622,7 +643,8 @@ Misc.
 >	Just fn -> Just (\ s -> c : fn s)
 >	Nothing -> Nothing
 
-> brack s = str ('(' : s) . str ")"
+> brack s = str ('(' : s) . char ')'
+> brack' s = char '(' . s . char ')'
 
 -----------------------------------------------------------------------------
 Run Length Encode an array to cut down on code size.
@@ -642,6 +664,6 @@ Run Length Encode an array to cut down on code size.
 >		. str ") ++ ["
 >		. rle_to_str xs False
 > 	 else
->		(if comma then str "," else id)
+>		(if comma then char ',' else id)
 >		. interleave' "," (map shows (take l (repeat x)))
 >		. rle_to_str xs True
