@@ -1,4 +1,4 @@
--- $Id: HappyTemplate-ghc,v 1.8 1997/08/25 13:37:47 simonm Exp $
+-- $Id: HappyTemplate-ghc,v 1.9 1997/08/25 17:44:18 simonm Exp $
 
 {-
 	The stack is in the following order throughout the parse:
@@ -61,17 +61,23 @@ happySpecReduce_1 i fn (-1#) tk _ (st@(HappyState action):sts) stk
      = action (-1#) (-1#) tk st sts stk
 happySpecReduce_1 i fn j tk _ sts@(st@(HappyState action):_) (v1:stk')
      = action i j tk st sts (fn v1 : stk')
+happySpecReduce_1 _ _ _ _ _ _ _
+     = notHappyAtAll
 
 happySpecReduce_2 i fn (-1#) tk _ (st@(HappyState action):sts) stk
      = action (-1#) (-1#) tk st sts stk
 happySpecReduce_2 i fn j tk _ (_:sts@(st@(HappyState action):_)) (v1:v2:stk')
      = action i j tk st sts (fn v1 v2 : stk')
+happySpecReduce_2 _ _ _ _ _ _ _
+     = notHappyAtAll
 
 happySpecReduce_3 i fn (-1#) tk _ (st@(HappyState action):sts) stk
      = action (-1#) (-1#) tk st sts stk
 happySpecReduce_3 i fn j tk _ (_:_:sts@(st@(HappyState action):_)) 
 	(v1:v2:v3:stk')
      = action i j tk st sts (fn v1 v2 v3 : stk')
+happySpecReduce_3 _ _ _ _ _ _ _
+     = notHappyAtAll
 
 happyReduce k i fn (-1#) tk _ (st@(HappyState action):sts) stk
      = action (-1#) (-1#) tk st sts stk
