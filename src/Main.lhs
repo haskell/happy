@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.51 2004/08/11 15:39:30 paulcc Exp $
+$Id: Main.lhs,v 1.52 2004/08/12 11:53:55 simonmar Exp $
 
 The main driver.
 
@@ -462,20 +462,20 @@ GHC version-dependent stuff in it.
 
 CPP is turned on for -fglasgow-exts, so we can use conditional compilation:
 
-> import_glaexts = "#if __GLASGOW_HASKELL__ >= 503\n\ 
-> 		   \import GHC.Exts\n\ 
->		   \#else\n\ 
->		   \import GlaExts\n\ 
->		   \#endif\n"
+> import_glaexts = "#if __GLASGOW_HASKELL__ >= 503\n" ++
+> 		   "import GHC.Exts\n" ++
+>		   "#else\n" ++
+>		   "import GlaExts\n" ++
+>		   "#endif\n"
 
-> import_debug = "#if __GLASGOW_HASKELL__ >= 503\n\ 
-> 		   \import System.IO\n\ 
-> 		   \import System.IO.Unsafe\n\ 
-> 		   \import Debug.Trace\n\ 
->		   \#else\n\ 
->		   \import IO\n\ 
->		   \import IOExts\n\ 
->		   \#endif\n"
+> import_debug = "#if __GLASGOW_HASKELL__ >= 503\n" ++
+> 		 "import System.IO\n" ++
+> 		 "import System.IO.Unsafe\n" ++
+> 		 "import Debug.Trace\n" ++
+>		 "#else\n" ++
+>		 "import IO\n" ++
+>		 "import IOExts\n" ++
+>		 "#endif\n"
 
 ------------------------------------------------------------------------------
 Extract various command-line options.

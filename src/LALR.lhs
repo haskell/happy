@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: LALR.lhs,v 1.23 2002/06/11 09:24:43 simonmar Exp $
+$Id: LALR.lhs,v 1.24 2004/08/12 11:53:54 simonmar Exp $
 
 Generation of LALR parsing tables.
 
@@ -17,20 +17,17 @@ Generation of LALR parsing tables.
 > import Set
 > import Grammar
 
-> import Array
+#if __GLASGOW_HASKELL__ >= 503
 
-#if defined(__GLASGOW_HASKELL__)
+> import Control.Monad.ST
+> import Data.Array.ST
+> import Data.Array hiding (bounds)
+
+#elif defined(__GLASGOW_HASKELL__)
 
 > import ST
-
-#if __GLASGOW_HASKELL__ < 402
-#define newSTArray newArray
-#define readSTArray readArray
-#define writeSTArray writeArray
-#define freezeSTArray freezeArray
-
-> import MutableArray
-#endif
+> import MArray
+> import Array 	hiding (bounds)
 
 #endif
 
@@ -317,12 +314,14 @@ Special version using a mutable array for GHC.
 
 > calcLookaheads n_states spont prop
 >	= runST (do
->	    array <- newSTArray (0,n_states) []
+>	    array <- newArray (0,n_states) []
 >	    propagate array (foldr fold_lookahead [] spont)
->	    freezeSTArray array
+>	    freeze array
 >	)
 
 >   where
+>	propagate :: STArray s Int [(Lr0Item, Set Name)]
+>			 -> [(Int, Lr0Item, Set Name)] -> ST s ()
 >	propagate array []  = return ()
 >	propagate array new = do 
 >		let
@@ -339,13 +338,13 @@ the spontaneous lookaheads in the right form to begin with (ToDo).
 
 > add_lookaheads array [] = return ()
 > add_lookaheads array ((i,item,s) : lookaheads) = do
->	las <- readSTArray array i
->	writeSTArray array i (add_lookahead item s las)
+>	las <- readArray array i
+>	writeArray array i (add_lookahead item s las)
 >	add_lookaheads array lookaheads
 
 > get_new array [] new = return new
 > get_new array (l@(i,item,s):las) new = do
->	state_las <- readSTArray array i
+>	state_las <- readArray array i
 >	get_new array las (get_new' l state_las new)
 
 > add_lookahead :: Lr0Item -> Set Name -> [(Lr0Item,Set Name)] ->

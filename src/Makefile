@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.50 2004/08/10 13:56:17 simonmar Exp $
+# $Id: Makefile,v 1.51 2004/08/12 11:53:55 simonmar Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -20,7 +20,12 @@ HS_PROG = happy$(HS_PROG_EXT)
 
 EXCLUDED_SRCS = TestLexer.lhs IntSet.lhs
 
-SRC_HC_OPTS += -cpp -fglasgow-exts -package lang $(HappyHcOpts)
+SRC_HC_OPTS += -cpp -fglasgow-exts $(HappyHcOpts)
+
+ghc_lt_503 = $(shell if (test $(GhcCanonVersion) -lt 503); then echo YES; else echo NO; fi)
+ifeq "$(ghc_lt_503)" "YES"
+SRC_HC_OPTS += -package lang
+endif
 
 Parser_HC_OPTS      = -Onot
 Version_HC_OPTS	    = -DHAPPY_VERSION=$(ProjectVersion)
@@ -39,6 +44,22 @@ boot ::
 		(cd $(FPTOOLS_TOP)/ghc/driver && $(MAKE) boot); \
 	fi 
 
+
+# -----------------------------------------------------------------------------=
+# Create the Version.hs file
+
+VERSION_HS = Version.hs
+EXTRA_SRCS += $(VERSION_HS)
+
+boot :: $(VERSION_HS)
+
+Version.hs : ../mk/version.mk
+	@$(RM) -f $(VERSION_HS)
+	@echo "Creating $(VERSION_HS) ... "
+	@echo "module Version where" >>$(VERSION_HS)
+	@echo "version = \"$(ProjectVersion)\"" >> $(VERSION_HS)
+
+# -----------------------------------------------------------------------------
 
 ifeq "$(INSTALLING)" "1"
 ifeq "$(BIN_DIST)"   "1"
