@@ -1,6 +1,10 @@
 -----------------------------------------------------------------------------
 Tests %monad without %lexer.
 
+> {
+> import Char
+> }
+
 > %name calc
 > %tokentype { Token }
 
@@ -44,9 +48,8 @@ Tests %monad without %lexer.
 > {
 
 -----------------------------------------------------------------------------
-The monad serves three purposes: 
+The monad serves two purposes: 
 
-	* it passes the input string around
 	* it passes the current line number around
 	* it deals with success/failure.
 
@@ -54,16 +57,16 @@ The monad serves three purposes:
 >	= ParseOk a
 >	| ParseFail String
 
-> type P a = String -> Int -> ParseResult a
+> type P a = Int -> ParseResult a
 
 > thenP :: P a -> (a -> P b) -> P b
-> m `thenP` k = \s l -> 
->	case m s l of
+> m `thenP` k = \l -> 
+>	case m l of
 >		ParseFail s -> ParseFail s
->		ParseOk a -> k a s l
+>		ParseOk a -> k a l
 
 > returnP :: a -> P a
-> returnP a = \s l -> ParseOk a
+> returnP a = \l -> ParseOk a
 
 -----------------------------------------------------------------------------
 
@@ -116,7 +119,9 @@ The datastructure for the tokens...
 >	(var,rest)   -> TokenVar var : lexer rest
 
 > runCalc :: String -> Exp
-> runCalc s = calc (lexer s)
+> runCalc s = case calc (lexer s) 1 of
+>		ParseOk e -> e
+>		ParseFail s -> error s
 
 > happyError = \tks i -> error (
 >	"Parse error in line " ++ show (i::Int) ++ "\n")
@@ -132,7 +137,7 @@ Here we test our parser.
 >	case runCalc "1 + 2 * 3" of {
 >	(Exp1 (Plus (Term (Factor (Int 1))) (Times (Factor (Int 2)) (Int 3)))) ->
 >	case runCalc "let x = 2 in x * (x - 2)" of {
->	(Let "x" (Exp1 (Term (Factor (Int 2)))) (Exp1 (Term (Times (Factor (Var "x")) (Brack (Exp1 (Minus (Term (Factor (Var "x"))) (Factor (Int 2))))))))) -> appendChan stdout "Test works\n" abort done; 
+>	(Let "x" (Exp1 (Term (Factor (Int 2)))) (Exp1 (Term (Times (Factor (Var "x")) (Brack (Exp1 (Minus (Term (Factor (Var "x"))) (Factor (Int 2))))))))) -> print "Test works\n"; 
 >	_ -> quit } ; _ -> quit } ; _ -> quit } ; _ -> quit }
-> quit = appendChan stdout "Test failed\n" abort done
+> quit = print "Test failed\n"
 > }

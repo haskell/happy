@@ -1,3 +1,8 @@
+> {
+> module Calc where
+> import Char
+> }
+
 First thing to declare is the name of your parser,
 and the type of the tokens the parser reads.
 
@@ -6,8 +11,6 @@ and the type of the tokens the parser reads.
 
 The parser will be of type [Token] -> ?, where ? is determined by the
 production rules.  Now we declare all the possible tokens:
-
- %monad { P } { thenP } { returnP }
 
 > %token 
 >	let		{ TokenLet }
@@ -124,20 +127,6 @@ Here we test our parser.
 	case runCalc "let x = 2 in x * (x - 2)" of {
 	(Let "x" (Exp1 (Term (Factor (Int 2)))) (Exp1 (Term (Times (Factor (Var "x")) (Brack (Exp1 (Minus (Term (Factor (Var "x"))) (Factor (Int 2))))))))) -> print "AndysTest works\n" ; 
 	_ -> quit } ; _ -> quit } ; _ -> quit } ; _ -> quit }
- quit = print "AndysTest failed\n"
-
-
- type P a = a
- thenP a b = b a
- returnP a = a
-
-Now the state monad
-
-> type P a = () -> (a,())
-> thenP a b s = case a s of
->		  (r,s') -> b r s'
-> returnP a = \ s -> (a,s)
-
-
+ quit = print "runCalc failed\n"
 
 > }

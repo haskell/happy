@@ -2,3 +2,15 @@ These are a few examples of Happy parsers, taken from various sources.
 The are intended as illustrations, not as working, complete examples,
 as some require functions and datatypes imported from other sources.
 
+Calc.ly	         :  The calculator example from the Happy manual
+DavesExample.ly  :  Parses simple lambda expressions to combinators
+SimonsExample.ly :  Another lambda expression parser
+ErlParser.ly     :  A parser for Erlang
+MonadTest.ly     :  Demonstrates use of %monad
+LexerTest.ly     :  Demonstrates use of %monad and %lexer
+ErrorTest.ly	 :  Demonstrates use of the 'error' token
+
+A full Haskell 98 parser written using Happy is available from the GHC
+CVS repository in fptools/hslibs/hssource.  See
+http://www.haskell.org/ghc/ for instructions on how to access the GHC
+CVS repository.
