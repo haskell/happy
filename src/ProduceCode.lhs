@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.56 2002/02/16 18:49:13 sof Exp $
+$Id: ProduceCode.lhs,v 1.57 2002/03/05 15:43:18 simonmar Exp $
 
 The code generator.
 
@@ -157,7 +157,7 @@ If we're using coercions, we need to generate the injections etc.
 >		. mkHappyOut n . str " x = unsafeCoerce# x\n"
 >		. str "{-# INLINE " . mkHappyOut n . str " #-}"
 >	  in
->	    str "type " . happy_item . str " = () -> ()\n" -- see NOTE below
+>	    str "newtype " . happy_item . str " = HappyAbsSyn (() -> ())\n" -- see NOTE below
 >	  . interleave "\n" 
 >	    [ inject n ty . nl . extract n ty | (n,ty) <- assocs nt_types ]
 >	  -- token injector
@@ -174,7 +174,12 @@ Because when the --strict flag is used, we need to seq these values,
 and GHC can be persuaded to use a polymorphic seq if it thinks the
 thing it is seqing has function type - otherwise it might use a
 vectored return, which will lead to disaster if the object in question
-doesn't have a vectored return convention.
+doesn't have a vectored return convention.  
+
+Also, note that we must use a newtype instead of just a type synonym,
+because the otherwise the type arguments to the HappyAbsSyn type
+constructor will lose information.  See happy/tests/bug001 for an
+example where this matters.
 
 ... Otherwise, output the declaration in full...
 
@@ -692,22 +697,21 @@ MonadStuff:
 >		  Nothing -> str "\\a tks -> a\n"
 >		  _       -> str "happyReturn\n")
 >	  Just (ty,tn,rtn) ->
->	     case lexer of
+>	     let pty = str ty in
+>	     str "happyThen :: " . pty
+>	   . str " a -> (a -> "	 . pty
+>	   . str " b) -> " . pty . str " b\n"
+>	   . str "happyThen = " . brack tn . nl
+>	   . str "happyReturn :: a -> " . pty . str " a\n"
+>	   . str "happyReturn = " . brack rtn . nl
+>	   . case lexer of
 >		Nothing ->
->                  str "happyThen = (" . str tn . str ")\n"
->	         . str "happyReturn = (" . str rtn . str ")\n"
->		 . str "happyThen1 m k tks = (" . str tn 
+>		   str "happyThen1 m k tks = (" . str tn 
 >		 . str ") m (\\a -> k a tks)\n"
 >		 . str "happyReturn1 = \\a tks -> " . brack rtn
 >		 . str " a\n"
 >		_ ->
->                  let pty = str ty in
->                  str "happyThen :: " . pty
->                . str " a -> (a -> "  . pty
->	         . str " b) -> " . pty . str " b\n"
->                . str "happyThen = " . brack tn . nl
->                . str "happyReturn = " . brack rtn . nl
->            	 . str "happyThen1 = happyThen\n"
+>		   str "happyThen1 = happyThen\n"
 >	     	 . str "happyReturn1 = happyReturn\n"
 >	)
 >	. str "\n"
