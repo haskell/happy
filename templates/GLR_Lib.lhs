@@ -2,7 +2,7 @@
 
 {-
    GLR_Lib.lhs
-   $Id: GLR_Lib.lhs,v 1.1 2004/08/11 15:39:32 paulcc Exp $
+   $Id: GLR_Lib.lhs,v 1.2 2004/08/13 16:22:59 paulcc Exp $
 -}
 
 Parser driver for the GLR parser.
@@ -45,8 +45,7 @@ Parser driver for the GLR parser.
 
 >{- these inserted by Happy -}
 
->import DATA
->-- import GHC.Exts
+>fakeimport DATA
 
 {- borrowed from GenericTemplate.hs -}
 

@@ -6,7 +6,7 @@ This module is designed as an extension to the Haskell parser generator Happy.
 (c) University of Durham, Paul Callaghan 2004
 	-- extension to semantic rules, and various optimisations
 
-$Id: ProduceGLRCode.lhs,v 1.2 2004/08/13 16:04:02 paulcc Exp $
+$Id: ProduceGLRCode.lhs,v 1.3 2004/08/13 16:22:59 paulcc Exp $
 
 %-----------------------------------------------------------------------------
 
@@ -148,7 +148,7 @@ the driver and data strs (large template).
 >   (sem_def, sem_info) = mkGSemType options g
 
 >   lib_content imps opts lib_text
->    = let (pre,drop_me:post) = break (== "import DATA") $ lines lib_text
+>    = let (pre,drop_me:post) = break (== "fakeimport DATA") $ lines lib_text
 >      in 
 >      unlines [ "{-# OPTIONS " ++ opts ++ " #-}"
 >	       , "module " ++ mod_name ++ "("
