@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: LALR.lhs,v 1.13 2000/03/31 09:19:27 simonmar Exp $
+$Id: LALR.lhs,v 1.14 2000/04/19 12:46:41 simonmar Exp $
 
 Generation of LALR parsing tables.
 
@@ -30,6 +30,8 @@ Generation of LALR parsing tables.
 #define readSTArray readArray
 #define writeSTArray writeArray
 #define freezeSTArray freezeArray
+
+> import MutableArray
 #endif
 
 #endif
