@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Info.lhs,v 1.4 1997/07/16 13:32:36 simonm Exp $
+$Id: Info.lhs,v 1.5 1997/09/09 16:31:44 simonm Exp $
 
 Generating info files.
 
@@ -8,7 +8,6 @@ Generating info files.
 
 > module Info (genInfoFile) where
 
-> import Array
 > import Version		( version )
 > import LALR 			( Lr0Item(..) )
 > import GenUtils
@@ -16,7 +15,16 @@ Generating info files.
 > import AbsSyn
 > import Grammar
 > import ProduceCode		( str, interleave, interleave' )
+
+#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
+
+> import Array
 > import List (nub)
+
+#define ASSOC(a,b) (a , b)
+#else
+#define ASSOC(a,b) (a := b)
+#endif
 
 Produce a file of parser information, useful for debugging the parser.
 
@@ -54,8 +62,8 @@ Produce a file of parser information, useful for debugging the parser.
 >	. foldr (.) id (map showConflictsState (assocs conflictArray))
 >	. str "\n"
 
->   showConflictsState (state, (0,0)) = id
->   showConflictsState (state, (sr,rr))
+>   showConflictsState ASSOC(state, (0,0)) = id
+>   showConflictsState ASSOC(state, (sr,rr))
 >   	= str "state "
 >	. shows state
 >	. str " contains "
@@ -108,9 +116,9 @@ Produce a file of parser information, useful for debugging the parser.
 >		(nt, toks, sem) = lookupProdNo rule
 >		(beforeDot, afterDot) = splitAt dot toks
 
->   showAction (t, LR'Fail)
+>   showAction ASSOC(t, LR'Fail)
 >   	= id
->   showAction (t, act)
+>   showAction ASSOC(t, act)
 >   	= str "\t"
 >	. showJName 15 t
 >	. showAction' act
@@ -131,9 +139,9 @@ Produce a file of parser information, useful for debugging the parser.
 >		(map (\a -> str "\t\t\t(" . showAction' a . str ")") 
 >		 (nub (filter (/= a) as)))
 
->   showGoto (nt, NoGoto)
+>   showGoto ASSOC(nt, NoGoto)
 >   	= id
->   showGoto (nt, Goto n)
+>   showGoto ASSOC(nt, Goto n)
 >   	= str "\t"
 >	. showJName 15 nt
 >	. str "goto state "

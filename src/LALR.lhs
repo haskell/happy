@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: LALR.lhs,v 1.5 1997/08/25 12:35:16 simonm Exp $
+$Id: LALR.lhs,v 1.6 1997/09/09 16:31:45 simonm Exp $
 
 Generation of LALR parsing tables.
 
@@ -15,18 +15,32 @@ Generation of LALR parsing tables.
 	 GrammarInfo(..), Name(..), Set, GotoTable(..),
 	 ActionTable(..)) where
 
-> import Array
 > import GenUtils
 > import Set
 > import AbsSyn
 > import Grammar
 > import First
 
-#ifdef __GLASGOW_HASKELL__
+#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
+
+> import Array
+
+#define ASSOC(a,b) (a , b)
+#else
+#define ASSOC(a,b) (a := b)
+#endif
+
+#if defined(__GLASGOW_HASKELL__)
+#if __GLASGOW_HASKELL__ >= 200
 
 > import GlaExts
 > import ST (runST)
 
+#else
+
+> import PreludeGlaST
+
+#endif
 #endif
 
 > type Lr0Item = (Int,Int)			-- (rule, dot)
@@ -271,7 +285,8 @@ calcLookaheads pass.
 >		Array Int [(Lr0Item, Int, Lr0Item)]	-- propagated lookaheads
 >	   )
 
-> propLookaheads gram sets first = (concat s, array (0,length sets - 1) p)
+> propLookaheads gram sets first = (concat s, array (0,length sets - 1) 
+>			[ ASSOC(a,b) | (a,b) <- p ])
 >   where
 
 >     (s,p) = unzip (zipWith propLASet sets [0..])
@@ -309,7 +324,7 @@ calcLookaheads pass.
 %-----------------------------------------------------------------------------
 \subsection{Calculate lookaheads}
 
-#ifdef __GLASGOW_HASKELL__
+#if defined(__GLASGOW_HASKELL__)
 
 Special version using a mutable array for GHC.
 
@@ -318,6 +333,8 @@ Special version using a mutable array for GHC.
 >	-> [(Int, Lr0Item, Set Name)]		-- spontaneous lookaheads
 >	-> Array Int [(Lr0Item, Int, Lr0Item)]	-- propagated lookaheads
 >	-> Array Int [(Lr0Item, Set Name)]
+
+#if __GLASGOW_HASKELL__ >= 200
 
 > calcLookaheads n_states spont prop
 >	= runST (do
@@ -341,19 +358,55 @@ This function is needed to merge all the (set_no,item,name) triples
 into (set_no, item, set name) triples.  It can be removed when we get
 the spontaneous lookaheads in the right form to begin with (ToDo).
 
-> fold_lookahead :: (Int,Lr0Item,Set Name) -> [(Int,Lr0Item,Set Name)]
->		-> [(Int,Lr0Item,Set Name)]
-> fold_lookahead l [] = [l]
-> fold_lookahead l@(i,item,s) (m@(i',item',s'):las)
->  	| i == i' && item == item' = (i,item, s `union_Int` s'):las
->	| i < i' = (i,item,s):m:las
->	| otherwise = m : fold_lookahead l las
-
 > add_lookaheads array [] = return ()
 > add_lookaheads array ((i,item,s) : lookaheads) = do
 >	las <- readArray array i
 >	writeArray array i (add_lookahead item s las)
 >	add_lookaheads array lookaheads
+
+> get_new array [] new = return new
+> get_new array (l@(i,item,s):las) new = do
+>	state_las <- readArray array i
+>	get_new array las (get_new' l state_las new)
+
+#else
+
+> calcLookaheads n_states spont prop
+>	= _runST (
+>	    newArray (0,n_states) [] `thenStrictlyST` \array ->
+>	    propagate array (foldr fold_lookahead [] spont) 
+>			`thenStrictlyST` \_ ->
+>	    freezeArray array
+>	)
+
+>   where
+>	propagate array []  = returnST ()
+>	propagate array new =
+>		let
+>		   items = [ (i,item'',s) | (j,item,s) <- new, 
+>				            (item',i,item'') <- prop ! j,
+>				            item == item' ]
+>		in
+>		get_new array items [] 		`thenStrictlyST` \new_new ->
+>		add_lookaheads array new 	`thenStrictlyST` \_ ->
+>		propagate array new_new
+
+This function is needed to merge all the (set_no,item,name) triples
+into (set_no, item, set name) triples.  It can be removed when we get
+the spontaneous lookaheads in the right form to begin with (ToDo).
+
+> add_lookaheads array [] = returnST ()
+> add_lookaheads array ((i,item,s) : lookaheads) =
+>	readArray array i `thenStrictlyST` \las ->
+>	writeArray array i (add_lookahead item s las) `thenStrictlyST` \_ ->
+>	add_lookaheads array lookaheads
+
+> get_new array [] new = returnST new
+> get_new array (l@(i,item,s):las) new =
+>	readArray array i `thenStrictlyST` \state_las ->
+>	get_new array las (get_new' l state_las new)
+
+#endif
 
 > add_lookahead :: Lr0Item -> Set Name -> [(Lr0Item,Set Name)] ->
 > 			[(Lr0Item,Set Name)]
@@ -361,11 +414,6 @@ the spontaneous lookaheads in the right form to begin with (ToDo).
 > add_lookahead item s (m@(item',s') : las)
 >	| item == item' = (item, s `union_Int` s') : las
 >	| otherwise     = m : add_lookahead item s las
-
-> get_new array [] new = return new
-> get_new array (l@(i,item,s):las) new = do
->	state_las <- readArray array i
->	get_new array las (get_new' l state_las new)
 
 > get_new' :: (Int,Lr0Item,Set Name) -> [(Lr0Item,Set Name)] ->
 >		 [(Int,Lr0Item,Set Name)] -> [(Int,Lr0Item,Set Name)]
@@ -378,14 +426,23 @@ the spontaneous lookaheads in the right form to begin with (ToDo).
 >	| otherwise = 
 >		get_new' l las new
 
-#else
+> fold_lookahead :: (Int,Lr0Item,Set Name) -> [(Int,Lr0Item,Set Name)]
+>		-> [(Int,Lr0Item,Set Name)]
+> fold_lookahead l [] = [l]
+> fold_lookahead l@(i,item,s) (m@(i',item',s'):las)
+>  	| i == i' && item == item' = (i,item, s `union_Int` s'):las
+>	| i < i' = (i,item,s):m:las
+>	| otherwise = m : fold_lookahead l las
+
+#else /* not __GLASGOW_HASKELL */
 
 > calcLookaheads
->	:: [(Int, Lr0Item, Name)]		-- spontaneous lookaheads
+>	:: Int					-- number of states
+>	-> [(Int, Lr0Item, Name)]		-- spontaneous lookaheads
 >	-> Array Int [(Lr0Item, Int, Lr0Item)]	-- propagated lookaheads
 >	-> [(Int, Lr0Item, Set Name)]
 
-> calcLookaheads spont prop
+> calcLookaheads n_states spont prop
 >	= fst (mkClosure (\(_,new) _ -> null new) propagate
 >	   ([], foldr addLookahead []
 >	   	[ (i,item,singletonSet t) | (i,item,t) <- spont]))
@@ -464,7 +521,7 @@ Generating the goto table doesn't need lookahead info.
 >       gotoTable  = listArray (0,length sets-1)
 >         [
 >           (array (1, length non_terms-1) [ 
->		(n, case lookup n goto of
+>		ASSOC(n, case lookup n goto of
 >			Nothing -> NoGoto
 >			Just s  -> Goto s)
 >                             | n <- tail non_terms, n >= 0, n < first_term ])
@@ -482,7 +539,7 @@ Generating the goto table doesn't need lookahead info.
 >	eof = getEOF g
 >       term_lim = (head terms,last terms)
 >       actionTable = array (0,length sets-1)
->             [ (set_no, accumArray res
+>             [ ASSOC(set_no, accumArray res
 >				 LR'Fail term_lim 
 >				(possActions goto set))
 >                   | ((set,goto),set_no) <- zip sets [0..] ]
@@ -492,10 +549,11 @@ Generating the goto table doesn't need lookahead info.
 >               Just t | t >= first_term || t == -1 -> 
 >			case lookup t goto of
 >                       	Nothing -> []
->                               Just j  -> [ (t, LR'Shift j) ]
+>                               Just j  -> [ ASSOC(t,LR'Shift j{-'-}) ]
 >               Nothing -> if rule == 0 
->                  then [ (eof, LR'Accept) ]
->                  else zip la (repeat (LR'Reduce rule))
+>                  then [ ASSOC(eof,LR'Accept{-'-}) ]
+>                  else [ ASSOC(a,b) | (a,b) <- 
+>				zip la (repeat (LR'Reduce rule)) ]
 >               _ -> []
 
 >	possActions goto coll = 
@@ -536,7 +594,7 @@ file.)
 >	conflictArray = listArray (bounds action) conflictList
 >	conflictList  = map countConflictsState (assocs action)
 >
->	countConflictsState (state, actions) 
+>	countConflictsState ASSOC(state, actions) 
 >	  = foldr countMultiples (0,0) (elems actions)
 >	  where
 >	    countMultiples (LR'Multiple as a) (sr,rr) 

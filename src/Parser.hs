@@ -6,7 +6,8 @@ import ParseMonad
 import GenUtils
 import AbsSyn
 import Lexer
-#ifdef __GLASGOW_HASKELL__
+
+#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
 import GlaExts
 #endif
 
@@ -547,7 +548,7 @@ ourParser = happyParse
 happyError :: P a
 happyError s l = failP (show l ++ ": Parse error\n") s l
 
--- $Id: Parser.hs,v 1.6 1997/09/08 12:38:41 simonm Exp $
+-- $Id: Parser.hs,v 1.7 1997/09/09 16:31:48 simonm Exp $
 
 {-
 	The stack is in the following order throughout the parse:

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Set.lhs,v 1.4 1997/08/25 12:30:18 simonm Exp $
+$Id: Set.lhs,v 1.5 1997/09/09 16:31:51 simonm Exp $
 
 A set ADT.
 
@@ -10,7 +10,7 @@ License.
 -----------------------------------------------------------------------------
 
 > module Set (
->        Set,
+>        Set(..),
 >        mkSet, setToList, emptySet, singletonSet,
 >        union, union_Int, unionManySets,
 >        elementOf, isEmptySet,

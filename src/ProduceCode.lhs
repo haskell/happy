@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.5 1997/08/25 13:37:39 simonm Exp $
+$Id: ProduceCode.lhs,v 1.6 1997/09/09 16:31:50 simonm Exp $
 
 The code generator.
 
@@ -8,15 +8,22 @@ The code generator.
 
 > module ProduceCode (produceParser, str, interleave, interleave') where
 
-> import Maybe 			( isJust )
-
 > import Version		( version )
 > import GenUtils
 > import AbsSyn
 > import Grammar
 > import Target			( Target(..) )
+
+#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
+
+> import Maybe 			( isJust )
 > import Array
-> import Char
+> import Char (isDigit)
+
+#define ASSOC(a,b) (a , b)
+#else
+#define ASSOC(a,b) (a := b)
+#endif
 
 %-----------------------------------------------------------------------------
 Produce the complete output file.
@@ -33,13 +40,14 @@ Produce the complete output file.
 >		-> Maybe String			-- module header
 >		-> Maybe String			-- module trailer
 >		-> Target			-- type of code required
+>		-> Bool				-- support pre-1.3 haskell
 >		-> String
 
 > produceParser
 > 	(GrammarInfo prods lookupProd lookupProdNos nonterms terms eof 
 >		first_term) 
 >	 action goto lexer token_rep token_type nt_types
-> 	 name monad module_header module_trailer target = (
+> 	 name monad module_header module_trailer target opt1_2 = (
 >	 
 > 	  str comment
 >	. maybestr module_header . str "\n"
@@ -67,7 +75,7 @@ data HappyAbsSyn a t1 .. tn
 
 >    produceAbsSynDecl
 >	= str "data HappyAbsSyn "
->	. str (unwords [ "t" ++ show n | (n, Nothing) <- assocs nt_types ])
+>	. str (unwords [ "t" ++ show n | ASSOC(n, Nothing) <- assocs nt_types ])
 >	. str "\n\t= HappyTerminal " . str token_type
 >	. str "\n\t| HappyErrorToken Int\n"
 >	. interleave "\n" 
@@ -76,7 +84,7 @@ data HappyAbsSyn a t1 .. tn
 >             (case ty of 
 >                 Nothing -> showString " t" . shows n
 >                 Just t  -> brack t)
->         | (n, ty) <- assocs nt_types, 
+>         | ASSOC(n, ty) <- assocs nt_types, 
 >	    (nt_types_index ! n) == n]
 
 %-----------------------------------------------------------------------------
@@ -311,7 +319,7 @@ detected in a different state now.
 >	. str "happy_n_terms = " . shows n_terminals . str " :: Int\n"
 >	. str "happy_n_nonterms = " . shows n_nonterminals . str " :: Int\n\n"
 
->    produceStateFunction goto (state, acts)
+>    produceStateFunction goto ASSOC(state, acts)
 > 	= foldr (.) id (map produceActions (assocs acts))
 >	. foldr (.) id (map produceGotos   (assocs gotos))
 >	. mkActionName state
@@ -323,20 +331,20 @@ detected in a different state now.
 >
 >	where gotos = goto ! state
 >	
->	      produceActions (t, LR'Fail) = id
->	      produceActions (t, action@(LR'Reduce _))
+>	      produceActions ASSOC(t, LR'Fail{-'-}) = id
+>	      produceActions ASSOC(t, action@(LR'Reduce{-'-} _))
 >	      	= if default_act == LR'Fail
 >			then   actionFunction t
 >			     . mkAction action . str "\n"
 >			else id
->	      produceActions (t, action)
+>	      produceActions ASSOC(t, action)
 >	      	= actionFunction t
 >		. mkAction action . str "\n"
 >		
->	      produceGotos (t, Goto i)
+>	      produceGotos ASSOC(t, Goto i)
 >	        = actionFunction t
 >		. str "happyGoto " . mkActionName i . str "\n"
->	      produceGotos (t, NoGoto) = id
+>	      produceGotos ASSOC(t, NoGoto) = id
 >	      
 >	      actionFunction t
 >	      	= mkActionName state . strspace
@@ -413,13 +421,13 @@ for types that have alphas in them. Maybe we should
 outlaw them inside { }
 
 >    nt_types_index = array (bounds nt_types) 
->			[ (a, fn a b) | (a, b) <- assocs nt_types ]
+>			[ ASSOC(a, fn a b) | ASSOC(a, b) <- assocs nt_types ]
 >     where
 >	fn n Nothing = n
 >	fn n (Just a) = case lookup a assoc_list of
 >			  Just v -> v
 >			  Nothing -> error ("cant find an item in list")
->	assoc_list = [ (b,a) | (a, Just b) <- assocs nt_types ]
+>	assoc_list = [ (b,a) | ASSOC(a, Just b) <- assocs nt_types ]
 
 >    makeAbsSynCon = mkAbsSynCon nt_types_index
 
@@ -451,9 +459,13 @@ outlaw them inside { }
 >	    Just (_,_,rtn) -> str rtn)
 >	. str "\n"
 
-> reduceArrElem n
->   	= str "\t" . shows n . str " := "
->	. str "happyReduce_" . shows n
+>    reduceArrElem n
+>      = if opt1_2 then
+>		str "\t" . shows n . str " := "
+>	      . str "happyReduce_" . shows n
+>	 else
+>		str "\t(" . shows n . str " , "
+>      	      . str "happyReduce_" . shows n . str ")"
 
 > actionVal :: LRAction -> Int
 > actionVal (LR'Shift  state) 	= state + 1

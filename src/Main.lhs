@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.7 1997/09/08 09:25:24 simonm Exp $
+$Id: Main.lhs,v 1.8 1997/09/09 16:31:47 simonm Exp $
 
 The main driver.
 
@@ -7,10 +7,6 @@ The main driver.
 -----------------------------------------------------------------------------
 
 > module Main (main) where
-
-> import System
-> import Char
-> import IO
 
 > import ParseMonad
 > import GenUtils
@@ -25,6 +21,19 @@ The main driver.
 > import Info (genInfoFile)
 > import Target (Target(..))
 > import GetOpt
+
+#if __HASKELL1__ >= 3 && ( !defined(__GLASGOW_HASKELL__) || __GLASGOW_HASKELL__ >= 200 )
+
+> import System
+> import Char
+> import IO
+
+#else
+
+> import
+>	LibSystem
+
+#endif
 
 #ifdef __GLASGOW_HASKELL__
 #define sCC _scc_
@@ -169,6 +178,8 @@ and generate the code.
 >                       hd
 >                       tl
 >			target
+>			opt1_2
+>	    opt1_2 = Opt1_2 `elem` cli
 >	    magic_filter = 
 >	      case magic_name of
 >		Nothing -> id
