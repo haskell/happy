@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Target.lhs,v 1.2 1997/03/27 14:14:51 simonm Exp $
+$Id: Target.lhs,v 1.3 1999/10/07 15:17:40 simonmar Exp $
 
 The target data type.
 
@@ -10,7 +10,6 @@ The target data type.
 
 > data Target
 > 	= TargetHaskell			-- functions and things
->	| TargetGhc			-- haskell + ghc extensions
 > 	| TargetArrayBased		-- arrays
->  deriving Eq
 
+>  deriving Eq

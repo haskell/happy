@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.21 1999/07/14 19:33:56 panne Exp $
+$Id: Main.lhs,v 1.22 1999/10/07 15:17:39 simonmar Exp $
 
 The main driver.
 
@@ -167,8 +167,9 @@ of code we should generate, and where it should go:
 >	getOutputFileName fl_name cli			>>= \outfilename ->
 >	getTemplate template_dir cli			>>= \template' ->
 >	getCoerce target cli				>>= \opt_coerce ->
+>	getGhc cli					>>= \opt_ghc ->
 >	let 
->	    template = template_file template' target opt_coerce in
+>	    template = template_file template' target cli opt_coerce in
 
 Read in the template file for this target:
 
@@ -190,6 +191,7 @@ and generate the code.
 >                       tl
 >			target
 >			opt_coerce
+>			opt_ghc
 >	    magic_filter = 
 >	      case magic_name of
 >		Nothing -> id
@@ -338,18 +340,26 @@ Various debugging/dumping options...
 -----------------------------------------------------------------------------
 How would we like our code to be generated?
 
-> optToTarget OptGhcTarget 	= Just TargetGhc
 > optToTarget OptArrayTarget 	= Just TargetArrayBased
 > optToTarget _			= Nothing
 
-> template_file temp_dir target coerce
+> template_file temp_dir target cli coerce
 >   = temp_dir ++ base
 >  where  
 >	base = case target of
->		 TargetHaskell 	  -> "/HappyTemplate"
->		 TargetGhc | coerce -> "/HappyTemplate-coerce"
->			   | otherwise -> "/HappyTemplate-ghc"
->		 TargetArrayBased -> "/HappyTemplate-arrays"
+>		 TargetHaskell 
+>		     | OptGhcTarget `elem` cli ->
+>			if OptUseCoercions `elem` cli 
+>				then "/HappyTemplate-coerce"
+>				else "/HappyTemplate-ghc"
+>		     | otherwise -> "/HappyTemplate"
+>
+>		 TargetArrayBased
+>		     | OptGhcTarget `elem` cli ->
+>			if OptUseCoercions `elem` cli 
+>				then "/HappyTemplate-arrays-coerce"
+>				else "/HappyTemplate-arrays-ghc"
+>		     | otherwise -> "/HappyTemplate-arrays"
 
 ------------------------------------------------------------------------------
 Extract various command-line options.
@@ -387,11 +397,13 @@ Extract various command-line options.
 
 > getCoerce target cli
 >	= if OptUseCoercions `elem` cli 
->	     then case target of
->			TargetGhc -> return True
->			otherwise -> dieHappy "-c/--coerce may only be used \ 
->					      \in conjunction with -g/--ghc\n"
+>	     then if OptGhcTarget `elem` cli
+>			then return True
+>			else dieHappy "-c/--coerce may only be used \ 
+>				      \in conjunction with -g/--ghc\n"
 >	     else return False
+
+> getGhc cli = return (OptGhcTarget `elem` cli)
 
 ------------------------------------------------------------------------------
 

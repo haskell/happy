@@ -3,6 +3,11 @@ Test for monadic Happy Parsers, Simon Marlow 1996.
 
 > {
 > import Char
+> import Addr
+> import Int
+> import Array
+> import IOExts
+> import GlaExts
 > }
 
 > %name calc

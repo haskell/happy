@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.24 1999/10/05 15:29:47 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.25 1999/10/07 15:17:39 simonmar Exp $
 
 The code generator.
 
@@ -16,7 +16,7 @@ The code generator.
 
 > import Maybe 			( isJust )
 > import Array
-> import Char (isDigit)
+> import Char
 
 %-----------------------------------------------------------------------------
 Produce the complete output file.
@@ -33,6 +33,7 @@ Produce the complete output file.
 >		-> Maybe String			-- module trailer
 >		-> Target			-- type of code required
 >		-> Bool				-- use coercions
+>		-> Bool				-- use ghc extensions
 >		-> String
 
 > produceParser (Grammar 
@@ -47,7 +48,7 @@ Produce the complete output file.
 >		, first_term = fst_term
 >		})
 >	 	action goto lexer token_rep token_type
->		name monad module_header module_trailer target coerce 
+>		name monad module_header module_trailer target coerce ghc
 >     =	( str comment
 >	. maybestr module_header . nl
 > 	. produceAbsSynDecl . nl
@@ -173,10 +174,8 @@ based parsers -- types aren't as important there).
 
 >     | otherwise = id
 
->	where intMaybeHash 
->		= case target of
->			TargetGhc -> str "Int#"
->			_	  -> str "Int"
+>	where intMaybeHash | ghc       = str "Int#"
+>		           | otherwise = str "Int"
 >	      token = brack token_type
 >	      tokens = 
 >     		case lexer of
@@ -371,9 +370,8 @@ the left hand side of '@'.
 
 >    tokIndex 
 >	= case target of
->		TargetGhc	 -> id
 >		TargetHaskell 	 -> id
->		TargetArrayBased -> \i ->i - n_nonterminals - 1
+>		TargetArrayBased -> \i -> i - n_nonterminals - 3
 
 
 %-----------------------------------------------------------------------------
@@ -428,8 +426,6 @@ machinery to discard states in the parser...
 
 >    produceActionTable TargetHaskell 
 >	= foldr (.) id (map (produceStateFunction goto) (assocs action))
->    produceActionTable TargetGhc
->	= foldr (.) id (map (produceStateFunction goto) (assocs action))
 >	
 >    produceActionTable TargetArrayBased
 > 	= produceActionArray
@@ -442,9 +438,9 @@ machinery to discard states in the parser...
 > 	= foldr (.) id (map produceActions assocs_acts)
 >	. foldr (.) id (map produceGotos   (assocs gotos))
 >	. mkActionName state
->	. case target of
->              TargetGhc ->   str " x = happyTcHack x "
->              _         ->   str " _ = "
+>	. (if ghc
+>              then str " x = happyTcHack x "
+>              else str " _ = ")
 >	. mkAction default_act
 >	. str "\n\n"
 >
@@ -476,30 +472,46 @@ machinery to discard states in the parser...
 action array indexed by (terminal * last_state) + state
 
 >    produceActionArray
->   	= str "happyActionArr :: Array Int Int\n"
->	. str "happyActionArr = listArray (2,"
->		. shows (n_terminals * n_states + 2)
->		. str ") (["
->	. rle_to_str (rle_list (concat 
->		(map actionArrElems (elems action)))) False
->	. str "\n\t])\n\n"
->	
+>	| ghc
+>	   = str "happyActionArr :: Addr\n"
+>	   . str "happyActionArr = A# \"" --"
+>	   . str (hexChars (concat (map actionArrElems (elems action))))
+>	   . str "\"#\n\n"  --"
+
+>	| otherwise
+>	    = str "happyActionArr :: Array Int Int\n"
+>	    . str "happyActionArr = listArray (0,"
+>		 . shows (n_terminals * n_states + 0)
+>		 . str ") (["
+>	    . rle_to_str (rle_list (concat 
+>		 (map actionArrElems (elems action)))) False
+>	    . str "\n\t])\n\n"
+
 >    (_, last_state) = bounds action
 >    n_states = last_state + 1
 >    n_terminals = length terms
 >    n_nonterminals = length nonterms - 1 -- lose one for %start
 >
->    actionArrElems actions = map actionVal (e : drop (n_nonterminals + 1) line)
->	where (e:d:line) = elems actions
+>    actionArrElems actions = map (actionVal default_act) 
+>				 (e : drop (n_nonterminals + 1) line)
+>	where (e:d:line)  = elems actions
+>	      default_act = getDefault (assocs actions)
 
 >    produceGotoArray
->   	= str "happyGotoArr :: Array Int Int\n"
->	. str "happyGotoArr = listArray (0, "
->		. shows (n_nonterminals * n_states)
->		. str ") (["
->	. rle_to_str (rle_list (concat 
->		(map gotoArrElems (elems goto)))) False
->	. str "\n\t])\n\n"
+>	| ghc
+>	   = str "happyGotoArr :: Addr\n"
+>	   . str "happyGotoArr = A# \"" --"
+>	   . str (hexChars (concat (map gotoArrElems (elems goto))))
+>	   . str "\"#\n\n"  --"
+
+>	| otherwise
+>	   = str "happyGotoArr :: Array Int Int\n"
+>	   . str "happyGotoArr = listArray (0, "
+>	   	   . shows (n_nonterminals * n_states)
+>	   	   . str ") (["
+>	   . rle_to_str (rle_list (concat 
+>	   	   (map gotoArrElems (elems goto)))) False
+>	   . str "\n\t])\n\n"
 
 >    gotoArrElems gotos	= map gotoVal (elems gotos)
 
@@ -515,9 +527,8 @@ action array indexed by (terminal * last_state) + state
 
 >    n_rules = length prods - 1 :: Int
 
->    showInt i = case target of
->    		TargetGhc -> shows i . showChar '#'
->		_	  -> shows i
+>    showInt i | ghc       = shows i . showChar '#'
+>	       | otherwise = shows i
 
 This lets examples like:
 
@@ -600,12 +611,13 @@ vars used in this piece of code.
 >    	where
 >	(code,vars) = expandVars r
 
-> actionVal :: LRAction -> Int
-> actionVal (LR'Shift  state) 	= state + 1
-> actionVal (LR'Reduce rule)  	= -(rule + 1)
-> actionVal  LR'Accept		= -1
-> actionVal  LR'Fail		= 0
-> actionVal (LR'Multiple _ a)	= actionVal a
+> actionVal :: LRAction -> LRAction -> Int
+> actionVal deflt (LR'Shift  state) 	= state + 1
+> actionVal deflt (LR'Reduce rule)  	= -(rule + 1)
+> actionVal deflt  LR'Accept		= -1
+> actionVal deflt (LR'Multiple _ a)	= actionVal deflt a
+> actionVal LR'Fail LR'Fail		= 0
+> actionVal deflt   LR'Fail		= actionVal deflt deflt
 
 > gotoVal :: Goto -> Int
 > gotoVal (Goto i)		= i
@@ -675,6 +687,22 @@ Misc.
 
 > brack s = str ('(' : s) . char ')'
 > brack' s = char '(' . s . char ')'
+
+-----------------------------------------------------------------------------
+-- Convert an integer to a 16-bit number encoded in \xNN\xNN format suitable
+-- for placing in a string.
+
+> hexChars :: [Int] -> String
+> hexChars acts = concat (map hexChar acts)
+
+> hexChar :: Int -> String
+> hexChar i | i < 0 = hexChar (i + 2^16)
+> hexChar i =  toHex (i `mod` 256) ++ toHex (i `div` 256)
+
+> toHex i = ['\\','x', hexDig (i `div` 16), hexDig (i `mod` 16)]
+
+> hexDig i | i <= 9    = chr (i + ord '0')
+>	   | otherwise = chr (i - 10 + ord 'a')
 
 -----------------------------------------------------------------------------
 Run Length Encode an array to cut down on code size.

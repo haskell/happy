@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Parser.ly,v 1.7 1998/06/19 13:41:05 simonm Exp $
+$Id: Parser.ly,v 1.8 1999/10/07 15:17:39 simonmar Exp $
 
 The parser.
 
@@ -12,6 +12,8 @@ The parser.
 > import GenUtils
 > import AbsSyn
 > import Lexer
+> import Array
+> import Int
 
 > #ifdef __GLASGOW_HASKELL__
 > import GlaExts
