@@ -690,6 +690,186 @@ stmts : stmts ';' stmt          { $3 : $1 }
 
     </sect1>
     
+    <sect1 id="sec-Precedences">
+      <title>Using Precedences</title>
+      <indexterm><primary>precedences</primary></indexterm>
+      <indexterm><primary>associativity</primary></indexterm>
+
+      <para>Going back to our earlier expression-parsing example,
+      wouldn't it be nicer if we didn't have to explicitly separate
+      the expressions into terms and factors, merely to make it
+      clear that <literal>'*'</literal> and <literal>'/'</literal>
+      operators bind more tightly than <literal>'+'</literal> and
+      <literal>'-'</literal>?</para>
+
+      <para>We could just change the grammar as follows (making the
+      appropriate changes to the expression datatype too):</para>
+
+<programlisting>
+Exp   : let var '=' Exp in Exp  { Let $2 $4 $6 }
+      | Exp '+' Exp             { Plus $1 $3 }
+      | Exp '-' Exp             { Minus $1 $3 }
+      | Exp '*' Exp             { Times $1 $3 }
+      | Exp '/' Exp             { Div $1 $3 }
+      | '(' Exp ')'             { Brack $2 }
+      | int                     { Int $1 }
+      | var                     { Var $1 }
+</programlisting>
+
+      <para>but now Happy will complain that there are shift/reduce
+      conflicts because the grammar is ambiguous - we haven't
+      specified whether e.g. <literal>1 + 2 * 3</literal> is to be
+      parsed as <literal>1 + (2 * 3)</literal> or <literal>(1 + 2) *
+      3</literal>.  Happy allows these ambiguities to be resolved by
+      specifying the <firstterm>precedences</firstterm> of the
+      operators involved using directives in the
+      header<footnote><para>Users of <literal>yacc</literal> will find
+      this familiar, Happy's precedence scheme works in exactly the
+      same way.</para></footnote>:</para>
+
+<programlisting>
+...
+%right in
+%left '+' '-'
+%left '*' '/'
+%%
+...
+</programlisting>
+<indexterm><primary><literal>%left</literal> directive</primary></indexterm>
+<indexterm><primary><literal>%right</literal> directive</primary></indexterm>
+<indexterm><primary><literal>%nonassoc</literal> directive</primary></indexterm>
+      
+      <para>The <literal>%left</literal> or <literal>%right</literal>
+      directive is followed by a list of terminals, and declares all
+      these tokens to be left or right-associative respectively.  The
+      precedence of these tokens with respect to other tokens is
+      established by the order of the <literal>%left</literal> and
+      <literal>%right</literal> directives: earlier means lower
+      precedence.  A higher precedence causes an operator to bind more
+      tightly; in our example above, because <literal>'*'</literal>
+      has a higher precedence than <literal>'+'</literal>, the
+      expression <literal>1 + 2 * 3</literal> will parse as <literal>1
+      + (2 * 3)</literal>.</para>
+
+      <para>What happens when two operators have the same precedence?
+      This is when the <firstterm>associativity</firstterm> comes into
+      play.  Operators specified as left associative will cause
+      expressions like <literal>1 + 2 - 3</literal> to parse as
+      <literal>(1 + 2) - 3</literal>, whereas right-associative
+      operators would parse as <literal>1 + (2 - 3)</literal>.  There
+      is also a <literal>%nonassoc</literal> directive which indicates
+      that the specified operators may not be used together.  For
+      example, if we add the comparison operators
+      <literal>'>'</literal> and <literal>'<'</literal> to our
+      grammar, then we would probably give their precedence as:</para>
+
+<programlisting>
+...
+%nonassoc '>' '<'
+%right in
+%left '+' '-'
+%left '*' '/'
+%%
+...
+</programlisting>
+
+      <para>which indicates that <literal>'>'</literal> and
+      <literal>'<'</literal> bind less tightly than the other
+      operators, and the non-associativity causes expressions such as
+      <literal>1 > 2 > 3</literal> to be disallowed.</para>
+
+      <sect2 id="how-precedence-works">
+	<title>How precedence works</title>
+
+	<para>The precedence directives, <literal>%left</literal>,
+	<literal>%right</literal> and <literal>%nonassoc</literal>,
+	assign precedence levels to the tokens in the declaration.  A
+	rule in the grammar may also have a precedence: if the last
+	terminal in the left hand side of the rule has a precedence,
+	then this is the precedence of the whole rule.</para>
+
+	<para>The precedences are used to resolve ambiguities in the
+	grammar.  If there is a shift/reduce conflict, then the
+	precedence of the rule and the lookahead token are examined in
+	order to resolve the conflict:</para>
+
+	<itemizedlist>
+	  <listitem>
+	    <para>If the precedence of the rule is higher, then the
+	    conflict is resolved as a reduce.</para>
+	  </listitem>
+	  <listitem>
+	    <para>If the precedence of the lookahead token is higher,
+	    then the conflict is resolved as a shift.</para>
+	  </listitem>
+	  <listitem>
+	    <para>If the precedences are equal, then</para>
+	    <itemizedlist>
+		<listitem>
+		<para>If the token is left-associative, then reduce</para>
+	      </listitem>
+	      <listitem>
+		<para>If the token is right-associative, then shift</para>
+	      </listitem>
+	      <listitem>
+		<para>If the token is non-associative, then fail</para>
+	      </listitem>
+	    </itemizedlist>
+	  </listitem>
+	  <listitem>
+	    <para>If either the rule or the token has no precedence,
+	    then the default is to shift (these conflicts are reported
+	    by Happy, whereas ones that are automatically resolved by
+	    the precedence rules are not).</para>
+	  </listitem>
+	</itemizedlist>
+      </sect2>
+
+      <sect2 id="context-precedence">
+	<title>Context-dependent Precedence</title>
+	
+	<para>The precedence of an individual rule can be overriden,
+	using <firstterm>context precedence</firstterm>.  This is
+	useful when, for example, a particular token has a different
+	precedence depending on the context.  A common example is the
+	minus sign: it has high precedence when used as prefix
+	negation, but a lower precedence when used as binary
+	subtraction.</para>
+
+	<para>We can implement this in Happy as follows:</para>
+
+<programlisting>
+
+%nonassoc '>' '<'
+%right in
+%left '+' '-'
+%left '*' '/'
+%left NEG
+%%
+
+Exp   : let var '=' Exp in Exp  { Let $2 $4 $6 }
+      | Exp '+' Exp             { Plus $1 $3 }
+      | Exp '-' Exp             { Minus $1 $3 }
+      | Exp '*' Exp             { Times $1 $3 }
+      | Exp '/' Exp             { Div $1 $3 }
+      | '(' Exp ')'             { Brack $2 }
+      | '-' Exp %prec NEG       { Negate $2 }
+      | int                     { Int $1 }
+      | var                     { Var $1 }
+</programlisting>
+<indexterm><primary><literal>%prec</literal> directive</primary></indexterm>
+
+	<para>We invent a new token <literal>NEG</literal> as a
+	placeholder for the precedence of our prefix negation rule.
+	The <literal>NEG</literal> token doesn't need to appear in
+	a <literal>%token</literal> directive.  The prefix negation
+	rule has a <literal>%prec NEG</literal> directive attached,
+	which overrides the default precedence for the rule (which
+	would normally be the precedence of '-') with the precedence
+	of <literal>NEG</literal>.</para>
+      </sect2>
+    </sect1>
+
     <sect1 id="sec-type-signatures">
       <title>Type Signatures</title>
 
@@ -1745,6 +1925,38 @@ any projection function.</para>
 	<para>Lexer declarations are described in more detail in <xref
         linkend="sec-lexers">.</para>
 	
+      </sect2>
+
+      <sect2 id="sec-prec-decls">
+	<title>Precedence declarations</title>
+
+<programlisting>
+%left     &lt;name&gt; ...
+%right    &lt;name&gt; ...
+%nonassoc &lt;name&gt; ...
+</programlisting>
+	<indexterm>
+	  <primary><literal>%left</literal> directive</primary>
+	</indexterm>
+	<indexterm>
+	  <primary><literal>%right</literal> directive</primary>
+	</indexterm>
+	<indexterm>
+	  <primary><literal>%nonassoc</literal> directive</primary>
+	</indexterm>
+
+	<para>These declarations are used to specify the precedences
+	and associativity of tokens.  The precedence assigned by a
+	<literal>%left</literal>, <literal>%right</literal> or
+	<literal>%nonassoc</literal> declaration is defined to be
+	higher than the precedence assigned by all declarations
+	earlier in the file, and lower than the precedence assigned by
+	all declarations later in the file.</para>
+
+	<para>The associativity of a token relative to tokens in the
+	same <literal>%left</literal>, <literal>%right</literal>, or
+	<literal>%nonassoc</literal> declaration is to the left, to
+	the right, or non-associative respectively.</para>
       </sect2>
     </sect1>
 
