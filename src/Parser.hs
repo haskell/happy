@@ -118,7 +118,7 @@ action_0 (12) = happyGoto action_2
 action_0 (13) = happyGoto action_3
 action_0 _ = happyReduce_25
 
-action_1 (33) = happyAccept
+action_1 (26) = happyAccept
 action_1 _ = happyFail
 
 action_2 (15) = happyShift action_7
@@ -517,7 +517,7 @@ happyNewToken action sts stk
 	= lexer(\tk -> 
 	let cont i = action i i tk (HappyState action) sts stk in
 	case tk of {
-	TokenEOF -> action 33 33 (error "reading EOF!") (HappyState action) sts stk;
+	TokenEOF -> action 26 26 (error "reading EOF!") (HappyState action) sts stk;
 	TokenInfo _ TokId -> cont 14;
 	TokenKW     TokSpecId_TokenType -> cont 15;
 	TokenKW     TokSpecId_Token -> cont 16;
@@ -530,13 +530,6 @@ happyNewToken action sts stk
 	TokenKW     TokDoubleColon -> cont 23;
 	TokenKW     TokDoublePercent -> cont 24;
 	TokenKW     TokBar -> cont 25;
-	TokenKW     TokOpenBrack -> cont 26;
-	TokenKW     TokCloseBrack -> cont 27;
-	TokenKW     TokMinus -> cont 28;
-	TokenKW     TokPlus -> cont 29;
-	TokenKW     TokStar -> cont 30;
-	TokenKW     TokQmark -> cont 31;
-	TokenKW     TokBackQ -> cont 32;
 	})
 
 happyThen = thenP
@@ -548,7 +541,7 @@ ourParser = happyParse
 happyError :: P a
 happyError s l = failP (show l ++ ": Parse error\n") s l
 
--- $Id: Parser.hs,v 1.7 1997/09/09 16:31:48 simonm Exp $
+-- $Id: Parser.hs,v 1.8 1997/09/24 10:06:25 simonm Exp $
 
 {-
 	The stack is in the following order throughout the parse:

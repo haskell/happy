@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Lexer.lhs,v 1.7 1997/09/09 16:31:46 simonm Exp $
+$Id: Lexer.lhs,v 1.8 1997/09/24 10:06:24 simonm Exp $
 
 The lexer.
 
@@ -49,13 +49,6 @@ The lexer.
 >       | TokDoubleColon        -- ::
 >       | TokDoublePercent      -- %%
 >       | TokBar                -- |
->	| TokOpenBrack		-- (
->	| TokCloseBrack		-- )
->	| TokPlus		-- +
->	| TokMinus		-- -
->	| TokStar		-- *
->	| TokQmark		-- ?
->	| TokBackQ		-- \?
 >       deriving (Eq,Ord
 
 #ifdef DEBUG
@@ -86,13 +79,6 @@ ToDo: proper text instance here, for use in parser error messages.
 >  	'\''	-> lexChar cont
 >  	'"'{-"-}-> lexString cont
 >  	'{' 	-> lexCode cont
->	'('	-> cont (TokenKW TokOpenBrack)
->	')'	-> cont (TokenKW TokCloseBrack)
->	'+'	-> cont (TokenKW TokPlus)
->	'-'	-> cont (TokenKW TokMinus)
->	'*'	-> cont (TokenKW TokStar)
->	'?'	-> cont (TokenKW TokQmark)
->	'\\'	-> lexBackQ cont
 >  	c 	
 >	  | isSpace c -> lexer cont
 >	  |  c >= 'a' && c <= 'z' 
@@ -122,9 +108,6 @@ followed by a special identifier.
 
 > lexId cont c rest = 
 >	readId rest (\ id rest' -> cont (TokenInfo (c:id) TokId) rest')
-
-> lexBackQ cont [] = cont TokenEOF []
-> lexBackQ cont (c:rest) = cont (TokenInfo [c] TokBackQ) rest
 
 > lexChar cont rest = lexReadChar rest 
 >	(\ id -> cont (TokenInfo ("'" ++ id ++ "'") TokId))

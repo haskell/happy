@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Parser.ly,v 1.4 1997/09/09 16:31:49 simonm Exp $
+$Id: Parser.ly,v 1.5 1997/09/24 10:06:26 simonm Exp $
 
 The parser.
 
@@ -33,13 +33,6 @@ The parser.
 >	"::"		{ TokenKW     TokDoubleColon }
 >	"%%"		{ TokenKW     TokDoublePercent }
 >	"|"		{ TokenKW     TokBar }
->	"("		{ TokenKW     TokOpenBrack }
->	")"		{ TokenKW     TokCloseBrack }
->	"-"		{ TokenKW     TokMinus }
->	"+"		{ TokenKW     TokPlus }
->	"*"		{ TokenKW     TokStar }
->	"?"		{ TokenKW     TokQmark }
->	"\?"		{ TokenKW     TokBackQ }
 
 > %monad { P } { thenP } { returnP }
 > %lexer { lexer } { TokenEOF }
