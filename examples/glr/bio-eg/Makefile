@@ -41,4 +41,5 @@ run12 : ${PROG}
 	echo Expect NINE matches, got `grep '^[(,0-9]*G_Match' out.1200 | wc -l`
 
 clean :
-	rm -rf ${PROG} Bio.info Bio.hs BioData.hs *.o *.hi out.daVinci 
+	rm -rf ${PROG} Bio.info Bio.hs BioData.hs *.o *.hi out.daVinci \
+		out.1200 out.600
