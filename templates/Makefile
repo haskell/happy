@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.6 2001/02/12 12:11:44 simonmar Exp $
+# $Id: Makefile,v 1.7 2001/02/12 19:26:59 qrczak Exp $
 
 TOP = ../..
 include $(TOP)/mk/boilerplate.mk
@@ -23,7 +23,9 @@ all :: $(TEMPLATES)
 
 override datadir = $(libdir)/happy
 
-ghc_411_at_least = $(shell expr "$(GhcMinVersion)" \>= 11)
+ghc_411_at_least = $(shell expr "$(GhcMajVersion)" ==   4 \& \
+                                "$(GhcMinVersion)" \>= 11 \| \
+                                "$(GhcMajVersion)" \>   4)
 
 ifeq "$(ghc_411_at_least)" "1"
 CPP_IT = $(GHC) -E -cpp -o
