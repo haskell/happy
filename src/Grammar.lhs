@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Grammar.lhs,v 1.6 1997/09/24 10:05:38 simonm Exp $
+$Id: Grammar.lhs,v 1.7 1997/09/26 09:53:23 simonm Exp $
 
 The Grammar data type.
 
@@ -63,9 +63,10 @@ terminals 	= n..m
 
 #ifdef DEBUG
 
-> instance Text Grammar where
+> instance Show Grammar where
 >       showsPrec _ (Grammar p d t n tys e eof) = 
 >               shows (getProds p) . showString "\n" .
+>		shows (getFirstTerm p) . showString "\n" .
 >               shows d . showString "\n" .
 >               shows t . showString "\n" .
 >               shows n . showString "\n" .
@@ -211,7 +212,7 @@ So is this.
 
 #ifdef DEBUG
 
->	,Text
+>	,Show
 
 #endif
 
@@ -234,7 +235,7 @@ So is this.
 
 #ifdef DEBUG
 
->	,Text
+>	,Show
 
 #endif
 
