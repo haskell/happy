@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: Main.lhs,v 1.35 2001/08/29 15:32:57 simonmar Exp $
+$Id: Main.lhs,v 1.36 2001/09/24 15:45:55 simonmar Exp $
 
 The main driver.
 
@@ -408,10 +408,11 @@ Extract various command-line options.
 
 > getInfoFileName base cli
 > 	= case [ s | (OptInfoFile s) <- cli ] of
->		[]	   -> return Nothing
->		f:fs       -> case last (filter isJust (f:fs)) of
+>		[]	-> return Nothing
+>		[f]     -> case f of
 >			        Nothing -> return (Just (base ++ ".info"))
 >				Just j  -> return (Just j)
+>	        _many	-> dieHappy "multiple --info/-i options\n"
 
 > getTemplate def cli
 > 	= case [ s | (OptTemplate s) <- cli ] of
