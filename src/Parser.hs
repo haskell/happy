@@ -1,4 +1,4 @@
--- parser produced by Happy Version 1.1-simonm
+-- parser produced by Happy Version 1.3
 
 
 module Parser (ourParser,AbsSyn) where
@@ -6,6 +6,9 @@ import ParseMonad
 import GenUtils
 import AbsSyn
 import Lexer
+#ifdef __GLASGOW_HASKELL__
+import GlaExts
+#endif
 
 data HappyAbsSyn 
 	= HappyTerminal Token
@@ -544,7 +547,7 @@ ourParser = happyParse
 happyError :: P a
 happyError s l = failP (show l ++ ": Parse error\n") s l
 
--- $Id: Parser.hs,v 1.5 1997/03/28 14:56:28 simonm Exp $
+-- $Id: Parser.hs,v 1.6 1997/09/08 12:38:41 simonm Exp $
 
 {-
 	The stack is in the following order throughout the parse:
@@ -607,17 +610,23 @@ happySpecReduce_1 i fn (-1) tk _ (st@(HappyState action):sts) stk
      = action (-1) (-1) tk st sts stk
 happySpecReduce_1 i fn j tk _ sts@(st@(HappyState action):_) (v1:stk')
      = action i j tk st sts (fn v1 : stk')
+happySpecReduce_1 _ _ _ _ _ _ _
+     = notHappyAtAll
 
 happySpecReduce_2 i fn (-1) tk _ (st@(HappyState action):sts) stk
      = action (-1) (-1) tk st sts stk
 happySpecReduce_2 i fn j tk _ (_:sts@(st@(HappyState action):_)) (v1:v2:stk')
      = action i j tk st sts (fn v1 v2 : stk')
+happySpecReduce_2 _ _ _ _ _ _ _
+     = notHappyAtAll
 
 happySpecReduce_3 i fn (-1) tk _ (st@(HappyState action):sts) stk
      = action (-1) (-1) tk st sts stk
 happySpecReduce_3 i fn j tk _ (_:_:sts@(st@(HappyState action):_)) 
 	(v1:v2:v3:stk')
      = action i j tk st sts (fn v1 v2 v3 : stk')
+happySpecReduce_3 _ _ _ _ _ _ _
+     = notHappyAtAll
 
 happyReduce k i fn (-1) tk _ (st@(HappyState action):sts) stk
      = action (-1) (-1) tk st sts stk
