@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: AbsSyn.lhs,v 1.1 1997/02/11 13:12:06 simonm Exp $
+$Id: AbsSyn.lhs,v 1.1.1.1 1997/02/11 13:12:06 simonm Exp $
 
 Abstract syntax for grammar files.
 
