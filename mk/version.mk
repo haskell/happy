@@ -15,3 +15,4 @@ ProjectName       = Happy
 ProjectNameShort  = happy
 ProjectVersion    = 1.12
 ProjectVersionInt = 112
+ProjectPatchLevel = 0
