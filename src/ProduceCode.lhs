@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.49 2001/03/30 14:08:23 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.50 2001/03/30 14:15:12 simonmar Exp $
 
 The code generator.
 
@@ -189,12 +189,12 @@ based parsers -- types aren't as important there).
 >     . str " \n\t-> " . token
 >     . str "\n\t-> HappyState "
 >     . token
->     . str " ([HappyAbsSyn] -> " . tokens . result
+>     . str " (HappyStk HappyAbsSyn -> " . tokens . result
 >     . str ")\n\t"
 >     . str "-> [HappyState "
 >     . token
->     . str " ([HappyAbsSyn] -> " . tokens . result
->     . str ")] \n\t-> [HappyAbsSyn] \n\t-> "
+>     . str " (HappyStk HappyAbsSyn -> " . tokens . result
+>     . str ")] \n\t-> HappyStk HappyAbsSyn \n\t-> "
 >     . tokens
 >     . result
 >     . str "\n\n"
