@@ -90,14 +90,21 @@ scanner	:: { Scanner }
 	: BIND tokendefs	 	{ Scanner $1 $2 }
 
 tokendefs :: { [RECtx] }
-	: tokendef tokendefs		{ $1 : $2 }
+	: tokendef tokendefs		{ $1 ++ $2 }
 	| {- empty -}			{ [] }
 
-tokendef :: { RECtx }
-	: startcodes context rhs	{ let (l,e,r) = $2 in 
-					  RECtx $1 l e r $3 }
-	| context rhs			{ let (l,e,r) = $1 in 
+tokendef :: { [RECtx] }
+	: startcodes rule		{ [ replaceCodes $1 $2 ] }
+	| startcodes '{' rules '}'	{ map (replaceCodes $1) $3 }
+	| rule				{ [ $1 ] }
+
+rule    :: { RECtx }
+	: context rhs			{ let (l,e,r) = $1 in 
 					  RECtx [] l e r $2 }
+
+rules	:: { [RECtx] }
+	: rule rules			{ $1 : $2 }
+	| {- empty -}			{ [] }
 
 startcodes :: { [(String,StartCode)] }
 	: '<' startcodes0 '>' 		{ $2 }
@@ -162,13 +169,22 @@ set	:: { CharSet }
 	| set0 				{ $1 }
 
 set0	:: { CharSet }
-	: '~' set0 			{ charSetComplement $2 }
-	| CHAR 				{ charSetSingleton $1 }
+	: CHAR 				{ charSetSingleton $1 }
 	| CHAR '-' CHAR			{ charSetRange $1 $3 }
 	| smac 				{% lookupSMac $1 }
 	| '[' sets ']' 			{ foldr charSetUnion emptyCharSet $2 }
-	| '[' '^' sets ']'		{ charSetComplement $
-					   foldr charSetUnion emptyCharSet $3 }
+
+	-- [^sets] is the same as  '. # [sets]'
+	-- The upshot is that [^set] does *not* match a newline character,
+	-- which seems much more useful than just taking the complement.
+	| '[' '^' sets ']'		
+			{% do { dot <- lookupSMac (tokPosn $1, ".");
+		      	        return (dot `charSetMinus`
+			      		  foldr charSetUnion emptyCharSet $3) }}
+
+	-- ~set is the same as '. # set'
+	| '~' set0	{% do { dot <- lookupSMac (tokPosn $1, ".");
+		      	        return (dot `charSetMinus` $2) } }
 
 sets	:: { [CharSet] }
 	: set sets			{ $1 : $2 }
@@ -194,4 +210,6 @@ repeat_rng n (Just (Just m)) re = intl :%% rst
 	where
 	intl = repeat_rng n Nothing re
 	rst = foldr (\re re'->Ques(re :%% re')) Eps (replicate (m-n) re)
+
+replaceCodes codes rectx = rectx{ reCtxStartCodes = codes }
 }

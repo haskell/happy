@@ -64,8 +64,12 @@ alex :-
 <startcodes>	0		{ zero }
 <startcodes>	@id		{ startcode }
 <startcodes>	\,		{ special }
-<startcodes> 	\> 		{ special `andBegin` 0 }
+<startcodes> 	\> 		{ special `andBegin` afterstartcodes }
 
+-- After a <..> startcode sequence, we can have a {...} grouping of rules,
+-- so don't try to interpret the opening { as a code block.
+<afterstartcodes> \{ [^$digit ]  { special `andBegin` 0 }
+<afterstartcodes> ()		{ skip `andBegin` 0 }  -- note: empty pattern
 {
 
 -- -----------------------------------------------------------------------------
