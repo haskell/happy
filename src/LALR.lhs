@@ -1,10 +1,10 @@
 -----------------------------------------------------------------------------
-$Id: LALR.lhs,v 1.18 2000/12/03 16:21:50 simonmar Exp $
+$Id: LALR.lhs,v 1.19 2000/12/03 16:53:53 simonmar Exp $
 
 Generation of LALR parsing tables.
 
 (c) 1993-1996 Andy Gill, Simon Marlow
-(c) 1997-1999 Simon Marlow
+(c) 1997-2000 Simon Marlow
 -----------------------------------------------------------------------------
 
 > module LALR

@@ -1,9 +1,9 @@
 -----------------------------------------------------------------------------
-$Id: Lexer.lhs,v 1.17 2000/12/03 16:21:50 simonmar Exp $
+$Id: Lexer.lhs,v 1.18 2000/12/03 16:53:53 simonmar Exp $
 
 The lexer.
 
-(c) 1993-1996 Andy Gill, Simon Marlow
+(c) 1993-2000 Andy Gill, Simon Marlow
 -----------------------------------------------------------------------------
 
 #if defined(__GLASGOW_HASKELL__) && __GLASGOW_HASKELL__ < 400

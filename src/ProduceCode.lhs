@@ -1,9 +1,9 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.39 2000/12/03 16:21:51 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.40 2000/12/03 16:53:53 simonmar Exp $
 
 The code generator.
 
-(c) 1993-1996 Andy Gill, Simon Marlow
+(c) 1993-2000 Andy Gill, Simon Marlow
 -----------------------------------------------------------------------------
 
 > module ProduceCode (produceParser, str, interleave, interleave') where

@@ -614,7 +614,7 @@ ourParser = happyParse
 happyError :: P a
 happyError s l = failP (show l ++ ": Parse error\n") s l{-# LINE 1 "GenericTemplate.hs" -}
 {-# LINE 1 "GenericTemplate.hs" -}
--- $Id: Parser.hs,v 1.15 2000/12/03 16:21:51 simonmar Exp $
+-- $Id: Parser.hs,v 1.16 2000/12/03 16:53:53 simonmar Exp $
 
 {-# LINE 15 "GenericTemplate.hs" -}
 
