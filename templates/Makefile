@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.10 2002/09/02 13:23:13 simonmar Exp $
+# $Id: Makefile,v 1.11 2002/09/24 14:26:04 sof Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -63,7 +63,7 @@ HappyTemplate-arrays-coerce-debug.hspp : $(GENERIC_TEMPLATE)
 # hack to turn cpp-style '# 27 "GenericTemplate.hs"' into 
 # '{-# LINE 27 "GenericTemplate.hs" #-}'.
 % : %.hspp
-	perl -pe 's/^#\s+(\d+)\s+(\"[^\"]*\")/{-# LINE \1 \2 #-}/g' < $< > $@
+	perl -pe 's/^#\s+(\d+)\s+(\"[^\"]*\")/{-# LINE \1 \2 #-}/g;s/\$$(Id:.*)\$$/\1/g' < $< > $@
 
 CLEAN_FILES += $(TEMPLATES) $(patsubst %, %.hspp, $(TEMPLATES))
 
