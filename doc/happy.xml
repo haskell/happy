@@ -1664,7 +1664,7 @@ close : '}'                  { () }
       unless you know how to use the <option>-F</option> flag for Hugs),
       running the example will produce a file which can be viewed with
       the <emphasis>daVinci</emphasis> graph visualization tool.
-      (See <ulink url="http://www.b-novative.com/products/daVinci/daVinci.html"/>
+      (See <ulink url="http://www.informatik.uni-bremen.de/~davinci/"/>
        for more information. Educational use licenses are currently 
 	available without charge.)  
       </para>
@@ -2200,7 +2200,7 @@ close : '}'                  { () }
 	run will produce a file <literal>out.daVinci</literal>. This is a
 	graph in the format expected by the <emphasis>daVinci</emphasis> 
 	graph visualization tool. 
-	(See <ulink url="http://www.b-novative.com/products/daVinci/daVinci.html"/>
+	(See <ulink url="http://www.informatik.uni-bremen.de/~davinci/"/>
 	for more information. Educational use licenses are currently
 	available without charge.) 
         </para>
