@@ -1,10 +1,10 @@
 -----------------------------------------------------------------------------
-$Id: GetOpt.lhs,v 1.6 2003/07/08 15:16:44 panne Exp $
+$Id: GetOpt.lhs,v 1.7 2003/12/29 17:16:32 panne Exp $
 
 A Haskell port of GNU's getopt library 
 -----------------------------------------------------------------------------
 
-Sven Panne <sven_panne@yahoo.com> Oct. 1996 (small changes Dec. 1997)
+Sven Panne <sven.panne@aedion.de> Oct. 1996 (small changes Dec. 1997)
 
 Two rather obscure features are missing: The Bash 2.0 non-option hack
 (if you don't already know it, you probably don't want to hear about
