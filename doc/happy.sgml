@@ -1043,11 +1043,10 @@ bounds-checking which makes lookup quite expensive, and secondly current
 compilers don't know how to generate static objects (i.e. they generate
 the code which builds the array at run-time).
 
-<tag> <tt/-g | --ghc/ </tag> <p>
-Instructs Happy to generate a parser that uses ghc-specific extensions
-to obtain faster code.  When compiling the resulting Haskell module,
-remember to use ghc with the <tt/-fglasgow-exts/ option, and to add
-the declaration <tt/import GlaExts/ to the module header.
+<tag> <tt/-g | --ghc/ </tag> <p> Instructs Happy to generate a parser
+that uses ghc-specific extensions to obtain faster code.  When
+compiling the resulting Haskell module, remember to add the
+declaration <tt/import GlaExts/ to the module header.
 
 <tag> <tt/-c | --coerce/ </tag> <p> 
 Use GHC's <tt/unsafeCoerce#/ extension to generate smaller faster
@@ -1058,8 +1057,8 @@ ensure it is type-correct.
 
 This option quite a significant effect on the performance of the
 resulting parser, but remember that parsers generated this way can
-only be compiled by GHC 3.02.  This option may only be used in
-conjuction with <tt/-g/.
+only be compiled by GHC 3.02 and above.  This option may only be used
+in conjuction with <tt/-g/.
 
 <tag> <tt/-i[&lt;filename&gt;] | --info[=&lt;filename&gt;]/ </tag> <p>
 Directs Happy to produce an info file containing detailed information
