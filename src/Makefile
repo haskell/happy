@@ -1,12 +1,12 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.15 1997/09/22 09:11:50 simonm Exp $
+# $Id: Makefile,v 1.16 1997/09/22 12:58:56 simonm Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
 
 HC = $(WithHappyHc)
 
-HAPPY    = happy
+HAPPY    = happy -1.2
 
 MKDEPENDHS      := $(FPTOOLS_TOP)/ghc/driver/ghc
 
