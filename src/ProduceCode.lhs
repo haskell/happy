@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-$Id: ProduceCode.lhs,v 1.51 2001/04/03 13:00:28 simonmar Exp $
+$Id: ProduceCode.lhs,v 1.52 2001/05/22 10:03:02 simonmar Exp $
 
 The code generator.
 
@@ -793,7 +793,7 @@ See notes under "Action Tables" above for some subtleties in this function.
 --
 --        off    = happyActOff ! state
 --	  off_i  = off + token
---	  check  | off_i => 0 = happyCheck ! off_i
+--	  check  | off_i => 0 = (happyCheck ! off_i) == token
 --		 | otherwise  = False
 --	  action | check      = happyTable ! off_i
 --	         | otherwise  = happyDefAaction ! off_i
@@ -976,7 +976,7 @@ See notes under "Action Tables" above for some subtleties in this function.
 >		 -- start at offset 1 in the table: all the empty states
 >		 -- (states with just a default reduction) are mapped to
 >		 -- offset zero.
->	   off <- findFreeOffset (-t+fst_zero) table off_arr state
+>	   off <- findFreeOffset (-t+fst_zero) check off_arr state
 >	   let new_max_off | furthest_right > max_off = furthest_right
 >			   | otherwise                = max_off
 >	       furthest_right = off + max_token
@@ -985,9 +985,17 @@ See notes under "Action Tables" above for some subtleties in this function.
 >
 >	   writeArray (which_off act_or_goto) state_no off
 >	   addState off table check state
->	   new_fst_zero <- findFstZero table fst_zero
+>	   new_fst_zero <- findFstFreeSlot check fst_zero
 >	   return (off, new_max_off, new_fst_zero)
 
+When looking for a free offest in the table, we use the 'check' table
+rather than the main table.  The check table starts off with (-1) in
+every slot, because that's the only thing that doesn't overlap with
+any tokens (non-terminals start at 0, terminals start at 1).  
+
+Because we use 0 for LR'MustFail as well as LR'Fail, we can't check
+for free offsets in the main table because we can't tell whether a
+slot is free or not.
 
 > -- Find a valid offset in the table for this state.
 > findFreeOffset off table off_arr state = do
@@ -1009,8 +1017,8 @@ See notes under "Action Tables" above for some subtleties in this function.
 > fits off [] table = return True
 > fits off ((t,_):rest) table = do
 >   i <- readArray table (off+t)
->   if i /= 0 then return False
->	      else fits off rest table
+>   if i /= -1 then return False
+>	       else fits off rest table
 
 > addState off table check [] = return ()
 > addState off table check ((t,val):state) = do
@@ -1021,11 +1029,11 @@ See notes under "Action Tables" above for some subtleties in this function.
 > notFail (t,LR'Fail) = False
 > notFail _           = True
 
-> findFstZero :: STUArray s Int Int -> Int -> ST s Int
-> findFstZero table n = do
+> findFstFreeSlot :: STUArray s Int Int -> Int -> ST s Int
+> findFstFreeSlot table n = do
 >	 i <- readArray table n
->	 if i == 0 then return n
->		   else findFstZero table (n+1)
+>	 if i == -1 then return n
+>		    else findFstFreeSlot table (n+1)
 
 -----------------------------------------------------------------------------
 -- Misc.
