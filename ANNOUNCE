@@ -3,8 +3,10 @@ ANNOUNCING  Happy 1.11  - The LALR(1) Parser Generator for Haskell
 
 I'm pleased to announce version 1.11 of Happy, the parser generator
 system for Haskell.  This is a minor update from version 1.10, with
-bugfixes for using Happy with GHC on 64-bit platforms, and other minor
-fixes.
+
+	- a bugfix for using Happy with GHC on 64-bit platforms
+	- a minor change to the way that precedence parsing is handled: 
+	  tokens no longer have a default precedence.
 
 Happy is available in source form, which can be compiled with GHC
 version 4.xx (4.08+ recommended), and we also provide binaries for

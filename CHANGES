@@ -1,6 +1,9 @@
 -----------------------------------------------------------------------------
 Changes from version 1.10 to 1.11
 
+	* tokens no longer have a default precedence - if you 
+	  want a token to have a precedence, you have to declare it.
+
 	* bugfix to templates for GHC on 64-bit platforms.
 
 -----------------------------------------------------------------------------
