@@ -46,10 +46,10 @@ GLR amendments (c) University of Durham, Ben Medlock 2001
 Read and parse the CLI arguments.
 
 >       getArgs				>>= \ args ->
->	main2 args
+>       main2 args
 
 > main2 :: [String] -> IO ()
-> main2 args = 
+> main2 args =
 
 Read and parse the CLI arguments.
 
@@ -95,7 +95,7 @@ Mangle the syntax into something useful.
 
 >       let first  	= sCC "First" (mkFirst g)
 >	    closures    = sCC "Closures" (precalcClosure0 g)
->           sets  	= sCC "LR0 Sets" (genLR0items g closures)
+>	    sets  	= sCC "LR0_Sets" (genLR0items g closures)
 >	    lainfo@(spont,prop) = sCC "Prop" (propLookaheads g sets first)
 >	    la 		= sCC "Calc" (calcLookaheads (length sets) spont prop)
 >	    items2	= sCC "Merge" (mergeLookaheadInfo la sets)
@@ -200,6 +200,7 @@ Branch off to GLR parser production
 >						    (importsToInject target cli)
 >						    (optsToInject target cli)
 >	               | otherwise                = NoGhcExts
+>	    debug      = OptDebugParser `elem` cli
 >	in
 >	if OptGLR `elem` cli 
 >	then produceGLRParser outfilename   -- specified output file name 
@@ -208,7 +209,7 @@ Branch off to GLR parser production
 >			      goto 	    -- goto table (:: GotoTable)
 >			      header 	    -- header from grammar spec
 >			      tl	    -- trailer from grammar spec
->			      (glr_decode,filtering,ghc_exts)
+>			      (debug, (glr_decode,filtering,ghc_exts))
 >			                    -- controls decoding code-gen
 >			      g		    -- grammar object
 >	else 

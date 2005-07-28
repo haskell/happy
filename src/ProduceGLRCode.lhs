@@ -66,6 +66,7 @@ this is where the exts matter
 
 ---
 
+> type DebugMode = Bool
 > type Options = (DecodeOption, FilterOption, GhcExts)
 
 
@@ -79,7 +80,7 @@ Main exported function
 >	 -> GotoTable  	  -- LR tables 
 >	 -> Maybe String  -- Module header
 >	 -> Maybe String  -- User-defined stuff (token DT, lexer etc.)
->	 -> Options       -- selecting code-gen style
+>	 -> (DebugMode,Options)       -- selecting code-gen style
 >	 -> Grammar 	  -- Happy Grammar
 >	 -> IO ()
 
@@ -108,12 +109,13 @@ the driver and data strs (large template).
 >	 -> String 	  -- Templates directory
 >	 -> Maybe String  -- Module header
 >	 -> Maybe String  -- User-defined stuff (token DT, lexer etc.)
->        -> Options       -- selecting code-gen style
+>        -> (DebugMode,Options)       -- selecting code-gen style
 >	 -> Grammar 	  -- Happy Grammar
 >	 -> IO ()
 >
-> mkFiles basename tables start templdir header trailer options g
+> mkFiles basename tables start templdir header trailer (debug,options) g
 >  = do
+>	let debug_ext = if debug then "-debug" else ""
 >	let (ext,imps,opts) = case thd3 options of 
 >		    		UseGhcExts is os -> ("-ghc", is, os)
 >		    		_                -> ("", "", "")
@@ -121,7 +123,7 @@ the driver and data strs (large template).
 >	--writeFile (basename ++ ".si") (unlines $ map show sem_info)
 >	writeFile (basename ++ "Data.hs") (content base opts $ "")
 
->	lib <- readFile (lib_template templdir ++ ext)
+>	lib <- readFile (lib_template templdir ++ ext ++ debug_ext)
 >	writeFile (basename ++ ".hs") (lib_content imps opts lib)
 >  where
 >   mod_name = reverse $ takeWhile (`notElem` "\\/") $ reverse basename
