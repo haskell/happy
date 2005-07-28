@@ -1,8 +1,8 @@
 
 Test case for packing
 
-Grammar allows different (asymmetric) routes for category C; the height-
-ordering heuristic won't work in this case.
+Grammar allows different (asymmetric) routes for category C, which may get
+packed at different times
 
 
 ---
@@ -11,4 +11,6 @@ ordering heuristic won't work in this case.
 
 For Hugs, load up Hugs.lhs - it doesn't produce graphs, and has easy entry 
 point "test :: String -> IO ()
+
+correct behaviour is packing of ambiguity for all C nodes (for D and E).
 

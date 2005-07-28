@@ -1,20 +1,16 @@
-.SUFFIXES: .y .hs .exe
-
-GHC=ghc 
-# -dshow-passes
-HAPPY=happy
-
-FILTER = --filter
-FILTER = 
-
-.y.hs : 
-	${HAPPY} -i -l $*.y --ghc ${FILTER}
+TOP=..
+include ${TOP}/Makefile.defs
 
 expr : Expr.hs Main.lhs
 	${GHC} -cpp -fglasgow-exts -package lang -o expr --make Main.lhs
 
+NUM=20
 run : expr
-	./expr 12 | grep ^Ok
+	./expr +RTS -s -RTS ${NUM} | grep ^Ok
+	egrep '' expr.stat > out${NUM}
+
+run30 : 
+	make run NUM=30
 
 test : run eof err
 

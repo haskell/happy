@@ -1,10 +1,7 @@
-.SUFFIXES: .y .lhs .exe
+TOP=..
+include ${TOP}/Makefile.defs
 
 PROG=bio-eg
-
-GHC=ghc 
-# -dshow-passes
-HAPPY=happy
 
 # filtering causes this example to fail...
 FILTER = --filter
@@ -13,12 +10,9 @@ FILTER =
 .hi.o :
 	@ dummy 
 
-${PROG} : Bio.o Main.lhs DV_lhs
+${PROG} : Bio.o Main.lhs 
 	${GHC} -cpp -fglasgow-exts -package lang -o ${PROG} --make Main.lhs
 
-DV_lhs :
-	ln -s ../common/DaVinciTypes.hs ../common/DV_lhs .
-                                                                                
 BioData.hs Bio.hs : Bio.y
 	${HAPPY} --info --glr --ghc ${FILTER} $< 
 

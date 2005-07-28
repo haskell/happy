@@ -11,12 +11,13 @@ This requires CPP / preprocessing; use Hugs.lhs for tests with Hugs
 
 > main 
 >  = do
->	[s] <- getArgs
+>	(s:o) <- getArgs
+>	let x = concat o
 >	case doParse $ map (:[]) $ lexer s of 
 >	  ParseOK r f -> do 
 >			    putStrLn $ "Ok " ++ show r ++ "\n" 
->					++ unlines (map show $ fmToList f)
->			    toDV $ fmToList f
+>                               ++ (if 'f' `elem` x then unlines (map show $ fmToList f) else "")
+>			    if 'g' `elem` x then toDV (fmToList f) else return ()
 >	  ParseEOF f  -> do 
 >			    putStrLn $ "Premature end of input:\n" 
 >					++ unlines (map show $ fmToList f)

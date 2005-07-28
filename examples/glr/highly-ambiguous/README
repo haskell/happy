@@ -5,7 +5,7 @@ It is a grammar taken from [1], although it is an example from the literature
 (the draft paper didn't mention which source). 
 
 There is an explosion of possibilities because many parse stacks need to be 
-kept active. Inputs of sizes above 15 will get very expensive to parse, with
+kept active. Inputs of sizes above 25 will get very expensive to parse, with
 the current parser driver; but this seems no worse (if not better) than other 
 implementations that produce a packed forest.
 

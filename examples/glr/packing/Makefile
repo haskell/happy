@@ -1,8 +1,5 @@
-.SUFFIXES: .y .hs .exe
-
-GHC=ghc 
-# -dshow-passes
-HAPPY=happy
+TOP = ..
+include $(TOP)/Makefile.defs
 
 FILTER = --filter
 FILTER = 

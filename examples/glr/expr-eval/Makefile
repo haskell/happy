@@ -1,23 +1,18 @@
-.SUFFIXES: .y .hs .lhs .exe
+TOP=..
+include ${TOP}/Makefile.defs
 
-GHC=ghc 
-# -dshow-passes
-HAPPY=happy
+OPT = -O
+DECODE = --decode
 
-FILTER = --filter
-FILTER = 
-
-.y.hs : 
-	${HAPPY} -i -l $*.y --decode ${FILTER}
-
-expr : Expr.hs Main.lhs DV_lhs
+expr : Expr.hs Main.lhs 
 	${GHC} -cpp -fglasgow-exts -package lang -o expr --make Main.lhs
 
-DV_lhs :
-	ln -s ../common/DaVinciTypes.hs ../common/DV_lhs .
-                                                                                
 run : expr
 	./expr "1+2*4-3"
+
+runn : expr
+	./expr +RTS -s -RTS `perl -e 'print join ("+", (1 .. ${NUM}));'` | tee out-${NUM}
+	cat expr.stat >> out-${NUM}
 
 eof : expr
 	echo testing premature eof

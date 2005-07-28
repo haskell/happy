@@ -1,14 +1,5 @@
-.SUFFIXES: .y .hs .exe
-
-GHC=ghc 
-# -dshow-passes
-HAPPY=happy
-
-FILTER = --filter
-FILTER = 
-
-.y.hs : 
-	${HAPPY} -i -l $*.y ${FILTER}
+TOP=..
+include ${TOP}/Makefile.defs
 
 expr : Expr.hs Main.lhs
 	${GHC} -cpp -fglasgow-exts -package lang -o expr --make Main.lhs

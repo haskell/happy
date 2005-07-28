@@ -1,22 +1,9 @@
-.SUFFIXES: .y .hs .lhs .exe
+TOP=..
+include ${TOP}/Makefile.defs
 
-GHC=ghc 
-# -dshow-passes
-HAPPY=happy
-
-FILTER = --filter
-FILTER =
-
-
-.y.hs : 
-	${HAPPY} -i -l $*.y ${FILTER}
-
-english : English.hs Main.lhs DV_lhs
+english : English.hs Main.lhs 
 	${GHC} -cpp -fglasgow-exts -package lang -o english --make Main.lhs
 
-DV_lhs :
-	ln -s ../common/DaVinciTypes.hs ../common/DV_lhs .
-                                                                                
 run : english
 	./english "the man saw the race with a telescope"
 
