@@ -1,0 +1,15 @@
+.SUFFIXES: .y .hs .exe
+
+OPT=
+GHC=ghc -I../common -i../common -package data ${OPT}
+# -dshow-passes
+HAPPY=happy
+
+FILTER = --filter
+FILTER =
+
+DECODE = 
+
+.y.hs :
+	${HAPPY} -i -l $*.y ${DECODE} ${FILTER}
+
