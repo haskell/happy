@@ -5,6 +5,7 @@ OPT = -O
 DECODE = --decode
 
 expr : Expr.hs Main.lhs 
+	# might want to run happy with --ghc
 	${GHC} -cpp -fglasgow-exts -package lang -o expr --make Main.lhs
 
 run : expr

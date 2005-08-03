@@ -27,11 +27,11 @@ BioData.hi BioData.o : BioData.hs
 run : run12 
 
 run6 : ${PROG}
-	./${PROG} +RTS -K5M -RTS `cat 1-600.dna`
+	./${PROG} +RTS -s -K5M -RTS `cat 1-600.dna`
 
 run12 : ${PROG}
 	rm -f out.1200
-	./${PROG} +RTS -K15M -RTS `cat 1-1200.dna` >& out.1200
+	./${PROG} +RTS -s -K15M -RTS `cat 1-1200.dna` >& out.1200
 	echo Expect NINE matches, got `grep '^[(,0-9]*G_Match' out.1200 | wc -l`
 
 clean :

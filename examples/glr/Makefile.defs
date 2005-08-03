@@ -9,7 +9,8 @@ FILTER = --filter
 FILTER =
 
 DECODE = 
+H_OPT = 
 
 .y.hs :
-	${HAPPY} -i -l $*.y ${DECODE} ${FILTER}
+	${HAPPY} -i -l ${DECODE} ${FILTER} ${H_OPT} $*.y 
 
