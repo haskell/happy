@@ -2,7 +2,7 @@
 
 {-
    GLR_Lib.lhs
-   $Id: GLR_Lib.lhs,v 1.4 2004/09/08 10:42:28 paulcc Exp $
+   $Id: GLR_Lib.lhs,v 1.5 2005/08/03 13:42:23 paulcc Exp $
 -}
 
 > {-
@@ -10,7 +10,7 @@
 > 
 > (c) University of Durham, Ben Medlock 2001
 >         -- initial code, for structure parsing
-> (c) University of Durham, Paul Callaghan 2004
+> (c) University of Durham, Paul Callaghan 2004-05
 >         -- extension to semantic rules
 >         -- shifting to chart data structure
 >         -- supporting hidden left recursion
@@ -39,15 +39,26 @@
 >           )
 >  where
 
-<> import IOExts 
-
 >import Char
 >import System
+#if __GLASGOW_HASKELL__ >= 500
+#if __GLASGOW_HASKELL__ >= 603
+>import Data.Map
+#else
 >import Data.FiniteMap
+#endif
+#else
+>import FiniteMap
+#endif
 
 >import Monad (foldM)
->import Maybe ( fromJust )
->import List ( insertBy , nub , maximumBy, partition , find )
+>import Maybe (fromJust)
+>import List (insertBy, nub, maximumBy, partition, find, groupBy, delete)
+
+#if defined(HAPPY_DEBUG)
+>import System.IO.Unsafe
+>import Pretty
+#endif
 
 >{- these inserted by Happy -}
 
@@ -80,6 +91,16 @@
 #define NEGATE(n) (negate (n))
 #define IF_GHC(x)
 #endif
+
+#if defined(HAPPY_DEBUG)
+#define DEBUG_TRACE(s)    (happyTrace (s) $ return ()) 
+>happyTrace string expr = unsafePerformIO $ do
+>    hPutStr stderr string
+>    return expr
+#else
+#define DEBUG_TRACE(s)    {- nothing -}
+#endif
+
 
 
 >doParse = glr_parse
@@ -161,23 +182,25 @@ main function
 >                             stks' <- reduceAll [] tok_form stks 
 >                             shiftAll tok_form stks'
 >                         | tok_form <- tok ]
->	case merge $ concat stkss of 		-- did this token kill stacks?
+>	let new_stks = merge $ concat stkss
+>	DEBUG_TRACE(unlines $ ("Stacks after R*/S pass" ++ show tok) 
+>				: map show new_stks)
+>	case new_stks of            -- did this token kill stacks?
 >	  [] -> case toks of
 >		  []  -> return $ Right []	   -- ok if no more tokens
 >		  _:_ -> return $ Left (tok:toks)  -- not ok if some input left
->	  ss -> doActions ss toks
+>	  _  -> doActions new_stks toks
 
 >reduceAll 
 > :: [GSymbol] -> (Int, GSymbol) -> [FStack] -> PM [(FStack, Int)]
 >reduceAll _ tok [] = return []
 >reduceAll cyclic_names itok@(i,tok) (stk:stks)
-> = case action this_state tok of
->    Accept       -> reduceAll [] itok stks
->    Error        -> -- trace ("Clash @ " ++ show (itok, top stk) ++ "\n")
->                    -- DISCARDS current stack - can't continue 
->                    reduceAll [] itok stks
->    Shift st rs -> do { ss <- redAll rs ; return $ (stk,st):ss } 
->    Reduce rs   -> redAll rs
+> = do
+>     case action this_state tok of
+>       Accept      -> reduceAll [] itok stks
+>       Error       -> reduceAll [] itok stks
+>       Shift st rs -> do { ss <- redAll rs ; return $ (stk,st) : ss } 
+>       Reduce rs   -> redAll rs
 > where 
 >  this_state = top stk
 >  redAll rs 
@@ -189,47 +212,76 @@ main function
 >	           ]
 >	           -- WARNING: incomplete if more than one Empty in a prod(!)
 >	           -- WARNING: can avoid by splitting emps/non-emps
+>	DEBUG_TRACE(unlines $ ("Packing reds = " ++ show (length reds)) 
+>			    : map show reds) 
 >	stks' <- foldM (pack i) stks reds	
->	  -- can reduce the build/unbuild here...
 >	let new_cyclic = [ m | (m,0,_) <- rs
 >	                     , UEQ(this_state, goto this_state m)
 >	                     , m `notElem` cyclic_names ]
->	reduceAll (cyclic_names ++ new_cyclic) itok stks' 
+>	reduceAll (cyclic_names ++ new_cyclic) itok $ merge stks' 
 
 >shiftAll :: (Int, GSymbol) -> [(FStack, Int)] -> PM [FStack]
 >shiftAll tok [] = return []
 >shiftAll (j,tok) stks
 > = do	
 >	let end = j + 1 
->	let key = (j,end,tok)
+>	let key = end `seq` (j,end,tok)
 >	newNode key
->	stks' <- sequence [ do { nid <- getID ; return (push key st nid end stk) }
->	                  | (stk,IBOX(st)) <- stks ]
->	return $ merge stks'
+>       let mss = [ (stk, st)
+>                 | ss@((_,st):_) <- groupBy (\a b -> snd a == snd b) stks
+>                 , stk <- merge $ map fst ss ]
+>       stks' <- sequence [ do { nid <- getID ; return (push key st nid stk) }
+>                         | (stk,IBOX(st)) <- mss ]
+>       return stks'
+
 
 >pack 
 > :: Int -> [FStack] -> (Branch, FStack, GSymbol) -> PM [FStack]
->-- {-## __A 2 __S LU(LLL)m __P $wpack 2 ##-};
 
 >pack e_i stks (fids,stk,m)
-> = do
->	nid <- getID
->	let s_i = endpoint stk
->	let st = goto (top stk) m
->	if ULT(st, ILIT(0)) then return stks else
->	 case fnd (\s -> UEQ(top s,st) && popF s == stk) stks of
->	  Nothing     -- new stack in set
->	              -> do -- let s_i = endpoint stk???
->                           let key = (s_i,e_i,m)
->                           addBranch key fids 
->                           return $ insertStack (push key st nid e_i stk) stks
+> | ULT(st, ILIT(0)) 
+>    = return stks
+> | otherwise
+>    = do
+>       let s_i = endpoint stk
+>       let key = (s_i,e_i,m)
+>       DEBUG_TRACE( unlines 
+>	           $ ("Pack at " ++ show key ++ " " ++ show fids)
+>		   : ("**" ++ show stk) 
+>		   : map show stks)
+>
+>       duplicate <- addBranch key fids
+>
+>       let stack_matches = [ s | s <- stks
+>	                        , UEQ(top s, st)
+>                               , let (k,s') = case ts_tail s of x:_ -> x
+>	                        , stk == s'
+>	                        , k == key
+>	                        ]  -- look for first obvious packing site
+>       let appears_in = not $ null stack_matches
+>
+>       DEBUG_TRACE( unlines 
+>	           $ ("Stack Matches: " ++ show (length stack_matches))
+>	           : map show stack_matches)
+>       DEBUG_TRACE( if not (duplicate && appears_in) then "" else
+>	             unlines 
+>	           $ ("DROP:" ++ show (IBOX(st),key) ++ " -- " ++ show stk)
+>	           : "*****" 
+>	           : map show stks)
 
->         Just (s,ss) -- pack into an existing stack
->                     -> do let oid = head (vals s)
->                           --let key = (s_i,e_i,m)
->                           let key = oid
->                           addBranch key fids
->                           return $ insertStack (push key st nid e_i stk) ss
+>       if duplicate && appears_in
+>        then return stks       -- because already there
+>        else do
+>              nid <- getID
+>              case stack_matches of
+>                []  -> return $ insertStack (push key st nid stk) stks
+>				-- No prior stacks
+
+>                s:_ -> return $ insertStack (push key st nid stk) (delete s stks)
+>				-- pack into an existing stack
+>    where
+>       st = goto (top stk) m
+
 
 
 ---
@@ -243,17 +295,16 @@ record an entry
 ---
 add a new branch
  - due to packing, we check to see if a branch is already there
- - if so, we avoid memory use
- - TODO (pcc): try to measure if this is worth doing.
+ - return True if the branch is already there
 
->addBranch :: ForestId -> Branch -> PM ()
+>addBranch :: ForestId -> Branch -> PM Bool
 >addBranch i b 
 > = do
 >	f <- useS id
 >	case lookupFM f i of 
->	  Nothing               -> chgS $ \f -> ((), addToFM f i [b])
->	  Just bs | b `elem` bs -> return ()
->	          | otherwise   -> chgS $ \f -> ((), addToFM f i (b:bs))
+>	  Nothing               -> chgS $ \f -> (False, addToFM f i [b])   
+>	  Just bs | b `elem` bs -> return True
+>	          | otherwise   -> chgS $ \f -> (True,  addToFM f i (b:bs))
 
 ---
 only for use with nodes that exist
@@ -263,6 +314,114 @@ only for use with nodes that exist
 > = useS $ \s -> lookupWithDefaultFM s no_such_node i
 >   where
 >	no_such_node = error $ "No such node in Forest: " ++ show i
+
+
+
+
+
+%-----------------------------------------------------------------------------
+Auxiliary functions 
+
+>(<>) x y = (x,y)  -- syntactic sugar
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Tomita stack
+ - basic idea taken from Peter Ljungloef's Licentiate thesis
+
+
+>data TStack a 
+> = TS { top      :: FAST_INT		-- state
+>      , ts_id    :: FAST_INT		-- ID
+>      , stoup    :: !(Maybe a)		-- temp holding place, for left rec.
+>      , ts_tail  :: ![(a,TStack a)]	-- [(element on arc , child)] 
+>      }
+
+>instance Show a => Show (TStack a) where
+>  show ts 
+>   = "St" ++ show (IBOX(top ts)) 
+#if defined(HAPPY_DEBUG)
+>     ++ "\n" ++ render (spp $ ts_tail ts)
+>     where
+>	spp ss = nest 2 
+>		$ vcat [ vcat [text (show (v,IBOX(top s))), spp (ts_tail s)] 
+>		       | (v,s) <- ss ]
+#endif
+
+
+---
+id uniquely identifies a stack
+
+>instance Eq (TStack a) where
+>      s1 == s2 = UEQ(ts_id s1, ts_id s2)
+
+<>instance Ord (TStack a) where
+<>      s1 `compare` s2 = IBOX(ts_id s1) `compare` IBOX(ts_id s2)
+ 
+---
+Nothing special done for insertion
+ - NB merging done at strategic points
+
+>insertStack :: TStack a -> [TStack a] -> [TStack a]
+>insertStack = (:)
+
+---
+
+>initTS :: Int -> TStack a
+>initTS IBOX(id) = TS ILIT(0) id Nothing []
+
+---
+
+>push :: ForestId -> FAST_INT -> Int -> TStack ForestId -> TStack ForestId
+>push x@(s_i,e_i,m) st IBOX(id) stk 
+> = TS st id stoup [(x,stk)] 
+>   where
+>	-- only fill stoup for cyclic states that don't consume input
+>       stoup | s_i == e_i && UEQ(st, goto st m) = Just x	
+>             | otherwise                        = Nothing
+
+---
+
+>pop :: Int -> TStack a -> [([a],TStack a)] 
+>pop 0 ts = [([],ts)]
+>pop 1 st@TS{stoup=Just x}
+> = pop 1 st{stoup=Nothing} ++ [ ([x],st) ] 
+>pop n ts = [ (xs ++ [x] , stk')
+>	    | (x,stk) <- ts_tail ts
+>	    , (xs,stk') <- pop (n-1) stk ] 
+
+---
+
+>popF :: TStack a -> TStack a 
+>popF ts = case ts_tail ts of (_,c):_ -> c
+
+---
+
+>endpoint stk
+> = case ts_tail stk of
+>     [] -> 0
+>     ((_,e_i,_),_):_ -> e_i
+
+
+
+---
+
+>merge :: (Eq a, Show a) => [TStack a] -> [TStack a]
+>merge stks
+> = [ TS st id ss (nub ch)
+>   | IBOX(st) <- nub (map (\s -> IBOX(top s)) stks)
+>   , let ch  = concat  [ x | TS st2 _ _ x <- stks, UEQ(st,st2) ]
+>	  ss  = mkss    [ s | TS st2 _ s _ <- stks, UEQ(st,st2) ]
+>	  IBOX(id) = head [ IBOX(i) | TS st2 i _ _ <- stks, UEQ(st,st2) ]
+>	  -- reuse of id is ok, since merge discards old stacks
+>   ]
+>   where
+>        mkss s = case nub [ x | Just x <- s ] of
+>                   []  -> Nothing
+>                   [x] -> Just x
+>                   xs  -> error $ unlines $ ("Stoup merge: " ++ show xs) 
+>					   : map show stks
 
 
 
@@ -296,109 +455,4 @@ TODO (pcc): combine the s/i, or use the modern libraries - might be faster?
 
 >getID :: ST s [Int] Int
 >getID = MkST $ \s (i:is) -> (i,s,is)
-
-
-
-%-----------------------------------------------------------------------------
-Auxiliary functions 
-
-<fnd> is exported as a useful operation for removing a single matching element
-  from a list and returning the remaining elements. It does not really
-  belong in this module though!
-TODO: put somewhere
-
->fnd :: (a -> Bool) -> [a] -> Maybe (a,[a])
->fnd _ [] = Nothing
->fnd p (x:xs)  | p x       = Just (x,xs)
->		| otherwise = case fnd p xs of
->				Just (x',xs) -> Just (x',x:xs)
->				_	     -> Nothing
-
->(<>) x y = (x,y)  -- syntactic sugar
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-<> module TStack ( TStack
-<>		, initTS
-<>		, push
-<>		, pop
-<>		, popF
-<>		, top
-<>		, vals
-<>		, merge )
-<> where
-
-
->data TStack a 
-> = TS { top      :: FAST_INT		-- state
->      , ts_id    :: FAST_INT		-- ID
->      , endpoint :: !Int		-- end position of items in this stack
->      , stoup    :: !(Maybe a)		-- temp holding place, for left rec.
->      , ts_tail  :: ![(a,TStack a)]	-- [(element on arc , child)] 
->      }
-
->instance Show a => Show (TStack a) where
-> show ts = "St" ++ show (IBOX(top ts), stoup ts) ++ show (ts_tail ts)
-
----
-id uniquely identifies a stack
-
->instance Eq (TStack a) where
->      s1 == s2 = UEQ(ts_id s1, ts_id s2)
-
-<>instance Ord (TStack a) where
-<>      s1 `compare` s2 = IBOX(ts_id s1) `compare` IBOX(ts_id s2)
- 
----
-Nothing special done for insertion, but check this against frequent merging
-on problem cases.
-
->insertStack :: TStack a -> [TStack a] -> [TStack a]
->insertStack = (:)
-
----
-
->initTS :: Int -> TStack a
->initTS IBOX(id) = TS ILIT(0) id 0 Nothing []
-
->--push :: a -> FAST_INT -> Int -> Int -> TStack a -> TStack a
->push x@(s_i,e_i,m) st IBOX(id) end stk 
-> = TS st id end stoup [(x,stk)] 
->   where
->       stoup | s_i == e_i && UEQ(st, goto st m) = Just x	
->             | otherwise                        = Nothing
->	-- only fill stoup for cyclic states that don't consume input
-
->pop :: Int -> TStack a -> [([a],TStack a)] 
->pop 0 ts = [([],ts)]
->pop 1 st@TS{stoup=Just x}
-> = pop 1 st{stoup=Nothing} ++ [ ([x],st) ] 
->pop n ts = [ (xs ++ [x] , stk')
->	    | (x,stk) <- ts_tail ts
->	    , let rec = pop (n-1) stk
->	    , (xs,stk') <- rec ]
-
->popF :: TStack a -> TStack a 
->popF ts = case ts_tail ts of (_,c):_ -> c
-
->vals :: TStack a -> [a]
->vals ts = fst $ unzip $ ts_tail ts
-
->--merge :: Show a => [TStack a] -> [TStack a]
->merge stks
-> = [ TS st id end ss ch
->   | IBOX(st) <- nub (map (\s -> IBOX(top s)) stks)
->   , let ch  = concat  [ x | TS st2 _ _ _ x <- stks, UEQ(st,st2) ]
->	  ss  = mkss    [ s | TS st2 _ _ s _ <- stks, UEQ(st,st2) ]
->	  (IBOX(id),end) = head [ (IBOX(i),e) | TS st2 i e _ _ <- stks, UEQ(st,st2) ]
->	  -- reuse of id is ok, since merge discards old stacks
->   ]	-- poss merge these, if multi pass is a cost (see profile!)
->   where
->        mkss s = case nub [ x | Just x <- s ] of
->                   []  -> Nothing
->                   [x] -> Just x
->                   xs  -> error $ unlines $ ("Stoup merge: " ++ show xs) : map show stks
-
 

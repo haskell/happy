@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.13 2004/08/13 09:11:04 simonmar Exp $
+# $Id: Makefile,v 1.14 2005/08/03 13:42:23 paulcc Exp $
 
 TOP = ..
 include $(TOP)/mk/boilerplate.mk
@@ -17,6 +17,7 @@ TEMPLATES = \
 	GLR_Base \
 	GLR_Lib \
 	GLR_Lib-ghc \
+	GLR_Lib-ghc-debug \
 
 GENERIC_TEMPLATE = GenericTemplate.hs
 GLR_TEMPLATE = GLR_Lib.lhs
@@ -75,6 +76,9 @@ GLR_Lib.hspp : $(GLR_TEMPLATE)
 
 GLR_Lib-ghc.hspp : $(GLR_TEMPLATE)
 	$(CPP_IT) $@ -DHAPPY_GHC $(GLR_TEMPLATE)
+
+GLR_Lib-ghc-debug.hspp : $(GLR_TEMPLATE)
+	$(CPP_IT) $@ -DHAPPY_GHC -DHAPPY_DEBUG $(GLR_TEMPLATE)
 
 # hack to turn cpp-style '# 27 "GenericTemplate.hs"' into 
 # '{-# LINE 27 "GenericTemplate.hs" #-}'.
