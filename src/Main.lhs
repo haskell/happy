@@ -459,19 +459,16 @@ GHC version-dependent stuff in it.
 >	| otherwise               = ""
 
 > importsToInject :: Target -> [CLIFlags] -> String
-> importsToInject tgt cli = "\n" ++ 
->  	concat [ "import "++s++"\n" 
->	       | s <- array_import ]
->	++ glaexts_import ++ debug_imports
+> importsToInject tgt cli = "\n" ++ array_import ++ glaexts_import ++ debug_imports
 >   where
->	glaexts_import | OptGhcTarget `elem` cli    = import_glaexts
->		       | otherwise                  = ""
+>	glaexts_import | OptGhcTarget `elem` cli   = import_glaexts
+>		       | otherwise                 = ""
 >
->	array_import   | tgt == TargetArrayBased   = ["Array"]
->		       | otherwise                 = []
+>	array_import   | tgt == TargetArrayBased   = import_array
+>		       | otherwise                 = ""
 >
 >	debug_imports  | OptDebugParser `elem` cli = import_debug
->		       | otherwise		   = []
+>		       | otherwise		   = ""
 
 CPP is turned on for -fglasgow-exts, so we can use conditional compilation:
 
@@ -480,6 +477,12 @@ CPP is turned on for -fglasgow-exts, so we can use conditional compilation:
 >		   "#else\n" ++
 >		   "import GlaExts\n" ++
 >		   "#endif\n"
+
+> import_array = "#if __GLASGOW_HASKELL__ >= 503\n" ++
+> 		 "import Data.Array\n" ++
+>		 "#else\n" ++
+>		 "import Array\n" ++
+>		 "#endif\n"
 
 > import_debug = "#if __GLASGOW_HASKELL__ >= 503\n" ++
 > 		 "import System.IO\n" ++

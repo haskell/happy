@@ -253,6 +253,13 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 
 >    produceReduction (nt, toks, (code,vars_used), _) i
 
+>     | isMonad2Prod && (use_monad || imported_identity)
+>	= mkReductionHdr (showInt lt) "happyMonad2Reduce "
+>	. char '(' . interleave " `HappyStk`\n\t" tokPatterns
+>	. str "happyRest) tk\n\t = happyThen ("
+>	. tokLets (char '(' . str code' . str ") tk")
+>	. str "\n\t) (\\r -> happyReturn (" . this_absSynCon . str " r))"
+
 >     | isMonadProd && (use_monad || imported_identity)
 >	= mkReductionHdr (showInt lt) "happyMonadReduce "
 >	. char '(' . interleave " `HappyStk`\n\t" tokPatterns
@@ -285,9 +292,11 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >	   )
 
 >       where 
->		isMonadProd = case code of ('%' : code) -> True
->			 		   _            -> False
-> 
+>		(code',isMonadProd,isMonad2Prod) 
+>                     = case code of ('%' : code1) -> case code1 of ('%' : code2) -> (code2, True,  True )
+>                                                                   _             -> (code1, True,  False)
+>			 	     _                                            -> (code,  False, False)
+
 >		-- adjust the nonterminal number for the array-based parser
 >		-- so that nonterminals start at zero.
 >		adjusted_nt | target == TargetArrayBased = nt - first_nonterm
@@ -332,10 +341,6 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >
 >		extract t | t >= firstStartTok && t < fst_term = mkHappyOut t
 >			  | otherwise			  = str "happyOutTok"
->
->		code' 
->		    | isMonadProd = tail code  -- drop the '%'
->		    | otherwise   = code
 >
 >		lt = length toks
 

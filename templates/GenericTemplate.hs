@@ -219,6 +219,20 @@ happyMonadReduce k nt fn j tk st sts stk =
        where sts1@(CONS(st1@HAPPYSTATE(action),_)) = happyDrop k CONS(st,sts)
              drop_stk = happyDropStk k stk
 
+happyMonad2Reduce k nt fn ERROR_TOK tk st sts stk
+     = happyFail ERROR_TOK tk st sts stk
+happyMonad2Reduce k nt fn j tk st sts stk =
+       happyThen1 (fn stk tk) (\r -> happyNewToken new_state sts1 (r `HappyStk` drop_stk))
+       where sts1@(CONS(st1@HAPPYSTATE(action),_)) = happyDrop k CONS(st,sts)
+             drop_stk = happyDropStk k stk
+#if defined(HAPPY_ARRAY)
+             off    = indexShortOffAddr happyGotoOffsets st1
+             off_i  = (off +# nt)
+             new_state = indexShortOffAddr happyTable off_i
+#else
+             new_state = action
+#endif
+
 happyDrop ILIT(0) l = l
 happyDrop n CONS(_,t) = happyDrop MINUS(n,(ILIT(1) :: FAST_INT)) t
 
