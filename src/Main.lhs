@@ -458,21 +458,27 @@ Note: we need -cpp at the moment because the template has some
 GHC version-dependent stuff in it.
 
 > optsToInject :: Target -> [CLIFlags] -> String
-> optsToInject _ cli 
->	| OptGhcTarget `elem` cli = "-fglasgow-exts -cpp"
->	| otherwise               = ""
+> optsToInject tgt cli 
+>	| OptGhcTarget `elem` cli   = "-fglasgow-exts -cpp"
+> 	| tgt == TargetArrayBased   = "-cpp"
+>	| OptDebugParser `elem` cli = "-cpp"
+>	| otherwise                 = ""
 
 > importsToInject :: Target -> [CLIFlags] -> String
 > importsToInject tgt cli = "\n" ++ array_import ++ glaexts_import ++ debug_imports
 >   where
->	glaexts_import | OptGhcTarget `elem` cli   = import_glaexts
->		       | otherwise                 = ""
+>	glaexts_import | is_ghc		= import_glaexts
+>		       | otherwise      = ""
 >
->	array_import   | tgt == TargetArrayBased   = import_array
->		       | otherwise                 = ""
+>	array_import   | is_array	= import_array
+>		       | otherwise	= ""
 >
->	debug_imports  | OptDebugParser `elem` cli = import_debug
->		       | otherwise		   = ""
+>	debug_imports  | is_debug	= import_debug
+>		       | otherwise	= ""
+>
+>	is_ghc   = OptGhcTarget `elem` cli
+>	is_debug = OptDebugParser `elem` cli
+>	is_array = tgt == TargetArrayBased
 
 CPP is turned on for -fglasgow-exts, so we can use conditional compilation:
 
