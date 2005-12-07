@@ -1,8 +1,8 @@
 # -----------------------------------------------------------------------------
 # $Id: Makefile,v 1.9 2005/01/14 14:47:23 simonmar Exp $
 
-TOP = ..
-include $(TOP)/mk/boilerplate.mk
+HAPPY=happy
+HC=ghc
 
 TESTS = Test.ly TestMulti.ly TestPrecedence.ly bug001.ly \
 	monad001.y monad002.ly precedence001.ly precedence002.y \
@@ -16,42 +16,44 @@ else
 HS_PROG_EXT = .bin
 endif
 
-
 %.n.hs : %.ly
-	$(HAPPY_INPLACE) $(TEST_HAPPY_OPTS) $< -o $@
+	$(HAPPY) $(TEST_HAPPY_OPTS) $< -o $@
 
 %.a.hs : %.ly
-	$(HAPPY_INPLACE) $(TEST_HAPPY_OPTS) -a $< -o $@
+	$(HAPPY) $(TEST_HAPPY_OPTS) -a $< -o $@
 
 %.g.hs : %.ly
-	$(HAPPY_INPLACE) $(TEST_HAPPY_OPTS) -g $< -o $@
+	$(HAPPY) $(TEST_HAPPY_OPTS) -g $< -o $@
 
 %.gc.hs : %.ly
-	$(HAPPY_INPLACE) $(TEST_HAPPY_OPTS) -gc $< -o $@
+	$(HAPPY) $(TEST_HAPPY_OPTS) -gc $< -o $@
 
 %.ag.hs : %.ly
-	$(HAPPY_INPLACE) $(TEST_HAPPY_OPTS) -ag $< -o $@
+	$(HAPPY) $(TEST_HAPPY_OPTS) -ag $< -o $@
 
 %.agc.hs : %.ly
-	$(HAPPY_INPLACE) $(TEST_HAPPY_OPTS) -agc $< -o $@
+	$(HAPPY) $(TEST_HAPPY_OPTS) -agc $< -o $@
 
 %.n.hs : %.y
-	$(HAPPY_INPLACE) $(TEST_HAPPY_OPTS) $< -o $@
+	$(HAPPY) $(TEST_HAPPY_OPTS) $< -o $@
 
 %.a.hs : %.y
-	$(HAPPY_INPLACE) $(TEST_HAPPY_OPTS) -a $< -o $@
+	$(HAPPY) $(TEST_HAPPY_OPTS) -a $< -o $@
 
 %.g.hs : %.y
-	$(HAPPY_INPLACE) $(TEST_HAPPY_OPTS) -g $< -o $@
+	$(HAPPY) $(TEST_HAPPY_OPTS) -g $< -o $@
 
 %.gc.hs : %.y
-	$(HAPPY_INPLACE) $(TEST_HAPPY_OPTS) -gc $< -o $@
+	$(HAPPY) $(TEST_HAPPY_OPTS) -gc $< -o $@
 
 %.ag.hs : %.y
-	$(HAPPY_INPLACE) $(TEST_HAPPY_OPTS) -ag $< -o $@
+	$(HAPPY) $(TEST_HAPPY_OPTS) -ag $< -o $@
 
 %.agc.hs : %.y
-	$(HAPPY_INPLACE) $(TEST_HAPPY_OPTS) -agc $< -o $@
+	$(HAPPY) $(TEST_HAPPY_OPTS) -agc $< -o $@
+
+%.o : %.hs
+	$(HC) -c -o $@ $<
 
 CLEAN_FILES += *.n.hs *.a.hs *.g.hs *.gc.hs *.ag.hs *.agc.hs *.info *.hi *.bin *.exe
 
@@ -72,17 +74,16 @@ HC_OPTS += -fglasgow-exts -package lang
 all :: $(ALL_TESTS)
 
 check-todo::
-	$(HAPPY_INPLACE) -ad Test.ly
+	$(HAPPY) -ad Test.ly
 	$(HC) Test.hs -o happy_test
 	./happy_test
 	-rm -f ./happy_test
-	$(HAPPY_INPLACE) -agd Test.ly
+	$(HAPPY) -agd Test.ly
 	$(HC) Test.hs -o happy_test
 	./happy_test
 	-rm -f ./happy_test
-	$(HAPPY_INPLACE) -agcd Test.ly
+	$(HAPPY) -agcd Test.ly
 	$(HC) Test.hs -o happy_test
 	./happy_test
 	-rm -f ./happy_test
 
-include $(TOP)/mk/target.mk
