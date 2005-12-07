@@ -6,7 +6,8 @@ The code generator.
 
 > module ProduceCode (produceParser) where
 
-> import Version		( version )
+> import Paths_Happy		( version )
+> import Data.Version		( showVersion )
 > import Grammar
 > import Target			( Target(..) )
 > import GenUtils		( mapDollarDollar, str, char, nl, strspace,
@@ -1074,7 +1075,7 @@ slot is free or not.
 -- Misc.
 
 > comment = 
->	  "-- parser produced by Happy Version " ++ version ++ "\n\n"
+>	  "-- parser produced by Happy Version " ++ showVersion version ++ "\n\n"
 
 > mkAbsSynCon fx t    	= str "HappyAbsSyn"   . shows (fx ! t)
 > mkHappyVar n     	= str "happy_var_"    . shows n

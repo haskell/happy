@@ -1,0 +1,32 @@
+name: Happy
+version: 1.16
+license: BSD3
+license-file: LICENSE
+copyright: (c) Andy Gill, Simon Marlow
+author: Andy Gill and Simon Marlow
+maintainer: Simon Marlow <simonmar@microsoft.com>
+stability: stable
+homepage: http://www.haskell.org/happy/
+synopsis: Happy is a parser generator for Haskell
+build-depends: base>=1.0, haskell98>=1.0
+
+executable: happy
+hs-source-dirs: src
+main-is: Main.lhs
+extensions: CPP
+ghc-options: -fglasgow-exts
+other-modules:
+	AbsSyn
+	Grammar
+	Lexer
+	Parser
+	Set
+	Main
+	Target
+	First
+	Info
+	ProduceCode
+	GenUtils
+	LALR
+	ParseMonad
+	ProduceGLRCode

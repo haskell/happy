@@ -14,7 +14,7 @@ This module is designed as an extension to the Haskell parser generator Happy.
 >                       , Options
 >                       ) where
 
-> import Version ( version )
+> import Paths_Happy ( version )
 > import GenUtils ( fst3, thd3, mapDollarDollar )
 > import GenUtils ( str, char, nl, brack, brack', interleave, maybestr )
 > import Grammar
@@ -23,6 +23,7 @@ This module is designed as an extension to the Haskell parser generator Happy.
 > import Data.Maybe ( fromJust )
 > import Data.Char ( isUpper, isSpace )
 > import Data.List ( nub, (\\), sort )
+> import Data.Version ( showVersion )
 
 %-----------------------------------------------------------------------------
 File and Function Names
@@ -209,7 +210,8 @@ the driver and data strs (large template).
 >                                   _                   -> False
 
 > comment which
->  = "-- parser (" ++ which ++ ") produced by Happy (GLR) Version " ++ version
+>  = "-- parser (" ++ which ++ ") produced by Happy (GLR) Version " ++ 
+>	showVersion version
 
 > user_def_token_code token_type
 >  = str "type UserDefTok = " . str token_type                      .nl
