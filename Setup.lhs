@@ -58,13 +58,13 @@ all_templates = templates ++ glr_base_templates ++ glr_templates
 templates = [
   ("HappyTemplate"			, []),
   ("HappyTemplate-ghc"			, ["-DHAPPY_GHC"]),
-  ("HappyTemplate-coerce"		, ["-DHAPPY_COERCE"]),
+  ("HappyTemplate-coerce"		, ["-DHAPPY_GHC","-DHAPPY_COERCE"]),
   ("HappyTemplate-arrays"		, ["-DHAPPY_ARRAY"]),
   ("HappyTemplate-arrays-ghc"		, ["-DHAPPY_ARRAY","-DHAPPY_GHC"]),
-  ("HappyTemplate-arrays-coerce"	, ["-DHAPPY_ARRAY","-DHAPPY_COERCE"]),
+  ("HappyTemplate-arrays-coerce"	, ["-DHAPPY_ARRAY","-DHAPPY_GHC","-DHAPPY_COERCE"]),
   ("HappyTemplate-arrays-debug"		, ["-DHAPPY_ARRAY","-DHAPPY_DEBUG"]),
   ("HappyTemplate-arrays-ghc-debug"	, ["-DHAPPY_ARRAY","-DHAPPY_GHC","-DHAPPY_DEBUG"]),
-  ("HappyTemplate-arrays-coerce-debug"	, ["-DHAPPY_ARRAY","-DHAPPY_COERCE","-DHAPPY_DEBUG"])
+  ("HappyTemplate-arrays-coerce-debug"	, ["-DHAPPY_ARRAY","-DHAPPY_GHC","-DHAPPY_COERCE","-DHAPPY_DEBUG"])
  ]
 
 glr_base_templates = [
