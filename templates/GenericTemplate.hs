@@ -227,7 +227,7 @@ happyMonad2Reduce k nt fn j tk st sts stk =
              drop_stk = happyDropStk k stk
 #if defined(HAPPY_ARRAY)
              off    = indexShortOffAddr happyGotoOffsets st1
-             off_i  = (off +# nt)
+             off_i  = PLUS(off,nt)
              new_state = indexShortOffAddr happyTable off_i
 #else
              new_state = action
