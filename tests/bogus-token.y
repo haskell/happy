@@ -1,6 +1,6 @@
 {
 module Main where
-import Exception
+import Control.Exception as Exception
 }
 
 %tokentype { Token }

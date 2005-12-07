@@ -3,7 +3,7 @@ This module demonstrates a Happy bug (in version <= 1.10).
 > {
 > module Main where
 > import IO
-> import Exception
+> import Control.Exception as Exception
 > }
 > 
 > %name parse

@@ -3,7 +3,7 @@
 {
 module Main where
 import IO
-import Exception
+import Control.Exception as Exception
 }
 
 %name parse
