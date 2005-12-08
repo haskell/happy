@@ -280,6 +280,7 @@ module Main where
 <programlisting>
 %name calc
 %tokentype { Token }
+%error { parseError }
 </programlisting>
 
     <indexterm>
@@ -287,6 +288,9 @@ module Main where
     </indexterm>
     <indexterm>
       <primary><literal>%tokentype</literal></primary>
+    </indexterm>
+    <indexterm>
+      <primary><literal>%error</literal></primary>
     </indexterm>
 
     <para>The first line declares the name of the parsing function
@@ -299,6 +303,10 @@ module Main where
     <function>calc</function>) will be of type <literal>[Token] ->
     T</literal>, where <literal>T</literal> is the return type of the
     parser, determined by the production rules below.</para>
+
+    <para>The <literal>%error</literal> directive tells Happy the name
+    of a function it should call in the event of a parse error.  More
+    about this later.</para>
 
     <para>Now we declare all the possible tokens:</para>
 
@@ -401,18 +409,17 @@ n   : t_1 ... t_n   { E }
 
 <programlisting>{</programlisting>
 
-    <indexterm>
-      <primary><function>happyError</function></primary>
-    </indexterm>
-    <para>All parsers must declare the function <function>happyError</function>,
-    which is called when an error is detected. </para>
+    <para>All parsers must include a function to be called in the
+    event of a parse error.  In the <literal>%error</literal>
+    directive earlier, we specified that the function to be called on
+    a parse error is <literal>parseError</literal>:</para>
 
 <programlisting>
-happyError :: [Token] -> a
-happyError _ = error "Parse error"
+parseError :: [Token] -> a
+parseError _ = error "Parse error"
 </programlisting>
 
-    <para>Note that <literal>happyError</literal> must be polymorphic
+    <para>Note that <literal>parseError</literal> must be polymorphic
     in its return type <literal>a</literal>, which usually means it
     must be a call to <literal>error</literal>.  We'll see in <xref
     linkend="sec-monads"/> how to wrap the parser in a monad so that we
@@ -1010,20 +1017,18 @@ stmts   :: { [ Stmt ] }
       <para>When this declaration is included in the grammar,
       <application>Happy</application> makes a couple of changes to the generated
       parser: the types of the main parser function and
-      <literal>happyError</literal> become <literal>[Token] -&gt; P a</literal> where
+      <literal>parseError</literal> (the function named in
+      <literal>%error</literal>) become <literal>[Token] -&gt; P a</literal> where
       <literal>P</literal> is the monad type constructor, and the function must
       be polymorphic in <literal>a</literal>.  In other words,
       <application>Happy</application> adds an application of the
       <literal>&lt;return&gt;</literal> operation defined in the declaration
-      above, around the result of the parser (<literal>happyError</literal> is
+      above, around the result of the parser (<literal>parseError</literal> is
       affected because it must have the same return type as the
       parser).  And that's all it does.</para>
 
-      <indexterm>
-	<primary><function>happyError</function></primary>
-      </indexterm>
       <para>This still isn't very useful: all you can do is return
-      something of monadic type from <literal>happyError</literal>.  How do you
+      something of monadic type from <literal>parseError</literal>.  How do you
       specify that the productions can also have type <literal>P a</literal>?
       Most of the time, you don't want a production to have this type:
       you'd have to write explicit <literal>returnP</literal>s everywhere.
@@ -1127,15 +1132,12 @@ catchE m k =
 </programlisting>
 
 	<para>Now, without changing the grammar, we can change the
-        definition of <literal>happyError</literal> and have something sensible
+        definition of <literal>parseError</literal> and have something sensible
         happen for a parse error:</para>
 
 <programlisting>
-happyError tokens = failE "Parse error"
+parseError tokens = failE "Parse error"
 </programlisting>
-	  <indexterm>
-	    <primary><function>happyError</function></primary>
-	  </indexterm>
 
 	<para>The parser now raises an exception in the monad instead
 	of bombing out on a parse error.</para>
@@ -1219,12 +1221,16 @@ happyError tokens = failE "Parse error"
         effect of eliminating the intermediate list of tokens, which
         is a slight performance win.</para>
 
-	<para>The type of the main parser function and
-        <literal>happyError</literal> is now just <literal>P a</literal> - the input is
-        being handled completely within the monad.</para>
-	<indexterm>
-	  <primary><function>happyError</function></primary>
-	</indexterm>
+	<para>The type of the main parser function is now just
+        <literal>P a</literal> - the input is being handled completely
+        within the monad.</para>
+
+	<para>The type of <literal>parseError</literal> becomes
+	<literal>Token -&gt; P a</literal>; that is it takes Happy's
+	current lookahead token as input.  This can be useful, because
+	the error function probably wants to report the token at which
+	the parse error occurred, and otherwise the lexer would have
+	to store this token in the monad.</para>
 
 	<para>The lexical analysis function must have the following
 	type:</para>
@@ -1308,6 +1314,35 @@ lexwrap cont = real_lexer `thenP` \token -> cont token
 
     </sect2>
 
+      <sect3>
+	<title>Monadic productions with %lexer</title>
+
+	<para>The <literal>{% ... }</literal> actions work fine with
+	<literal>%lexer</literal>, but additionally there are two more
+	forms which are useful in certain cases.  Firstly:</para>
+
+<programlisting>
+n  :  t_1 ... t_n          {%^ &lt;expr&gt; }
+</programlisting>
+
+	<para>In this case, <literal>&lt;expr&gt;</literal> has type
+	<literal>Token -> P a</literal>.  That is, Happy passes the
+	current lookahead token to the monadic action
+	<literal>&lt;expr&gt;</literal>.  This is a useful way to get
+	hold of Happy's current lookahead token without having to
+	store it in the monad.</para>
+
+<programlisting>
+n  :  t_1 ... t_n          {%% &lt;expr&gt; }
+</programlisting>
+
+	<para>This is a slight variant on the previous form.  The type
+	of <literal>&lt;expr&gt;</literal> is the same, but in this
+	case the lookahead token is actually discarded and a new token
+	is read from the input.  This can be useful when you want to
+	change the next token and continue parsing.</para>
+      </sect3>
+
     <sect2 id="sec-line-numbers">
       <title>Line Numbers</title>
 
@@ -1357,17 +1392,14 @@ lexer cont s =
         around, it uses a monad just like the one above.</para>
 
         <para>Reporting the line number of a parse error is achieved
-        by changing <literal>happyError</literal> to look something like
+        by changing <literal>parseError</literal> to look something like
         this:</para>
 
 <programlisting>
-happyError :: P a
-happyError = getLineNo `thenP` \line -> 
+parseError :: Token -> P a
+parseError = getLineNo `thenP` \line -> 
              failP (show line ++ ": parse error")
 </programlisting>
-	<indexterm>
-	  <primary><function>happyError</function></primary>
-	</indexterm>
 
 	<para>We can also get hold of the line number during parsing,
         to put it in the parsed data structure for future reference.
@@ -1398,7 +1430,7 @@ happyError = getLineNo `thenP` \line ->
 
 	<indexterm>
 	  <primary>type</primary>
-	  <secondary>of <function>happyError</function></secondary>
+	  <secondary>of <function>parseError</function></secondary>
 	</indexterm>
 	<indexterm>
 	  <primary>type</primary>
@@ -1417,7 +1449,7 @@ happyError = getLineNo `thenP` \line ->
 	      <para>
 <programlisting>
 parse      :: [Token] -> <emphasis>t</emphasis>
-happyError :: [Token] -> a
+parseError :: [Token] -> a
 </programlisting>
 </para>
 	    </formalpara>
@@ -1429,7 +1461,7 @@ happyError :: [Token] -> a
 	      <para>
 <programlisting>
 parse      :: [Token] -> P <emphasis>t</emphasis>
-happyError :: [Token] -> P a
+parseError :: [Token] -> P a
 </programlisting>
 </para>
 	    </formalpara>
@@ -1441,7 +1473,7 @@ happyError :: [Token] -> P a
 	      <title> with <literal>%lexer</literal> </title>
 	      <para><programlisting>
 parse      :: T <emphasis>t</emphasis>
-happyError :: T a
+parseError :: Token -> T a
 lexer      :: (Token -> T a) -> T a
 </programlisting>
 where the type constructor <literal>T</literal> is whatever you want (usually <literal>T
@@ -1455,7 +1487,7 @@ properly.</para>
 	      <title> with <literal>%monad</literal> and <literal>%lexer</literal> </title>
 	      <para><programlisting>
 parse      :: P <emphasis>t</emphasis>
-happyError :: P a
+parseError :: Token -> P a
 lexer      :: (Token -> P a) -> P a
 </programlisting>
 </para>
@@ -1514,7 +1546,6 @@ close : '}'                  { () }
       recovery on the other hand is well-defined, as is just
       sufficient to implement the Haskell layout rule (which is why it
       was added in the first place).</para>
-
     </sect1>
 
     <sect1 id="sec-multiple-parsers">
@@ -3024,6 +3055,23 @@ any projection function.</para>
 	<para>Happy's <literal>%expect</literal> directive works
 	exactly like that of yacc.</para>
       </sect2>
+
+      <sect2 id="sec-error-directive">
+	<title>Error declaration</title>
+
+<programlisting>
+%error { &lt;identifier&gt; }
+</programlisting>
+	<indexterm>
+	  <primary><literal>%error</literal></primary>
+	</indexterm>
+
+	<para>Specifies the function to be called in the event of a
+	parse error.  The type of <literal>&lt;f&gt;</literal> varies
+	depending on the presence of <literal>%lexer</literal> (see
+	<xref linkend="sec-monad-summary" />).</para>
+      </sect2>
+
     </sect1>
 
     <sect1 id="sec-grammar">
