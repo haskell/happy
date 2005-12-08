@@ -14,7 +14,7 @@ executable: happy
 hs-source-dirs: src
 main-is: Main.lhs
 extensions: CPP
-ghc-options: -fglasgow-exts
+ghc-options: -fglasgow-exts -O
 other-modules:
 	AbsSyn
 	Grammar
