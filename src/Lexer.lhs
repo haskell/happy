@@ -44,6 +44,7 @@ The lexer.
 >       | TokSpecId_Right       -- %right
 >       | TokSpecId_Prec        -- %prec
 >       | TokSpecId_Expect      -- %expect
+>       | TokSpecId_Error       -- %error
 >       | TokCodeQuote          -- stuff inside { .. }
 >       | TokColon              -- :
 >       | TokSemiColon          -- ;
@@ -119,6 +120,8 @@ followed by a special identifier.
 >               returnToken cont (TokenKW TokSpecId_Prec) rest
 >       'e':'x':'p':'e':'c':'t':rest ->
 >               returnToken cont (TokenKW TokSpecId_Expect) rest
+>       'e':'r':'r':'o':'r':rest ->
+>               returnToken cont (TokenKW TokSpecId_Error) rest
 >	_ -> lexError ("unrecognised directive: %" ++ 
 >				takeWhile (not.isSpace) s) s
 

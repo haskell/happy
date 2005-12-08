@@ -53,8 +53,9 @@ Here is our mid-section datatype
 >		token_type	  :: String,
 >		imported_identity :: Bool,
 >		monad		  :: (Bool,String,String,String,String),
+>		expect		  :: Maybe Int,
 >		lexer		  :: Maybe (String,String),
->               expect            :: Maybe Int
+>		error_handler	  :: Maybe String
 >	}
 
 #ifdef DEBUG
@@ -342,6 +343,7 @@ Get the token specs in terms of Names.
 >		imported_identity		  = getImportedIdentity dirs,
 >		monad		  = getMonad dirs,
 >		lexer		  = getLexer dirs,
+>		error_handler	  = getError dirs,
 >		token_type	  = getTokenType dirs,
 >               expect            = getExpect dirs
 >	})

@@ -29,6 +29,7 @@ The parser.
 >       spec_right	{ TokenKW      TokSpecId_Right }
 >       spec_prec	{ TokenKW      TokSpecId_Prec }
 >       spec_expect     { TokenKW      TokSpecId_Expect }
+>       spec_error      { TokenKW      TokSpecId_Error }
 >	code		{ TokenInfo $$ TokCodeQuote }
 >       int             { TokenNum $$  TokNum }
 >	":"		{ TokenKW      TokColon }
@@ -87,6 +88,7 @@ The parser.
 >	| spec_right ids		{ TokenRight $2 }
 >	| spec_left ids			{ TokenLeft $2 }
 >       | spec_expect int               { TokenExpect $2 }
+>       | spec_error code               { TokenError $2 }
 
 > optStart :: { Maybe String }
 > 	: id				{ Just $1 }

@@ -215,7 +215,7 @@ happyReduce k nt fn j tk st sts stk
 happyMonadReduce k nt fn ERROR_TOK tk st sts stk
      = happyFail ERROR_TOK tk st sts stk
 happyMonadReduce k nt fn j tk st sts stk =
-        happyThen1 (fn stk) (\r -> GOTO(action) nt j tk st1 sts1 (r `HappyStk` drop_stk))
+        happyThen1 (fn stk tk) (\r -> GOTO(action) nt j tk st1 sts1 (r `HappyStk` drop_stk))
        where sts1@(CONS(st1@HAPPYSTATE(action),_)) = happyDrop k CONS(st,sts)
              drop_stk = happyDropStk k stk
 

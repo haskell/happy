@@ -57,6 +57,7 @@ Produce the complete output file.
 >		, token_specs = token_rep
 >		, token_type = token_type
 >		, starts = starts
+>		, error_handler = error_handler
 >		})
 >	 	action goto top_options module_header module_trailer 
 >		target coerce ghc strict
@@ -254,22 +255,16 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 
 >    produceReduction (nt, toks, (code,vars_used), _) i
 
->     | isMonad2Prod && (use_monad || imported_identity)
->	= mkReductionHdr (showInt lt) "happyMonad2Reduce "
+>     | is_monad_prod && (use_monad || imported_identity)
+>	= mkReductionHdr (showInt lt) monad_reduce
 >	. char '(' . interleave " `HappyStk`\n\t" tokPatterns
 >	. str "happyRest) tk\n\t = happyThen ("
->	. tokLets (char '(' . str code' . str ") tk")
->	. str "\n\t) (\\r -> happyReturn (" . this_absSynCon . str " r))"
-
->     | isMonadProd && (use_monad || imported_identity)
->	= mkReductionHdr (showInt lt) "happyMonadReduce "
->	. char '(' . interleave " `HappyStk`\n\t" tokPatterns
->	. str "happyRest)\n\t = happyThen ("
->	. tokLets (str code')
+>	. tokLets (char '(' . str code' . char ')')
+>	. (if monad_pass_token then str " tk" else id)
 >	. str "\n\t) (\\r -> happyReturn (" . this_absSynCon . str " r))"
 
 >     | specReduceFun lt
->	= mkReductionHdr (shows lt) "happySpecReduce_"
+>	= mkReductionHdr id ("happySpecReduce_" ++ show lt)
 >	. interleave "\n\t" tokPatterns
 >	. str " =  "
 >	. tokLets (
@@ -284,7 +279,7 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >		. str " = notHappyAtAll ")
 
 >     | otherwise
-> 	= mkReductionHdr (showInt lt) "happyReduce "
+> 	= mkReductionHdr (showInt lt) "happyReduce"
 >	. char '(' . interleave " `HappyStk`\n\t" tokPatterns
 >	. str "happyRest)\n\t = "
 >	. tokLets
@@ -293,10 +288,12 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >	   )
 
 >       where 
->		(code',isMonadProd,isMonad2Prod) 
->                     = case code of ('%' : code1) -> case code1 of ('%' : code2) -> (code2, True,  True )
->                                                                   _             -> (code1, True,  False)
->			 	     _                                            -> (code,  False, False)
+>		(code', is_monad_prod, monad_pass_token, monad_reduce) 
+>                     = case code of 
+>			  '%':'%':code1 -> (code1, True, True, "happyMonad2Reduce")
+>			  '%':'^':code1 -> (code1, True, True, "happyMonadReduce")
+>			  '%':code1     -> (code1, True, False, "happyMonadReduce")
+>			  _ -> (code, False, False, "")
 
 >		-- adjust the nonterminal number for the array-based parser
 >		-- so that nonterminals start at zero.
@@ -305,7 +302,7 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >
 >		mkReductionHdr lt s = 
 >			mkReduceFun i . str " = "
->			. str s . lt . strspace . showInt adjusted_nt
+>			. str s . strspace . lt . strspace . showInt adjusted_nt
 >			. strspace . reductionFun . nl 
 >			. reductionFun . strspace
 > 
@@ -377,9 +374,9 @@ The token conversion function.
 >	. str (eof ++ " -> ")
 >    	. eofAction . str ";\n\t"
 >	. interleave ";\n\t" (map doToken token_rep)
->	. str "_ -> happyError'\n\t"
+>	. str "_ -> happyError' tk\n\t"
 >	. str "})\n\n"
->       . str "happyError_ tk = happyError'\n";
+>       . str "happyError_ tk = happyError' tk\n";
 >	}
 
 >	where 
@@ -387,9 +384,9 @@ The token conversion function.
 >	  eofAction = 
 >	    (case target of
 >	    	TargetArrayBased ->
->	   	  str "happyDoAction " . eofTok . eofError . str " action"
->	    	_ ->  str "action "	. eofTok . strspace . eofTok . eofError
->		    . str " (HappyState action)")
+>	   	  str "happyDoAction " . eofTok . str " tk action"
+>	    	_ ->  str "action "	. eofTok . strspace . eofTok
+>		    . str " tk (HappyState action)")
 >	     . str " sts stk"
 >	  eofError = str " (error \"reading EOF!\")"
 >	  eofTok = showInt (tokIndex eof)
@@ -699,19 +696,31 @@ MonadStuff:
 >		 . str " a\n"
 >		 . str "happyError' = "
 >		 . str (if use_monad then "" else "HappyIdentity . ")
->		 . str "happyError\n"
->		 . str "\n"
+>		 . errorHandler
+>		 . str "\n\n"
 >		_ ->
 >		   str "happyThen1 = happyThen\n"
 >	     	 . str "happyReturn1 :: " . pcont . str " => a -> " . pty . str " a\n"
 >	     	 . str "happyReturn1 = happyReturn\n"
 >	     	 . str "happyError' :: " . str monad_context . str " => "
+>				         . str token_type . str " -> " 
 >	     	 . str monad_tycon
 >	     	 . str " a\n"
->	     	 . str "happyError' = "
+>	     	 . str "happyError' tk = "
 >	     	 . str (if use_monad then "" else "HappyIdentity ")
->	     	 . str "happyError\n"
+>		 . errorHandler . str " tk\n"
 >	     	 . str "\n"
+
+An error handler specified with %error is passed the current token
+when used with %lexer, but happyError (the old way but kept for
+compatibility) is not passed the current token.
+
+>    errorHandler = 
+>	case error_handler of
+>		Just h  -> str h
+>		Nothing -> case lexer of 
+>				Nothing -> str "happyError"
+>				Just _  -> str "(\\token -> happyError)"
 
 >    reduceArrElem n
 >      = str "\t(" . shows n . str " , "

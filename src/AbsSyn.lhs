@@ -8,7 +8,8 @@ Here is the abstract syntax of the language we parse.
 
 > module AbsSyn (
 > 	AbsSyn(..), Directive(..),
-> 	getTokenType, getTokenSpec, getParserNames, getLexer, getImportedIdentity, getMonad,
+> 	getTokenType, getTokenSpec, getParserNames, getLexer,
+>	getImportedIdentity, getMonad, getError,
 >       getPrios, getPrioNames, getExpect
 >  ) where
 
@@ -42,6 +43,7 @@ generate some error messages.
 >	| TokenRight    [String]		-- %right
 >	| TokenLeft     [String]		-- %left
 >       | TokenExpect   Int                     -- %expect
+>       | TokenError    String                  -- %error
 
 #ifdef DEBUG
 
@@ -94,3 +96,9 @@ generate some error messages.
 >                 [t] -> Just t
 >                 []  -> Nothing
 >                 _   -> error "multiple expect directives"
+
+> getError ds 
+> 	= case [ a | (TokenError a) <- ds ] of
+> 		[t] -> Just t
+>		[]  -> Nothing
+>		_   -> error "multiple error directives"
