@@ -136,12 +136,12 @@ Report any conflicts in the grammar.
 >          Just n | n == sr && rr == 0 -> return ()
 >          Just n | rr > 0 -> 
 >                  die ("The grammar has reduce/reduce conflicts.\n" ++
->                       "This is not allowed when an expect directive is given")
+>                       "This is not allowed when an expect directive is given\n")
 >          Just n -> 
 >                 die ("The grammar has " ++ show sr ++ 
 >                      " shift/reduce conflicts.\n" ++
 >                      "This is different from the number given in the " ++
->                      "expect directive")
+>                      "expect directive\n")
 >          _ -> do
 
 >	    (if sr /= 0
