@@ -1,5 +1,5 @@
 %define name    happy
-%define version 1.15
+%define version 1.16
 %define release 1
 
 Name:           %{name}
@@ -8,7 +8,7 @@ Release:        %{release}
 License:        BSD-like
 Group:          Development/Languages/Haskell
 URL:            http://haskell.org/happy/
-Source:         http://haskell.org/happy/dist/%{version}/happy-%{version}-src.tar.gz
+Source:         http://haskell.org/happy/dist/%{version}/happy-%{version}.tar.gz
 Packager:       Sven Panne <sven.panne@aedion.de>
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
 Prefix:         %{_prefix}
@@ -34,29 +34,30 @@ Authors:
     Andy Gill <andy@galconn.com>
 
 %prep
-%setup -n happy-%{version}
+%setup
 
 %build
+runhaskell Setup.lhs configure --prefix=%{prefix}
+runhaskell Setup.lhs build
+cd doc
 test -f configure || autoreconf
-./configure --prefix=%{prefix}
-make
+./configure
 make html
 
 %install
-make prefix=${RPM_BUILD_ROOT}%{prefix} install
+runhaskell Setup.lhs copy --destdir=${RPM_BUILD_ROOT}
 
 %clean
 rm -rf ${RPM_BUILD_ROOT}
 
 %files
 %defattr(-,root,root)
-%doc happy/ANNOUNCE
-%doc happy/CHANGES
-%doc happy/LICENSE
-%doc happy/README
-%doc happy/TODO
-%doc happy/doc/happy
-%doc happy/examples
+%doc ANNOUNCE
+%doc CHANGES
+%doc LICENSE
+%doc README
+%doc TODO
+%doc doc/happy
+%doc examples
 %{prefix}/bin/happy
-%{prefix}/bin/happy-%{version}
-%{prefix}/lib/happy-%{version}
+%{prefix}/share/happy-%{version}

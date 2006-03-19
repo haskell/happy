@@ -6,7 +6,7 @@ Generating info files.
 
 > module Info (genInfoFile) where
 
-> import Paths_Happy		( version )
+> import Paths_happy		( version )
 > import LALR 			( Lr0Item )
 > import GenUtils               ( str, interleave, interleave', ljustify )
 > import Set ( Set )

@@ -1,4 +1,4 @@
-name: Happy
+name: happy
 version: 1.16
 license: BSD3
 license-file: LICENSE
@@ -9,6 +9,121 @@ stability: stable
 homepage: http://www.haskell.org/happy/
 synopsis: Happy is a parser generator for Haskell
 build-depends: base>=1.0, haskell98>=1.0
+extra-source-files:
+	ANNOUNCE
+	CHANGES
+	"InstallShield/Setup Files/Uncompressed Files/Language Independent/OS Independent/setup.bmp"
+	"InstallShield/Setup Files/Compressed Files/Language Independent/OS Independent/ANNOUNCE"
+	"InstallShield/Registry Entries/Default.rge"
+	"InstallShield/String Tables/0009-English/value.shl"
+	"InstallShield/String Tables/Default.shl"
+	"InstallShield/File Groups/Program Executable Files.fgl"
+	"InstallShield/File Groups/Help Files.fgl"
+	"InstallShield/File Groups/Default.fdf"
+	"InstallShield/Component Definitions/Default.cdf"
+	"InstallShield/Component Definitions/Default.fgl"
+	"InstallShield/Text Substitutions/Setup.tsb"
+	"InstallShield/Text Substitutions/Build.tsb"
+	"InstallShield/Happy.ipr"
+	"InstallShield/Shell Objects/Default.shl"
+	"InstallShield/Script Files/Setup.Inx"
+	"InstallShield/Script Files/Setup.Obs"
+	"InstallShield/Script Files/Setup.dbg"
+	"InstallShield/Script Files/Setup.ino"
+	"InstallShield/Script Files/Setup.ins"
+	"InstallShield/Script Files/Setup.map"
+	"InstallShield/Script Files/setup.rul"
+	Makefile
+	README
+	TODO
+	doc/Makefile
+	doc/aclocal.m4
+	doc/config.mk.in
+	doc/configure.ac
+	doc/docbook-xml.mk
+	doc/fptools.css
+	doc/happy.1.in
+	doc/happy.xml
+	examples/glr/nlp/Main.lhs
+	examples/glr/nlp/Makefile
+	examples/glr/nlp/README
+	examples/glr/nlp/English.y
+	examples/glr/nlp/Hugs.lhs
+	examples/glr/Makefile
+	examples/glr/Makefile.defs
+	examples/glr/expr-eval/Main.lhs
+	examples/glr/expr-eval/Makefile
+	examples/glr/expr-eval/Expr.y
+	examples/glr/expr-eval/README
+	examples/glr/expr-eval/Hugs.lhs
+	examples/glr/expr-tree/Main.lhs
+	examples/glr/expr-tree/Makefile
+	examples/glr/expr-tree/Expr.y
+	examples/glr/expr-tree/README
+	examples/glr/expr-tree/Tree.lhs
+	examples/glr/expr-tree/Hugs.lhs
+	examples/glr/highly-ambiguous/Main.lhs
+	examples/glr/highly-ambiguous/Makefile
+	examples/glr/highly-ambiguous/Expr.y
+	examples/glr/highly-ambiguous/README
+	examples/glr/highly-ambiguous/Hugs.lhs
+	examples/glr/hidden-leftrec/Main.lhs
+	examples/glr/hidden-leftrec/Makefile
+	examples/glr/hidden-leftrec/Expr.y
+	examples/glr/hidden-leftrec/README
+	examples/glr/hidden-leftrec/Hugs.lhs
+	examples/glr/expr-monad/Main.lhs
+	examples/glr/expr-monad/Makefile
+	examples/glr/expr-monad/Expr.y
+	examples/glr/expr-monad/README
+	examples/glr/expr-monad/Hugs.lhs
+	examples/glr/bio-eg/Main.lhs
+	examples/glr/bio-eg/Makefile
+	examples/glr/bio-eg/Bio.y
+	examples/glr/bio-eg/README
+	examples/glr/bio-eg/1-1200.dna
+	examples/glr/bio-eg/1-600.dna
+	examples/glr/common/DV_lhs
+	examples/glr/common/DaVinciTypes.hs
+	examples/glr/packing/Main.lhs
+	examples/glr/packing/Makefile
+	examples/glr/packing/Expr.y
+	examples/glr/packing/README
+	examples/glr/packing/Hugs.lhs
+	examples/PgnParser.ly
+	examples/MonadTest.ly
+	examples/igloo/ParserM.hs
+	examples/igloo/Makefile
+	examples/igloo/Parser.y
+	examples/igloo/Foo.hs
+	examples/igloo/README
+	examples/igloo/Lexer.hs
+	examples/igloo/Lexer.x
+	examples/igloo/Parser.hs
+	examples/README
+	examples/Calc.ly
+	examples/DavesExample.ly
+	examples/ErrorTest.ly
+	examples/ErlParser.ly
+	examples/SimonsExample.ly
+	examples/LexerTest.ly
+	happy.spec
+	src/ARRAY-NOTES
+	templates/GLR_Base.lhs
+	templates/GenericTemplate.hs
+	templates/GLR_Lib.lhs
+	tests/monad001.y
+	tests/Makefile
+	tests/TestMulti.ly
+	tests/Partial.ly
+	tests/precedence001.ly
+	tests/TestPrecedence.ly
+	tests/bogus-token.y
+	tests/monad002.ly
+	tests/bug001.ly
+	tests/bug002.y
+	tests/Test.ly
+	tests/precedence002.y
 
 executable: happy
 hs-source-dirs: src
@@ -17,16 +132,16 @@ extensions: CPP
 ghc-options: -fglasgow-exts -O
 other-modules:
 	AbsSyn
-	Grammar
-	Lexer
-	Parser
-	Set
-	Main
-	Target
 	First
-	Info
-	ProduceCode
 	GenUtils
+	Grammar
+	Info
 	LALR
+	Lexer
+	Main
 	ParseMonad
+	Parser
+	ProduceCode
 	ProduceGLRCode
+	Set
+	Target
