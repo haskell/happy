@@ -353,7 +353,7 @@ The token conversion function.
 > 
 >	Nothing ->
 >    	  str "happyNewToken action sts stk [] =\n\t"
->    	. eofAction
+>    	. eofAction "notHappyAtAll"
 >	. str " []\n\n"
 >       . str "happyNewToken action sts stk (tk:tks) =\n\t"
 >	. str "let cont i = " . doAction . str " sts stk tks in\n\t"
@@ -372,7 +372,7 @@ The token conversion function.
 >	. str " sts stk in\n\t"
 >	. str "case tk of {\n\t"
 >	. str (eof ++ " -> ")
->    	. eofAction . str ";\n\t"
+>    	. eofAction "tk" . str ";\n\t"
 >	. interleave ";\n\t" (map doToken token_rep)
 >	. str "_ -> happyError' tk\n\t"
 >	. str "})\n\n"
@@ -381,12 +381,12 @@ The token conversion function.
 
 >	where 
 
->	  eofAction = 
+>	  eofAction tk =
 >	    (case target of
 >	    	TargetArrayBased ->
->	   	  str "happyDoAction " . eofTok . str " tk action"
+>	   	  str "happyDoAction " . eofTok . strspace . str tk . str " action"
 >	    	_ ->  str "action "	. eofTok . strspace . eofTok
->		    . str " tk (HappyState action)")
+>		    . strspace . str tk . str " (HappyState action)")
 >	     . str " sts stk"
 >	  eofError = str " (error \"reading EOF!\")"
 >	  eofTok = showInt (tokIndex eof)
