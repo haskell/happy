@@ -1,6 +1,3 @@
-# -----------------------------------------------------------------------------
-# $Id: Makefile,v 1.9 2005/01/14 14:47:23 simonmar Exp $
-
 HAPPY=happy
 HC=ghc
 
@@ -53,7 +50,7 @@ endif
 	$(HAPPY) $(TEST_HAPPY_OPTS) -agc $< -o $@
 
 %.o : %.hs
-	$(HC) -c -o $@ $<
+	$(HC) $(HC_OPTS) -c -o $@ $<
 
 CLEAN_FILES += *.n.hs *.a.hs *.g.hs *.gc.hs *.ag.hs *.agc.hs *.info *.hi *.bin *.exe
 
@@ -86,4 +83,3 @@ check-todo::
 	$(HC) Test.hs -o happy_test
 	./happy_test
 	-rm -f ./happy_test
-
