@@ -10,7 +10,8 @@ Here is the abstract syntax of the language we parse.
 > 	AbsSyn(..), Directive(..),
 > 	getTokenType, getTokenSpec, getParserNames, getLexer,
 >	getImportedIdentity, getMonad, getError,
->       getPrios, getPrioNames, getExpect
+>       getPrios, getPrioNames, getExpect,
+>       getAttributes, getAttributetype
 >  ) where
 
 > data AbsSyn
@@ -44,6 +45,9 @@ generate some error messages.
 >	| TokenLeft     [String]		-- %left
 >       | TokenExpect   Int                     -- %expect
 >       | TokenError    String                  -- %error
+>       | TokenAttributetype String             -- %attributetype
+>       | TokenAttribute String String          -- %attribute
+ 
 
 #ifdef DEBUG
 
@@ -102,3 +106,12 @@ generate some error messages.
 > 		[t] -> Just t
 >		[]  -> Nothing
 >		_   -> error "multiple error directives"
+
+> getAttributes ds
+>         = [ (id,typ) | (TokenAttribute id typ) <- ds ]
+
+> getAttributetype ds
+>         = case [ t | (TokenAttributetype t) <- ds ] of
+>                  [t] -> Just t
+>                  []  -> Nothing
+>                  _   -> error "multiple attributetype directives"
