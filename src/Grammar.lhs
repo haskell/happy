@@ -20,10 +20,14 @@ Here is our mid-section datatype
 
 > import GenUtils
 > import AbsSyn
+> import ParseMonad
+> import AttrGrammar
+> import AttrGrammarParser
 
 > import Array
 > import Char
 > import List
+> import Maybe (fromMaybe)
 
 #ifdef DEBUG
 
@@ -54,6 +58,8 @@ Here is our mid-section datatype
 >		imported_identity :: Bool,
 >		monad		  :: (Bool,String,String,String,String),
 >		expect		  :: Maybe Int,
+>               attributes        :: [(String,String)],
+>               attributetype     :: String,
 >		lexer		  :: Maybe (String,String),
 >		error_handler	  :: Maybe String
 >	}
@@ -269,13 +275,16 @@ Translate the rules from string to name-based.
 >	  = mapToName nt `thenE` \nt' ->
 >	    Succeeded (nt', prods, ty)
 >
+>       attrs = getAttributes dirs
+>       attrType = fromMaybe "HappyAttrs" (getAttributetype dirs)
+>
 > 	transRule (nt, prods, ty)
 >   	  = parEs (map (finishRule nt) prods)
 >
 >	finishRule nt (lhs,code,line,prec)
 >	  = failMap (addLine line) $
->	    checkCode (length lhs) code `parE`  \code' ->
->	    parEs (map mapToName lhs) 	`thenE`  \lhs' ->
+>          parEs (map mapToName lhs)   `parE`  \lhs' ->
+>          checkCode (length lhs) lhs' nonterm_names code attrs `thenE`  \code' ->
 >	    case mkPrec lhs' prec of
 >		Left s  -> Failed ["Undeclared precedence token: " ++ s]
 >		Right p -> Succeeded (nt, lhs', code', p)
@@ -345,7 +354,9 @@ Get the token specs in terms of Names.
 >		lexer		  = getLexer dirs,
 >		error_handler	  = getError dirs,
 >		token_type	  = getTokenType dirs,
->               expect            = getExpect dirs
+>               expect            = getExpect dirs,
+>               attributes        = attrs,
+>               attributetype     = attrType
 >	})
 
 For combining actions with possible error messages.
@@ -366,14 +377,144 @@ So is this.
 
 > checkRules [] _ nonterms = Succeeded (reverse nonterms)
 
+
+-----------------------------------------------------------------------------
+-- If any attribute directives were used, we are in an attribute grammar, so
+-- go do special processing.  If not, pass on to the regular processing routine
+
+> checkCode :: Int -> [Name] -> [Name] -> String -> [(String,String)] -> MaybeErr (String,[Int]) [String]
+> checkCode arity lhs nonterm_names code []    = doCheckCode arity code
+> checkCode arity lhs nonterm_names code attrs = rewriteAttributeGrammar arity lhs nonterm_names code attrs
+
+------------------------------------------------------------------------------
+-- Special processing for attribute grammars.  We re-parse the body of the code
+-- block and output the nasty-looking record manipulation and let binding goop
+--
+
+> rewriteAttributeGrammar :: Int -> [Name] -> [Name] -> String -> [(String,String)] -> MaybeErr (String,[Int]) [String]
+> rewriteAttributeGrammar arity lhs nonterm_names code attrs =
+
+   first we need to parse the body of the code block
+
+>     case runP agParser code 0 of
+>        FailP msg  -> Failed [ "error in attribute grammar rules: "++msg ]
+>        OkP rules  ->
+
+   now we break the rules into three lists, one for synthesized attributes,
+   one for inherited attributes, and one for conditionals
+
+>            let (selfRules,subRules,conditions) = partitionRules [] [] [] rules
+>                attrNames = map fst attrs
+>                defaultAttr = head attrNames
+
+   now check that $i references are in range
+
+>            in parEs (map checkArity (mentionedProductions rules)) `thenE` \prods -> 
+
+   and output the rules
+
+>                formatRules arity attrNames defaultAttr 
+>                            allSubProductions selfRules 
+>                            subRules conditions `thenE` \rulesStr ->
+
+   return the munged code body and all sub-productions mentioned
+
+>               Succeeded (rulesStr,nub (allSubProductions++prods))
+
+
+>    where partitionRules a b c [] = (a,b,c)
+>          partitionRules a b c (RightmostAssign attr toks : xs) = partitionRules a (SubAssign (arity,attr) toks : b) c xs
+>          partitionRules a b c (x@(SelfAssign _ _ )  : xs) = partitionRules (x:a) b c xs
+>          partitionRules a b c (x@(SubAssign _ _)    : xs) = partitionRules a (x:b) c xs
+>          partitionRules a b c (x@(Conditional _)    : xs) = partitionRules a b (x:c) xs
+
+>          allSubProductions             = map (+1) (findIndices (`elem` nonterm_names) lhs)
+
+>          mentionedProductions rules    = [ i | (AgTok_SubRef (i,_)) <- concat (map getTokens rules) ]
+
+>          getTokens (SelfAssign _ toks)      = toks
+>          getTokens (SubAssign _ toks)       = toks
+>          getTokens (Conditional toks)       = toks
+>          getTokens (RightmostAssign _ toks) = toks
+>           
+>          checkArity x = if x <= arity then Succeeded x else Failed [show x++" out of range"]
+
+
+
+------------------------------------------------------------------------------------
+-- Actually emit the code for the record bindings and conditionals
+--
+
+> formatRules :: Int -> [String] -> String -> [Name] 
+>             -> [AgRule] -> [AgRule] -> [AgRule] 
+>             -> MaybeErr String [String]
+
+> formatRules arity attrNames defaultAttr prods selfRules subRules conditions = Succeeded $
+>     concat [ "\\happyInhAttrs -> let { "
+>            , "happySelfAttrs = happyInhAttrs",formattedSelfRules
+>            , subProductionRules
+>            , "; happyConditions = ", formattedConditions
+>            , " } in (happyConditions,happySelfAttrs)"
+>            ]
+>
+>  where formattedSelfRules = case selfRules of [] -> []; _ -> "{ "++formattedSelfRules'++" }"
+>        formattedSelfRules' = concat $ intersperse ", " $ map formatSelfRule selfRules
+>        formatSelfRule (SelfAssign [] toks)   = defaultAttr++" = "++(formatTokens toks)
+>        formatSelfRule (SelfAssign attr toks) = attr++" = "++(formatTokens toks)
+
+>        subRulesMap :: [(Int,[(String,[AgToken])])]
+>        subRulesMap = map     (\l   -> foldr (\ (_,x) (i,xs) -> (i,x:xs))
+>                                             (fst $ head l,[snd $ head l])
+>                                             (tail l) ) .
+>                      groupBy (\x y -> (fst x) == (fst y)) .
+>                      sortBy  (\x y -> compare (fst x) (fst y)) .
+>                      map     (\(SubAssign (i,id) toks) -> (i,(id,toks))) $ subRules
+
+>        subProductionRules = concat $ map formatSubRules prods
+
+>        formatSubRules i = 
+>           let attrs = fromMaybe [] . lookup i $ subRulesMap
+>               attrUpdates' = concat $ intersperse ", " $ map (formatSubRule i) attrs
+>               attrUpdates  = case attrUpdates' of [] -> []; x -> "{ "++x++" }"
+>           in concat ["; (happyConditions_",show i,",happySubAttrs_",show i,") = ",mkHappyVar i
+>                     ," happyEmptyAttrs"
+>                     , attrUpdates
+>                     ]
+>         
+>        formattedConditions = concat $ intersperse "++" $ localConditions : (map (\i -> "happyConditions_"++(show i)) prods)
+>        localConditions = "["++(concat $ intersperse ", " $ map formatCondition conditions)++"]"
+>        formatCondition (Conditional toks) = formatTokens toks
+
+>        formatSubRule i ([],toks)   = defaultAttr++" = "++(formatTokens toks)
+>        formatSubRule i (attr,toks) = attr++" = "++(formatTokens toks)
+
+>        formatTokens tokens = concat (map formatToken tokens)
+
+>        formatToken AgTok_LBrace           =  "{ "
+>        formatToken AgTok_RBrace           = "} "
+>        formatToken AgTok_Where            = "where "
+>        formatToken AgTok_Semicolon        = "; "
+>        formatToken AgTok_Eq               = "="
+>        formatToken (AgTok_SelfRef [])     = "("++defaultAttr++" happySelfAttrs) "
+>        formatToken (AgTok_SelfRef x)      = "("++x++" happySelfAttrs) "
+>        formatToken (AgTok_RightmostRef x) = formatToken (AgTok_SubRef (arity,x))
+>        formatToken (AgTok_SubRef (i,[])) 
+>            | i `elem` prods = "("++defaultAttr++" happySubAttrs_"++(show i)++") "
+>            | otherwise      = mkHappyVar i ++ " "
+>        formatToken (AgTok_SubRef (i,x)) 
+>            | i `elem` prods = "("++x++" happySubAttrs_"++(show i)++") "
+>            | otherwise      = error "lhs "++(show i)++" is not a non-terminal"
+>        formatToken (AgTok_Unknown x)     = x++" "
+
+
 -----------------------------------------------------------------------------
 -- Check for every $i that i is <= the arity of the rule.
 
 -- At the same time, we collect a list of the variables actually used in this
 -- code, which is used by the backend.
 
-> checkCode :: Int -> String -> MaybeErr (String, [Int]) [String]
-> checkCode arity code = go code "" []
+> doCheckCode :: Int -> String -> MaybeErr (String, [Int]) [String]
+> doCheckCode arity code = go code "" []
 >   where go code acc used =
 >           case code of
 >		[] -> Succeeded (reverse acc, used)

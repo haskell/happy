@@ -58,6 +58,8 @@ Produce the complete output file.
 >		, token_type = token_type
 >		, starts = starts
 >		, error_handler = error_handler
+>               , attributetype = attributetype
+>               , attributes = attributes
 >		})
 >	 	action goto top_options module_header module_trailer 
 >		target coerce ghc strict
@@ -75,6 +77,7 @@ Produce the complete output file.
 >	. produceMonadStuff
 >	. produceEntries
 >	. produceStrict strict
+>       . produceAttributes attributes attributetype . nl
 >	. maybestr module_trailer . nl
 >	) ""
 >  where
@@ -731,9 +734,10 @@ compatibility) is not passed the current token.
 
 >    produceEntries
 >	= interleave "\n\n" (map produceEntry (zip starts [0..]))
+>       . if null attributes then id else produceAttrEntries starts
 
 >    produceEntry ((name, start_nonterm, accept_nonterm, _partial), no)
->	= str name 
+>       = (if null attributes then str name else str "do_" . str name)
 >	. maybe_tks
 >	. str " = "
 >	. str unmonad
@@ -758,6 +762,57 @@ compatibility) is not passed the current token.
 >		  | otherwise = id
 >	unmonad | use_monad = ""
 >		  | otherwise = "happyRunIdentity "
+
+>    produceAttrEntries starts
+>       = interleave "\n\n" (map f starts)
+>     where
+>       f = case (use_monad,lexer) of
+>             (True,Just _)  -> \(name,_,_,_) -> monadAndLexerAE name
+>             (True,Nothing) -> \(name,_,_,_) -> monadAE name
+>             (False,Just _) -> error "attribute grammars not supported for non-monadic parsers with %lexer"
+>             (False,Nothing)-> \(name,_,_,_) -> regularAE name
+>
+>       defaultAttr = fst (head attributes)
+>
+>       monadAndLexerAE name
+>         = str name . str " = " 
+>         . str "do { "
+>         . str "f <- do_" . str name . str "; "
+>         . str "let { (conds,attrs) = f happyEmptyAttrs } in do { "
+>         . str "sequence_ conds; "
+>         . str "return (". str defaultAttr . str " attrs) }}"
+>       monadAE name
+>         = str name . str " toks = "
+>         . str "do { "
+>         . str "f <- do_" . str name . str " toks; "
+>         . str "let { (conds,attrs) = f happyEmptyAttrs } in do { "
+>         . str "sequence_ conds; "
+>         . str "return (". str defaultAttr . str " attrs) }}"
+>       regularAE name
+>         = str name . str " toks = "
+>         . str "let { "
+>         . str "f = do_" . str name . str " toks; "
+>         . str "(conds,attrs) = f happyEmptyAttrs; "
+>         . str "x = foldr seq attrs conds; "
+>         . str "} in (". str defaultAttr . str " x)"
+
+----------------------------------------------------------------------------
+-- Produce attributes declaration for attribute grammars
+
+> produceAttributes [] _ = id
+> produceAttributes attrs attributeType 
+>     = str "data " . attrHeader . str " = HappyAttributes {" . attributes . str "}" . nl
+>     . str "happyEmptyAttrs = HappyAttributes {" . attrsErrors . str "}" . nl
+
+>   where attributes  = foldl1 (\x y -> x . str ", " . y) $ map formatAttribute attrs
+>         formatAttribute (id,typ) = str id . str " :: " . str typ
+>         attrsErrors = foldl1 (\x y -> x . str ", " . y) $ map attrError attrs
+>         attrError (id,_) = str id . str " = error \"invalid reference to attribute '" . str id . str "'\""
+>         attrHeader =
+>             case attributeType of
+>             [] -> str "HappyAttributes"
+>             _  -> str attributeType
+
 
 -----------------------------------------------------------------------------
 -- Strict or non-strict parser
