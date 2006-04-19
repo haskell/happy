@@ -1312,8 +1312,6 @@ lexwrap :: (Token -> P a) -> P a
 lexwrap cont = real_lexer `thenP` \token -> cont token
 </programlisting>
 
-    </sect2>
-
       <sect3>
 	<title>Monadic productions with %lexer</title>
 
@@ -1342,6 +1340,7 @@ n  :  t_1 ... t_n          {%% &lt;expr&gt; }
 	is read from the input.  This can be useful when you want to
 	change the next token and continue parsing.</para>
       </sect3>
+    </sect2>
 
     <sect2 id="sec-line-numbers">
       <title>Line Numbers</title>
@@ -2518,6 +2517,374 @@ close : '}'                  { () }
     </sect1>
   </chapter>
 
+<!-- Attribute Grammars ================================================= -->
+  <chapter id="sec-AttributeGrammar">
+    <title>Attribute Grammars</title>
+
+    <sect1 id="sec-introAttributeGrammars">
+    <title>Introduction</title>
+
+    <para>Attribute grammars are a formalism for expressing syntax directed 
+    translation of a context-free grammar.  An introduction to attribute grammars 
+    may be found <ulink
+    url="http://www-rocq.inria.fr/oscar/www/fnc2/manual/node32.html">here</ulink>.
+    There is also an article in the Monad Reader about attribute grammars and a
+    different approach to attribute grammars using Haskell
+    <ulink url="http://www.haskell.org/tmrwiki/WhyAttributeGrammarsMatter">here</ulink>.
+    </para>
+
+    <para>
+    The main practical difficulty that has prevented attribute grammars from
+    gaining widespread use involves evaluating the attributes.  Attribute grammars
+    generate non-trivial data dependency graphs that are difficult to evaluate
+    using mainstream languages and techniques.  The solutions generally involve
+    restricting the form of the grammars or using big hammers like topological sorts.
+    However, a language which supports lazy evaluation, such as Haskell, has no
+    problem forming complex data dependency graphs and evaluating them.  The primary
+    intellectual barrier to attribute grammar adoption seems to stem from the fact that
+    most programmers have difficulty with the declarative nature of the
+    specification.  Haskell programmers, on the other hand, have already
+    embraced a purely functional language.  In short, the Haskell language and
+    community seem like a perfect place to experiment with attribute grammars.
+    </para>
+
+    <para>
+    Embedding attribute grammars in Happy is easy because because Haskell supports
+    three important features: higher order functions, labeled records, and 
+    lazy evaluation.  Attributes are encoded as fields in a labeled record. The parse
+    result of each non-terminal in the grammar is a function which takes a record 
+    of inherited attributes and returns a record of synthesized attributes.  In each
+    production, the attributes of various non-terminals are bound together using
+    <literal>let</literal>.
+    Finally, at the end of the parse, a distinguished attribute is evaluated to be 
+    the final result.  Lazy evaluation takes care of evaluating each attribute in the 
+    correct order, resulting in an attribute grammar system that is capable of evaluating
+    a fairly large class of attribute grammars.
+    </para>
+
+    <para>
+    Attribute grammars in Happy do not use any language extensions, so the
+    parsers are Haskell 98 (assuming you don't use the GHC specific -g option).
+    Currently, attribute grammars cannot be generated for GLR parsers (It's not
+    exactly clear how these features should interact...)
+    </para>
+    
+    </sect1>
+
+    <sect1 id="sec-AtrributeGrammarsInHappy">
+    <title>Attribute Grammars in Happy</title>
+
+    <sect2 id="sec-declaringAttributes">
+      <title>Declaring Attributes</title>
+
+      <para>
+      The presence of one or more <literal>%attribute</literal> directives indicates
+      that a grammar is an attribute grammar.  Attributes are calculated properties 
+      that are associated with the non-terminals in a parse tree.  Each
+      <literal>%attribute</literal> directive generates a field in the attributes
+      record with the given name and type.
+      </para>
+
+      <para>
+      The first <literal>%attribute</literal>
+      directive in a grammar defines the default attribute.  The
+      default attribute is distinguished in two ways: 1) if no attribute specifier is 
+      given on an attribute reference,
+      the default attribute is assumed (see <xref linkend="sec-semanticRules"/>)
+      and 2) the value for the default attribute of the starting non-terminal becomes the 
+      return value of the parse.
+      </para>
+
+      <para>
+      Optionally, one may specify a type declaration for the attribute record using
+      the <literal>%attributetype</literal> declaration.  This allows you to define the
+      type given to the attribute record and, more importantly, allows you to introduce
+      type variables that can be subsequently used in <literal>%attribute</literal> 
+      declarations.  If the <literal>%attributetype</literal> directive is given without
+      any <literal>%attribute</literal> declarations, then the <literal>%attributetype</literal>
+      declaration has no effect.
+      </para>
+
+      <para>
+      For example, the following declarations:
+      </para>
+
+<programlisting>
+%attributetype { MyAttributes a }
+%attribute value { a }
+%attribute num   { Int }
+%attribute label { String }
+</programlisting>
+
+      <para>
+      would generate this attribute record declaration in the parser:
+      </para>
+
+<programlisting>
+data MyAttributes a =
+   HappyAttributes {
+     value :: a,
+     num :: Int,
+     label :: String
+   }
+</programlisting>
+
+       <para>
+       and <literal>value</literal> would be the default attribute.
+       </para>
+
+    </sect2>
+
+    <sect2 id="sec-semanticRules">
+      <title>Semantic Rules</title>
+      
+      <para>In an ordinary Happy grammar, a production consists of a list
+      of terminals and/or non-terminals followed by an uninterpreted
+      code fragment enclosed in braces.  With an attribute grammar, the 
+      format is very similar, but the braces enclose a set of semantic rules
+      rather than uninterpreted Haskell code.  Each semantic rule is either
+      an attribute calculation or a conditional, and rules are separated by
+      semicolons<footnote><para>Note that semantic rules must not rely on
+      layout, because whitespace alignment is not guaranteed to be 
+      preserved</para></footnote>.
+      </para>
+
+      <para>
+      Both attribute calculations and conditionals may contain attribute references
+      and/or terminal references.  Just like regular Happy grammars, the tokens 
+      <literal>$1</literal> through <literal>$&lt;n&gt;</literal>, where 
+      <literal>n</literal> is the number of symbols in the production, refer to
+      subtrees of the parse.  If the referenced symbol is a terminal, then the
+      value of the reference is just the value of the terminal, the same way as
+      in a regular Happy grammar.  If the referenced symbol is a non-terminal, 
+      then the reference may be followed by an attribute specifier, which is 
+      a dot followed by an attribute name.  If the attribute specifier is omitted,
+      then the default attribute is assumed (the default attribute is the first
+      attribute appearing in an <literal>%attribute</literal> declaration).
+      Additionally, the special reference <literal>$$</literal> references the
+      attributes of the current node in the parse tree; it behaves exactly
+      like the numbered references.
+      </para>
+
+      <para>      
+      An attribute calculation rule is of the form:
+      </para>
+<programlisting>
+&lt;attribute reference&gt; = &lt;Haskell expression&gt;
+</programlisting>
+      <para>
+      A rule of this form defines the value of an attribute, possibly as a function
+      of the attributes of <literal>$$</literal> (inherited attributes), the attributes
+      of non-terminals in the production (synthesized attributes), or the values of
+      terminals in the production.  The value for an attribute can only
+      be defined once for a particular production.
+      </para>
+
+      <para>
+      The following rule calculates the default attribute of the current production in
+      terms of the first and second items of the production (a synthesized attribute):
+      </para>
+<programlisting>
+$$ = $1 : $2
+</programlisting>
+
+      <para>
+      This rule calculates the length attribute of a non-terminal in terms of the
+      length of the current non-terminal (an inherited attribute):
+      </para>      
+<programlisting>
+$1.length = $$.length + 1
+</programlisting>
+
+      <para>
+      Conditional rules allow the rejection of strings due to context-sensitive properties.
+      All conditional rules have the form:
+      </para>
+<programlisting>
+where &lt;Haskell expression&gt;
+</programlisting>
+      <para>
+      For non-monadic parsers, all conditional expressions
+      must be of the same (monomorphic) type.  At
+      the end of the parse, the conditionals will be reduced using 
+      <literal>seq</literal>, which gives the grammar an opportunity to call 
+      <literal>error</literal> with an informative message.  For monadic parsers,
+      all conditional statements must have type <literal>Monad m => m ()</literal> where
+      <literal>m</literal> is the monad in which the parser operates.  All conditionals
+      will be sequenced at the end of the parse, which allows the conditionals to call
+      <literal>fail</literal> with an informative message.
+      </para>
+      
+      <para>
+      The following conditional rule will cause the (non-monadic) parser to fail
+      if the inherited length attribute is not 0.
+      </para>
+<programlisting>
+where if $$.length == 0 then () else error "length not equal to 0"
+</programlisting>
+      
+      <para>
+      This conditional is the monadic equivalent:
+      </para>
+<programlisting>
+where unless ($$.length == 0) (fail "length not equal to 0")
+</programlisting>
+
+
+    </sect2>
+    </sect1>
+
+    <sect1 id="sec-AttrGrammarLimits">
+      <title>Limits of Happy Attribute Grammars</title>
+
+      <para>
+	If you are not careful, you can write an attribute grammar which fails to
+	terminate.  This generally happens when semantic rules
+	are written which cause a circular dependency on the value of
+	an attribute.  Even if the value of the attribute is well-defined (that is,
+	if a fixpoint calculation over attribute values will eventually converge to
+	a unique solution), this attribute grammar system will not evaluate such 
+	grammars.
+      </para>
+      <para>
+	On practical way to overcome this limitation is to ensure that each attribute
+	is always used in either a top-down (inherited) fashion or in a bottom-up
+	(synthesized) fashion.  If the calculations are sufficiently lazy, one can
+	"tie the knot" by synthesizing a value in one attribute, and then assigning
+	that value to another, inherited attribute at some point in the parse tree.
+	This technique can be useful for common tasks like building symbol tables for
+	a syntactic scope and making that table available to sub-nodes of the parse.
+      </para>
+    </sect1>
+
+	    
+    <sect1 id="sec-AttributeGrammarExample">
+      <title>Example Attribute Grammars</title>
+      <para>
+      The following two toy attribute grammars may prove instructive.  The first is
+      an attribute grammar for the classic context-sensitive grammar 
+      { a^n b^n c^n | n >= 0 }.  It demonstrates the use of conditionals,
+      inherited and synthesized attributes.
+      </para>
+
+<programlisting>
+{
+module ABCParser (parse) where
+}
+
+%tokentype { Char }
+
+%token a { 'a' }
+%token b { 'b' }
+%token c { 'c' }
+%token newline { '\n' }
+
+%attributetype { Attrs a }
+%attribute value { a }
+%attribute len   { Int }
+
+%name parse abcstring
+
+%%
+
+abcstring 
+   : alist blist clist newline
+        { $$ = $1 ++ $2 ++ $3
+        ; $2.len = $1.len
+        ; $3.len = $1.len
+        }
+
+alist 
+   : a alist 
+        { $$ = $1 : $2
+        ; $$.len = $2.len + 1
+        }
+   |    { $$ = []; $$.len = 0 }
+
+blist 
+   : b blist
+        { $$ = $1 : $2
+        ; $2.len = $$.len - 1
+        }
+   |    { $$ = []
+        ; where failUnless ($$.len == 0) "blist wrong length" 
+        }
+
+clist
+   : c clist
+        { $$ = $1 : $2
+        ; $2.len = $$.len - 1
+        }
+   |    { $$ = []
+        ; where failUnless ($$.len == 0) "clist wrong length" 
+        }
+
+{
+happyError = error "parse error"
+failUnless b msg = if b then () else error msg
+}
+</programlisting>
+
+<para>
+This grammar parses binary numbers and
+calculates their value.  It demonstrates
+the use of inherited and synthesized attributes.
+</para>
+
+
+<programlisting>
+{
+module BitsParser (parse) where
+}
+
+%tokentype { Char }
+
+%token minus { '-' }
+%token plus  { '+' }
+%token one   { '1' }
+%token zero  { '0' }
+%token newline { '\n' }
+
+%attributetype { Attrs }
+%attribute value { Integer }
+%attribute pos   { Int }
+
+%name parse start
+
+%%
+
+start 
+   : num newline { $$ = $1 }
+
+num 
+   : bits        { $$ = $1       ; $1.pos = 0 }
+   | plus bits   { $$ = $2       ; $2.pos = 0 }
+   | minus bits  { $$ = negate $2; $2.pos = 0 }
+
+bits
+   : bit         { $$ = $1
+                 ; $1.pos = $$.pos 
+                 }
+
+   | bits bit    { $$ = $1 + $2
+                 ; $1.pos = $$.pos + 1
+                 ; $2.pos = $$.pos
+                 }
+
+bit
+   : zero        { $$ = 0 }
+   | one         { $$ = 2^($$.pos) }
+
+{
+happyError = error "parse error"
+}
+</programlisting>
+      
+
+    </sect1>
+
+  </chapter>
+
 <!-- Invoking ============================================================ -->
 
   <chapter id="sec-invoking">
@@ -3070,6 +3437,48 @@ any projection function.</para>
 	parse error.  The type of <literal>&lt;f&gt;</literal> varies
 	depending on the presence of <literal>%lexer</literal> (see
 	<xref linkend="sec-monad-summary" />).</para>
+      </sect2>
+
+      <sect2 id="sec-attributes">
+	<title>Attribute Type Declaration</title>
+<programlisting>
+%attributetype { &lt;valid Haskell type declaration&gt; }
+</programlisting>
+        <indexterm>
+	  <primary><literal>%attributetype</literal> directive</primary>
+	</indexterm>
+ 
+	<para>(optional) This directive allows you to declare the type of the
+	attributes record when defining an attribute grammar.  If this declaration
+	is not given, Happy will choose a default.  This declaration may only
+	appear once in a grammar.
+	</para>
+	<para>
+	  Attribute grammars are explained in <xref linkend="sec-AttributeGrammar"/>.
+	</para>
+      </sect2>
+
+      <sect2 id="sec-attribute">
+	<title>Attribute declaration</title>
+<programlisting>
+%attribute &lt;Haskell identifier&gt; { &lt;valid Haskell type&gt; }
+</programlisting>
+        <indexterm>
+         <primary><literal>%attribute</literal> directive</primary>
+       </indexterm>
+
+       <para>The presence of one or more of these directives declares that the
+       grammar is an attribute grammar.  The first attribute listed becomes the
+       default attribute.  Each <literal>%attribute</literal> directive generates a
+       field in the attributes record with the given label and type.  If there
+       is an <literal>%attributetype</literal> declaration in the grammar which 
+       introduces type variables, then the type of an attribute may mention any
+       such type variables.
+       </para>
+
+       <para>
+       Attribute grammars are explained in <xref linkend="sec-AttributeGrammar"/>.
+       </para>
       </sect2>
 
     </sect1>
