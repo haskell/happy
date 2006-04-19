@@ -40,12 +40,14 @@
 -- is uninterpreted haskell expressions.  We only need to know about
 --    a) braces and semicolons to break the rules apart
 --    b) the equals sign to break the rules into LValues and the RHS
---    c) attribute references, which are $$ or $x (postivie integer x)
---         followed by an optional attribute specifier, which
---         is a dot followed by a Haskell variable identifier
+--    c) attribute references, which are $$, $x (postivie integer x)
+--       or $> (for the rightmost symbol) followed by an optional
+--       attribute specifier, which is a dot followed by a
+--       Haskell variable identifier
 --         Examples:
 --            $$
 --            $1
+--            $>
 --            $$.pos
 --            $3.value
 --            $2.someAttribute0'

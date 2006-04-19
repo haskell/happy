@@ -2661,9 +2661,10 @@ data MyAttributes a =
       a dot followed by an attribute name.  If the attribute specifier is omitted,
       then the default attribute is assumed (the default attribute is the first
       attribute appearing in an <literal>%attribute</literal> declaration).
-      Additionally, the special reference <literal>$$</literal> references the
+      The special reference <literal>$$</literal> references the
       attributes of the current node in the parse tree; it behaves exactly
-      like the numbered references.
+      like the numbered references.  Additionally, the reference <literal>$></literal>
+      always references the rightmost symbol in the production.
       </para>
 
       <para>      

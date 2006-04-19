@@ -57,6 +57,7 @@ or a conditional statement.
 >   | ";" code0                                  { $1 : $2 }
 >   | selfRef code0                              { $1 : $2 }
 >   | subRef code0                               { $1 : $2 }
+>   | rightRef code                              { $1 : $2 }
 >   | unknown code0                              { $1 : $2 }
 >   |                                            { [] }
 
