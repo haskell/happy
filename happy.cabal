@@ -145,3 +145,5 @@ other-modules:
 	ProduceGLRCode
 	Set
 	Target
+        AttrGrammar
+        AttrGrammarParser
