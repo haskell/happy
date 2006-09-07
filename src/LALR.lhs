@@ -18,7 +18,7 @@ Generation of LALR parsing tables.
 
 > import Control.Monad.ST
 > import Data.Array.ST
-> import Data.Array hiding (bounds)
+> import Data.Array as Array
 > import Data.List (nub)
 
 > unionMap :: (Ord b) => (a -> Set b) -> Set a -> Set b
@@ -624,7 +624,7 @@ Count the conflicts
 >   
 >   where
 >	   
->	conflictArray = listArray (bounds action) conflictList
+>	conflictArray = listArray (Array.bounds action) conflictList
 >	conflictList  = map countConflictsState (assocs action)
 >
 >	countConflictsState (state, actions) 
