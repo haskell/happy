@@ -30,18 +30,12 @@ myPostBuild _ _ _ lbi =
 	    ghc_args = ["-o", dst_pp, "-E", "-cpp", src] ++ opts
 		-- hack to turn cpp-style '# 27 "GenericTemplate.hs"' into 
 		-- '{-# LINE 27 "GenericTemplate.hs" #-}'.
-	    perl_args = ["-pe", "s/^#\\s+(\\d+)\\s+(\"[^\"]*\")/{-# LINE \\1 \\2 #-}/g;s/\\$(Id:.*)\\$/\\1/g"]
+	    perl_args = ["-pe", "s/^#\\s+(\\d+)\\s+(\"[^\"]*\")/{-# LINE \\1 \\2 #-}/g;s/\\$(Id:.*)\\$/\\1/g", dst_pp]
 	mb_perl <- findExecutable "perl"
 	perl <- case mb_perl of
-		  Nothing -> ioError (userError "You need \"perl\" installed and in your PATH to complete the build")
+		  Nothing -> ioError (userError "You need \"perl\" installed and on your PATH to complete the build")
 		  Just path -> return path
-	do_cmd ghc ghc_args `cmd_seq` 
-	   do h_dst_pp <- openFile dst_pp ReadMode
-	      h_dst    <- openFile dst    WriteMode
-	      putStrLn (perl ++ ' ':unwords perl_args)
-	      p <- runProcess perl perl_args Nothing Nothing 
-			(Just h_dst_pp) (Just h_dst) Nothing
-	      waitForProcess p
+	do_cmd ghc ghc_args `cmd_seq` do_cmd_out perl perl_args dst
 
   cmd_seqs ([ cpp_template "GenericTemplate.hs" dst opts | (dst,opts) <- templates ] ++
   	    [ cpp_template "GLR_Base.lhs"       dst opts | (dst,opts) <- glr_base_templates ] ++
@@ -103,8 +97,16 @@ glr_templates = [
 
 do_cmd :: FilePath -> [String] -> IO ExitCode
 do_cmd cmd args = do
-  putStrLn (cmd ++ ' ':unwords args)
-  rawSystem cmd args
+  putStrLn (unwords (cmd:args))
+  ph <- runProcess cmd args Nothing Nothing Nothing Nothing Nothing
+  waitForProcess ph
+
+do_cmd_out :: FilePath -> [String] -> FilePath -> IO ExitCode
+do_cmd_out cmd args outfile = do
+  putStrLn (unwords (cmd:args))
+  outh <- openFile outfile WriteMode
+  ph <- runProcess cmd args Nothing Nothing Nothing (Just outh) Nothing
+  waitForProcess ph
 
 cmd_seq :: IO ExitCode -> IO ExitCode -> IO ExitCode
 cmd_seq c1 c2 = do
