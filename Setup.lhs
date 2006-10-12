@@ -8,10 +8,11 @@ import Distribution.PackageDescription ( PackageDescription )
 import Distribution.Setup ( BuildFlags, CleanFlags, CopyDest(..), CopyFlags(..), InstallFlags )
 import Distribution.Simple ( defaultMainWithHooks, defaultUserHooks, UserHooks(..), Args, compilerPath )
 import Distribution.Simple.LocalBuildInfo ( LocalBuildInfo(..), mkDataDir )
-import System.Directory ( removeFile, copyFile, getCurrentDirectory, setCurrentDirectory, createDirectoryIfMissing )
+import System.Directory
 import System.Exit ( ExitCode(..) )
-import System.IO ( FilePath )
-import System.Process ( runCommand, waitForProcess )
+import System.IO
+import System.Process
+import System.Cmd
 import Text.Printf ( printf )
 
 main :: IO ()
@@ -25,12 +26,23 @@ myPostBuild _ _ _ lbi =
   excursion "templates" $ do
   let cpp_template src dst opts = do
 	let dst_pp = dst ++ ".hspp"
-	    cmd = printf "%s -E -cpp -o %s %s %s" 
-			(compilerPath (compiler lbi)) dst_pp src (unwords opts)
+	    ghc = compilerPath (compiler lbi)
+	    ghc_args = ["-o", dst_pp, "-E", "-cpp", src] ++ opts
 		-- hack to turn cpp-style '# 27 "GenericTemplate.hs"' into 
 		-- '{-# LINE 27 "GenericTemplate.hs" #-}'.
-	    perl = printf "perl -pe \'s/^#\\s+(\\d+)\\s+(\"[^\"]*\")/{-# LINE \\1 \\2 #-}/g;s/\\$(Id:.*)\\$/\\1/g' < %s > %s" dst_pp dst
-	do_cmd cmd `cmd_seq` do_cmd perl
+	    perl_args = ["-pe", "s/^#\\s+(\\d+)\\s+(\"[^\"]*\")/{-# LINE \\1 \\2 #-}/g;s/\\$(Id:.*)\\$/\\1/g"]
+	mb_perl <- findExecutable "perl"
+	perl <- case mb_perl of
+		  Nothing -> ioError (userError "You need \"perl\" installed and in your PATH to complete the build")
+		  Just path -> return path
+	do_cmd ghc ghc_args `cmd_seq` 
+	   do h_dst_pp <- openFile dst_pp ReadMode
+	      h_dst    <- openFile dst    WriteMode
+	      putStrLn (perl ++ ' ':unwords perl_args)
+	      p <- runProcess perl perl_args Nothing Nothing 
+			(Just h_dst_pp) (Just h_dst) Nothing
+	      waitForProcess p
+
   cmd_seqs ([ cpp_template "GenericTemplate.hs" dst opts | (dst,opts) <- templates ] ++
   	    [ cpp_template "GLR_Base.lhs"       dst opts | (dst,opts) <- glr_base_templates ] ++
   	    [ cpp_template "GLR_Lib.lhs"        dst opts | (dst,opts) <- glr_templates ])
@@ -89,10 +101,10 @@ glr_templates = [
 -- -----------------------------------------------------------------------------
 -- Utils
 
-do_cmd :: String -> IO ExitCode
-do_cmd c = do
-  putStrLn c
-  runCommand c >>= waitForProcess
+do_cmd :: FilePath -> [String] -> IO ExitCode
+do_cmd cmd args = do
+  putStrLn (cmd ++ ' ':unwords args)
+  rawSystem cmd args
 
 cmd_seq :: IO ExitCode -> IO ExitCode -> IO ExitCode
 cmd_seq c1 c2 = do
