@@ -2,6 +2,7 @@ Changes from version 1.15 to 1.16
 
 	* New %error directive
 	* New production forms: {%% .. } and {%^ .. }
+	* Added Attribute Grammar support, by Robert Dockins
 
 -----------------------------------------------------------------------------
 Changes from version 1.14 to 1.15
