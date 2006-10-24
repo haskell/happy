@@ -3,14 +3,18 @@ module Parser (ourParser,AbsSyn) where
 import ParseMonad
 import AbsSyn
 import Lexer
+#if __GLASGOW_HASKELL__ >= 503
+import Data.Array
+#else
 import Array
+#endif
 #if __GLASGOW_HASKELL__ >= 503
 import GHC.Exts
 #else
 import GlaExts
 #endif
 
--- parser produced by Happy Version 1.15
+-- parser produced by Happy Version 1.16
 
 newtype HappyAbsSyn  = HappyAbsSyn (() -> ())
 happyIn4 :: (AbsSyn) -> (HappyAbsSyn )
@@ -174,7 +178,7 @@ happyReduction_1 (happy_x_5 `HappyStk`
 		 (AbsSyn happy_var_1 (reverse happy_var_2) (reverse happy_var_4) happy_var_5
 	) `HappyStk` happyRest}}}}
 
-happyReduce_2 = happySpecReduce_2 1# happyReduction_2
+happyReduce_2 = happySpecReduce_2  1# happyReduction_2
 happyReduction_2 happy_x_2
 	happy_x_1
 	 =  case happyOut5 happy_x_1 of { happy_var_1 -> 
@@ -183,7 +187,7 @@ happyReduction_2 happy_x_2
 		 (happy_var_2 : happy_var_1
 	)}}
 
-happyReduce_3 = happySpecReduce_1 1# happyReduction_3
+happyReduce_3 = happySpecReduce_1  1# happyReduction_3
 happyReduction_3 happy_x_1
 	 =  case happyOut6 happy_x_1 of { happy_var_1 -> 
 	happyIn5
@@ -219,7 +223,7 @@ happyReduction_5 (happy_x_6 `HappyStk`
 		 ((happy_var_1,happy_var_6,Just happy_var_3)
 	) `HappyStk` happyRest}}}
 
-happyReduce_6 = happySpecReduce_3 2# happyReduction_6
+happyReduce_6 = happySpecReduce_3  2# happyReduction_6
 happyReduction_6 happy_x_3
 	happy_x_2
 	happy_x_1
@@ -229,7 +233,7 @@ happyReduction_6 happy_x_3
 		 ((happy_var_1,happy_var_3,Nothing)
 	)}}
 
-happyReduce_7 = happySpecReduce_3 3# happyReduction_7
+happyReduce_7 = happySpecReduce_3  3# happyReduction_7
 happyReduction_7 happy_x_3
 	happy_x_2
 	happy_x_1
@@ -239,7 +243,7 @@ happyReduction_7 happy_x_3
 		 (happy_var_1 : happy_var_3
 	)}}
 
-happyReduce_8 = happySpecReduce_1 3# happyReduction_8
+happyReduce_8 = happySpecReduce_1  3# happyReduction_8
 happyReduction_8 happy_x_1
 	 =  case happyOut8 happy_x_1 of { happy_var_1 -> 
 	happyIn7
@@ -251,25 +255,25 @@ happyReduction_9 (happy_x_4 `HappyStk`
 	happy_x_3 `HappyStk`
 	happy_x_2 `HappyStk`
 	happy_x_1 `HappyStk`
-	happyRest)
+	happyRest) tk
 	 = happyThen (case happyOut15 happy_x_1 of { happy_var_1 -> 
 	case happyOut9 happy_x_2 of { happy_var_2 -> 
 	case happyOutTok happy_x_3 of { (TokenInfo happy_var_3 TokCodeQuote) -> 
-	 lineP >>= \l -> return (happy_var_1,happy_var_3,l,happy_var_2)}}}
+	( lineP >>= \l -> return (happy_var_1,happy_var_3,l,happy_var_2))}}}
 	) (\r -> happyReturn (happyIn8 r))
 
 happyReduce_10 = happyMonadReduce 3# 4# happyReduction_10
 happyReduction_10 (happy_x_3 `HappyStk`
 	happy_x_2 `HappyStk`
 	happy_x_1 `HappyStk`
-	happyRest)
+	happyRest) tk
 	 = happyThen (case happyOut15 happy_x_1 of { happy_var_1 -> 
 	case happyOut9 happy_x_2 of { happy_var_2 -> 
 	case happyOutTok happy_x_3 of { (TokenInfo happy_var_3 TokCodeQuote) -> 
-	 lineP >>= \l -> return (happy_var_1,happy_var_3,l,happy_var_2)}}}
+	( lineP >>= \l -> return (happy_var_1,happy_var_3,l,happy_var_2))}}}
 	) (\r -> happyReturn (happyIn8 r))
 
-happyReduce_11 = happySpecReduce_2 5# happyReduction_11
+happyReduce_11 = happySpecReduce_2  5# happyReduction_11
 happyReduction_11 happy_x_2
 	happy_x_1
 	 =  case happyOutTok happy_x_2 of { (TokenInfo happy_var_2 TokId) -> 
@@ -277,12 +281,12 @@ happyReduction_11 happy_x_2
 		 (Just happy_var_2
 	)}
 
-happyReduce_12 = happySpecReduce_0 5# happyReduction_12
+happyReduce_12 = happySpecReduce_0  5# happyReduction_12
 happyReduction_12  =  happyIn9
 		 (Nothing
 	)
 
-happyReduce_13 = happySpecReduce_2 6# happyReduction_13
+happyReduce_13 = happySpecReduce_2  6# happyReduction_13
 happyReduction_13 happy_x_2
 	happy_x_1
 	 =  case happyOut10 happy_x_1 of { happy_var_1 -> 
@@ -291,14 +295,14 @@ happyReduction_13 happy_x_2
 		 (happy_var_2 : happy_var_1
 	)}}
 
-happyReduce_14 = happySpecReduce_1 6# happyReduction_14
+happyReduce_14 = happySpecReduce_1  6# happyReduction_14
 happyReduction_14 happy_x_1
 	 =  case happyOut11 happy_x_1 of { happy_var_1 -> 
 	happyIn10
 		 ([happy_var_1]
 	)}
 
-happyReduce_15 = happySpecReduce_2 7# happyReduction_15
+happyReduce_15 = happySpecReduce_2  7# happyReduction_15
 happyReduction_15 happy_x_2
 	happy_x_1
 	 =  case happyOutTok happy_x_2 of { (TokenInfo happy_var_2 TokCodeQuote) -> 
@@ -306,7 +310,7 @@ happyReduction_15 happy_x_2
 		 (TokenType happy_var_2
 	)}
 
-happyReduce_16 = happySpecReduce_2 7# happyReduction_16
+happyReduce_16 = happySpecReduce_2  7# happyReduction_16
 happyReduction_16 happy_x_2
 	happy_x_1
 	 =  case happyOut13 happy_x_2 of { happy_var_2 -> 
@@ -314,7 +318,7 @@ happyReduction_16 happy_x_2
 		 (TokenSpec happy_var_2
 	)}
 
-happyReduce_17 = happySpecReduce_3 7# happyReduction_17
+happyReduce_17 = happySpecReduce_3  7# happyReduction_17
 happyReduction_17 happy_x_3
 	happy_x_2
 	happy_x_1
@@ -324,7 +328,7 @@ happyReduction_17 happy_x_3
 		 (TokenName happy_var_2 happy_var_3 False
 	)}}
 
-happyReduce_18 = happySpecReduce_3 7# happyReduction_18
+happyReduce_18 = happySpecReduce_3  7# happyReduction_18
 happyReduction_18 happy_x_3
 	happy_x_2
 	happy_x_1
@@ -334,13 +338,13 @@ happyReduction_18 happy_x_3
 		 (TokenName happy_var_2 happy_var_3 True
 	)}}
 
-happyReduce_19 = happySpecReduce_1 7# happyReduction_19
+happyReduce_19 = happySpecReduce_1  7# happyReduction_19
 happyReduction_19 happy_x_1
 	 =  happyIn11
 		 (TokenImportedIdentity
 	)
 
-happyReduce_20 = happySpecReduce_3 7# happyReduction_20
+happyReduce_20 = happySpecReduce_3  7# happyReduction_20
 happyReduction_20 happy_x_3
 	happy_x_2
 	happy_x_1
@@ -350,7 +354,7 @@ happyReduction_20 happy_x_3
 		 (TokenLexer happy_var_2 happy_var_3
 	)}}
 
-happyReduce_21 = happySpecReduce_2 7# happyReduction_21
+happyReduce_21 = happySpecReduce_2  7# happyReduction_21
 happyReduction_21 happy_x_2
 	happy_x_1
 	 =  case happyOutTok happy_x_2 of { (TokenInfo happy_var_2 TokCodeQuote) -> 
@@ -358,7 +362,7 @@ happyReduction_21 happy_x_2
 		 (TokenMonad "()" happy_var_2 ">>=" "return"
 	)}
 
-happyReduce_22 = happySpecReduce_3 7# happyReduction_22
+happyReduce_22 = happySpecReduce_3  7# happyReduction_22
 happyReduction_22 happy_x_3
 	happy_x_2
 	happy_x_1
@@ -396,7 +400,7 @@ happyReduction_24 (happy_x_5 `HappyStk`
 		 (TokenMonad happy_var_2 happy_var_3 happy_var_4 happy_var_5
 	) `HappyStk` happyRest}}}}
 
-happyReduce_25 = happySpecReduce_2 7# happyReduction_25
+happyReduce_25 = happySpecReduce_2  7# happyReduction_25
 happyReduction_25 happy_x_2
 	happy_x_1
 	 =  case happyOut15 happy_x_2 of { happy_var_2 -> 
@@ -404,7 +408,7 @@ happyReduction_25 happy_x_2
 		 (TokenNonassoc happy_var_2
 	)}
 
-happyReduce_26 = happySpecReduce_2 7# happyReduction_26
+happyReduce_26 = happySpecReduce_2  7# happyReduction_26
 happyReduction_26 happy_x_2
 	happy_x_1
 	 =  case happyOut15 happy_x_2 of { happy_var_2 -> 
@@ -412,7 +416,7 @@ happyReduction_26 happy_x_2
 		 (TokenRight happy_var_2
 	)}
 
-happyReduce_27 = happySpecReduce_2 7# happyReduction_27
+happyReduce_27 = happySpecReduce_2  7# happyReduction_27
 happyReduction_27 happy_x_2
 	happy_x_1
 	 =  case happyOut15 happy_x_2 of { happy_var_2 -> 
@@ -420,7 +424,7 @@ happyReduction_27 happy_x_2
 		 (TokenLeft happy_var_2
 	)}
 
-happyReduce_28 = happySpecReduce_2 7# happyReduction_28
+happyReduce_28 = happySpecReduce_2  7# happyReduction_28
 happyReduction_28 happy_x_2
 	happy_x_1
 	 =  case happyOutTok happy_x_2 of { (TokenNum happy_var_2  TokNum) -> 
@@ -428,7 +432,7 @@ happyReduction_28 happy_x_2
 		 (TokenExpect happy_var_2
 	)}
 
-happyReduce_29 = happySpecReduce_2 7# happyReduction_29
+happyReduce_29 = happySpecReduce_2  7# happyReduction_29
 happyReduction_29 happy_x_2
 	happy_x_1
 	 =  case happyOutTok happy_x_2 of { (TokenInfo happy_var_2 TokCodeQuote) -> 
@@ -436,7 +440,7 @@ happyReduction_29 happy_x_2
 		 (TokenError happy_var_2
 	)}
 
-happyReduce_30 = happySpecReduce_2 7# happyReduction_30
+happyReduce_30 = happySpecReduce_2  7# happyReduction_30
 happyReduction_30 happy_x_2
 	happy_x_1
 	 =  case happyOutTok happy_x_2 of { (TokenInfo happy_var_2 TokCodeQuote) -> 
@@ -444,7 +448,7 @@ happyReduction_30 happy_x_2
 		 (TokenAttributetype happy_var_2
 	)}
 
-happyReduce_31 = happySpecReduce_3 7# happyReduction_31
+happyReduce_31 = happySpecReduce_3  7# happyReduction_31
 happyReduction_31 happy_x_3
 	happy_x_2
 	happy_x_1
@@ -454,19 +458,19 @@ happyReduction_31 happy_x_3
 		 (TokenAttribute happy_var_2 happy_var_3
 	)}}
 
-happyReduce_32 = happySpecReduce_1 8# happyReduction_32
+happyReduce_32 = happySpecReduce_1  8# happyReduction_32
 happyReduction_32 happy_x_1
 	 =  case happyOutTok happy_x_1 of { (TokenInfo happy_var_1 TokId) -> 
 	happyIn12
 		 (Just happy_var_1
 	)}
 
-happyReduce_33 = happySpecReduce_0 8# happyReduction_33
+happyReduce_33 = happySpecReduce_0  8# happyReduction_33
 happyReduction_33  =  happyIn12
 		 (Nothing
 	)
 
-happyReduce_34 = happySpecReduce_2 9# happyReduction_34
+happyReduce_34 = happySpecReduce_2  9# happyReduction_34
 happyReduction_34 happy_x_2
 	happy_x_1
 	 =  case happyOut14 happy_x_1 of { happy_var_1 -> 
@@ -475,14 +479,14 @@ happyReduction_34 happy_x_2
 		 (happy_var_1:happy_var_2
 	)}}
 
-happyReduce_35 = happySpecReduce_1 9# happyReduction_35
+happyReduce_35 = happySpecReduce_1  9# happyReduction_35
 happyReduction_35 happy_x_1
 	 =  case happyOut14 happy_x_1 of { happy_var_1 -> 
 	happyIn13
 		 ([happy_var_1]
 	)}
 
-happyReduce_36 = happySpecReduce_2 10# happyReduction_36
+happyReduce_36 = happySpecReduce_2  10# happyReduction_36
 happyReduction_36 happy_x_2
 	happy_x_1
 	 =  case happyOutTok happy_x_1 of { (TokenInfo happy_var_1 TokId) -> 
@@ -491,7 +495,7 @@ happyReduction_36 happy_x_2
 		 ((happy_var_1,happy_var_2)
 	)}}
 
-happyReduce_37 = happySpecReduce_2 11# happyReduction_37
+happyReduce_37 = happySpecReduce_2  11# happyReduction_37
 happyReduction_37 happy_x_2
 	happy_x_1
 	 =  case happyOutTok happy_x_1 of { (TokenInfo happy_var_1 TokId) -> 
@@ -500,19 +504,19 @@ happyReduction_37 happy_x_2
 		 (happy_var_1 : happy_var_2
 	)}}
 
-happyReduce_38 = happySpecReduce_0 11# happyReduction_38
+happyReduce_38 = happySpecReduce_0  11# happyReduction_38
 happyReduction_38  =  happyIn15
 		 ([]
 	)
 
-happyReduce_39 = happySpecReduce_1 12# happyReduction_39
+happyReduce_39 = happySpecReduce_1  12# happyReduction_39
 happyReduction_39 happy_x_1
 	 =  case happyOutTok happy_x_1 of { (TokenInfo happy_var_1 TokCodeQuote) -> 
 	happyIn16
 		 (Just happy_var_1
 	)}
 
-happyReduce_40 = happySpecReduce_0 12# happyReduction_40
+happyReduce_40 = happySpecReduce_0  12# happyReduction_40
 happyReduction_40  =  happyIn16
 		 (Nothing
 	)
@@ -521,7 +525,7 @@ happyNewToken action sts stk
 	= lexer(\tk -> 
 	let cont i = happyDoAction i tk action sts stk in
 	case tk of {
-	TokenEOF -> happyDoAction 24# (error "reading EOF!") action sts stk;
+	TokenEOF -> happyDoAction 24# tk action sts stk;
 	TokenInfo happy_dollar_dollar TokId -> cont 1#;
 	TokenKW      TokSpecId_TokenType -> cont 2#;
 	TokenKW      TokSpecId_Token -> cont 3#;
@@ -545,10 +549,10 @@ happyNewToken action sts stk
 	TokenKW      TokDoubleColon -> cont 21#;
 	TokenKW      TokDoublePercent -> cont 22#;
 	TokenKW      TokBar -> cont 23#;
-	_ -> happyError'
+	_ -> happyError' tk
 	})
 
-happyError_ tk = happyError'
+happyError_ tk = happyError' tk
 
 happyThen :: () => P a -> (a -> P b) -> P b
 happyThen = (>>=)
@@ -557,13 +561,14 @@ happyReturn = (return)
 happyThen1 = happyThen
 happyReturn1 :: () => a -> P a
 happyReturn1 = happyReturn
-happyError' :: () => P a
-happyError' = happyError
+happyError' :: () => Token -> P a
+happyError' tk = (\token -> happyError) tk
 
 ourParser = happySomeParser where
   happySomeParser = happyThen (happyParse 0#) (\x -> happyReturn (happyOut4 x))
 
 happySeq = happyDontSeq
+
 
 happyError :: P a
 happyError = lineP >>= \l -> fail (show l ++ ": Parse error\n")
@@ -571,7 +576,7 @@ happyError = lineP >>= \l -> fail (show l ++ ": Parse error\n")
 {-# LINE 1 "<built-in>" #-}
 {-# LINE 1 "<command line>" #-}
 {-# LINE 1 "GenericTemplate.hs" #-}
--- $Id$
+-- Id: GenericTemplate.hs,v 1.26 2005/01/14 14:47:22 simonmar Exp 
 
 {-# LINE 28 "GenericTemplate.hs" #-}
 
@@ -720,9 +725,23 @@ happyReduce k nt fn j tk st sts stk
 happyMonadReduce k nt fn 0# tk st sts stk
      = happyFail 0# tk st sts stk
 happyMonadReduce k nt fn j tk st sts stk =
-        happyThen1 (fn stk) (\r -> happyGoto nt j tk st1 sts1 (r `HappyStk` drop_stk))
+        happyThen1 (fn stk tk) (\r -> happyGoto nt j tk st1 sts1 (r `HappyStk` drop_stk))
        where sts1@((HappyCons (st1@(action)) (_))) = happyDrop k (HappyCons (st) (sts))
              drop_stk = happyDropStk k stk
+
+happyMonad2Reduce k nt fn 0# tk st sts stk
+     = happyFail 0# tk st sts stk
+happyMonad2Reduce k nt fn j tk st sts stk =
+       happyThen1 (fn stk tk) (\r -> happyNewToken new_state sts1 (r `HappyStk` drop_stk))
+       where sts1@((HappyCons (st1@(action)) (_))) = happyDrop k (HappyCons (st) (sts))
+             drop_stk = happyDropStk k stk
+
+             off    = indexShortOffAddr happyGotoOffsets st1
+             off_i  = (off +# nt)
+             new_state = indexShortOffAddr happyTable off_i
+
+
+
 
 happyDrop 0# l = l
 happyDrop n (HappyCons (_) (t)) = happyDrop (n -# (1# :: Int#)) t
