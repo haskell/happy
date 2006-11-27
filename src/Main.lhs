@@ -63,6 +63,9 @@ Read and parse the CLI arguments.
 >               (cli,_,[]) | DumpHelp `elem` cli -> do
 >                  prog <- getProgramName
 >                  bye (usageInfo (usageHeader prog) argInfo)
+>               (cli,_,_) | OptDebugParser `elem` cli
+>                        && OptArrayTarget `notElem` cli -> do
+>                  die "Cannot use debugging without -a\n"
 >               (cli,[fl_name],[]) ->
 >                  runParserGen cli fl_name
 >               (_,_,errors) -> do
