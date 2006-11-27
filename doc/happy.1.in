@@ -95,6 +95,9 @@ Generate a parser that will print debugging information to
 at run-time, including all the shifts, reductions, state transitions
 and token inputs performed by the parser.
 
+This option may only be used in conjuction with
+.BR \-a .
+
 .TP
 \fB\-i\fR [\fIFILE\fR], \fB\-\-info\fR[=\fIFILE\fR]
 Directs Happy to produce an info file containing detailed information
