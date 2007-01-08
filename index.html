@@ -18,13 +18,13 @@
 
 <LI><A HREF="#download">Download</A></LI>
 
-<LI><A HREF="CHANGES">Version 1.15 Release Notes</A></LI>
+<LI><A HREF="CHANGES">Version 1.16 Release Notes</A></LI>
 
 <LI>Documentation:
  <UL>
 	<LI><A HREF="doc/html/index.html">Online Documentation</A></LI>
 
-	<LI><A HREF="doc/happy-1.15-html.tar.gz">Downloadable HTML documentation (.tar.gz)</A></LI>
+	<LI><A HREF="doc/happy-1.16-html.tar.gz">Downloadable HTML documentation (.tar.gz)</A></LI>
 
 	<LI>Printable Documentation in <A HREF="doc/ps/happy.ps.gz">Gzipped Postscript</A> format.</LI>
   </UL>
@@ -37,6 +37,7 @@
 <H2><A NAME="News">News</A></H2>
 
 <UL>
+<LI>8 January 2006: Happy 1.16 released.</LI>
 <LI>14 January 2005: Happy 1.15 released.</LI>
 <LI>14 April 2004: Happy 1.14 released.</LI>
 <LI>19 June 2002: Happy 1.13 released.</LI>
@@ -66,11 +67,13 @@ cases).</P>
 have a Haskell parser that uses Happy, which will shortly be part of the
 library collection distributed with GHC.</P>
 
-<P>The current public version of Happy is 1.15, which was released on
-14 January 2005.  However, more recent snapshots of the Happy source
-code can be obtained from the <a
-href="http://www.haskell.org/ghc/cvs-cheat-sheet.html">fptools CVS
-repository</a>.</P>
+<P>The current public version of Happy is 1.16, which was released on
+8 January 2006.  However, more recent snapshots of the Happy source
+code can be obtained from the darcs repository:</P>
+
+<pre>&nbsp;&nbsp;&nbsp;darcs get http://darcs.haskell.org/happy/</pre>
+
+<p>Feel free to hack on Happy and <tt>darcs send</tt> me your patches.</p>
 
 <P>
 <HR WIDTH="100%"></P>
@@ -78,22 +81,19 @@ repository</a>.</P>
 <H2><A NAME="download">Downloading Happy</A></H2>
 
 <P>To compile Happy from source, you'll need <A HREF="http://www.haskell.org/ghc/">GHC
-</A>version 4.08 or later.</P>
+</A>version 5.04 or later.</P>
 
 <UL>
-<LI><A HREF="dist/1.15/happy-1.15-src.tar.gz">Source distribution</A></P>
+<LI><A HREF="dist/1.16/happy-1.16.tar.gz">Source distribution</A></P>
 </LI>
 </UL>
-
-<p>There are some examples of using the new GLR parsing features in Happy,
-      which unfortunately were missed from the 1.15 source distribution.  They
-      are available from Paul Callaghan's <a href="http://www.dur.ac.uk/p.c.callaghan/happy-glr/">GLR parsing page</a>.</p>
 
 <P>We also have binary distributions for various platforms:</P>
 
 <UL>
-<LI><A HREF="dist/1.15/happy-1.15-1.i386.rpm">RPM for Linux/x86 (Redhat 9)</A></LI>
-<li>Windows: a <a href="dist/1.15/happy-1.15-Win32.zip">binary
+<LI><A HREF="dist/1.16/happy-1.16-1.x86_64.rpm">RPM for Linux/x86_64 (Fedora Core 5)</A></LI>
+<LI><A HREF="dist/1.16/happy-1.16-1.i386.rpm">RPM for Linux/x86 (Redhat 9)</A></LI>
+<li>Windows: a <a href="dist/1.16/happy-1.16-Win32.zip">binary
 distribution</a> is available, just unzip and go.</li>
 <LI>Debian GNU/Linux users: packages are available <a href="http://packages.debian.org/happy">here</a>
 <LI>RPMs for other versions of Linux can be built directly from the source, using <tt>rpmbuild -ta</tt>.
@@ -109,8 +109,6 @@ hs-happy</tt>, or install it from the ports tree in
 <UL>
 <LI><A
 HREF="dist/1.13/happy-1.13-nodoc-sparc-sun-solaris2.tar.gz">Sparc/Solaris2</A>
-(version 1.13)</LI>
-<LI><A HREF="dist/1.13/happy-1-13.msi">Windows 9x/NT/2000/XP</A>
 (version 1.13)</LI>
 <LI><A HREF="dist/1.10/happy-1.10-hppa1.1-hp-hpux.tar.gz">HP-PA (HPUX) (version 1.10)</A></LI>
 

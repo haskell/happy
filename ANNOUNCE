@@ -1,17 +1,26 @@
-ANNOUNCING  Happy 1.11  - The LALR(1) Parser Generator for Haskell
------------------------------------------------------------------
+ANNOUNCING Happy 1.16  - The LALR(1) Parser Generator for Haskell
 
-I'm pleased to announce version 1.11 of Happy, the parser generator
-system for Haskell.  This is a minor update from version 1.10, with
+I'm pleased to announce version 1.16 of Happy, the parser generator
+system for Haskell.
 
-	- a bugfix for using Happy with GHC on 64-bit platforms
-	- a minor change to the way that precedence parsing is handled: 
-	  tokens no longer have a default precedence.
+Changes from version 1.15 to 1.16
+
+	* Switch to a Cabal build system: you need a recent version of Cabal
+	  (1.1.6 or later).  If you have GHC 6.4.2, then you need to upgrade
+	  Cabal before building Happy.  GHC 6.6 is fine.
+
+	* New %error directive
+
+	* New production forms: {%% .. } and {%^ .. }
+
+	* Added Attribute Grammar support, by Robert Dockins
+
+NOTE: Happy version 1.16 is required for building GHC version 6.6 and
+later.
 
 Happy is available in source form, which can be compiled with GHC
-version 4.xx (4.08+ recommended), and we also provide binaries for
-some architectures.  The Happy homepage with links to the various
-distributions lives at:
+version 5.04+, and we also provide binaries for some architectures.
+The Happy homepage with links to the various distributions lives at:
 
 	http://www.haskell.org/happy/
 

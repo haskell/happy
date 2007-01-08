@@ -1,3 +1,15 @@
+Changes from version 1.15 to 1.16
+
+	* Switch to a Cabal build system: you need a recent version of Cabal
+	  (1.1.6 or later).  If you have GHC 6.4.2, then you need to upgrade
+	  Cabal before building Happy.  GHC 6.6 is fine.
+
+	* New %error directive
+
+	* New production forms: {%% .. } and {%^ .. }
+
+	* Added Attribute Grammar support, by Robert Dockins
+
 -----------------------------------------------------------------------------
 Changes from version 1.14 to 1.15
 
