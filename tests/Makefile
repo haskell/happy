@@ -1,4 +1,4 @@
-HAPPY=happy
+HAPPY=../dist/build/happy/happy
 HC=ghc
 
 TESTS = Test.ly TestMulti.ly TestPrecedence.ly bug001.ly \
@@ -6,7 +6,9 @@ TESTS = Test.ly TestMulti.ly TestPrecedence.ly bug001.ly \
 	bogus-token.y bug002.y Partial.ly \
 	AttrGrammar001.y AttrGrammar002.y
 
-TEST_HAPPY_OPTS = --strict 
+ERROR_TESTS = error001.y
+
+TEST_HAPPY_OPTS = --strict --template=../templates
 
 ifeq "$(TARGETPLATFORM)" "i386-unknown-mingw32"
 HS_PROG_EXT = .exe
@@ -59,28 +61,37 @@ ALL_TEST_HS = $(shell echo $(TESTS) | sed -e 's/\([^\. ]*\)\.\(l\)\{0,1\}y/\1.n.
 
 ALL_TESTS = $(patsubst %.hs, %.run, $(ALL_TEST_HS))
 
-HC_OPTS += -fglasgow-exts -package lang
+CHECK_ERROR_TESTS = $(patsubst %, check.%, $(ERROR_TESTS))
+
+HC_OPTS += -fglasgow-exts 
 
 .PRECIOUS: *.hs *.o *.bin *.exe
 
 %.run : %$(HS_PROG_EXT)
+	@echo "--> Checking $<..."
 	./$<
+
+check.%.y : %.y
+	@echo "--> Checking $<..."
+	$(HAPPY) $(TEST_HAPPY_OPTS) $< 1>$*.run.stdout 2>$*.run.stderr || true
+	@diff -u $*.stdout $*.run.stdout
+	@diff -u $*.stderr $*.run.stderr
 
 %$(HS_PROG_EXT) : %.o
 	$(HC) $(HC_OPTS) $($*_LD_OPTS) $< -o $@
 
-all :: $(ALL_TESTS)
+all :: $(CHECK_ERROR_TESTS) $(ALL_TESTS)
 
 check-todo::
-	$(HAPPY) -ad Test.ly
+	$(HAPPY) $(TEST_HAPPY_OPTS) -ad Test.ly
 	$(HC) Test.hs -o happy_test
 	./happy_test
 	-rm -f ./happy_test
-	$(HAPPY) -agd Test.ly
+	$(HAPPY) $(TEST_HAPPY_OPTS) -agd Test.ly
 	$(HC) Test.hs -o happy_test
 	./happy_test
 	-rm -f ./happy_test
-	$(HAPPY) -agcd Test.ly
+	$(HAPPY) $(TEST_HAPPY_OPTS) -agcd Test.ly
 	$(HC) Test.hs -o happy_test
 	./happy_test
 	-rm -f ./happy_test
