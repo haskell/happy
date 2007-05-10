@@ -29,6 +29,8 @@ Here is our mid-section datatype
 > import List
 > import Maybe (fromMaybe)
 
+> import Control.Monad.Writer
+
 #ifdef DEBUG
 
 > import IOExts
@@ -164,42 +166,26 @@ In hindsight, this was probably a bad idea.
 
 This bit is a real mess, mainly because of the error message support.
 
-> m `thenE` k 
-> 	= case m of
->		Failed e    -> Failed e
->		Succeeded a -> case k a of
->				Failed e -> Failed e
->				Succeeded b -> Succeeded b
+> type ErrMsg = String
+> type M a = Writer [ErrMsg] a
 
-> m `parE` k 
-> 	= case m of
->		Failed e    -> case k (error "parE") of
->				Failed e' -> Failed (e ++ e')
->				Succeeded _ -> Failed e
->		Succeeded a -> case k a of
->				Failed e -> Failed e
->				Succeeded b -> Succeeded b
+> addErr :: ErrMsg -> M ()
+> addErr e = tell [e]
 
-> parEs [] = Succeeded []
-> parEs (x:xs) = x `parE` \x' ->
->		 parEs xs `parE` \xs' ->
->		 Succeeded (x':xs')
+> mangler :: FilePath -> AbsSyn -> MaybeErr Grammar [ErrMsg]
+> mangler file abssyn
+>   | null errs = Succeeded g
+>   | otherwise = Failed errs
+>   where (g, errs) = runWriter (manglerM file abssyn)
 
-> failMap :: (b -> c) -> MaybeErr a [b] -> MaybeErr a [c]
-> failMap f e = case e of
->   		  Succeeded a -> Succeeded a
->		  Failed s -> Failed (map f s)
+> manglerM :: FilePath -> AbsSyn -> M Grammar
+> manglerM file (AbsSyn hd dirs rules tl) =
+>   -- add filename to all error messages
+>   mapWriter (\(a,e) -> (a, map (\s -> file ++ ": " ++ s) e)) $ do
 
+>   nonterm_strs <- checkRules ([n | (n,_,_) <- rules]) "" []
 
-> mangler :: FilePath -> AbsSyn -> MaybeErr Grammar [String]
-> mangler file (AbsSyn hd dirs rules tl) = 
-
->	  -- add filename to all error messages
->	failMap (\s -> file ++ ": " ++ s) $
-
->	checkRules ([n | (n,_,_) <- rules]) "" [] `thenE` \nonterm_strs  ->
-
->	let
+>   let
 
 >       terminal_strs  = concat (map getTerm dirs) ++ [eofName]
 
@@ -235,20 +221,22 @@ Build up a mapping from name values to strings.
 
 >       mapToName str = 
 >             case lookupName str  of
->                [a] -> Succeeded a
->                []  -> Failed ["unknown identifier `" ++ str ++ "'"]
->                _   -> Failed ["multiple use of `" ++ str ++ "'"]
+>                [a]   -> return a
+>                []    -> do addErr ("unknown identifier '" ++ str ++ "'")
+>                            return errorTok
+>                (a:_) -> do addErr ("multiple use of '" ++ str ++ "'")
+>                            return a
 
 Start symbols...
 
 >		-- default start token is the first non-terminal in the grammar
->	lookupStart (TokenName s Nothing  _) = Succeeded first_nt
+>	lookupStart (TokenName s Nothing  _) = return first_nt
 >	lookupStart (TokenName s (Just n) _) = mapToName n
->	in
+>   -- in
 
->	parEs (map lookupStart starts)	`thenE` \ start_toks ->
+>   start_toks <- mapM lookupStart starts
 
->	let
+>   let
 >	parser_names   = [ s | TokenName s _ _ <- starts ]
 >	start_partials = [ b | TokenName _ _ b <- starts ]
 >	start_prods = zipWith (\nm tok -> (nm, [tok], ("no code",[]), No))
@@ -272,22 +260,23 @@ Deal with priorities...
 Translate the rules from string to name-based.
 
 >	convNT (nt, prods, ty) 
->	  = mapToName nt `thenE` \nt' ->
->	    Succeeded (nt', prods, ty)
+>	  = do nt' <- mapToName nt
+>	       return (nt', prods, ty)
 >
 >       attrs = getAttributes dirs
 >       attrType = fromMaybe "HappyAttrs" (getAttributetype dirs)
 >
 > 	transRule (nt, prods, ty)
->   	  = parEs (map (finishRule nt) prods)
+>   	  = mapM (finishRule nt) prods
 >
 >	finishRule nt (lhs,code,line,prec)
->	  = failMap (addLine line) $
->          parEs (map mapToName lhs)   `parE`  \lhs' ->
->          checkCode (length lhs) lhs' nonterm_names code attrs `thenE`  \code' ->
+>	  = mapWriter (\(a,e) -> (a, map (addLine line) e)) $ do
+>           lhs' <- mapM mapToName lhs
+>           code' <- checkCode (length lhs) lhs' nonterm_names code attrs
 >	    case mkPrec lhs' prec of
->		Left s  -> Failed ["Undeclared precedence token: " ++ s]
->		Right p -> Succeeded (nt, lhs', code', p)
+>		Left s  -> do addErr ("Undeclared precedence token: " ++ s)
+>                             return (nt, lhs', code', No)
+>		Right p -> return (nt, lhs', code', p)
 >
 >       mkPrec :: [Name] -> Maybe String -> Either String Priority
 >       mkPrec lhs prio =
@@ -300,27 +289,27 @@ Translate the rules from string to name-based.
 >               Just s -> case lookup s prioByString of
 >                           Nothing -> Left s
 >                           Just p -> Right p
->	in
+>   -- in
 
->       parEs (map convNT rules)    `thenE` \rules1 ->
->	parEs (map transRule rules1) `thenE` \rules2 ->
+>   rules1 <- mapM convNT rules
+>   rules2 <- mapM transRule rules1
 
->	let
+>   let
 >	tys = accumArray (\a b -> b) Nothing (first_nt, last_nt) 
 >			[ (nm, Just ty) | (nm, _, Just ty) <- rules1 ]
 
 >	env_array :: Array Int String
 >	env_array = array (errorTok, last_t) name_env
->	in
+>   -- in
 
 Get the token specs in terms of Names.
 
->	let 
->	fixTokenSpec (a,b) = mapToName a `thenE` \a -> Succeeded (a,b)
->	in
->       parEs (map fixTokenSpec (getTokenSpec dirs)) `thenE` \tokspec ->
+>   let 
+>	fixTokenSpec (a,b) = do n <- mapToName a; return (n,b)
+>   -- in
+>   tokspec <- mapM fixTokenSpec (getTokenSpec dirs)
 
->	let
+>   let
 >	   ass = combinePairs [ (a,no)
 >			      | ((a,_,_,_),no) <- zip productions [0..] ]
 >	   arr = array (firstStartTok, length ass - 1 + firstStartTok) ass
@@ -331,9 +320,9 @@ Get the token specs in terms of Names.
 >
 >	   productions = start_prods ++ concat rules2
 >	   prod_array  = listArray' (0,length productions-1) productions
->	in
+>   -- in
 
->	Succeeded (Grammar {
+>   return  (Grammar {
 >		productions 	  = productions,
 >		lookupProdNo   	  = (prod_array !),
 >		lookupProdsOfName = lookup_prods,
@@ -372,17 +361,18 @@ So is this.
 > checkRules (name:rest) above nonterms
 >       | name == above = checkRules rest name nonterms
 >       | name `elem` nonterms 
->		= Failed ["Multiple rules for `" ++ name ++ "'"]
+>		= do addErr ("Multiple rules for '" ++ name ++ "'")
+>                    checkRules rest name nonterms
 >       | otherwise = checkRules rest name (name : nonterms)
 
-> checkRules [] _ nonterms = Succeeded (reverse nonterms)
+> checkRules [] _ nonterms = return (reverse nonterms)
 
 
 -----------------------------------------------------------------------------
 -- If any attribute directives were used, we are in an attribute grammar, so
 -- go do special processing.  If not, pass on to the regular processing routine
 
-> checkCode :: Int -> [Name] -> [Name] -> String -> [(String,String)] -> MaybeErr (String,[Int]) [String]
+> checkCode :: Int -> [Name] -> [Name] -> String -> [(String,String)] -> M (String,[Int])
 > checkCode arity lhs nonterm_names code []    = doCheckCode arity code
 > checkCode arity lhs nonterm_names code attrs = rewriteAttributeGrammar arity lhs nonterm_names code attrs
 
@@ -391,13 +381,14 @@ So is this.
 -- block and output the nasty-looking record manipulation and let binding goop
 --
 
-> rewriteAttributeGrammar :: Int -> [Name] -> [Name] -> String -> [(String,String)] -> MaybeErr (String,[Int]) [String]
+> rewriteAttributeGrammar :: Int -> [Name] -> [Name] -> String -> [(String,String)] -> M (String,[Int])
 > rewriteAttributeGrammar arity lhs nonterm_names code attrs =
 
    first we need to parse the body of the code block
 
 >     case runP agParser code 0 of
->        FailP msg  -> Failed [ "error in attribute grammar rules: "++msg ]
+>        FailP msg  -> do addErr ("error in attribute grammar rules: "++msg)
+>                         return ("",[])
 >        OkP rules  ->
 
    now we break the rules into three lists, one for synthesized attributes,
@@ -409,17 +400,18 @@ So is this.
 
    now check that $i references are in range
 
->            in parEs (map checkArity (mentionedProductions rules)) `thenE` \prods -> 
+>            in do let prods = mentionedProductions rules
+>                  mapM checkArity prods
 
    and output the rules
 
->                formatRules arity attrNames defaultAttr 
->                            allSubProductions selfRules 
->                            subRules conditions `thenE` \rulesStr ->
+>                  rulesStr <- formatRules arity attrNames defaultAttr 
+>                               allSubProductions selfRules 
+>                               subRules conditions
 
    return the munged code body and all sub-productions mentioned
 
->               Succeeded (rulesStr,nub (allSubProductions++prods))
+>                  return (rulesStr,nub (allSubProductions++prods))
 
 
 >    where partitionRules a b c [] = (a,b,c)
@@ -437,7 +429,7 @@ So is this.
 >          getTokens (Conditional toks)       = toks
 >          getTokens (RightmostAssign _ toks) = toks
 >           
->          checkArity x = if x <= arity then Succeeded x else Failed [show x++" out of range"]
+>          checkArity x = when (x > arity) $ addErr (show x++" out of range")
 
 
 
@@ -447,9 +439,9 @@ So is this.
 
 > formatRules :: Int -> [String] -> String -> [Name] 
 >             -> [AgRule] -> [AgRule] -> [AgRule] 
->             -> MaybeErr String [String]
+>             -> M String
 
-> formatRules arity attrNames defaultAttr prods selfRules subRules conditions = Succeeded $
+> formatRules arity attrNames defaultAttr prods selfRules subRules conditions = return $
 >     concat [ "\\happyInhAttrs -> let { "
 >            , "happySelfAttrs = happyInhAttrs",formattedSelfRules
 >            , subProductionRules
@@ -513,11 +505,11 @@ So is this.
 -- At the same time, we collect a list of the variables actually used in this
 -- code, which is used by the backend.
 
-> doCheckCode :: Int -> String -> MaybeErr (String, [Int]) [String]
+> doCheckCode :: Int -> String -> M (String, [Int])
 > doCheckCode arity code = go code "" []
 >   where go code acc used =
 >           case code of
->		[] -> Succeeded (reverse acc, used)
+>		[] -> return (reverse acc, used)
 >	
 >		'"'  :r    -> case reads code :: [(String,String)] of
 >				 []      -> go r ('"':acc) used
@@ -529,7 +521,8 @@ So is this.
 >		'\\':'$':r -> go r ('$':acc) used
 >
 >		'$':'>':r -- the "rightmost token"
->			| arity == 0 -> Failed [ "$> in empty rule" ] 
+>			| arity == 0 -> do addErr "$> in empty rule"
+>                                          go r acc used
 >			| otherwise  -> go r (reverse (mkHappyVar arity) ++ acc)
 >					 (arity : used)
 >
@@ -537,8 +530,8 @@ So is this.
 >			case reads r :: [(Int,String)] of
 >			  (j,r):_ -> 
 >			     if j > arity 
->			   	  then Failed [ '$': show j ++ " out of range" ] 
->				 	`parE` \_ -> go r acc used
+>			   	  then do addErr ('$': show j ++ " out of range")
+>                                         go r acc used
 >			   	  else go r (reverse (mkHappyVar j) ++ acc) 
 >					 (j : used)
 >			  
