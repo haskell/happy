@@ -18,9 +18,9 @@ Changes from version 1.15 to 1.16
 NOTE: Happy version 1.16 is required for building GHC version 6.6 and
 later.
 
-Happy is available in source form, which can be compiled with GHC
-version 5.04+, and we also provide binaries for some architectures.
-The Happy homepage with links to the various distributions lives at:
+Happy is available in source form (GHC 6.4.x or later and Cabal 1.1.6
+required), and we also provide binaries for some architectures.  The
+Happy homepage with links to the various distributions lives at:
 
 	http://www.haskell.org/happy/
 
