@@ -43,7 +43,7 @@
 >import System
 #if __GLASGOW_HASKELL__ >= 500
 #if __GLASGOW_HASKELL__ >= 603
->import Data.Map
+>import qualified Data.Map as Map
 #else
 >import Data.FiniteMap
 #endif
@@ -114,7 +114,11 @@ and end position, and a grammatical category for that interval. Branches
 are lists of conjunctions of symbols which can be matched in that span.
 Note that tokens are stored as part of the spans.
 
+#if __GLASGOW_HASKELL__ >= 603
+>type Forest       = Map.Map ForestId [Branch]
+#else
 >type Forest       = FiniteMap ForestId [Branch]
+#endif
 
 ---
 End result of parsing: 
@@ -141,7 +145,11 @@ Forest to simplified output
 >	rs@(_:_) -> error $ "multiple roots in forest, = " ++ show rs
 >						++ unlines (map show ns_map)
 >   where
+#if __GLASGOW_HASKELL__ >= 603
+>       ns_map = Map.toList f 
+#else
 >	ns_map = fmToList f 
+#endif
 >	roots = [ r | (r@(0,sz,sym),_) <- ns_map
 >	            , sz == length
 >	            , sym == top_symbol ]
@@ -151,7 +159,11 @@ Forest to simplified output
 
 >glr_parse :: [[UserDefTok]] -> GLRResult
 >glr_parse toks 
+#if __GLASGOW_HASKELL__ >= 603
+> = case runST Map.empty [0..] (tp toks) of
+#else
 > = case runST emptyFM [0..] (tp toks) of
+#endif
 >    (f,Left ts)   -> ParseError ts f 
 >						-- Error within sentence
 >    (f,Right ss)  -> forestResult (length toks) f
@@ -290,7 +302,11 @@ record an entry
 
 >newNode :: ForestId -> PM ()
 >newNode i
+#if __GLASGOW_HASKELL__ >= 603
+> = chgS $ \f -> ((), Map.insert i [] f)
+#else
 > = chgS $ \f -> ((), addToFM f i [])
+#endif
 
 ---
 add a new branch
@@ -301,17 +317,27 @@ add a new branch
 >addBranch i b 
 > = do
 >	f <- useS id
+#if __GLASGOW_HASKELL__ >= 603
+>       case Map.lookup i f of 
+>         Nothing               -> chgS $ \f -> (False, Map.insert i [b] f)   
+>         Just bs | b `elem` bs -> return True
+>                 | otherwise   -> chgS $ \f -> (True,  Map.insert i (b:bs) f)
+#else
 >	case lookupFM f i of 
 >	  Nothing               -> chgS $ \f -> (False, addToFM f i [b])   
 >	  Just bs | b `elem` bs -> return True
 >	          | otherwise   -> chgS $ \f -> (True,  addToFM f i (b:bs))
-
+#endif
 ---
 only for use with nodes that exist
 
 >getBranches ::  ForestId -> PM [Branch]
 >getBranches i 
+#if __GLASGOW_HASKELL__ >= 603
+> = useS $ \s -> Map.findWithDefault no_such_node i s
+#else
 > = useS $ \s -> lookupWithDefaultFM s no_such_node i
+#endif
 >   where
 >	no_such_node = error $ "No such node in Forest: " ++ show i
 
