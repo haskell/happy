@@ -1303,13 +1303,18 @@ lexer cont s =
         make the types work out).</para>
 
 	<para>This may all seem a bit weird.  Why, you ask, doesn't
-        the lexer just have type <literal>P Token</literal>?  Well, the
-        decision was taken to use a continuation purely for
-        performance reasons.  If the lexer must return a token, then
-        it turns out that the input string must be a real state
-        object, and the monad has to return it as well as pass it
-        around.  If you want a lexer of type <literal>P Token</literal>, then
-        just define a wrapper to deal with the continuation:</para>
+        the lexer just have type <literal>P Token</literal>?  It was
+        done this way for performance reasons - this formulation
+        sometimes means that you can use a reader monad instead of a
+        state monad for <literal>P</literal>, and the reader monad
+        might be faster.  It's not at all clear that this reasoning
+        still holds (or indeed ever held), and it's entirely possible
+        that the use of a continuation here is just a
+        misfeature.</para>
+
+        <para>If you want a lexer of type <literal>P Token</literal>,
+        then just define a wrapper to deal with the
+        continuation:</para>
 
 <programlisting>
 lexwrap :: (Token -> P a) -> P a
