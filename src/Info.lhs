@@ -7,7 +7,7 @@ Generating info files.
 > module Info (genInfoFile) where
 
 > import Paths_happy		( version )
-> import LALR 			( Lr0Item )
+> import LALR 			( Lr0Item(..) )
 > import GenUtils               ( str, interleave, interleave', ljustify )
 > import Set ( Set )
 > import qualified Set hiding ( Set )
@@ -115,13 +115,13 @@ Produce a file of parser information, useful for debugging the parser.
 >   showState state n
 >   	= str "State ". shows n
 >	. str "\n\n"
->	. interleave "\n" (map showItem [ (r,d) | (r,d) <- state, d /= 0 ])
+>	. interleave "\n" (map showItem [ (Lr0 r d) | (Lr0 r d) <- state, d /= 0 ])
 >	. str "\n"
 >   	. foldr (.) id (map showAction (assocs (action ! n)))
 >	. str "\n"
 >   	. foldr (.) id (map showGoto (assocs (goto ! n)))
 
->   showItem (rule,dot)
+>   showItem (Lr0 rule dot)
 >   	= ljuststr 50 (
 >	  	  str "\t"
 >		. showName nt

@@ -8,12 +8,14 @@ Generation of LALR parsing tables.
 > module LALR
 >	(genActionTable, genGotoTable, genLR0items, precalcClosure0,
 >	 propLookaheads, calcLookaheads, mergeLookaheadInfo, countConflicts,
->	 Lr0Item, Lr1Item)
+>	 Lr0Item(..), Lr1Item)
 >	where
 
 > import GenUtils
 > import Set ( Set )
 > import qualified Set hiding ( Set )
+> import qualified NameSet
+> import NameSet ( NameSet )
 > import Grammar
 
 > import Control.Monad.ST
@@ -24,11 +26,15 @@ Generation of LALR parsing tables.
 > unionMap :: (Ord b) => (a -> Set b) -> Set a -> Set b
 > unionMap f = Set.fold (Set.union . f) Set.empty
 
+> unionNameMap :: (Name -> NameSet) -> NameSet -> NameSet
+> unionNameMap f = NameSet.fold (NameSet.union . f) NameSet.empty
+
 This means rule $a$, with dot at $b$ (all starting at 0)
 
-> type Lr0Item = (Int,Int)			-- (rule, dot)
+> data Lr0Item = Lr0 {-#UNPACK#-}!Int {-#UNPACK#-}!Int			-- (rule, dot)
+>       deriving (Eq,Ord)
 
-> type Lr1Item = (Int,Int,Set Name)		-- (rule, dot, lookahead)
+> data Lr1Item = Lr1 {-#UNPACK#-}!Int {-#UNPACK#-}!Int NameSet  -- (rule, dot, lookahead)
 > type RuleList = [Lr0Item]
 
 -----------------------------------------------------------------------------
@@ -45,23 +51,23 @@ using a memo table so that no work is repeated.
 >  where
 >
 >	info' :: [(Name, RuleList)]
->	info' = map (\(n,rules) -> (n,map (\rule -> (rule,0)) (Set.toAscList rules))) info
+>	info' = map (\(n,rules) -> (n,map (\rule -> Lr0 rule 0) (NameSet.toAscList rules))) info
 
->	info :: [(Name, Set Int)]
+>	info :: [(Name, NameSet)]
 >	info = mkClosure (==) (\f -> map (follow f) f)
->			(map (\nt -> (nt,Set.fromList (lookupProdsOfName g nt))) nts)
+>			(map (\nt -> (nt,NameSet.fromList (lookupProdsOfName g nt))) nts)
 
->	follow :: [(Name, Set Int)] -> (Name, Set Int) -> (Name, Set Int)
->	follow f (nt,rules) = (nt, unionMap (followNT f) rules `Set.union` rules)
+>	follow :: [(Name, NameSet)] -> (Name, NameSet) -> (Name, NameSet)
+>	follow f (nt,rules) = (nt, unionNameMap (followNT f) rules `NameSet.union` rules)
 
->	followNT :: [(Name, Set Int)] -> Int -> Set Int
+>	followNT :: [(Name, NameSet)] -> Int -> NameSet
 >	followNT f rule = 
 >		case findRule g rule 0 of
 >			Just nt	| nt >= firstStartTok && nt < fst_term ->
 >				case lookup nt f of
 >					Just rs -> rs
 >					Nothing -> error "followNT"
->			_ -> Set.empty
+>			_ -> NameSet.empty
 
 >	nts = non_terminals g
 >	fst_term = first_term g
@@ -72,7 +78,7 @@ using a memo table so that no work is repeated.
 > 	fst_term = first_term g
 >	addRules rule set = Set.union (Set.fromList (rule : closureOfRule rule)) set
 > 
->	closureOfRule (rule,dot) = 
+>	closureOfRule (Lr0 rule dot) = 
 >           case findRule g rule dot of 
 >           	(Just nt) | nt >= firstStartTok && nt < fst_term 
 >		   -> closureOfNT nt
@@ -81,7 +87,7 @@ using a memo table so that no work is repeated.
 -----------------------------------------------------------------------------
 Generating the closure of a set of LR(1) items
 
-> closure1 :: Grammar -> ([Name] -> Set Name) -> [Lr1Item] -> [Lr1Item]
+> closure1 :: Grammar -> ([Name] -> NameSet) -> [Lr1Item] -> [Lr1Item]
 > closure1 g first set
 >       = fst (mkClosure (\(_,new) _ -> null new) addItems ([],set))
 >	where
@@ -96,14 +102,14 @@ Generating the closure of a set of LR(1) items
 >					new_old_items
 
 >		fn :: Lr1Item -> [Lr1Item]
->		fn (rule,dot,as) =
+>		fn (Lr1 rule dot as) =
 >		    case lookupProdNo g rule of { (name,lhs,_,_) ->
 >		    case drop dot lhs of
 >			(b:beta) | b >= firstStartTok && b < fst_term ->
->			    let terms = unionMap 
+>			    let terms = unionNameMap 
 >						(\a -> first (beta ++ [a])) as
 >			    in
->			    [ (rule,0,terms) | rule <- lookupProdsOfName g b ]
+>			    [ (Lr1 rule 0 terms) | rule <- lookupProdsOfName g b ]
 >			_ -> []
 >		    }
 
@@ -118,16 +124,16 @@ Stamp on overloading with judicious use of type signatures...
 
 > subtract_item :: [Lr1Item] -> Lr1Item -> [Lr1Item] -> [Lr1Item]
 > subtract_item [] i result = i : result
-> subtract_item ((rule,dot,as):items) i@(rule',dot',as') result =
+> subtract_item ((Lr1 rule dot as):items) i@(Lr1 rule' dot' as') result =
 >	case compare rule' rule of
 >		LT -> i : result
 >		GT -> carry_on
 >		EQ -> case compare dot' dot of
 >			LT -> i : result
 >			GT -> carry_on
->			EQ -> case Set.difference as' as of
->				bs | Set.null bs -> result
->				   | otherwise -> (rule,dot,bs) : result
+>			EQ -> case NameSet.difference as' as of
+>				bs | NameSet.null bs -> result
+>				   | otherwise -> (Lr1 rule dot bs) : result
 >  where
 >	carry_on = subtract_item items i result
 
@@ -136,14 +142,14 @@ Union two sets of items.
 > union_items :: [Lr1Item] -> [Lr1Item] -> [Lr1Item]
 > union_items is [] = is
 > union_items [] is = is
-> union_items (i@(rule,dot,as):is) (i'@(rule',dot',as'):is') =
+> union_items (i@(Lr1 rule dot as):is) (i'@(Lr1 rule' dot' as'):is') =
 >	case compare rule rule' of
 >		LT -> drop_i
 >		GT -> drop_i'
 >		EQ -> case compare dot dot' of
 >			LT -> drop_i
 >			GT -> drop_i'
->			EQ -> (rule,dot,as `Set.union` as') : union_items is is'
+>			EQ -> (Lr1 rule dot (as `NameSet.union` as')) : union_items is is'
 >  where
 >	drop_i  = i  : union_items is (i':is')
 >	drop_i' = i' : union_items (i:is) is'
@@ -158,9 +164,9 @@ items for the set of items goto(I,X)
 > gotoClosure :: Grammar -> Set Lr0Item -> Name -> Set Lr0Item
 > gotoClosure gram i x = unionMap fn i
 >    where
->       fn (rule_no,dot) =
+>       fn (Lr0 rule_no dot) =
 >          case findRule gram rule_no dot of
->               Just t | x == t -> Set.singleton (rule_no,dot+1)
+>               Just t | x == t -> Set.singleton (Lr0 rule_no (dot+1))
 >               _ -> Set.empty           
 
 -----------------------------------------------------------------------------
@@ -185,7 +191,7 @@ information about which sets were generated by which others.
 
 >    n_starts = length (starts g)
 >    startRules :: [Set Lr0Item]
->    startRules = [ Set.singleton (rule,0) | rule <- [0..n_starts] ]
+>    startRules = [ Set.singleton (Lr0 rule 0) | rule <- [0..n_starts] ]
 
 >    tokens = non_terminals g ++ terminals g
 
@@ -256,9 +262,9 @@ calcLookaheads pass.
 > propLookaheads 
 >	:: Grammar
 >	-> [(Set Lr0Item,[(Name,Int)])]		-- LR(0) kernel sets
->	-> ([Name] -> Set Name)			-- First function
+>	-> ([Name] -> NameSet)			-- First function
 >	-> (
->		[(Int, Lr0Item, Set Name)],	-- spontaneous lookaheads
+>		[(Int, Lr0Item, NameSet)],	-- spontaneous lookaheads
 >		Array Int [(Lr0Item, Int, Lr0Item)]	-- propagated lookaheads
 >	   )
 
@@ -268,7 +274,7 @@ calcLookaheads pass.
 
 >     (s,p) = unzip (zipWith propLASet sets [0..])
 
->     propLASet :: (Set Lr0Item, [(Name, Int)]) -> Int -> ([(Int, Lr0Item, Set Name)],(Int,[(Lr0Item, Int, Lr0Item)]))
+>     propLASet :: (Set Lr0Item, [(Name, Int)]) -> Int -> ([(Int, Lr0Item, NameSet)],(Int,[(Lr0Item, Int, Lr0Item)]))
 >     propLASet (set,goto) i = (start_spont ++ concat s, (i, concat p))
 >	where
 
@@ -278,29 +284,29 @@ calcLookaheads pass.
 >	  start_info :: [(String, Name, Name, Bool)]
 >	  start_info = starts gram	
 
->	  start_spont :: [(Int, Lr0Item ,Set Name)]
->	  start_spont	= [ (start, (start,0), 
->			     Set.singleton (startLookahead gram partial))
+>	  start_spont :: [(Int, Lr0Item ,NameSet)]
+>	  start_spont	= [ (start, (Lr0 start 0), 
+>			     NameSet.singleton (startLookahead gram partial))
 >			  | (start, (_,_,_,partial)) <- 
 >				zip [ 0 .. length start_info - 1] start_info]
 
->	  propLAItem :: Lr0Item -> ([(Int, Lr0Item, Set Name)], [(Lr0Item, Int, Lr0Item)])
->	  propLAItem item@(rule,dot) = (spontaneous, propagated)
+>	  propLAItem :: Lr0Item -> ([(Int, Lr0Item, NameSet)], [(Lr0Item, Int, Lr0Item)])
+>	  propLAItem item@(Lr0 rule dot) = (spontaneous, propagated)
 >	    where
 
->		j = closure1 gram first [(rule,dot,Set.singleton dummyTok)]
+>		j = closure1 gram first [Lr1 rule dot (NameSet.singleton dummyTok)]
 
->		spontaneous :: [(Int, Lr0Item, Set Name)]
+>		spontaneous :: [(Int, Lr0Item, NameSet)]
 >		spontaneous = concat [ 
 >		 (case findRule gram rule dot of
 >		     Nothing -> []
 >		     Just x  -> case lookup x goto of
 >			 	  Nothing -> error "spontaneous"
 >				  Just k  ->
->					case Set.filter (/= dummyTok) ts of
->					   ts' | Set.null ts' -> []
->					       | otherwise -> [(k, (rule, dot+1), ts')])
->			| (rule,dot,ts) <- j ]
+>					case NameSet.filter (/= dummyTok) ts of
+>					   ts' | NameSet.null ts' -> []
+>					       | otherwise -> [(k, Lr0 rule (dot+1), ts')])
+>			| (Lr1 rule dot ts) <- j ]
 
 >		propagated :: [(Lr0Item, Int, Lr0Item)]
 >		propagated = concat [
@@ -308,8 +314,8 @@ calcLookaheads pass.
 >		     Nothing -> []
 >		     Just x  -> case lookup x goto of
 >				  Nothing -> error "propagated"
->				  Just k  -> [(item, k, (rule, dot+1))])
->			| (rule,dot,ts) <- j, dummyTok `elem` (Set.toAscList ts) ]
+>				  Just k  -> [(item, k, Lr0 rule (dot+1))])
+>			| (Lr1 rule dot ts) <- j, dummyTok `elem` (NameSet.toAscList ts) ]
 
 The lookahead for a start rule depends on whether it was declared
 with %name or %partial: a %name parser is assumed to parse the whole
@@ -326,9 +332,9 @@ Special version using a mutable array:
 
 > calcLookaheads
 >	:: Int					-- number of states
->	-> [(Int, Lr0Item, Set Name)]		-- spontaneous lookaheads
+>	-> [(Int, Lr0Item, NameSet)]		-- spontaneous lookaheads
 >	-> Array Int [(Lr0Item, Int, Lr0Item)]	-- propagated lookaheads
->	-> Array Int [(Lr0Item, Set Name)]
+>	-> Array Int [(Lr0Item, NameSet)]
 
 > calcLookaheads n_states spont prop
 >	= runST (do
@@ -338,8 +344,8 @@ Special version using a mutable array:
 >	)
 
 >   where
->	propagate :: STArray s Int [(Lr0Item, Set Name)]
->			 -> [(Int, Lr0Item, Set Name)] -> ST s ()
+>	propagate :: STArray s Int [(Lr0Item, NameSet)]
+>			 -> [(Int, Lr0Item, NameSet)] -> ST s ()
 >	propagate array []  = return ()
 >	propagate array new = do 
 >		let
@@ -365,29 +371,29 @@ the spontaneous lookaheads in the right form to begin with (ToDo).
 >	state_las <- readArray array i
 >	get_new array las (get_new' l state_las new)
 
-> add_lookahead :: Lr0Item -> Set Name -> [(Lr0Item,Set Name)] ->
-> 			[(Lr0Item,Set Name)]
+> add_lookahead :: Lr0Item -> NameSet -> [(Lr0Item,NameSet)] ->
+> 			[(Lr0Item,NameSet)]
 > add_lookahead item s [] = [(item,s)]
 > add_lookahead item s (m@(item',s') : las)
->	| item == item' = (item, s `Set.union` s') : las
+>	| item == item' = (item, s `NameSet.union` s') : las
 >	| otherwise     = m : add_lookahead item s las
 
-> get_new' :: (Int,Lr0Item,Set Name) -> [(Lr0Item,Set Name)] ->
->		 [(Int,Lr0Item,Set Name)] -> [(Int,Lr0Item,Set Name)]
+> get_new' :: (Int,Lr0Item,NameSet) -> [(Lr0Item,NameSet)] ->
+>		 [(Int,Lr0Item,NameSet)] -> [(Int,Lr0Item,NameSet)]
 > get_new' l [] new = l : new
 > get_new' l@(i,item,s) (m@(item',s') : las) new
 >	| item == item' =
->		let s'' = Set.filter (\x -> not (Set.member x s')) s in
->		if Set.null s'' then new else
+>		let s'' = NameSet.filter (\x -> not (NameSet.member x s')) s in
+>		if NameSet.null s'' then new else
 >		((i,item,s''):new)
 >	| otherwise = 
 >		get_new' l las new
 
-> fold_lookahead :: (Int,Lr0Item,Set Name) -> [(Int,Lr0Item,Set Name)]
->		-> [(Int,Lr0Item,Set Name)]
+> fold_lookahead :: (Int,Lr0Item,NameSet) -> [(Int,Lr0Item,NameSet)]
+>		-> [(Int,Lr0Item,NameSet)]
 > fold_lookahead l [] = [l]
 > fold_lookahead l@(i,item,s) (m@(i',item',s'):las)
->  	| i == i' && item == item' = (i,item, s `Set.union` s'):las
+>  	| i == i' && item == item' = (i,item, s `NameSet.union` s'):las
 >	| i < i' = (i,item,s):m:las
 >	| otherwise = m : fold_lookahead l las
 
@@ -443,7 +449,7 @@ Merge lookaheads
 Stick the lookahead info back into the state table.
 
 > mergeLookaheadInfo
->	:: Array Int [(Lr0Item, Set Name)] 	-- lookahead info
+>	:: Array Int [(Lr0Item, NameSet)] 	-- lookahead info
 >	-> [(Set Lr0Item, [(Name,Int)])] 	-- state table
 >	-> [ ([Lr1Item], [(Name,Int)]) ]
 
@@ -457,11 +463,11 @@ Stick the lookahead info back into the state table.
 >		where
 
 >	  	  mergeIntoItem :: Lr0Item -> [Lr1Item]
->	  	  mergeIntoItem item@(rule,dot)
->		     = [(rule,dot,la)]
+>	  	  mergeIntoItem item@(Lr0 rule dot)
+>		     = [Lr1 rule dot la]
 >		     where la = case [ s | (item',s) <- lookaheads ! i,
 >					    item == item' ] of
->					[] -> Set.empty
+>					[] -> NameSet.empty
 >					[x] -> x
 >					_ -> error "mergIntoItem"
 
@@ -494,7 +500,7 @@ Generating the goto table doesn't need lookahead info.
 -----------------------------------------------------------------------------
 Generate the action table
 
-> genActionTable :: Grammar -> ([Name] -> Set Name) ->
+> genActionTable :: Grammar -> ([Name] -> NameSet) ->
 >		 [([Lr1Item],[(Name,Int)])] -> ActionTable
 > genActionTable g first sets = actionTable
 >   where
@@ -513,7 +519,7 @@ Generate the action table
 >				(possActions goto set))
 >                   | ((set,goto),set_no) <- zip sets [0..] ]
 
->       possAction goto set (rule,pos,la) = 
+>       possAction goto set (Lr1 rule pos la) = 
 >          case findRule g rule pos of
 >               Just t | t >= fst_term || t == errorTok -> 
 >			case lookup t goto of
@@ -528,7 +534,7 @@ Generate the action table
 >		      [ (startLookahead g partial, LR'Accept{-'-}) ]
 >                  | otherwise   
 >		   -> case lookupProdNo g rule of
->                          (_,_,_,p) -> zip (Set.toAscList la) (repeat (LR'Reduce rule p))
+>                          (_,_,_,p) -> zip (NameSet.toAscList la) (repeat (LR'Reduce rule p))
 >               _ -> []
 
 >	possActions goto coll = 

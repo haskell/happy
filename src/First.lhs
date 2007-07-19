@@ -7,13 +7,13 @@ Implementation of FIRST
 > module First ( mkFirst ) where
 
 > import GenUtils
-> import Set ( Set )
-> import qualified Set hiding ( Set )
+> import NameSet ( NameSet )
+> import qualified NameSet as Set
 > import Grammar
 
 \subsection{Utilities}
 
-> joinSymSets :: (a -> Set Name) -> [a] -> Set Name
+> joinSymSets :: (a -> NameSet) -> [a] -> NameSet
 > joinSymSets f = foldr 
 >       (\ h b -> let
 >                   h' = f h
@@ -25,12 +25,12 @@ Implementation of FIRST
 
 Does the Set include the $\epsilon$ symbol ?
 
-> incEmpty :: Set Name -> Bool
+> incEmpty :: NameSet -> Bool
 > incEmpty set = any isEmpty (Set.toAscList set)
 
 \subsection{Implementation of FIRST}
 
-> mkFirst :: Grammar -> [Name] -> Set Name
+> mkFirst :: Grammar -> [Name] -> NameSet
 > mkFirst (Grammar { first_term = fst_term
 >		   , lookupProdNo = prodNo
 >		   , lookupProdsOfName = prodsOfName
@@ -51,7 +51,7 @@ Does the Set include the $\epsilon$ symbol ?
 >           	        Just t -> t
 >                       Nothing -> error "attempted FIRST(e) :-("
 
-> 	next :: Name -> Set Name
+> 	next :: Name -> NameSet
 > 	next t | t >= fst_term = Set.singleton t
 > 	next n = 
 >       	foldb Set.union 

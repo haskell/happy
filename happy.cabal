@@ -144,6 +144,7 @@ other-modules:
 	ProduceCode
 	ProduceGLRCode
 	Set
+	NameSet
 	Target
         AttrGrammar
         AttrGrammarParser
