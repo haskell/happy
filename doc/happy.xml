@@ -43,8 +43,7 @@
     
     <indexterm><primary>yacc</primary></indexterm>
 
-    <para> <application>Happy</application> is flexible; unlike
-    <application>yacc</application>, you can have several
+    <para> <application>Happy</application> is flexible: you can have several
     <application>Happy</application> parsers in the same program, and
     each parser may have multiple entry points.
     <application>Happy</application> can work in conjunction with a
