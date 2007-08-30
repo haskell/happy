@@ -134,7 +134,13 @@ If we're using coercions, we need to generate the injections etc.
 >		. mkHappyOut n . str " x = unsafeCoerce# x\n"
 >		. str "{-# INLINE " . mkHappyOut n . str " #-}"
 >	  in
->	    str "newtype " . happy_item . str " = HappyAbsSyn (() -> ())\n" -- see NOTE below
+>	    str "newtype " . happy_item . str " = HappyAbsSyn HappyAny\n" -- see NOTE below
+>         . interleave "\n" (map str
+>           [ "#if __GLASGOW_HASKELL__ >= 607",
+>             "type HappyAny = GHC.Exts.Any",
+>             "#else",
+>             "type HappyAny = forall a . a",
+>             "#endif" ])
 >	  . interleave "\n" 
 >	    [ inject n ty . nl . extract n ty | (n,ty) <- assocs nt_types ]
 >	  -- token injector
@@ -144,14 +150,19 @@ If we're using coercions, we need to generate the injections etc.
 >	  . str "happyOutTok :: " . bhappy_item . str " -> " . str token_type
 >	  . str "\nhappyOutTok x = unsafeCoerce# x\n{-# INLINE happyOutTok #-}\n"
 
+>         . str "\n"
+
 NOTE: in the coerce case we always coerce all the semantic values to
-HappyAbsSyn which is declared to be a synonym for () -> ().  Why don't
-we just use (), or declare a new type with a single constructor?
-Because when the --strict flag is used, we need to seq these values,
-and GHC can be persuaded to use a polymorphic seq if it thinks the
-thing it is seqing has function type - otherwise it might use a
-vectored return, which will lead to disaster if the object in question
-doesn't have a vectored return convention.  
+HappyAbsSyn which is declared to be a synonym for Any.  This is the
+type that GHC officially knows nothing about - it's the same type used
+to implement Dynamic.  (in GHC 6.6 and older, Any didn't exist, so we
+use the closest approximation namely forall a . a).  
+
+It's vital that GHC doesn't know anything about this type, because it
+will use any knowledge it has to optimise, and if the knowledge is
+false then the optimisation may also be false.  Previously we used (()
+-> ()) as the type here, but this led to bogus optimisations (see GHC
+ticket #1616).
 
 Also, note that we must use a newtype instead of just a type synonym,
 because the otherwise the type arguments to the HappyAbsSyn type
