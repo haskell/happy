@@ -37,7 +37,7 @@ Authors:
 %setup
 
 %build
-runhaskell Setup.lhs configure --prefix=%{prefix}
+runhaskell Setup.lhs configure --prefix=%{_prefix} --docdir=%{_datadir}/doc/packages/%{name}
 runhaskell Setup.lhs build
 cd doc
 test -f configure || autoreconf
