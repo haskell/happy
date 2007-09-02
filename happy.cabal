@@ -9,7 +9,7 @@ stability: stable
 homepage: http://www.haskell.org/happy/
 synopsis: Happy is a parser generator for Haskell
 category: Development
-build-depends: base>=1.0, haskell98>=1.0, mtl>=1.0
+build-depends: base>=1.0, haskell98>=1.0, mtl>=1.0, array, containers
 extra-source-files:
 	ANNOUNCE
 	CHANGES
