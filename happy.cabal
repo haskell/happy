@@ -9,7 +9,7 @@ stability: stable
 homepage: http://www.haskell.org/happy/
 synopsis: Happy is a parser generator for Haskell
 category: Development
-build-depends: base>=1.0, haskell98>=1.0, mtl>=1.0, array, containers
+cabal-version: >= 1.2
 extra-source-files:
 	ANNOUNCE
 	CHANGES
@@ -126,26 +126,39 @@ extra-source-files:
 	tests/Test.ly
 	tests/precedence002.y
 
-executable: happy
-hs-source-dirs: src
-main-is: Main.lhs
-extensions: CPP
-ghc-options: -fglasgow-exts -O
-other-modules:
-	AbsSyn
-	First
-	GenUtils
-	Grammar
-	Info
-	LALR
-	Lexer
-	Main
-	ParseMonad
-	Parser
-	ProduceCode
-	ProduceGLRCode
-	Set
-	NameSet
-	Target
+flag small_base
+  description: Choose the new smaller, split-up base package.
+
+executable happy
+  executable: happy
+  hs-source-dirs: src
+  main-is: Main.lhs
+
+  if flag(small_base)
+    build-depends: base >= 2.1, array, containers
+  else
+    build-depends: base >= 1.0
+
+  build-depends: haskell98 >= 1.0, mtl >= 1.0
+
+  extensions: CPP
+  ghc-options: -fglasgow-exts
+  --TODO: replace this ^^^ with if impl(ghc) { extensions: ... }
+  other-modules:
+        AbsSyn
+        First
+        GenUtils
+        Grammar
+        Info
+        LALR
+        Lexer
+        Main
+        ParseMonad
+        Parser
+        ProduceCode
+        ProduceGLRCode
+        Set
+        NameSet
+        Target
         AttrGrammar
         AttrGrammarParser
