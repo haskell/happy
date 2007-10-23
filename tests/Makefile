@@ -63,7 +63,7 @@ ALL_TESTS = $(patsubst %.hs, %.run, $(ALL_TEST_HS))
 
 CHECK_ERROR_TESTS = $(patsubst %, check.%, $(ERROR_TESTS))
 
-HC_OPTS += -fglasgow-exts 
+HC_OPTS += -fglasgow-exts -no-recomp
 
 .PRECIOUS: *.hs *.o *.bin *.exe
 
