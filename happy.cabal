@@ -113,6 +113,9 @@ extra-source-files:
 	templates/GLR_Base.lhs
 	templates/GenericTemplate.hs
 	templates/GLR_Lib.lhs
+	tests/error001.y
+	tests/error001.stdout
+	tests/error001.stderr
 	tests/monad001.y
 	tests/Makefile
 	tests/TestMulti.ly
