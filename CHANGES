@@ -1,3 +1,11 @@
+Changes from version 1.16 to 1.17
+
+        * Cabal 1.2 is required
+        * Works with upcoming GHC 6.8.1
+        * Fix the 'parE' bug (poor error message for errors in the grammar)
+        * Some performance improvements
+
+-----------------------------------------------------------------------------
 Changes from version 1.15 to 1.16
 
 	* Switch to a Cabal build system: you need a recent version of Cabal
