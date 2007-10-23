@@ -8,7 +8,7 @@ TESTS = Test.ly TestMulti.ly TestPrecedence.ly bug001.ly \
 
 ERROR_TESTS = error001.y
 
-TEST_HAPPY_OPTS = --strict --template=../templates
+TEST_HAPPY_OPTS = --strict --template=..
 
 ifeq "$(TARGETPLATFORM)" "i386-unknown-mingw32"
 HS_PROG_EXT = .exe
