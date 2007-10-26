@@ -8,6 +8,6 @@ tar xvzf happy-*.tar.gz
 cd happy-*/
 mkdir dist
 mkdir dist/build
-mv Parser.hs AttrGrammarParser.hs dist/build
+mv happy dist/build
 cd ..
 tar cvzf happy-*.tar.gz happy-*/
