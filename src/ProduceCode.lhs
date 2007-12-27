@@ -220,11 +220,22 @@ based parsers -- types aren't as important there).
 >	  		Nothing -> char '[' . token . str "] -> "
 >	  		Just _ -> id
 >	      happyReductionDefinition =
->		       str "type HappyReduction m = "
+>		       str "{- to allow type-synonyms as our monads (likely\n"
+>		     . str " - with explicitly-specified bind and return)\n"
+>		     . str " - in Haskell98, it seems that with\n"
+>		     . str " - /type M a = .../, then /(HappyReduction M)/\n"
+>		     . str " - is not allowed.  But Happy is a\n"
+>		     . str " - code-generator that can just substitute it.\n"
+>		     . str "type HappyReduction m = "
 >		     . happyReduction (str "m")
+>		     . str "\n-}"
 >	      happyReductionValue =
->		       str "HappyReduction "
+>		       str "({-"
+>		     . str "HappyReduction "
 >		     . brack monad_tycon
+>		     . str " = -}"
+>		     . happyReduction (brack monad_tycon)
+>		     . str ")"
 >	      happyReduction m =
 >		       str "\n\t   "
 >		     . intMaybeHash
