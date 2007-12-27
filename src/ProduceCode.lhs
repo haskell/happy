@@ -82,6 +82,7 @@ Produce the complete output file.
 >	) ""
 >  where
 >    n_starts = length starts
+>    token = brack token_type
 >
 >    top_opts = 
 >      case top_options of
@@ -144,10 +145,10 @@ If we're using coercions, we need to generate the injections etc.
 >	  . interleave "\n" 
 >	    [ inject n ty . nl . extract n ty | (n,ty) <- assocs nt_types ]
 >	  -- token injector
->	  . str "happyInTok :: " . str token_type . str " -> " . bhappy_item
+>	  . str "happyInTok :: " . token . str " -> " . bhappy_item
 >	  . str "\nhappyInTok x = unsafeCoerce# x\n{-# INLINE happyInTok #-}\n"
 >	  -- token extractor
->	  . str "happyOutTok :: " . bhappy_item . str " -> " . str token_type
+>	  . str "happyOutTok :: " . bhappy_item . str " -> " . token
 >	  . str "\nhappyOutTok x = unsafeCoerce# x\n{-# INLINE happyOutTok #-}\n"
 
 >         . str "\n"
@@ -173,7 +174,7 @@ example where this matters.
 
 >     | otherwise
 >	= str "data HappyAbsSyn " . str_tyvars
->	. str "\n\t= HappyTerminal " . str token_type
+>	. str "\n\t= HappyTerminal " . token
 >	. str "\n\t| HappyErrorToken Int\n"
 >	. interleave "\n" 
 >         [ str "\t| " . makeAbsSynCon n . strspace . type_param n ty
@@ -228,7 +229,6 @@ based parsers -- types aren't as important there).
 
 >	where intMaybeHash | ghc       = str "Int#"
 >		           | otherwise = str "Int"
->	      token = brack token_type
 >	      tokens = 
 >     		case lexer of
 >	  		Nothing -> char '[' . token . str "] -> "
@@ -704,7 +704,7 @@ MonadStuff:
 >		 . str "happyReturn1 = \\a tks -> " . brack monad_return
 >		 . str " a\n"
 >		 . str "happyError' :: " . str monad_context . str " => ["
->		 . str token_type
+>		 . token
 >		 . str "] -> "
 >		 . str monad_tycon
 >		 . str " a\n"
@@ -717,7 +717,7 @@ MonadStuff:
 >	     	 . str "happyReturn1 :: " . pcont . str " => a -> " . pty . str " a\n"
 >	     	 . str "happyReturn1 = happyReturn\n"
 >	     	 . str "happyError' :: " . str monad_context . str " => "
->				         . str token_type . str " -> " 
+>				         . token . str " -> " 
 >	     	 . str monad_tycon
 >	     	 . str " a\n"
 >	     	 . str "happyError' tk = "
