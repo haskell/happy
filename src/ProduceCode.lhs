@@ -198,32 +198,18 @@ based parsers -- types aren't as important there).
 >     | target == TargetArrayBased = id
 
 >     | all isJust (elems nt_types) =
->       str "type HappyReduction m = \n\t"
->     . str "   "
->     . intMaybeHash
->     . str " \n\t-> " . token
->     . str "\n\t-> HappyState "
->     . token
->     . str " (HappyStk HappyAbsSyn -> " . tokens . result
->     . str ")\n\t"
->     . str "-> [HappyState "
->     . token
->     . str " (HappyStk HappyAbsSyn -> " . tokens . result
->     . str ")] \n\t-> HappyStk HappyAbsSyn \n\t-> "
->     . tokens
->     . result
->     . str "\n\n"
+>       happyReductionDefinition . str "\n\n"
 >     . interleave' ",\n " 
 >             [ mkActionName i | (i,action) <- zip [ 0 :: Int .. ] 
 >                                             (assocs action) ]
 >     . str " :: " . str monad_context . str " => "
->     . intMaybeHash
->     . str " -> HappyReduction (" . str monad_tycon . str ")\n\n"
+>     . intMaybeHash . str " -> " . happyReductionValue . str "\n\n"
 >     . interleave' ",\n " 
 >             [ mkReduceFun i | 
 >                     (i,action) <- zip [ n_starts :: Int .. ]
 >                                       (drop n_starts prods) ]
->     . str " :: " . str monad_context . str " => HappyReduction (" . str monad_tycon . str ")\n\n" 
+>     . str " :: " . str monad_context . str " => "
+>     . happyReductionValue . str "\n\n"
 
 >     | otherwise = id
 
@@ -233,7 +219,27 @@ based parsers -- types aren't as important there).
 >     		case lexer of
 >	  		Nothing -> char '[' . token . str "] -> "
 >	  		Just _ -> id
->	      result = (str "m HappyAbsSyn")
+>	      happyReductionDefinition =
+>		       str "type HappyReduction m = "
+>		     . happyReduction (str "m")
+>	      happyReductionValue =
+>		       str "HappyReduction "
+>		     . brack monad_tycon
+>	      happyReduction m =
+>		       str "\n\t   "
+>		     . intMaybeHash
+>		     . str " \n\t-> " . token
+>		     . str "\n\t-> HappyState "
+>		     . token
+>		     . str " (HappyStk HappyAbsSyn -> " . tokens . result
+>		     . str ")\n\t"
+>		     . str "-> [HappyState "
+>		     . token
+>		     . str " (HappyStk HappyAbsSyn -> " . tokens . result
+>		     . str ")] \n\t-> HappyStk HappyAbsSyn \n\t-> "
+>		     . tokens
+>		     . result
+>		  where result = m . str " HappyAbsSyn"
 
 %-----------------------------------------------------------------------------
 Next, the reduction functions.   Each one has the following form:
