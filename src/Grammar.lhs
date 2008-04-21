@@ -23,6 +23,7 @@ Here is our mid-section datatype
 > import ParseMonad
 > import AttrGrammar
 > import AttrGrammarParser
+> import EBNF_Rules
 
 > import Array
 > import Char
@@ -179,10 +180,11 @@ This bit is a real mess, mainly because of the error message support.
 >   where (g, errs) = runWriter (manglerM file abssyn)
 
 > manglerM :: FilePath -> AbsSyn -> M Grammar
-> manglerM file (AbsSyn hd dirs rules tl) =
+> manglerM file (AbsSyn hd dirs rules' tl) =
 >   -- add filename to all error messages
 >   mapWriter (\(a,e) -> (a, map (\s -> file ++ ": " ++ s) e)) $ do
 
+>   let rules = ebnf_rules rules'
 >   nonterm_strs <- checkRules ([n | (n,_,_) <- rules]) "" []
 
 >   let

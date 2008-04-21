@@ -86,6 +86,11 @@ ToDo: proper text instance here, for use in parser error messages.
 >  	'\''	-> lexChar cont
 >  	'"'{-"-}-> lexString cont
 >  	'{' 	-> lexCode cont
+
+>       '*'     -> returnToken cont (TokenInfo "*" TokId)
+>       '?'     -> returnToken cont (TokenInfo "?" TokId)
+>       '+'     -> returnToken cont (TokenInfo "+" TokId)
+
 >  	c 	
 >	  | isSpace c -> runP (lexer cont)
 >	  |  c >= 'a' && c <= 'z' 

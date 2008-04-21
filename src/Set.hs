@@ -1,5 +1,5 @@
 module Set (
-   Set, null, member, empty, singleton,
+   Set, null, member, empty, singleton, insert,
    union, difference, filter, fold,
    fromList, toAscList
 ) where
@@ -34,4 +34,7 @@ fold f z = foldr f z . setToList
 
 toAscList :: Set a -> [a] 
 toAscList = setToList
+
+insert :: Ord a => a -> Set a -> Set a
+insert x xs = addToSet xs x
 #endif
