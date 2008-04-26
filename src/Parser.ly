@@ -39,6 +39,9 @@ The parser.
 >	"::"		{ TokenKW      TokDoubleColon }
 >	"%%"		{ TokenKW      TokDoublePercent }
 >	"|"		{ TokenKW      TokBar }
+>	"("		{ TokenKW      TokParenL }
+>	")"		{ TokenKW      TokParenR }
+>	","		{ TokenKW      TokComma }
 
 > %monad { P }
 > %lexer { lexer } { TokenEOF }
@@ -49,23 +52,46 @@ The parser.
 >	: optCode tokInfos "%%" rules optCode
 >				{ AbsSyn $1 (reverse $2) (reverse $4) $5 }
 
-> rules :: { [(String, [([String],String,Int,Maybe String)], Maybe String)] }
+> rules :: { [Rule] }
 > 	: rules rule	{ $2 : $1 }
 >	| rule		{ [$1] }
 
-> rule :: { (String, [([String],String,Int,Maybe String)], Maybe String) }
-> 	: id "::" code ":" prods	{ ($1,$5,Just $3) }
->	| id "::" code id ":" prods	{ ($1,$6,Just $3) }
->  	| id ":" prods			{ ($1,$3,Nothing) }
+> rule :: { Rule }
+> 	: id params "::" code ":" prods         { ($1,$2,$6,Just $4) }
+>	| id params "::" code id ":" prods      { ($1,$2,$7,Just $4) }
+>  	| id params ":" prods                   { ($1,$2,$4,Nothing) }
 
+> params :: { [String] }
+>       : "(" comma_ids ")"             { reverse $2 }
+>       | {- empty -}                   { [] }
 
-> prods :: { [([String],String,Int,Maybe String)] }
+> comma_ids :: { [String] }
+>       : id                            { [$1] }
+>       | comma_ids "," id              { $3 : $1 }
+
+> prods :: { [Prod] }
 > 	: prod "|" prods		{ $1 : $3 }
 >	| prod				{ [$1] }
 
-> prod :: { ([String],String,Int,Maybe String) }
-> 	: ids prec code ";"		{% lineP >>= \l -> return ($1,$3,l,$2) }
->	| ids prec code			{% lineP >>= \l -> return ($1,$3,l,$2) }
+> prod :: { Prod }
+> 	: terms prec code ";"		{% lineP >>= \l -> return ($1,$3,l,$2) }
+>	| terms prec code		{% lineP >>= \l -> return ($1,$3,l,$2) }
+
+> term :: { Term }
+>       : id                             { App $1 [] }
+>       | id "(" comma_terms ")"         { App $1 (reverse $3) }
+
+> terms :: { [Term] }
+>       : terms_rev                      { reverse $1 }
+>       |                                { [] }
+
+> terms_rev :: { [Term] }
+>       : term                           { [$1] }
+>       | terms_rev term                 { $2 : $1 }
+
+> comma_terms :: { [Term] }
+>       : term                           { [$1] }
+>       | comma_terms "," term           { $3 : $1 }
 
 > prec :: { Maybe String }
 >       : spec_prec id			{ Just $2 }

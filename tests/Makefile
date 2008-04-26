@@ -5,7 +5,7 @@ TESTS = Test.ly TestMulti.ly TestPrecedence.ly bug001.ly \
 	monad001.y monad002.ly precedence001.ly precedence002.y \
 	bogus-token.y bug002.y Partial.ly \
 	AttrGrammar001.y AttrGrammar002.y \
-	ebnf.y
+	test_rules.y
 
 ERROR_TESTS = error001.y
 

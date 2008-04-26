@@ -23,7 +23,7 @@ Here is our mid-section datatype
 > import ParseMonad
 > import AttrGrammar
 > import AttrGrammarParser
-> import EBNF_Rules
+> import ParamRules
 
 > import Array
 > import Char
@@ -184,7 +184,9 @@ This bit is a real mess, mainly because of the error message support.
 >   -- add filename to all error messages
 >   mapWriter (\(a,e) -> (a, map (\s -> file ++ ": " ++ s) e)) $ do
 
->   let rules = ebnf_rules rules'
+>   rules <- case expand_rules rules' of
+>              Left err -> addErr err >> return []
+>              Right as -> return as
 >   nonterm_strs <- checkRules ([n | (n,_,_) <- rules]) "" []
 
 >   let

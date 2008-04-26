@@ -11,15 +11,22 @@ Here is the abstract syntax of the language we parse.
 > 	getTokenType, getTokenSpec, getParserNames, getLexer,
 >	getImportedIdentity, getMonad, getError,
 >       getPrios, getPrioNames, getExpect,
->       getAttributes, getAttributetype
+>       getAttributes, getAttributetype,
+>       Rule,Prod,Term(..)
 >  ) where
 
 > data AbsSyn
 >     = AbsSyn
 >         (Maybe String)					-- header
 >         [Directive String]      				-- directives
->         [(String,[([String],String,Int,Maybe String)],Maybe String)]	-- productions
+>         [Rule]	-- productions
 >         (Maybe String)					-- footer
+
+> type Rule     = (String,[String],[Prod],Maybe String)
+> type Prod     = ([Term],String,Int,Maybe String)
+> data Term     = App String [Term]
+
+
 
 #ifdef DEBUG
 

@@ -54,6 +54,9 @@ The lexer.
 >       | TokDoublePercent      -- %%
 >       | TokBar                -- |
 >       | TokNum                -- Integer
+>       | TokParenL             -- (
+>       | TokParenR             -- )
+>       | TokComma              -- ,
 >       deriving (Eq,Ord
 
 #ifdef DEBUG
@@ -87,9 +90,9 @@ ToDo: proper text instance here, for use in parser error messages.
 >  	'"'{-"-}-> lexString cont
 >  	'{' 	-> lexCode cont
 
->       '*'     -> returnToken cont (TokenInfo "*" TokId)
->       '?'     -> returnToken cont (TokenInfo "?" TokId)
->       '+'     -> returnToken cont (TokenInfo "+" TokId)
+>       '('     -> returnToken cont (TokenKW TokParenL)
+>       ')'     -> returnToken cont (TokenKW TokParenR)
+>       ','     -> returnToken cont (TokenKW TokComma)
 
 >  	c 	
 >	  | isSpace c -> runP (lexer cont)

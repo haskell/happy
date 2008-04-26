@@ -1,5 +1,5 @@
 name: happy
-version: 1.17.1
+version: 1.17.2
 license: BSD3
 license-file: LICENSE
 copyright: (c) Andy Gill, Simon Marlow
@@ -145,7 +145,7 @@ executable happy
   build-depends: haskell98 >= 1.0, mtl >= 1.0
 
   extensions: CPP
-  ghc-options: -fglasgow-exts
+  ghc-options: -fglasgow-exts -W
   --TODO: replace this ^^^ with if impl(ghc) { extensions: ... }
   other-modules:
         AbsSyn
