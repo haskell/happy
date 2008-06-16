@@ -495,7 +495,7 @@ So is this.
 >            | otherwise      = mkHappyVar i ++ " "
 >        formatToken (AgTok_SubRef (i,x)) 
 >            | i `elem` prods = "("++x++" happySubAttrs_"++(show i)++") "
->            | otherwise      = error "lhs "++(show i)++" is not a non-terminal"
+>            | otherwise      = error ("lhs "++(show i)++" is not a non-terminal")
 >        formatToken (AgTok_Unknown x)     = x++" "
 
 
