@@ -127,7 +127,7 @@
 
       <para> Remember: parsers produced using
       <application>Happy</application> should compile without
-      difficulty under any Haskell 98 complier or interpreter<footnote><para>With one
+      difficulty under any Haskell 98 compiler or interpreter<footnote><para>With one
 	exception: if you have a production with a polymorphic type signature,
 	then a compiler that supports local universal quantification is
 	required.  See <xref linkend="sec-type-signatures" />.</para>
@@ -3523,7 +3523,7 @@ any projection function.</para>
 
       <para>The expression represents the semantic value of the
       non-terminal, and may refer to the semantic values of the
-      symbols in the right-hand side using the meta-variables
+    symbols in the right-hand side using the meta-variables
       <literal>&dollar;1 ... &dollar;n</literal>.  It is an error to
       refer to <literal>&dollar;i</literal> when <literal>i</literal>
       is larger than the number of symbols on the right hand side of
@@ -3547,6 +3547,91 @@ any projection function.</para>
 
       <para>Remember that all the expressions for a production must
       have the same type.</para>
+
+      <sect2 id="sec-param-prods">
+        <title>Parameterized Productions</title>
+        Starting from version 1.17.1, <application>Happy</application> supports
+        <emphasis>parameterized productions</emphasis> which provide a
+        convenient notation for capturing recurring patterns in context free
+        grammars. This gives the benefits of something similar to parsing
+        combinators in the context of <application>Happy</application>
+        grammars.
+        <para>This functionality is best illustrated with an example:
+<programlisting>
+opt(p)          : p                   { Just $1 }
+                |                     { Nothing }
+
+rev_list1(p)    : p                   { [$1] }
+                | rev_list1(p) p      { $2 : $1 }
+</programlisting>
+        The first production, <literal>opt</literal>, is used for optional
+        components of a grammar.  It is just like <literal>p?</literal> in
+        regular expressions or EBNF. The second production,
+        <literal>rev_list1</literal>, is for parsing a list of 1 or more
+        occurrences of <literal>p</literal>.  Parameterized productions are
+        just like ordinary productions, except that they have parameter in
+        parenthesis after the production name. Multiple parameters should
+        be separated by commas:
+<programlisting>
+fst(p,q)        : p q                 { $1 }
+snd(p,q)        : p q                 { $2 }
+both(p,q)       : p q                 { ($1,$2) }
+</programlisting>
+        </para>
+
+        <para>To use a parameterized production, we have to pass values for the
+        parameters, as if we are calling a function.  The parameters can be
+        either terminals, non-terminals, or other instantiations of
+        parameterized productions.  Here are some examples:
+<programlisting>
+list1(p)        : rev_list1(p)        { reverse $1 }
+list(p)         : list1(p)            { $1 }
+                |                     { [] }
+</programlisting>
+        The first production uses <literal>rev_list</literal> to define
+        a production that behaves like <literal>p+</literal>, returning
+        a list of elements in the same order as they occurred in the input.
+        The second one, <literal>list</literal> is like <literal>p*</literal>.
+        </para>
+
+        <para>Parameterized productions are implemented as a prepossessing
+        pass in Happy:  each instantiation of a production turns into a
+        separate non-terminal, but are careful to avoid generating the
+        same rule multiple times, as this would lead to an ambiguous grammar.
+        Consider, for example, the following parameterized rule:
+<programlisting>
+sep1(p,q)       : p list(snd(q,p))    { $1 : $2 }
+</programlisting>
+        The rules that would be generated for <literal>sep1(EXPR,SEP)</literal>
+<programlisting>
+sep1(EXPR,SEP)
+  : EXPR list(snd(SEP,EXPR))                { $1 : $2 }
+
+list(snd(SEP,EXPR))
+  : list1(snd(SEP,EXPR))                    { $1 }
+  |                                         { [] }
+
+list1(snd(SEP,EXPR))
+  : rev_list1(snd(SEP,EXPR))                { reverse $1 }
+
+rev_list1(snd(SEP,EXPR))
+  : snd(SEP,EXPR))                          { [$1] }
+  | rev_list1(snd(SEP,EXPR)) snd(SEP,EXPR)  { $2 : $1 }
+
+snd(SEP,EXPR)
+  : SEP EXPR                                { $2 }
+</programlisting>
+        Note that this is just a normal grammar, with slightly strange names
+        for the non-terminals.
+        </para>
+
+        <para>A drawback of the current implementation is that it does not
+        support type signatures for the parameterized productions, that
+        depend on the types of the parameters.  We plan to implement that
+        in the future---the current workaround is to omit the type signatures
+        for such rules.
+        </para>
+      </sect2>
 
       </sect1>
 
