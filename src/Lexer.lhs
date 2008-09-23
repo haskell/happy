@@ -179,8 +179,8 @@ here is a bit tricky, but should work in most cases.
 >
 > 	a: '\'':r | isAlphaNum a -> lexReadCode r n ('\'':a:c)
 >
-> 	'\'' :r	-> lexReadChar r (\ str r' -> 
->         	   lexReadCode r' n ('\'' : (reverse str) ++ '\'' : c))
+> 	'\'' :r	-> lexReadSingleChar r (\ str r' -> 
+>         	   lexReadCode r' n ((reverse str) ++ '\'' : c))
 >
 > 	ch:r -> lexReadCode r n (ch:c)
 >
@@ -202,6 +202,11 @@ Utilities that read the rest of a token.
 >	|| c >= 'A' && c <= 'Z' 
 >	|| c >= '0' && c <= '9' 
 >	|| c == '_'
+
+> lexReadSingleChar :: String -> (String -> String -> a) -> a
+> lexReadSingleChar (c:'\'':r)      fn = fn (c:"'") r
+> lexReadSingleChar ('\\':c:'\'':r) fn = fn ('\\':c:"'") r
+> lexReadSingleChar r               fn = fn "" r
 
 > lexReadChar :: String -> (String -> String -> a) -> a
 > lexReadChar ('\'':r)      fn = fn "" r
