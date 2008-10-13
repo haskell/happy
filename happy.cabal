@@ -13,27 +13,6 @@ cabal-version: >= 1.2
 extra-source-files:
 	ANNOUNCE
 	CHANGES
-	"InstallShield/Setup Files/Uncompressed Files/Language Independent/OS Independent/setup.bmp"
-	"InstallShield/Setup Files/Compressed Files/Language Independent/OS Independent/ANNOUNCE"
-	"InstallShield/Registry Entries/Default.rge"
-	"InstallShield/String Tables/0009-English/value.shl"
-	"InstallShield/String Tables/Default.shl"
-	"InstallShield/File Groups/Program Executable Files.fgl"
-	"InstallShield/File Groups/Help Files.fgl"
-	"InstallShield/File Groups/Default.fdf"
-	"InstallShield/Component Definitions/Default.cdf"
-	"InstallShield/Component Definitions/Default.fgl"
-	"InstallShield/Text Substitutions/Setup.tsb"
-	"InstallShield/Text Substitutions/Build.tsb"
-	"InstallShield/Happy.ipr"
-	"InstallShield/Shell Objects/Default.shl"
-	"InstallShield/Script Files/Setup.Inx"
-	"InstallShield/Script Files/Setup.Obs"
-	"InstallShield/Script Files/Setup.dbg"
-	"InstallShield/Script Files/Setup.ino"
-	"InstallShield/Script Files/Setup.ins"
-	"InstallShield/Script Files/Setup.map"
-	"InstallShield/Script Files/setup.rul"
 	Makefile
 	README
 	TODO
