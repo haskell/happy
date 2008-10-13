@@ -1,6 +1,13 @@
-This is Happy version 1.16, a parser generator for Haskell 98.
+This is Happy version 1.18, a parser generator for Haskell 98.
 
-WWW:	http://www.haskell.org/happy/
+   http://www.haskell.org/happy/
+   http://hackage.haskell.org/cgi-bin/hackage-scripts/package/happy
+
+Happy is built using Cabal.  First install GHC, then:
+ 
+  $ runhaskell Setup.lhs configure
+  $ runhaskell Setup.lhs build
+  $ runhaskell Setup.lhs install
 
 Complete documentation can be found in the directory 'doc', in
 DocBook XML format.  To format the documentation, the DocBook-Tools
