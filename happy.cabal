@@ -125,9 +125,8 @@ executable happy
 
   build-depends: haskell98 >= 1.0, mtl >= 1.0
 
-  extensions: CPP
-  ghc-options: -fglasgow-exts -W
-  --TODO: replace this ^^^ with if impl(ghc) { extensions: ... }
+  extensions: CPP, MagicHash
+  ghc-options: -W
   other-modules:
         AbsSyn
         First
