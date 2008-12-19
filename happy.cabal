@@ -4,12 +4,19 @@ license: BSD3
 license-file: LICENSE
 copyright: (c) Andy Gill, Simon Marlow
 author: Andy Gill and Simon Marlow
-maintainer: Simon Marlow <simonmar@microsoft.com>
+maintainer: Simon Marlow <marlowsd@gmail.com>
+bug-reports: mailto:marlowsd@gmail.com
 stability: stable
 homepage: http://www.haskell.org/happy/
 synopsis: Happy is a parser generator for Haskell
 category: Development
 cabal-version: >= 1.2
+
+-- Later, this isn't compatible with Cabal 1.2:
+-- source-repository head
+--   type:     darcs
+--   location: http://darcs.haskell.org/happy/
+
 build-type: Custom
 extra-source-files:
 	ANNOUNCE
