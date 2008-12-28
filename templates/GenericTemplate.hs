@@ -101,7 +101,11 @@ happyDoAction i tk st
 				     happyAccept i tk st
 		n | LT(n,(ILIT(0) :: FAST_INT)) -> DEBUG_TRACE("reduce (rule " ++ show rule
 						 ++ ")")
-				     (happyReduceArr ! rule) i tk st
+#if __GLASGOW_HASKELL__ >= 503
+				     (happyReduceArr Data.Array.! rule) i tk st
+#else
+				     (happyReduceArr Array.! rule) i tk st
+#endif
 				     where rule = IBOX(NEGATE(PLUS(n,(ILIT(1) :: FAST_INT))))
 		n		  -> DEBUG_TRACE("shift, enter state "
 						 ++ show IBOX(new_state)
