@@ -54,8 +54,8 @@ trying the code out with Hugs. (Hugs didn't like the code
 generated with GHC extensions, -gac.)
 
 > main = do
->   Exception.tryJust errorCalls (print test1 >> fail "Test failed.") 
->   Exception.tryJust errorCalls (print test2 >> fail "Test failed.") 
->   Exception.tryJust errorCalls (print test3 >> fail "Test failed.")
+>   Exception.try (print test1 >> fail "Test failed.") :: IO (Either ErrorCall ())
+>   Exception.try (print test2 >> fail "Test failed.") :: IO (Either ErrorCall ())
+>   Exception.try (print test3 >> fail "Test failed.") :: IO (Either ErrorCall ())
 
 > }
