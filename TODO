@@ -2,6 +2,8 @@
   it's silly not to, because it means the monad has to keep track of the
   previous token in order to report it in the error message.
 
+* BUG in error handling without %lexer: see tests/ParGF.y
+
 * allow polymorphic type signatures for productions.
 * allow omitted semnatic values, defaulting to $1?
 
