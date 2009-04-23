@@ -84,7 +84,9 @@ Produce the complete output file.
 >    n_starts = length starts
 >    token = brack token_type
 >
->    top_opts = 
+>    nowarn_opts = str "{-# OPTIONS_GHC -fno-warn-overlapping-patterns #-}" . nl
+>
+>    top_opts = nowarn_opts .
 >      case top_options of
 >          "" -> str ""
 >          _  -> str (unwords [ "{-# OPTIONS"
