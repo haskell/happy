@@ -16,7 +16,7 @@ parse : A { () }
 data Token = A | B
 
 test1 = parse [B]
-main =  do Exception.tryJust errorCalls (print test1 >> fail "Test failed.")
+main =  do Exception.try (print test1 >> fail "Test failed.") :: IO (Either ErrorCall ())
            putStrLn "Test worked"
 
 happyError = error "parse error"
