@@ -2,15 +2,15 @@
 
 #ifdef HAPPY_GHC
 #define ILIT(n) n#
-#define IBOX(n) (I# (n))
-#define FAST_INT Int#
-#define LT(n,m) (n <# m)
-#define GTE(n,m) (n >=# m)
-#define EQ(n,m) (n ==# m)
-#define PLUS(n,m) (n +# m)
-#define MINUS(n,m) (n -# m)
-#define TIMES(n,m) (n *# m)
-#define NEGATE(n) (negateInt# (n))
+#define IBOX(n) (Happy_GHC_Exts.I# (n))
+#define FAST_INT Happy_GHC_Exts.Int#
+#define LT(n,m) (n Happy_GHC_Exts.<# m)
+#define GTE(n,m) (n Happy_GHC_Exts.>=# m)
+#define EQ(n,m) (n Happy_GHC_Exts.==# m)
+#define PLUS(n,m) (n Happy_GHC_Exts.+# m)
+#define MINUS(n,m) (n Happy_GHC_Exts.-# m)
+#define TIMES(n,m) (n Happy_GHC_Exts.*# m)
+#define NEGATE(n) (Happy_GHC_Exts.negateInt# (n))
 #define IF_GHC(x) (x)
 #else
 #define ILIT(n) (n)
@@ -48,8 +48,8 @@ data Happy_IntList = HappyCons FAST_INT Happy_IntList
 #endif
 
 #if defined(HAPPY_COERCE)
-#define GET_ERROR_TOKEN(x)  (case unsafeCoerce# x of { IBOX(i) -> i })
-#define MK_ERROR_TOKEN(i)   (unsafeCoerce# IBOX(i))
+#define GET_ERROR_TOKEN(x)  (case Happy_GHC_Exts.unsafeCoerce# x of { IBOX(i) -> i })
+#define MK_ERROR_TOKEN(i)   (Happy_GHC_Exts.unsafeCoerce# IBOX(i))
 #define MK_TOKEN(x)	    (happyInTok (x))
 #else
 #define GET_ERROR_TOKEN(x)  (case x of { HappyErrorToken IBOX(i) -> i })
@@ -101,11 +101,7 @@ happyDoAction i tk st
 				     happyAccept i tk st
 		n | LT(n,(ILIT(0) :: FAST_INT)) -> DEBUG_TRACE("reduce (rule " ++ show rule
 						 ++ ")")
-#if __GLASGOW_HASKELL__ >= 503
-				     (happyReduceArr Data.Array.! rule) i tk st
-#else
-				     (happyReduceArr Array.! rule) i tk st
-#endif
+				     (happyReduceArr Happy_Data_Array.! rule) i tk st
 				     where rule = IBOX(NEGATE(PLUS(n,(ILIT(1) :: FAST_INT))))
 		n		  -> DEBUG_TRACE("shift, enter state "
 						 ++ show IBOX(new_state)
@@ -132,27 +128,27 @@ happyDoAction i tk st
 #ifdef HAPPY_GHC
 indexShortOffAddr (HappyA# arr) off =
 HAPPY_IF_GHC_GT_500
-	narrow16Int# i
+	Happy_GHC_Exts.narrow16Int# i
 HAPPY_ELIF_GHC_500
-	intToInt16# i
+	Happy_GHC_Exts.intToInt16# i
 HAPPY_ELSE
-	(i `iShiftL#` 16#) `iShiftRA#` 16#
+	Happy_GHC_Exts.iShiftRA# (Happy_GHC_Exts.iShiftL# i 16#) 16#
 HAPPY_ENDIF
   where
 HAPPY_IF_GHC_GE_503
-	i = word2Int# ((high `uncheckedShiftL#` 8#) `or#` low)
+	i = Happy_GHC_Exts.word2Int# (Happy_GHC_Exts.or# (Happy_GHC_Exts.uncheckedShiftL# high 8#) low)
 HAPPY_ELSE
-	i = word2Int# ((high `shiftL#` 8#) `or#` low)
+	i = Happy_GHC_Exts.word2Int# (Happy_GHC_Exts.or# (Happy_GHC_Exts.shiftL# high 8#) low)
 HAPPY_ENDIF
-	high = int2Word# (ord# (indexCharOffAddr# arr (off' +# 1#)))
-	low  = int2Word# (ord# (indexCharOffAddr# arr off'))
-	off' = off *# 2#
+	high = Happy_GHC_Exts.int2Word# (Happy_GHC_Exts.ord# (Happy_GHC_Exts.indexCharOffAddr# arr (off' Happy_GHC_Exts.+# 1#)))
+	low  = Happy_GHC_Exts.int2Word# (Happy_GHC_Exts.ord# (Happy_GHC_Exts.indexCharOffAddr# arr off'))
+	off' = off Happy_GHC_Exts.*# 2#
 #else
-indexShortOffAddr arr off = arr ! off
+indexShortOffAddr arr off = arr Happy_Data_Array.! off
 #endif
 
 #ifdef HAPPY_GHC
-data HappyAddr = HappyA# Addr#
+data HappyAddr = HappyA# Happy_GHC_Exts.Addr#
 #endif
 
 #endif /* HAPPY_ARRAY */
@@ -290,7 +286,7 @@ notHappyAtAll = error "Internal Happy error\n"
 -- Hack to get the typechecker to accept our action functions
 
 #if defined(HAPPY_GHC)
-happyTcHack :: Int# -> a -> a
+happyTcHack :: Happy_GHC_Exts.Int# -> a -> a
 happyTcHack x y = y
 {-# INLINE happyTcHack #-}
 #endif

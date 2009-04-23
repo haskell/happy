@@ -128,19 +128,19 @@ If we're using coercions, we need to generate the injections etc.
 >	      inject n ty
 >		= mkHappyIn n . str " :: " . type_param n ty
 >		. str " -> " . bhappy_item . char '\n'
->		. mkHappyIn n . str " x = unsafeCoerce# x\n"
+>		. mkHappyIn n . str " x = Happy_GHC_Exts.unsafeCoerce# x\n"
 >		. str "{-# INLINE " . mkHappyIn n . str " #-}"
 >
 >	      extract n ty
 >		= mkHappyOut n . str " :: " . bhappy_item
 >		. str " -> " . type_param n ty . char '\n'
->		. mkHappyOut n . str " x = unsafeCoerce# x\n"
+>		. mkHappyOut n . str " x = Happy_GHC_Exts.unsafeCoerce# x\n"
 >		. str "{-# INLINE " . mkHappyOut n . str " #-}"
 >	  in
 >	    str "newtype " . happy_item . str " = HappyAbsSyn HappyAny\n" -- see NOTE below
 >         . interleave "\n" (map str
 >           [ "#if __GLASGOW_HASKELL__ >= 607",
->             "type HappyAny = GHC.Exts.Any",
+>             "type HappyAny = Happy_GHC_Exts.Any",
 >             "#else",
 >             "type HappyAny = forall a . a",
 >             "#endif" ])
@@ -148,10 +148,10 @@ If we're using coercions, we need to generate the injections etc.
 >	    [ inject n ty . nl . extract n ty | (n,ty) <- assocs nt_types ]
 >	  -- token injector
 >	  . str "happyInTok :: " . token . str " -> " . bhappy_item
->	  . str "\nhappyInTok x = unsafeCoerce# x\n{-# INLINE happyInTok #-}\n"
+>	  . str "\nhappyInTok x = Happy_GHC_Exts.unsafeCoerce# x\n{-# INLINE happyInTok #-}\n"
 >	  -- token extractor
 >	  . str "happyOutTok :: " . bhappy_item . str " -> " . token
->	  . str "\nhappyOutTok x = unsafeCoerce# x\n{-# INLINE happyOutTok #-}\n"
+>	  . str "\nhappyOutTok x = Happy_GHC_Exts.unsafeCoerce# x\n{-# INLINE happyOutTok #-}\n"
 
 >         . str "\n"
 
@@ -215,7 +215,7 @@ based parsers -- types aren't as important there).
 
 >     | otherwise = id
 
->	where intMaybeHash | ghc       = str "Int#"
+>	where intMaybeHash | ghc       = str "Happy_GHC_Exts.Int#"
 >		           | otherwise = str "Int"
 >	      tokens = 
 >     		case lexer of
@@ -579,32 +579,32 @@ action array indexed by (terminal * last_state) + state
 >	    . str "\"#\n\n" --"
 
 >	| otherwise
->	    = str "happyActOffsets :: Array Int Int\n"
->	    . str "happyActOffsets = listArray (0," 
+>	    = str "happyActOffsets :: Happy_Data_Array.Array Int Int\n"
+>	    . str "happyActOffsets = Happy_Data_Array.listArray (0,"
 >		. shows (n_states) . str ") (["
 >	    . interleave' "," (map shows act_offs)
 >	    . str "\n\t])\n\n"
 >	
->	    . str "happyGotoOffsets :: Array Int Int\n"
->	    . str "happyGotoOffsets = listArray (0," 
+>	    . str "happyGotoOffsets :: Happy_Data_Array.Array Int Int\n"
+>	    . str "happyGotoOffsets = Happy_Data_Array.listArray (0,"
 >		. shows (n_states) . str ") (["
 >	    . interleave' "," (map shows goto_offs)
 >	    . str "\n\t])\n\n"
 >	
->	    . str "happyDefActions :: Array Int Int\n"
->	    . str "happyDefActions = listArray (0," 
+>	    . str "happyDefActions :: Happy_Data_Array.Array Int Int\n"
+>	    . str "happyDefActions = Happy_Data_Array.listArray (0,"
 >		. shows (n_states) . str ") (["
 >	    . interleave' "," (map shows defaults)
 >	    . str "\n\t])\n\n"
 >	
->	    . str "happyCheck :: Array Int Int\n"
->	    . str "happyCheck = listArray (0," 
+>	    . str "happyCheck :: Happy_Data_Array.Array Int Int\n"
+>	    . str "happyCheck = Happy_Data_Array.listArray (0,"
 >		. shows table_size . str ") (["
 >	    . interleave' "," (map shows check)
 >	    . str "\n\t])\n\n"
 >	
->	    . str "happyTable :: Array Int Int\n"
->	    . str "happyTable = listArray (0," 
+>	    . str "happyTable :: Happy_Data_Array.Array Int Int\n"
+>	    . str "happyTable = Happy_Data_Array.listArray (0,"
 >		. shows table_size . str ") (["
 >	    . interleave' "," (map shows table)
 >	    . str "\n\t])\n\n"
@@ -622,7 +622,7 @@ action array indexed by (terminal * last_state) + state
 >
 >    produceReduceArray
 >   	= {- str "happyReduceArr :: Array Int a\n" -}
->	  str "happyReduceArr = array ("
+>	  str "happyReduceArr = Happy_Data_Array.array ("
 >		. shows (n_starts :: Int) -- omit the %start reductions
 >		. str ", "
 >		. shows n_rules
