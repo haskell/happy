@@ -7,6 +7,7 @@ The parser.
 -----------------------------------------------------------------------------
 
 > {
+> {-# OPTIONS_GHC -w #-}
 > module Parser (ourParser,AbsSyn) where
 > import ParseMonad
 > import AbsSyn
