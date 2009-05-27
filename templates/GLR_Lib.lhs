@@ -297,6 +297,7 @@ add a new branch
 >         Nothing               -> chgS $ \f -> (False, Map.insert i [b] f)   
 >         Just bs | b `elem` bs -> return True
 >                 | otherwise   -> chgS $ \f -> (True,  Map.insert i (b:bs) f)
+
 ---
 only for use with nodes that exist
 
