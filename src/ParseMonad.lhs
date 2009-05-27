@@ -8,6 +8,7 @@ The parser monad.
 
 > data ParseResult a = OkP a | FailP String
 > newtype P a = P (String -> Int -> ParseResult a)
+> runP :: P a -> String -> Int -> ParseResult a
 > runP (P f) = f
 
 > lineP :: P Int
@@ -17,5 +18,5 @@ The parser monad.
 >	return m = P $ \ _ _ -> OkP m
 >	m >>= k =  P $ \s l -> case runP m s l of
 >		OkP a -> runP (k a) s l
->		FailP s -> FailP s
+>		FailP err -> FailP err
 >	fail s = P $ \ _ _ -> FailP s
