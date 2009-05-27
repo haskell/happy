@@ -485,27 +485,14 @@ GHC version-dependent stuff in it.
 
 CPP is turned on for -fglasgow-exts, so we can use conditional compilation:
 
-> import_glaexts = "#if __GLASGOW_HASKELL__ >= 503\n" ++
-> 		   "import qualified GHC.Exts as Happy_GHC_Exts\n" ++
->		   "#else\n" ++
->		   "import qualified GlaExts as Happy_GHC_Exts\n" ++
->		   "#endif\n"
+> import_glaexts = "import qualified GHC.Exts as Happy_GHC_Exts\n"
 
-> import_array = "#if __GLASGOW_HASKELL__ >= 503\n" ++
-> 		 "import qualified Data.Array as Happy_Data_Array\n" ++
->		 "#else\n" ++
->		 "import qualified Array as Happy_Data_Array\n" ++
->		 "#endif\n"
+> import_array = "import qualified Data.Array as Happy_Data_Array\n"
 
-> import_debug = "#if __GLASGOW_HASKELL__ >= 503\n" ++
+> import_debug =
 > 		 "import qualified System.IO as Happy_System_IO\n" ++
 > 		 "import qualified System.IO.Unsafe as Happy_System_IO_Unsafe\n" ++
-> 		 "import qualified Debug.Trace as Happy_Debug_Trace\n" ++
->		 "#else\n" ++
->		 "import qualified IO as Happy_System_IO\n" ++
->		 "import qualified IOExts as Happy_System_IO_Unsafe\n" ++
->		 "import qualified IOExts as Happy_Debug_Trace\n" ++
->		 "#endif\n"
+> 		 "import qualified Debug.Trace as Happy_Debug_Trace\n"
 
 ------------------------------------------------------------------------------
 Extract various command-line options.

@@ -127,19 +127,9 @@ happyDoAction i tk st
 
 #ifdef HAPPY_GHC
 indexShortOffAddr (HappyA# arr) off =
-HAPPY_IF_GHC_GT_500
 	Happy_GHC_Exts.narrow16Int# i
-HAPPY_ELIF_GHC_500
-	Happy_GHC_Exts.intToInt16# i
-HAPPY_ELSE
-	Happy_GHC_Exts.iShiftRA# (Happy_GHC_Exts.iShiftL# i 16#) 16#
-HAPPY_ENDIF
   where
-HAPPY_IF_GHC_GE_503
 	i = Happy_GHC_Exts.word2Int# (Happy_GHC_Exts.or# (Happy_GHC_Exts.uncheckedShiftL# high 8#) low)
-HAPPY_ELSE
-	i = Happy_GHC_Exts.word2Int# (Happy_GHC_Exts.or# (Happy_GHC_Exts.shiftL# high 8#) low)
-HAPPY_ENDIF
 	high = Happy_GHC_Exts.int2Word# (Happy_GHC_Exts.ord# (Happy_GHC_Exts.indexCharOffAddr# arr (off' Happy_GHC_Exts.+# 1#)))
 	low  = Happy_GHC_Exts.int2Word# (Happy_GHC_Exts.ord# (Happy_GHC_Exts.indexCharOffAddr# arr off'))
 	off' = off Happy_GHC_Exts.*# 2#

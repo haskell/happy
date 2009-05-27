@@ -41,14 +41,10 @@
 
 >import Char
 >import System
-#if __GLASGOW_HASKELL__ >= 500
 #if __GLASGOW_HASKELL__ >= 603
 >import qualified Data.Map as Map
 #else
 >import Data.FiniteMap
-#endif
-#else
->import FiniteMap
 #endif
 
 >import Monad (foldM)

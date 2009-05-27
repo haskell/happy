@@ -8,14 +8,9 @@ import ParserM (ParserM (..), mkT, Token(..), St, start_code,
                 show_pos, position, input,
                 AlexInput, alexGetChar, alexInputPrevChar)
 
-#if __GLASGOW_HASKELL__ >= 503
 import Data.Array
 import Data.Char (ord)
 import Data.Array.Base (unsafeAt)
-#else
-import Array
-import Char (ord)
-#endif
 alex_base :: Array Int Int
 alex_base = listArray (0,10) [-8,-3,2,0,-91,-97,-93,0,-83,-77,-80]
 
