@@ -55,10 +55,10 @@ inst_rule (x,xs,ps,t) ts  = do s <- build xs ts []
                                ps1 <- lift $ mapM (inst_prod s) ps
                                let y = inst_name (x,ts)
                                return (y,ps1,t)    -- XXX: type?
-  where build (x:xs) (t:ts) m = build xs ts ((x,t):m)
+  where build (x':xs') (t':ts') m = build xs' ts' ((x',t'):m)
         build [] [] m  = return m
-        build xs [] _  = err ("Need " ++ show (length xs) ++ " more arguments")
-        build _ xs _   = err (show (length xs) ++ " argumnets too many.")
+        build xs' [] _  = err ("Need " ++ show (length xs') ++ " more arguments")
+        build _ ts' _   = err (show (length ts') ++ " arguments too many.")
 
         err m = throwError ("In " ++ inst_name (x,ts) ++ ": " ++ m)
 
@@ -68,7 +68,7 @@ make_rule funs (f,xs) =
     Just r  -> inst_rule r xs
     Nothing -> throwError ("Undefined rule: " ++ f)
 
-
+runM2 :: ErrorT e (Writer w) a -> Either e (a, w)
 runM2 m = case runWriter (runErrorT m) of
             (Left e,_)   -> Left e
             (Right a,xs) -> Right (a,xs)
