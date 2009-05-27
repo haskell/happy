@@ -12,8 +12,8 @@ Generation of LALR parsing tables.
 >	where
 
 > import GenUtils
-> import Set ( Set )
-> import qualified Set hiding ( Set )
+> import Data.Set ( Set )
+> import qualified Data.Set as Set hiding ( Set )
 > import qualified NameSet
 > import NameSet ( NameSet )
 > import Grammar

@@ -147,7 +147,6 @@ executable happy
         Parser
         ProduceCode
         ProduceGLRCode
-        Set
         NameSet
         Target
         AttrGrammar

@@ -9,8 +9,8 @@ Generating info files.
 > import Paths_happy		( version )
 > import LALR 			( Lr0Item(..) )
 > import GenUtils               ( str, interleave, interleave', ljustify )
-> import Set ( Set )
-> import qualified Set hiding ( Set )
+> import Data.Set ( Set )
+> import qualified Data.Set as Set hiding ( Set )
 > import Grammar
 
 > import Array
