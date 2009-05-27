@@ -62,34 +62,41 @@ generate some error messages.
 
 #endif
 
+> getTokenType :: [Directive t] -> String
 > getTokenType ds 
 > 	= case [ t | (TokenType t) <- ds ] of 
 >		[t] -> t
 >		[]  -> error "no token type given"
 >		_   -> error "multiple token types"
 
+> getParserNames :: [Directive t] -> [Directive t]
 > getParserNames ds = [ t | t@(TokenName _ _ _) <- ds ]
 
+> getLexer :: [Directive t] -> Maybe (String, String)
 > getLexer ds 
 > 	= case [ (a,b) | (TokenLexer a b) <- ds ] of
 > 		[t] -> Just t
 >		[]  -> Nothing
 >		_   -> error "multiple lexer directives"
 
+> getImportedIdentity :: [Directive t] -> Bool
 > getImportedIdentity ds 
 > 	= case [ (()) | TokenImportedIdentity <- ds ] of
 > 		[_] -> True
 >		[]  -> False
 >		_   -> error "multiple importedidentity directives"
 
+> getMonad :: [Directive t] -> (Bool, String, String, String, String)
 > getMonad ds 
 > 	= case [ (True,a,b,c,d) | (TokenMonad a b c d) <- ds ] of
 > 		[t] -> t
 >		[]  -> (False,"()","HappyIdentity",">>=","return")
 >		_   -> error "multiple monad directives"
 
+> getTokenSpec :: [Directive t] -> [(t, String)]
 > getTokenSpec ds = concat [ t | (TokenSpec t) <- ds ]
 
+> getPrios :: [Directive t] -> [Directive t]
 > getPrios ds = [ d | d <- ds,
 >                 case d of
 >		    TokenNonassoc _ -> True
@@ -98,25 +105,31 @@ generate some error messages.
 >		    _ -> False
 >               ]
 
+> getPrioNames :: Directive t -> [String]
 > getPrioNames (TokenNonassoc s) = s
 > getPrioNames (TokenLeft s)     = s
 > getPrioNames (TokenRight s)    = s
+> getPrioNames _                 = error "Not an associativity token"
 
+> getExpect :: [Directive t] -> Maybe Int
 > getExpect ds
 >         = case [ n | (TokenExpect n) <- ds ] of
 >                 [t] -> Just t
 >                 []  -> Nothing
 >                 _   -> error "multiple expect directives"
 
+> getError :: [Directive t] -> Maybe String
 > getError ds 
 > 	= case [ a | (TokenError a) <- ds ] of
 > 		[t] -> Just t
 >		[]  -> Nothing
 >		_   -> error "multiple error directives"
 
+> getAttributes :: [Directive t] -> [(String, String)]
 > getAttributes ds
->         = [ (id,typ) | (TokenAttribute id typ) <- ds ]
+>         = [ (ident,typ) | (TokenAttribute ident typ) <- ds ]
 
+> getAttributetype :: [Directive t] -> Maybe String
 > getAttributetype ds
 >         = case [ t | (TokenAttributetype t) <- ds ] of
 >                  [t] -> Just t
