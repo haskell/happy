@@ -121,7 +121,7 @@ Here is our mid-section datatype
 > mkPrio i (TokenNonassoc _) = Prio None i
 > mkPrio i (TokenRight _) = Prio RightAssoc i
 > mkPrio i (TokenLeft _) = Prio LeftAssoc i
-> mkPrio i _ = error "Panic: impossible case in mkPrio"
+> mkPrio _ _ = error "Panic: impossible case in mkPrio"
 
 -----------------------------------------------------------------------------
 -- Magic name values
@@ -147,6 +147,7 @@ namespace, which are kept in the Grammar structure.
 
 In hindsight, this was probably a bad idea.
 
+> startName, eofName, errorName, dummyName :: String
 > startName = "%start" -- with a suffix, like %start_1, %start_2 etc.
 > eofName   = "%eof"			
 > errorName = "error"
@@ -180,7 +181,7 @@ This bit is a real mess, mainly because of the error message support.
 >   where (g, errs) = runWriter (manglerM file abssyn)
 
 > manglerM :: FilePath -> AbsSyn -> M Grammar
-> manglerM file (AbsSyn hd dirs rules' tl) =
+> manglerM file (AbsSyn _hd dirs rules' _tl) =
 >   -- add filename to all error messages
 >   mapWriter (\(a,e) -> (a, map (\s -> file ++ ": " ++ s) e)) $ do
 
@@ -193,7 +194,7 @@ This bit is a real mess, mainly because of the error message support.
 
 >       terminal_strs  = concat (map getTerm dirs) ++ [eofName]
 
->	n_starts   = length starts
+>	n_starts   = length starts'
 >	n_nts      = length nonterm_strs
 >	n_ts       = length terminal_strs
 >	first_nt   = firstStartTok + n_starts
@@ -206,11 +207,11 @@ This bit is a real mess, mainly because of the error message support.
 >       nonterm_names  = [ first_nt .. last_nt ]
 >       terminal_names = [ first_t .. last_t ]
 
->	starts	    = case getParserNames dirs of
+>	starts'	    = case getParserNames dirs of
 >			[] -> [TokenName "happyParse" Nothing False]
 >			ns -> ns
 >
->	start_strs  = [ startName++'_':p  | (TokenName p _ _) <- starts ]
+>	start_strs  = [ startName++'_':p  | (TokenName p _ _) <- starts' ]
 
 Build up a mapping from name values to strings.
 
@@ -223,26 +224,27 @@ Build up a mapping from name values to strings.
 >	lookupName :: String -> [Name]
 >	lookupName n = [ t | (t,r) <- name_env, r == n ]
 
->       mapToName str = 
->             case lookupName str  of
+>       mapToName str' =
+>             case lookupName str' of
 >                [a]   -> return a
->                []    -> do addErr ("unknown identifier '" ++ str ++ "'")
+>                []    -> do addErr ("unknown identifier '" ++ str' ++ "'")
 >                            return errorTok
->                (a:_) -> do addErr ("multiple use of '" ++ str ++ "'")
+>                (a:_) -> do addErr ("multiple use of '" ++ str' ++ "'")
 >                            return a
 
 Start symbols...
 
 >		-- default start token is the first non-terminal in the grammar
->	lookupStart (TokenName s Nothing  _) = return first_nt
->	lookupStart (TokenName s (Just n) _) = mapToName n
+>	lookupStart (TokenName _ Nothing  _) = return first_nt
+>	lookupStart (TokenName _ (Just n) _) = mapToName n
+>	lookupStart _ = error "lookupStart: Not a TokenName"
 >   -- in
 
->   start_toks <- mapM lookupStart starts
+>   start_toks <- mapM lookupStart starts'
 
 >   let
->	parser_names   = [ s | TokenName s _ _ <- starts ]
->	start_partials = [ b | TokenName _ _ b <- starts ]
+>	parser_names   = [ s | TokenName s _ _ <- starts' ]
+>	start_partials = [ b | TokenName _ _ b <- starts' ]
 >	start_prods = zipWith (\nm tok -> (nm, [tok], ("no code",[]), No))
 >			 start_names start_toks
 
@@ -270,7 +272,7 @@ Translate the rules from string to name-based.
 >       attrs = getAttributes dirs
 >       attrType = fromMaybe "HappyAttrs" (getAttributetype dirs)
 >
-> 	transRule (nt, prods, ty)
+> 	transRule (nt, prods, _ty)
 >   	  = mapM (finishRule nt) prods
 >
 >	finishRule nt (lhs,code,line,prec)
@@ -299,7 +301,7 @@ Translate the rules from string to name-based.
 >   rules2 <- mapM transRule rules1
 
 >   let
->	tys = accumArray (\a b -> b) Nothing (first_nt, last_nt) 
+>	tys = accumArray (\_ x -> x) Nothing (first_nt, last_nt) 
 >			[ (nm, Just ty) | (nm, _, Just ty) <- rules1 ]
 
 >	env_array :: Array Int String
@@ -315,19 +317,19 @@ Get the token specs in terms of Names.
 
 >   let
 >	   ass = combinePairs [ (a,no)
->			      | ((a,_,_,_),no) <- zip productions [0..] ]
+>			      | ((a,_,_,_),no) <- zip productions' [0..] ]
 >	   arr = array (firstStartTok, length ass - 1 + firstStartTok) ass
 
 >	   lookup_prods :: Name -> [Int]
 >	   lookup_prods x | x >= firstStartTok && x < first_t = arr ! x
 >	   lookup_prods _ = error "lookup_prods"
 >
->	   productions = start_prods ++ concat rules2
->	   prod_array  = listArray' (0,length productions-1) productions
+>	   productions' = start_prods ++ concat rules2
+>	   prod_array  = listArray' (0,length productions' - 1) productions'
 >   -- in
 
 >   return  (Grammar {
->		productions 	  = productions,
+>		productions 	  = productions',
 >		lookupProdNo   	  = (prod_array !),
 >		lookupProdsOfName = lookup_prods,
 >               token_specs	  = tokspec,
@@ -357,11 +359,13 @@ For combining actions with possible error messages.
 > addLine :: Int -> String -> String
 > addLine l s = show l ++ ": " ++ s
 
+> getTerm :: Directive a -> [a]
 > getTerm (TokenSpec stuff) = map fst stuff
 > getTerm _                 = []
 
 So is this.
 
+> checkRules :: [String] -> String -> [String] -> Writer [ErrMsg] [String]
 > checkRules (name:rest) above nonterms
 >       | name == above = checkRules rest name nonterms
 >       | name `elem` nonterms 
@@ -377,7 +381,7 @@ So is this.
 -- go do special processing.  If not, pass on to the regular processing routine
 
 > checkCode :: Int -> [Name] -> [Name] -> String -> [(String,String)] -> M (String,[Int])
-> checkCode arity lhs nonterm_names code []    = doCheckCode arity code
+> checkCode arity _   _             code []    = doCheckCode arity code
 > checkCode arity lhs nonterm_names code attrs = rewriteAttributeGrammar arity lhs nonterm_names code attrs
 
 ------------------------------------------------------------------------------
@@ -445,7 +449,7 @@ So is this.
 >             -> [AgRule] -> [AgRule] -> [AgRule] 
 >             -> M String
 
-> formatRules arity attrNames defaultAttr prods selfRules subRules conditions = return $
+> formatRules arity _attrNames defaultAttr prods selfRules subRules conditions = return $
 >     concat [ "\\happyInhAttrs -> let { "
 >            , "happySelfAttrs = happyInhAttrs",formattedSelfRules
 >            , subProductionRules
@@ -457,6 +461,7 @@ So is this.
 >        formattedSelfRules' = concat $ intersperse ", " $ map formatSelfRule selfRules
 >        formatSelfRule (SelfAssign [] toks)   = defaultAttr++" = "++(formatTokens toks)
 >        formatSelfRule (SelfAssign attr toks) = attr++" = "++(formatTokens toks)
+>        formatSelfRule _ = error "formatSelfRule: Not a self rule"
 
 >        subRulesMap :: [(Int,[(String,[AgToken])])]
 >        subRulesMap = map     (\l   -> foldr (\ (_,x) (i,xs) -> (i,x:xs))
@@ -464,7 +469,7 @@ So is this.
 >                                             (tail l) ) .
 >                      groupBy (\x y -> (fst x) == (fst y)) .
 >                      sortBy  (\x y -> compare (fst x) (fst y)) .
->                      map     (\(SubAssign (i,id) toks) -> (i,(id,toks))) $ subRules
+>                      map     (\(SubAssign (i,ident) toks) -> (i,(ident,toks))) $ subRules
 
 >        subProductionRules = concat $ map formatSubRules prods
 
@@ -480,9 +485,10 @@ So is this.
 >        formattedConditions = concat $ intersperse "++" $ localConditions : (map (\i -> "happyConditions_"++(show i)) prods)
 >        localConditions = "["++(concat $ intersperse ", " $ map formatCondition conditions)++"]"
 >        formatCondition (Conditional toks) = formatTokens toks
+>        formatCondition _ = error "formatCondition: Not a condition"
 
->        formatSubRule i ([],toks)   = defaultAttr++" = "++(formatTokens toks)
->        formatSubRule i (attr,toks) = attr++" = "++(formatTokens toks)
+>        formatSubRule _ ([],toks)   = defaultAttr++" = "++(formatTokens toks)
+>        formatSubRule _ (attr,toks) = attr++" = "++(formatTokens toks)
 
 >        formatTokens tokens = concat (map formatToken tokens)
 
@@ -501,6 +507,7 @@ So is this.
 >            | i `elem` prods = "("++x++" happySubAttrs_"++(show i)++") "
 >            | otherwise      = error ("lhs "++(show i)++" is not a non-terminal")
 >        formatToken (AgTok_Unknown x)     = x++" "
+>        formatToken AgTok_EOF = error "formatToken AgTok_EOF"
 
 
 -----------------------------------------------------------------------------
@@ -510,18 +517,18 @@ So is this.
 -- code, which is used by the backend.
 
 > doCheckCode :: Int -> String -> M (String, [Int])
-> doCheckCode arity code = go code "" []
+> doCheckCode arity code0 = go code0 "" []
 >   where go code acc used =
 >           case code of
 >		[] -> return (reverse acc, used)
 >	
 >		'"'  :r    -> case reads code :: [(String,String)] of
->				 []      -> go r ('"':acc) used
->				 (s,r):_ -> go r (reverse (show s) ++ acc) used
+>				 []       -> go r ('"':acc) used
+>				 (s,r'):_ -> go r' (reverse (show s) ++ acc) used
 >		a:'\'' :r | isAlphaNum a -> go r ('\'':a:acc) used
 >		'\'' :r    -> case reads code :: [(Char,String)] of
->				 []      -> go r ('\'':acc) used
->				 (c,r):_ -> go r (reverse (show c) ++ acc) used
+>				 []       -> go r  ('\'':acc) used
+>				 (c,r'):_ -> go r' (reverse (show c) ++ acc) used
 >		'\\':'$':r -> go r ('$':acc) used
 >
 >		'$':'>':r -- the "rightmost token"
@@ -532,15 +539,16 @@ So is this.
 >
 >		'$':r@(i:_) | isDigit i -> 
 >			case reads r :: [(Int,String)] of
->			  (j,r):_ -> 
+>			  (j,r'):_ -> 
 >			     if j > arity 
 >			   	  then do addErr ('$': show j ++ " out of range")
->                                         go r acc used
->			   	  else go r (reverse (mkHappyVar j) ++ acc) 
+>                                         go r' acc used
+>			   	  else go r' (reverse (mkHappyVar j) ++ acc) 
 >					 (j : used)
->			  
+>			  [] -> error "doCheckCode []"
 >		c:r  -> go r (c:acc) used
 
+> mkHappyVar :: Int -> String
 > mkHappyVar n 	= "happy_var_" ++ show n
 
 -----------------------------------------------------------------------------
