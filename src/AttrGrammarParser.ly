@@ -5,6 +5,7 @@ assignment to an attribute of the RHS (an inherited attribute),
 or a conditional statement.
 
 > {
+> {-# OPTIONS_GHC -w #-}
 > module AttrGrammarParser (agParser) where
 > import ParseMonad
 > import AttrGrammar
