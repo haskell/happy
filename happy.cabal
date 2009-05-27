@@ -133,7 +133,7 @@ executable happy
   build-depends: haskell98 >= 1.0, mtl >= 1.0
 
   extensions: CPP, MagicHash
-  ghc-options: -W
+  ghc-options: -Wall
   other-modules:
         AbsSyn
         First
