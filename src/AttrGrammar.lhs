@@ -24,9 +24,15 @@
 >   | AgTok_EOF
 >  deriving (Show,Eq,Ord)
 
+> subRefVal :: AgToken -> (Int, String)
 > subRefVal   (AgTok_SubRef x)       = x
+> subRefVal   _ = error "subRefVal: Bad value"
+> selfRefVal :: AgToken -> String
 > selfRefVal  (AgTok_SelfRef x)      = x
+> selfRefVal  _ = error "selfRefVal: Bad value"
+> rightRefVal :: AgToken -> String
 > rightRefVal (AgTok_RightmostRef x) = x
+> rightRefVal _ = error "rightRefVal: Bad value"
 
 > data AgRule
 >   = SelfAssign String [AgToken]
@@ -60,7 +66,7 @@
 
 > agLexAll :: P [AgToken]
 > agLexAll = P $ aux []
->  where aux toks [] l = OkP (reverse toks)
+>  where aux toks [] _ = OkP (reverse toks)
 >        aux toks s l  = agLexer' (\t -> aux (t:toks)) s l
 
 > agLexer :: (AgToken -> P a) -> P a
@@ -96,6 +102,6 @@
 
 > agLexAttribute :: (AgToken -> Pfunc a) -> (String -> AgToken) -> Pfunc a
 > agLexAttribute cont k ('.':x:xs) 
->	 | isLower x = let (id,rest) = span (\x -> isAlphaNum x || x == '\'') xs in cont (k (x:id)) rest
+>	 | isLower x = let (ident,rest) = span (\c -> isAlphaNum c || c == '\'') xs in cont (k (x:ident)) rest
 >	 | otherwise = \_ -> FailP "bad attribute identifier"
 > agLexAttribute cont k rest = cont (k "") rest
