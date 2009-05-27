@@ -10,6 +10,7 @@ Implementation of FIRST
 > import NameSet ( NameSet )
 > import qualified NameSet as Set
 > import Grammar
+> import Data.IntSet (IntSet)
 
 \subsection{Utilities}
 
@@ -43,6 +44,8 @@ Does the Set include the $\epsilon$ symbol ?
 >       env = mkClosure (==) (getNext fst_term prodNo prodsOfName)
 >               [ (name,Set.empty) | name <- nts ]
 
+> getNext :: Name -> (a -> (b, [Name], c, d)) -> (Name -> [a])
+>         -> [(Name, IntSet)] -> [(Name, NameSet)]
 > getNext fst_term prodNo prodsOfName env = 
 >		[ (nm, next nm) | (nm,_) <- env ]
 >    where 
@@ -60,4 +63,5 @@ Does the Set include the $\epsilon$ symbol ?
 
 My little hack
 
+> snd4 :: (a, b, c, d) -> b
 > snd4 (_,b,_,_) = b
