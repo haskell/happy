@@ -45,14 +45,14 @@ Here are two defs that everyone seems to define ...
 HBC has it in one of its builtin modules
 
 > mapMaybe :: (a -> Maybe b) -> [a] -> [b]
-> mapMaybe f [] = []
+> mapMaybe _ [] = []
 > mapMaybe f (a:r) = case f a of
 >                       Nothing -> mapMaybe f r
 >                       Just b  -> b : mapMaybe f r
 
 > maybeMap :: (a -> b) -> Maybe a -> Maybe b
 > maybeMap f (Just a) = Just (f a)
-> maybeMap f Nothing  = Nothing
+> maybeMap _ Nothing  = Nothing
 
 > joinMaybe :: (a -> a -> a) -> Maybe a -> Maybe a -> Maybe a 
 > joinMaybe _ Nothing  Nothing  = Nothing
@@ -69,12 +69,13 @@ This will never terminate.
 > mkClosure :: (a -> a -> Bool) -> (a -> a) -> a -> a
 > mkClosure eq f = match . iterate f
 >   where
->       match (a:b:c) | a `eq` b = a
+>       match (a:b:_) | a `eq` b = a
 >       match (_:c)              = match c
+>       match [] = error "Can't happen: match []"
 
 > foldb :: (a -> a -> a) -> [a] -> a
-> foldb f [] = error "can't reduce an empty list using foldb"
-> foldb f [x] = x
+> foldb _ [] = error "can't reduce an empty list using foldb"
+> foldb _ [x] = x
 > foldb f l  = foldb f (foldb' l)
 >    where 
 >       foldb' (x:y:x':y':xs) = f (f x y) (f x' y') : foldb' xs
@@ -95,8 +96,11 @@ This will never terminate.
 
 Gofer-like stuff:
 
+> fst3 :: (a, b, c) -> a
 > fst3 (a,_,_) = a
+> snd3 :: (a, b, c) -> b
 > snd3 (_,a,_) = a
+> thd3 :: (a, b, c) -> c
 > thd3 (_,_,a) = a
 
 > cjustify, ljustify, rjustify :: Int -> String -> String
@@ -113,13 +117,14 @@ Gofer-like stuff:
 > copy n x = take n xs where xs = x:xs
 
 > partition' :: (Eq b) => (a -> b) -> [a] -> [[a]]
-> partition' f [] = []
-> partition' f [x] = [[x]]
+> partition' _ [] = []
+> partition' _ [x] = [[x]]
 > partition' f (x:x':xs) | f x == f x' 
 >    = tack x (partition' f (x':xs))
 >                       | otherwise 
 >    = [x] : partition' f (x':xs)
 
+> tack :: a -> [[a]] -> [[a]]
 > tack x xss = (x : head xss) : tail xss
 
 > combinePairs :: (Ord a) => [(a,b)] -> [(a,[b])]
@@ -134,7 +139,7 @@ Gofer-like stuff:
 > assocMaybeErr :: (Eq a) => [(a,b)] -> a -> MaybeErr b String
 > assocMaybeErr env k = case [ val | (key,val) <- env, k == key] of
 >                        [] -> Failed "assoc: "
->                        (val:vs) -> Succeeded val
+>                        (val:_) -> Succeeded val
 > 
 
 Now some utilties involving arrays.  Here is a version of @elem@ that
@@ -173,18 +178,18 @@ will give a very efficent variation of the fib function.
 Replace $$ with an arbitrary string, being careful to avoid ".." and '.'.
 
 > mapDollarDollar :: String -> Maybe (String -> String)
-> mapDollarDollar code = go code ""
+> mapDollarDollar code0 = go code0 ""
 >   where go code acc =
 >           case code of
 >		[] -> Nothing
 >	
 >		'"'  :r    -> case reads code :: [(String,String)] of
->				 []      -> go r ('"':acc)
->				 (s,r):_ -> go r (reverse (show s) ++ acc)
+>				 []       -> go r ('"':acc)
+>				 (s,r'):_ -> go r' (reverse (show s) ++ acc)
 >		a:'\'' :r | isAlphaNum a -> go r ('\'':a:acc)
 >		'\'' :r    -> case reads code :: [(Char,String)] of
->				 []      -> go r ('\'':acc)
->				 (c,r):_ -> go r (reverse (show c) ++ acc)
+>				 []       -> go r ('\'':acc)
+>				 (c,r'):_ -> go r' (reverse (show c) ++ acc)
 >		'\\':'$':r -> go r ('$':acc)
 >		'$':'$':r  -> Just (\repl -> reverse acc ++ repl ++ r)
 >		c:r  -> go r (c:acc)
@@ -193,18 +198,27 @@ Replace $$ with an arbitrary string, being careful to avoid ".." and '.'.
 %-------------------------------------------------------------------------------
 Fast string-building functions. 
 
+> str :: String -> String -> String
 > str = showString
+> char :: Char -> String -> String
 > char c = (c :)
+> interleave :: String -> [String -> String] -> String -> String
 > interleave s = foldr (\a b -> a . str s . b) id
+> interleave' :: String -> [String -> String] -> String -> String
 > interleave' s = foldr1 (\a b -> a . str s . b) 
 
+> strspace :: String -> String
 > strspace = char ' '
+> nl :: String -> String
 > nl = char '\n'
 
+> maybestr :: Maybe String -> String -> String
 > maybestr (Just s)	= str s
 > maybestr _		= id
 
+> brack :: String -> String -> String
 > brack s = str ('(' : s) . char ')'
+> brack' :: (String -> String) -> String -> String
 > brack' s = char '(' . s . char ')'
 
 
