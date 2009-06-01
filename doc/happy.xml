@@ -16,7 +16,7 @@
     </author>
     <address><email>simonmar@microsoft.com</email></address>
     <copyright>
-      <year>1997-2001</year>
+      <year>1997-2009</year>
       <holder>Simon Marlow</holder>
     </copyright>
     <abstract>
@@ -60,12 +60,9 @@
     an existing grammar, without need for a rewrite. </para>
 
     <para> <application>Happy</application> is sufficiently powerful
-    to parse Haskell itself - there's a freely available Haskell
-    parser written using <application>Happy</application> which can be
-    obtained from <ulink
-    url="http://www.pms.informatik.uni-muenchen.de/mitarbeiter/panne/haskell_libs/hsparser.html">
-    The <literal>hsparser</literal> Page</ulink>, and included with versions of
-    GHC from 5.00 onwards.</para>
+    to parse full Haskell
+    - <ulink url="http://www.haskell.org/ghc">GHC</ulink> itself uses
+    a Happy parser.</para>
 
     <indexterm><primary><literal>hsparser</literal></primary></indexterm>
     <indexterm>
@@ -123,7 +120,7 @@
 
       <para> <application>Happy</application> is written in Glasgow Haskell.  This
       means that (for the time being), you need GHC to compile it.
-      Any version of GHC >= 3.02 should work.</para>
+      Any version of GHC >= 6.2 should work.</para>
 
       <para> Remember: parsers produced using
       <application>Happy</application> should compile without
@@ -143,7 +140,7 @@
 
       <para> Any bugs found in <application>Happy</application> should
       be reported to me: Simon Marlow
-      <email>simonmar@microsoft.com</email> including all the relevant
+      <email>marlowsd@gmail.com</email> including all the relevant
       information: the compiler used to compile
       <application>Happy</application>, the command-line options used,
       your grammar file or preferably a cut-down example showing the
@@ -169,7 +166,7 @@
       you, please get in touch.</para>
       
       <blockquote>
-	<para> Copyright 2000, Simon Marlow and Andy Gill.  All rights
+	<para> Copyright 2009, Simon Marlow and Andy Gill.  All rights
 	reserved. </para>
 
 	<para> Redistribution and use in source and binary forms, with
@@ -213,8 +210,7 @@
       <para> <application>Happy</application>'s web page can be found at <ulink
       url="http://www.haskell.org/happy/">http://www.haskell.org/happy/</ulink>.
       <application>Happy</application> source and binaries can be downloaded from
-      there.  There are several mirrors of this site, but since they
-      tend to move around a bit I won't mention them here. </para>
+      there.</para>
       
     </sect1>
 
