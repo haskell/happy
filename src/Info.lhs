@@ -36,10 +36,7 @@ Produce a file of parser information, useful for debugging the parser.
 >		 , lookupProdNo = lookupProd
 >		 , lookupProdsOfName = lookupProdNos
 >		 , non_terminals = nonterms
->		 , terminals = terms
 >                , token_names = env
->		 , eof_term = eof
->		 , first_term = fst_term
 >		 })
 >	 action goto tokens conflictArray filename unused_rules unused_terminals
 > 	= (showHeader
@@ -62,7 +59,7 @@ Produce a file of parser information, useful for debugging the parser.
 >	. foldr (.) id (map showConflictsState (assocs conflictArray))
 >	. str "\n"
 
->   showConflictsState (state, (0,0)) = id
+>   showConflictsState (_,     (0,0)) = id
 >   showConflictsState (state, (sr,rr))
 >   	= str "state "
 >	. shows state
@@ -99,7 +96,7 @@ Produce a file of parser information, useful for debugging the parser.
 >	. interleave "\n" (zipWith showProduction prods [ 0 :: Int .. ])
 >	. str "\n"
   
->   showProduction (nt, toks, sem, prec) i
+>   showProduction (nt, toks, _sem, _prec) i
 > 	= ljuststr 50 (
 >	  str "\t"
 >	. showName nt
@@ -131,10 +128,10 @@ Produce a file of parser information, useful for debugging the parser.
 >		. interleave " " (map showName afterDot))
 >	. str "   (rule " . shows rule . str ")"
 >	where
->		(nt, toks, sem, prec) = lookupProd rule
+>		(nt, toks, _sem, _prec) = lookupProd rule
 >		(beforeDot, afterDot) = splitAt dot toks
 
->   showAction (t, LR'Fail)
+>   showAction (_, LR'Fail)
 >   	= id
 >   showAction (t, act)
 >   	= str "\t"
@@ -156,10 +153,11 @@ Produce a file of parser information, useful for debugging the parser.
 >   	= showAction' a
 >	. str "\n"
 >	. interleave "\n" 
->		(map (\a -> str "\t\t\t(" . showAction' a . str ")") 
+>		(map (\a' -> str "\t\t\t(" . showAction' a' . str ")") 
 >		 (nub (filter (/= a) as)))
+>   showAction' LR'Fail = error "showAction' LR'Fail: Unhandled case"
 
->   showGoto (nt, NoGoto)
+>   showGoto (_, NoGoto)
 >   	= id
 >   showGoto (nt, Goto n)
 >   	= str "\t"
@@ -204,8 +202,10 @@ Produce a file of parser information, useful for debugging the parser.
 >   showName    = str . nameOf
 >   showJName j = str . ljustify j . nameOf
 
+> ljuststr :: Int -> (String -> String) -> String -> String
 > ljuststr n s = str (ljustify n (s ""))
 
+> banner :: String -> String -> String
 > banner s 
 > 	= str "-----------------------------------------------------------------------------\n"
 >	. str s
