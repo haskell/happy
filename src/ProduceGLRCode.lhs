@@ -15,25 +15,26 @@ This module is designed as an extension to the Haskell parser generator Happy.
 >                       ) where
 
 > import Paths_happy ( version )
-> import GenUtils ( fst3, thd3, mapDollarDollar )
+> import GenUtils ( thd3, mapDollarDollar )
 > import GenUtils ( str, char, nl, brack, brack', interleave, maybestr )
 > import Grammar
 > import System.IO
 > import Data.Array
-> import Data.Maybe ( fromJust )
-> import Data.Char ( isUpper, isSpace )
+> import Data.Char ( isSpace )
 > import Data.List ( nub, (\\), sort )
 > import Data.Version ( showVersion )
 
 %-----------------------------------------------------------------------------
 File and Function Names
 
+> base_template, lib_template :: String -> String
 > base_template td = td ++ "/GLR_Base"		-- NB Happy uses / too
 > lib_template  td = td ++ "/GLR_Lib"		-- Windows accepts this?
 
 ---
 prefix for production names, to avoid name clashes
 
+> prefix :: String
 > prefix = "G_"
 
 %-----------------------------------------------------------------------------
@@ -95,6 +96,7 @@ Main exported function
 >                                    putStrLn "GLR-Happy doesn't support multiple start points (yet)"
 >                                    putStrLn "Defaulting to first start point."
 >                                    return s
+>                          [] -> error "produceGLRParser: []"
 >     mkFiles basename tbls parseName template_dir header trailer options g
 
 
@@ -187,7 +189,7 @@ the driver and data strs (large template).
 >     . table_text
 
 >   lib_content imps opts lib_text
->    = let (pre,drop_me:post) = break (== "fakeimport DATA") $ lines lib_text
+>    = let (pre,_drop_me : post) = break (== "fakeimport DATA") $ lines lib_text
 >      in 
 >      unlines [ "{-# OPTIONS " ++ opts ++ " #-}\n"
 >	       , comment "driver" ++ "\n"
@@ -209,16 +211,18 @@ the driver and data strs (large template).
 >   use_filtering = case options of (_, UseFiltering,_) -> True
 >                                   _                   -> False
 
+> comment :: String -> String
 > comment which
 >  = "-- parser (" ++ which ++ ") produced by Happy (GLR) Version " ++ 
 >	showVersion version
 
-> user_def_token_code token_type
->  = str "type UserDefTok = " . str token_type                      .nl
->  . str "instance TreeDecode " . brack token_type . str " where"   .nl
->  . str "\tdecode_b f (Branch (SemTok t) []) = [happy_return t]"   .nl
->  . str "instance LabelDecode " . brack token_type . str " where"  .nl
->  . str "\tunpack (SemTok t) = t"                                  .nl
+> user_def_token_code :: String -> String -> String
+> user_def_token_code tokenType
+>  = str "type UserDefTok = " . str tokenType                     . nl
+>  . str "instance TreeDecode " . brack tokenType . str " where"  . nl
+>  . str "\tdecode_b f (Branch (SemTok t) []) = [happy_return t]" . nl
+>  . str "instance LabelDecode " . brack tokenType . str " where" . nl
+>  . str "\tunpack (SemTok t) = t"                                . nl
 
 
 %-----------------------------------------------------------------------------
@@ -257,6 +261,7 @@ that will be used for them in the GLR parser.
 >                   Nothing -> tok
 >                   Just fn -> fn "_"
 
+> toGSym :: [(Int, String)] -> Int -> String
 > toGSym gsMap i 
 >  = case lookup i gsMap of
 >     Nothing -> error $ "No representation for symbol " ++ show i
@@ -306,15 +311,15 @@ It also shares identical reduction values as CAFs
 >	                 -> "Shift " ++ show st ++ " " ++ mkReds rs
 >       LR'Multiple rs r@(LR'Reduce{})
 >	                 -> "Reduce " ++ mkReds (r:rs)
+>       _ -> error "writeActionTbl/mkAct: Unhandled case"
 >    where
->     rule r  = lookupProdNo g r
 >     mkReds rs = "[" ++ tail (concat [ "," ++ mkRed r | LR'Reduce r _ <- rs ]) ++ "]"
 
 >   mkRed r = "red_" ++ show r
 >   mkReductions = [ mkRedDefn p | p@(_,(n,_,_,_)) <- zip [0..] $ productions g 
 >                                , n `notElem` start_productions g ]
 
->   mkRedDefn (r, (lhs_id, rhs_ids, (code,dollar_vars), _))
+>   mkRedDefn (r, (lhs_id, rhs_ids, (_code,_dollar_vars), _))
 >    = mkRed r ++ " = ("++ lhs ++ "," ++ show arity ++ " :: Int," ++ sem ++")"
 >      where
 >         lhs = toGSym gsMap $ lhs_id
@@ -502,14 +507,14 @@ Creates the appropriate semantic values.
  - for tree-decode, these are the code abstracted over the children's values
 
 > mkSemObjects :: Options -> MonadInfo -> SemInfo -> ShowS 
-> mkSemObjects (LabelDecode,filter_opt,_) ignore_monad_info sem_info
+> mkSemObjects (LabelDecode,filter_opt,_) _ sem_info
 >  = interleave "\n" 
 >  $ [   str (mkSemFn_Name ij)
 >      . str (" ns@(" ++ pat ++ "happy_rest) = ")
 >      . str (" Branch (" ++ c_name ++ " (" ++ code ++ ")) ")
 >      . str (nodes filter_opt)
->    | (ty, c_name, mask, prod_info) <- sem_info
->    , (ij, (pats,code), ps) <- prod_info 
+>    | (_ty, c_name, mask, prod_info) <- sem_info
+>    , (ij, (pats,code), _ps) <- prod_info 
 >    , let pat | null mask = ""
 >              | otherwise = concatMap (\v -> mk_tok_binder pats (v+1) ++ ":")
 >                                      [0..maximum mask]
@@ -528,14 +533,14 @@ Creates the appropriate semantic values.
 >      . str (" ns@(" ++ pat ++ "happy_rest) = ")
 >      . str (" Branch (" ++ c_name ++ " (" ++ sem ++ ")) ")
 >      . str (nodes filter_opt)
->    | (ty, c_name, mask, prod_info) <- sem_info
+>    | (_ty, c_name, mask, prod_info) <- sem_info
 >    , (ij, (pats,code), _) <- prod_info 
 >    , let indent c = init $ unlines $ map (replicate 2 '\t'++) $ lines c
 >    , let mcode = case monad_info of
 >                    Nothing -> code
 >                    Just (_,_,rtn) -> case code of 
->                                        '%':code -> "\n" ++ indent code
->                                        other    -> rtn ++ " (" ++ code ++ ")"
+>                                        '%':code' -> "\n" ++ indent code'
+>                                        _         -> rtn ++ " (" ++ code ++ ")"
 >    , let sem = foldr (\v t -> mk_lambda pats (v + 1) "" ++ t) mcode mask
 >    , let pat | null mask = ""
 >              | otherwise = concatMap (\v -> mkHappyVar (v+1) ":")
@@ -544,9 +549,11 @@ Creates the appropriate semantic values.
 >          nodes UseFiltering = "(" ++ foldr (\l -> mkHappyVar (l+1) . showChar ':') "[])" mask
 >    ] 
 
+> mk_lambda :: [(Int, String)] -> Int -> String -> String
 > mk_lambda pats v
 >  = (\s -> "\\" ++ s ++ " -> ") . mk_binder id pats v
 
+> mk_binder :: (String -> String) -> [(Int, String)] -> Int -> String -> String
 > mk_binder wrap pats v
 >  = case lookup v pats of
 >	Nothing -> mkHappyVar v 
@@ -558,6 +565,7 @@ Creates the appropriate semantic values.
 ---
 standardise the naming scheme
 
+> mkSemFn_Name :: (Int, Int) -> String
 > mkSemFn_Name (i,j) = "semfn_" ++ show i ++ "_" ++ show j
 
 ---
@@ -568,7 +576,7 @@ maps production name to the underlying (possibly shared) semantic function
 >  = array (0,maximum $ map fst prod_map) prod_map
 >    where 
 >        prod_map = [ (p, mkSemFn_Name ij) 
->                   | (_,_,_,pi) <- sem_info, (ij,_,ps) <- pi, p <- ps ]
+>                   | (_,_,_,pi') <- sem_info, (ij,_,ps) <- pi', p <- ps ]
 
 
 %-----------------------------------------------------------------------------
@@ -584,7 +592,7 @@ only unpacked when needed. Using classes here to manage the unpacking.
 >    ++ map mk_inst ty_cs
 >    where
 >	ty_cs = [ (ty, [ (c_name, mask)
->	               | (ty2, c_name, mask, j_vs) <- seminfo
+>	               | (ty2, c_name, mask, _j_vs) <- seminfo
 >	               , ty2 == ty
 >	               ])
 >	        | ty <- nub [ ty | (ty,_,_,_) <- seminfo ]
@@ -611,7 +619,7 @@ only unpacked when needed. Using classes here to manage the unpacking.
 >	cross_prod Nothing s_var nodes
 >	 = cross_prod_ (char '[' . str s_var . char ']') 
 >	               (map str nodes)
->	cross_prod (Just (_,tn,rtn)) s_var nodes
+>	cross_prod (Just (_,_,rtn)) s_var nodes
 >	 = str "map happy_join $ "
 >        . cross_prod_ (char '[' . str rtn . char ' ' . str s_var . char ']')
 >	               (map str nodes)
@@ -639,7 +647,7 @@ only unpacked when needed. Using classes here to manage the unpacking.
 >	mk_inst (ty, cns)
 >	 = ("instance LabelDecode (" ++ ty ++ ") where ")
 >	 : [ "\tunpack (" ++ c_name ++ " s) = s"
->	   | (c_name, mask) <- cns ]
+>	   | (c_name, _mask) <- cns ]
 
 
 ---
@@ -687,6 +695,7 @@ remove Happy-generated start symbols.
 
 ---
 
+> mkHappyVar :: Int -> String -> String
 > mkHappyVar n = showString "happy_var_" . shows n
 
 
