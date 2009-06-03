@@ -159,7 +159,7 @@ followed by a special identifier.
 >	(\ ident -> returnToken cont (TokenInfo ("\"" ++ ident ++ "\"") TokId))
 
 > lexCode :: (Token -> P a) -> String -> Int -> ParseResult a
-> lexCode cont rest = lexReadCode rest 0 "" cont
+> lexCode cont rest = lexReadCode rest (0 :: Integer) "" cont
 
 > lexNum :: (Token -> P a) -> Char -> String -> Int -> ParseResult a
 > lexNum cont c rest = 
