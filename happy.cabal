@@ -130,7 +130,7 @@ executable happy
   else
     build-depends: base >= 1.0
 
-  build-depends: haskell98 >= 1.0, mtl >= 1.0
+  build-depends: base < 5, haskell98 >= 1.0, mtl >= 1.0
 
   extensions: CPP, MagicHash
   ghc-options: -Wall
