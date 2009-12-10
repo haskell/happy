@@ -2,7 +2,7 @@ TOP=..
 include ${TOP}/Makefile.defs
 
 expr : Expr.hs Main.lhs
-	${GHC} -cpp -fglasgow-exts -package lang -o expr --make Main.lhs
+	${GHC} -cpp -fglasgow-exts  -o expr --make Main.lhs
 
 NUM=20
 run : expr

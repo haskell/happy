@@ -2,35 +2,35 @@
 > import System(getArgs)
 > import Maybe(fromJust)
 > import Bio
-> import Data.FiniteMap
+> import qualified Data.Map as Map
 > import Control.Monad.State
 
->#include "DV_lhs"
+#include "DV_lhs"
 
 > main 
 >  = do
 >	[s] <- getArgs
 >	case doParse $ map (:[]) $ lexer s of 
 >	  ParseOK r f -> do 
->			    let f_ = filter_noise $ fmToList f
+>			    let f_ = filter_noise $ Map.toList f
 >			    putStrLn $ "Ok " ++ show r ++ "\n" 
 >						++ unlines (map show f_)
 >			    --writeFile "full" (unlines $ map show f)
 >			    toDV (trim_graph f_ r)
 >	  ParseEOF f  -> do 
->			    let f_ = filter_noise $ fmToList f
+>			    let f_ = filter_noise $ Map.toList f
 >			    putStrLn $ "Premature end of input:\n" 
 >						++ unlines (map show f_)
 >			    toDV f_
 >			    --writeFile "full" (unlines $ map show f)
 >	  ParseError ts f -> do 
->			    let f_ = filter_noise $ fmToList f
+>			    let f_ = filter_noise $ Map.toList f
 >			    putStrLn $ "Error: " ++ show ts
 >			    toDV f_ 
 >			    --writeFile "full" (unlines $ map show f)
 
 > forest_lookup f i
->  = fromJust $ lookupFM f i
+>  = fromJust $ Map.lookup f i
 
 ---
 remove intergenic things, to make graph small enough for drawing
@@ -56,7 +56,7 @@ remove intergenic things, to make graph small enough for drawing
 >	             if lookupWithDefaultFM visited False i
 >	               then return ()
 >	               else do
->	                      case lookupFM table i of 
+>	                      case Map.lookup table i of 
 >	                        Nothing 
 >	                          -> error $ "bad node: " ++ show i
 >	                        Just bs

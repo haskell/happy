@@ -2,7 +2,7 @@ TOP=..
 include ${TOP}/Makefile.defs
 
 english : English.hs Main.lhs 
-	${GHC} -cpp -fglasgow-exts -package lang -o english --make Main.lhs
+	${GHC} -cpp -fglasgow-exts  -o english --make Main.lhs
 
 run : english
 	./english "the man saw the race with a telescope"

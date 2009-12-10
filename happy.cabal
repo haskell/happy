@@ -97,9 +97,9 @@ extra-source-files:
 	examples/LexerTest.ly
 	happy.spec
 	src/ARRAY-NOTES
-	templates/GLR_Base.lhs
+	templates/GLR_Base.hs
 	templates/GenericTemplate.hs
-	templates/GLR_Lib.lhs
+	templates/GLR_Lib.hs
 	tests/error001.y
 	tests/error001.stdout
 	tests/error001.stderr

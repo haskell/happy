@@ -8,7 +8,7 @@ FILTER =
 	${HAPPY} -i -l $*.y ${FILTER}
 
 expr : Expr.hs Main.lhs
-	${GHC} -cpp -fglasgow-exts -package lang -o expr --make Main.lhs
+	${GHC} -cpp -fglasgow-exts  -o expr --make Main.lhs
 
 run : expr
 	./expr "+ 1 1 1 1 1 1 "

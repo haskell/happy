@@ -34,8 +34,8 @@ myPostBuild _ flags _ lbi = do
 	runProgram perlProgram ["-i.bak", "-pe", crazy_perl_regexp, dst]
 
   sequence_ ([ cpp_template "GenericTemplate.hs" dst opts | (dst,opts) <- templates ] ++
-             [ cpp_template "GLR_Base.lhs"       dst opts | (dst,opts) <- glr_base_templates ] ++
-             [ cpp_template "GLR_Lib.lhs"        dst opts | (dst,opts) <- glr_templates ])
+             [ cpp_template "GLR_Base.hs"       dst opts | (dst,opts) <- glr_base_templates ] ++
+             [ cpp_template "GLR_Lib.hs"        dst opts | (dst,opts) <- glr_templates ])
 
 myPostClean _ _ _ _ = mapM_ (try . removeFile) all_template_files
 

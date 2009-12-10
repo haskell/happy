@@ -11,18 +11,18 @@ FILTER =
 	@ dummy 
 
 ${PROG} : Bio.o Main.lhs 
-	${GHC} -cpp -fglasgow-exts -package lang -o ${PROG} --make Main.lhs
+	${GHC} -cpp -fglasgow-exts  -o ${PROG} --make Main.lhs
 
 BioData.hs Bio.hs : Bio.y
 	${HAPPY} --info --glr --ghc ${FILTER} $< 
 
 Bio.o : Bio.hs BioData.hi
-	${GHC} -cpp -fglasgow-exts -package lang -O2 -c Bio.hs
+	${GHC} -cpp -fglasgow-exts  -O2 -c Bio.hs
 
 DATA_FLAGS = -funfolding-use-threshold0 -fno-strictness 
 BioData.hi BioData.o : BioData.hs 
 	@echo "Making BioData.hs WITHOUT optimisation (for speed)"
-	${GHC} -cpp -fglasgow-exts -package lang ${DATA_FLAGS} -c $<
+	${GHC} -cpp -fglasgow-exts  ${DATA_FLAGS} -c $<
 
 run : run12 
 

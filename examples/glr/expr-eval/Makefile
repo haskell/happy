@@ -6,7 +6,7 @@ DECODE = --decode
 
 expr : Expr.hs Main.lhs 
 	# might want to run happy with --ghc
-	${GHC} -cpp -fglasgow-exts -package lang -o expr --make Main.lhs
+	${GHC} -cpp -fglasgow-exts  -o expr --make Main.lhs
 
 run : expr
 	./expr "1+2*4-3"
