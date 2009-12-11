@@ -46,6 +46,10 @@ import qualified Data.Map as Map
 import Monad (foldM)
 import Maybe (fromJust)
 import List (insertBy, nub, maximumBy, partition, find, groupBy, delete)
+#if defined(HAPPY_GHC)
+import GHC.Prim
+import GHC.Exts
+#endif
 
 #if defined(HAPPY_DEBUG)
 import System.IO.Unsafe

@@ -25,5 +25,3 @@ This requires CPP / preprocessing; use Hugs.lhs for tests with Hugs
 >			    putStrLn $ "Error: " ++ show ts
 >			    toDV $ Map.toList f
 
-> forest_lookup f i
->  = fromJust $ Map.lookup f i
