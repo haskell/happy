@@ -39,13 +39,13 @@
            )
   where
 
-import Char
+import Data.Char
 import System
 import qualified Data.Map as Map
 
-import Monad (foldM)
-import Maybe (fromJust)
-import List (insertBy, nub, maximumBy, partition, find, groupBy, delete)
+import Control.Monad (foldM)
+import Data.Maybe (fromJust)
+import Data.List (insertBy, nub, maximumBy, partition, find, groupBy, delete)
 #if defined(HAPPY_GHC)
 import GHC.Prim
 import GHC.Exts

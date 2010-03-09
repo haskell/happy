@@ -25,16 +25,16 @@ Here is our mid-section datatype
 > import AttrGrammarParser
 > import ParamRules
 
-> import Array
-> import Char
-> import List
-> import Maybe (fromMaybe)
+> import Data.Array
+> import Data.Char
+> import Data.List
+> import Data.Maybe (fromMaybe)
 
 > import Control.Monad.Writer
 
 #ifdef DEBUG
 
-> import IOExts
+> import System.IOExts
 
 #endif
 

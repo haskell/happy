@@ -34,10 +34,10 @@ All the code below is understood to be in the public domain.
 >	strspace, maybestr
 >        ) where
 
-> import Char  (isAlphaNum)
-> import List
-> import Ix    ( Ix(..) )
-> import Array ( Array, listArray, array, (!) )
+> import Data.Char  (isAlphaNum)
+> import Data.List
+> import Data.Ix    ( Ix(..) )
+> import Data.Array ( Array, listArray, array, (!) )
 
 %------------------------------------------------------------------------------
 

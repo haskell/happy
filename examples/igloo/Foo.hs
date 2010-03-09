@@ -2,7 +2,7 @@
 module Main (main) where
 
 import Parser (parse)
-import IO (hPutStrLn, stderr)
+import System.IO (hPutStrLn, stderr)
 
 main :: IO ()
 main = do x <- getContents

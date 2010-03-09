@@ -13,8 +13,8 @@ Generating info files.
 > import qualified Data.Set as Set hiding ( Set )
 > import Grammar
 
-> import Array
-> import List (nub)
+> import Data.Array
+> import Data.List (nub)
 > import Data.Version	 	( showVersion )
 
 Produce a file of parser information, useful for debugging the parser.

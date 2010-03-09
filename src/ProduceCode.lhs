@@ -14,9 +14,9 @@ The code generator.
 >                                 interleave, interleave', maybestr, 
 >                                 brack, brack' )
 
-> import Maybe 			( isJust, isNothing )
-> import Char
-> import List
+> import Data.Maybe 			( isJust, isNothing )
+> import Data.Char
+> import Data.List
 
 > import Control.Monad.ST
 > import Data.Array.ST      ( STUArray )

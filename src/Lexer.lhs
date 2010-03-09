@@ -11,7 +11,7 @@ The lexer.
 
 > import ParseMonad        
 
-> import Char ( isSpace, isAlphaNum, isDigit, digitToInt )
+> import Data.Char ( isSpace, isAlphaNum, isDigit, digitToInt )
 
 > data Token 
 >       = TokenInfo String TokenId

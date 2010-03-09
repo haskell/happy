@@ -1,6 +1,6 @@
 > module Main where
 > import System(getArgs)
-> import Maybe(fromJust)
+> import Data.Maybe(fromJust)
 > import FiniteMap(fmToList,lookupFM)
 > import English
 
