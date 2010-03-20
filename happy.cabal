@@ -134,7 +134,6 @@ executable happy
   build-tools: perl
 
   extensions: CPP, MagicHash
-  ghc-options: -Wall
   other-modules:
         AbsSyn
         First
