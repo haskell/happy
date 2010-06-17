@@ -18,13 +18,13 @@
 
 <LI><A HREF="#download">Download</A></LI>
 
-<LI><A HREF="CHANGES">Version 1.17 Release Notes</A></LI>
+<LI><A HREF="CHANGES">Version 1.18 Release Notes</A></LI>
 
 <LI>Documentation:
  <UL>
 	<LI><A HREF="doc/html/index.html">Online Documentation</A></LI>
 
-	<LI><A HREF="doc/happy-1.17-html.tar.gz">Downloadable HTML documentation (.tar.gz)</A></LI>
+	<LI><A HREF="doc/happy-1.18.4-html.tar.gz">Downloadable HTML documentation (.tar.gz)</A></LI>
 
 	<LI>Printable Documentation in <A HREF="doc/happy.pdf">PDF</A> format.</LI>
   </UL>
@@ -37,6 +37,10 @@
 <H2><A NAME="News">News</A></H2>
 
 <UL>
+<LI>23 April 2009: Happy 1.18.4 released.</LI>
+<LI>5 Nov 2008: Happy 1.18.2 released.</LI>
+<LI>14 Oct 2008: Happy 1.18.1 released.</LI>
+<LI>13 Oct 2008: Happy 1.18 released.</LI>
 <LI>22 October 2007: Happy 1.17 released.</LI>
 <LI>8 January 2007: Happy 1.16 released.</LI>
 <LI>14 January 2005: Happy 1.15 released.</LI>
@@ -68,36 +72,31 @@ cases).</P>
 have a Haskell parser that uses Happy, which will shortly be part of the
 library collection distributed with GHC.</P>
 
-<P>The current public version of Happy is 1.17, which was released on
-22 October 2007.  However, more recent snapshots of the Happy source
-code can be obtained from the darcs repository:</P>
-
-<pre>&nbsp;&nbsp;&nbsp;darcs get http://darcs.haskell.org/happy/</pre>
-
-<p>Feel free to hack on Happy and <tt>darcs send</tt> me your patches.</p>
-
 <P>
 <HR WIDTH="100%"></P>
 
 <H2><A NAME="download">Downloading Happy</A></H2>
 
-<P>To compile Happy from source, you'll need <A HREF="http://www.haskell.org/ghc/">GHC
-</A>version 5.04 or later.</P>
+<p>Happy is part of
+  the <a href="http://www.haskell.org/haskellwiki/Haskell_Platform">Haskell
+    Platform</a>, so if you install the platform you will
+  automatically have a working Happy.</p>
+
+<p>Happy is also on Hackage.  If you have
+  the <a href="http://hackage.haskell.org/trac/hackage/wiki/CabalInstall">cabal-install</a>
+  tool (which also comes with the Haskell Platform), then you can
+  build and install the latest version of Happy with</p>
+<pre>
+  cabal install happy
+</pre>
+
+<p>To find out what the latest version of Happy is, and to download
+  the source separately, go to Happy's <a href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/happy">HackageDB
+  page</a>.
+
+<p>Happy might also be pre-packaged for your OS:</p>
 
 <UL>
-<LI><A HREF="dist/1.17/happy-1.17.tar.gz">Source distribution</A></P>
-</LI>
-</UL>
-
-<P>We also have binary distributions for various platforms:</P>
-
-<UL>
-<!--
-<LI><A HREF="dist/1.16/FC5/happy-1.16-1.x86_64.rpm">RPM for Linux/x86_64 (Fedora Core 5)</A></LI>
-<LI><A HREF="dist/1.16/RH9/happy-1.16-1.i386.rpm">RPM for Linux/x86 (Redhat 9)</A></LI>
--->
-<li>Windows: a <a href="dist/1.17/happy-1.17.zip">binary
-distribution</a> is available, just unzip and go.</li>
 <LI>Ubuntu users: packages should be available from the universe repository.
 <LI>Debian GNU/Linux users: packages are available <a href="http://packages.debian.org/happy">here</a>
 <LI>RPMs for other versions of Linux can be built directly from the source, using <tt>rpmbuild -ta</tt>.
@@ -108,15 +107,15 @@ hs-happy</tt>, or install it from the ports tree in
     install it from <tt>/usr/ports/devel/happy</tt>.
 </UL>
 
-<P>The following binaries are for older versions of Happy:</P>
+<H2><a name="devel">Development</a></h2>
 
-<UL>
-<LI><A
-HREF="dist/1.13/happy-1.13-nodoc-sparc-sun-solaris2.tar.gz">Sparc/Solaris2</A>
-(version 1.13)</LI>
-<LI><A HREF="dist/1.10/happy-1.10-hppa1.1-hp-hpux.tar.gz">HP-PA (HPUX) (version 1.10)</A></LI>
+    <p>Happy is licensed under a <a
+	      href="http://www.haskell.org/happy/doc/html/sec-license.html">BSD-style license</a>.  The current sources are in a <a href="http://darcs.net/">Darcs</a>
+	    repository, to get the latest version say:</p>
 
-</UL>
+    <pre>&nbsp;&nbsp;&nbsp;darcs get http://darcs.haskell.org/happy/</pre>
+
+<p>Feel free to hack on Happy and <tt>darcs send</tt> me your patches.</p>
 
 <H2>
 <HR WIDTH="100%"></H2>
@@ -142,7 +141,7 @@ Hargreaves <cite>Mr Happy</cite> book.</P>
 
 <!-- <ADDRESS><A HREF="http://www.cse.ogi.edu/~andy">Andy Gill,</A> <A HREF="mailto:andy@cse.ogi.edu">andy@cse.ogi.edu,
 <BR> -->
-</A><A HREF="http://www.haskell.org/~simonmar">Simon Marlow,</A> <A HREF="mailto:simonmar@microsoft.com">simonmar@microsoft.com
+</A><A HREF="http://www.haskell.org/~simonmar">Simon Marlow,</A> <A HREF="mailto:marlowsd@gmail.com">marlowsd@gmail.com
 </A></ADDRESS>
 
 </BODY>
