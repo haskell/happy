@@ -61,8 +61,8 @@ data Happy_IntList = HappyCons FAST_INT Happy_IntList
 
 #if defined(HAPPY_DEBUG)
 #define DEBUG_TRACE(s)    (happyTrace (s)) $
-happyTrace string expr = unsafePerformIO $ do
-    hPutStr stderr string
+happyTrace string expr = Happy_System_IO_Unsafe.unsafePerformIO $ do
+    Happy_System_IO.hPutStr Happy_System_IO.stderr string
     return expr
 #else
 #define DEBUG_TRACE(s)    {- nothing -}
