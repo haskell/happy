@@ -273,6 +273,7 @@ happyFail  i tk HAPPYSTATE(action) sts stk =
 
 -- Internal happy errors:
 
+notHappyAtAll :: a
 notHappyAtAll = error "Internal Happy error\n"
 
 -----------------------------------------------------------------------------
