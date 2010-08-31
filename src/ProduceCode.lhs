@@ -80,7 +80,10 @@ Produce the complete output file.
 >    n_starts = length starts'
 >    token = brack token_type'
 >
->    nowarn_opts = str "{-# OPTIONS_GHC -fno-warn-overlapping-patterns #-}" . nl
+>    nowarn_opts = str "{-# OPTIONS_GHC -w #-}" . nl
+>       -- XXX Happy-generated code is full of warnings.  Some are easy to
+>       -- fix, others not so easy, and others would require GHC version
+>       -- #ifdefs.  For now I'm just disabling all of them.
 >
 >    top_opts = nowarn_opts .
 >      case top_options of
