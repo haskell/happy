@@ -2,7 +2,7 @@
 
 #ifdef HAPPY_GHC
 #define ILIT(n) n#
-#define FAST_INT_BINDING(n) !(n)
+#define FAST_INT_BINDING(n) (n)
 #define IBOX(n) (Happy_GHC_Exts.I# (n))
 #define FAST_INT Happy_GHC_Exts.Int#
 #define LT(n,m) (n Happy_GHC_Exts.<# m)
@@ -132,10 +132,10 @@ happyDoAction i tk st
 indexShortOffAddr (HappyA# arr) off =
 	Happy_GHC_Exts.narrow16Int# i
   where
-	!i = Happy_GHC_Exts.word2Int# (Happy_GHC_Exts.or# (Happy_GHC_Exts.uncheckedShiftL# high 8#) low)
-	!high = Happy_GHC_Exts.int2Word# (Happy_GHC_Exts.ord# (Happy_GHC_Exts.indexCharOffAddr# arr (off' Happy_GHC_Exts.+# 1#)))
-	!low  = Happy_GHC_Exts.int2Word# (Happy_GHC_Exts.ord# (Happy_GHC_Exts.indexCharOffAddr# arr off'))
-	!off' = off Happy_GHC_Exts.*# 2#
+        i = Happy_GHC_Exts.word2Int# (Happy_GHC_Exts.or# (Happy_GHC_Exts.uncheckedShiftL# high 8#) low)
+        high = Happy_GHC_Exts.int2Word# (Happy_GHC_Exts.ord# (Happy_GHC_Exts.indexCharOffAddr# arr (off' Happy_GHC_Exts.+# 1#)))
+        low  = Happy_GHC_Exts.int2Word# (Happy_GHC_Exts.ord# (Happy_GHC_Exts.indexCharOffAddr# arr off'))
+        off' = off Happy_GHC_Exts.*# 2#
 #else
 indexShortOffAddr arr off = arr Happy_Data_Array.! off
 #endif
