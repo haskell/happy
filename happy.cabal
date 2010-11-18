@@ -121,7 +121,6 @@ flag small_base
   description: Choose the new smaller, split-up base package.
 
 executable happy
-  executable: happy
   hs-source-dirs: src
   main-is: Main.lhs
 
