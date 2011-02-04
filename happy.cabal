@@ -133,6 +133,8 @@ executable happy
   build-tools: perl
 
   extensions: CPP, MagicHash
+  if impl(ghc >= 7.1)
+    extensions: NondecreasingIndentation
   other-modules:
         AbsSyn
         First
