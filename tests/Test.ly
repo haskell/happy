@@ -4,7 +4,7 @@ First thing to declare is the name of your parser,
 and the type of the tokens the parser reads.
 
 > {
-> import Char
+> import Data.Char
 > }
 
 > %name calc
