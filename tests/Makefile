@@ -5,7 +5,7 @@ TESTS = Test.ly TestMulti.ly TestPrecedence.ly bug001.ly \
 	monad001.y monad002.ly precedence001.ly precedence002.y \
 	bogus-token.y bug002.y Partial.ly \
 	AttrGrammar001.y AttrGrammar002.y \
-	test_rules.y
+	test_rules.y monaderror.y
 
 ERROR_TESTS = error001.y
 
@@ -53,9 +53,6 @@ endif
 %.agc.hs : %.y
 	$(HAPPY) $(TEST_HAPPY_OPTS) -agc $< -o $@
 
-%.o : %.hs
-	$(HC) $(HC_OPTS) -c -o $@ $<
-
 CLEAN_FILES += *.n.hs *.a.hs *.g.hs *.gc.hs *.ag.hs *.agc.hs *.info *.hi *.bin *.exe
 
 ALL_TEST_HS = $(shell echo $(TESTS) | sed -e 's/\([^\. ]*\)\.\(l\)\{0,1\}y/\1.n.hs \1.a.hs \1.g.hs \1.gc.hs \1.ag.hs \1.agc.hs/g')
@@ -78,7 +75,7 @@ check.%.y : %.y
 	@diff -u $*.stdout $*.run.stdout
 	@diff -u $*.stderr $*.run.stderr
 
-%$(HS_PROG_EXT) : %.o
+%$(HS_PROG_EXT) : %.hs
 	$(HC) $(HC_OPTS) $($*_LD_OPTS) $< -o $@
 
 all :: $(CHECK_ERROR_TESTS) $(ALL_TESTS)
