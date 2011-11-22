@@ -250,9 +250,10 @@ happyGoto action j tk st = action j j tk (HappyState action)
 -- Error recovery (ERROR_TOK is the error token)
 
 -- parse error if we are in recovery and we fail again
-happyFail  ERROR_TOK tk old_st _ stk =
+happyFail ERROR_TOK tk old_st _ stk@(x `HappyStk` _) =
+     let FAST_INT_BINDING(i) = GET_ERROR_TOKEN(x) in
 --	trace "failing" $ 
-    	happyError_ tk
+        happyError_ i tk
 
 {-  We don't need state discarding for our restricted implementation of
     "error".  In fact, it can cause some bogus parses, so I've disabled it

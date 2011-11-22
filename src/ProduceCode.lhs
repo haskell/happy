@@ -393,7 +393,10 @@ The token conversion function.
 >	. interleave ";\n\t" (map doToken token_rep)
 >	. str "_ -> happyError' (tk:tks)\n\t"
 >	. str "}\n\n"
->       . str "happyError_ tk tks = happyError' (tk:tks)\n";
+>       . str "happyError_ " . eofTok . str " tk tks = happyError' tks\n"
+>       . str "happyError_ _ tk tks = happyError' (tk:tks)\n";
+>             -- when the token is EOF, tk == _|_ (notHappyAtAll)
+>             -- so we must not pass it to happyError'
 
 >	Just (lexer'',eof') ->
 >	  str "happyNewToken action sts stk\n\t= "
@@ -408,8 +411,11 @@ The token conversion function.
 >	. interleave ";\n\t" (map doToken token_rep)
 >	. str "_ -> happyError' tk\n\t"
 >	. str "})\n\n"
->       . str "happyError_ tk = happyError' tk\n";
->	}
+>       . str "happyError_ " . eofTok . str " tk = happyError' tk\n"
+>       . str "happyError_ _ tk = happyError' tk\n";
+>             -- superfluous pattern match needed to force happyError_ to
+>             -- have the correct type.
+>       }
 
 >	where 
 
