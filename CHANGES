@@ -1,3 +1,14 @@
+-----------------------------------------------------------------------------
+1.18.8
+        * Fix a packaging bug (cabal-install-0.10.2 didn't put the
+          Happy-generated files in the sdist)
+
+-----------------------------------------------------------------------------
+1.18.7
+
+        * Fix a bug in error handling when using %monad without %lexer
+
+-----------------------------------------------------------------------------
 Changes from version 1.17 to 1.18
 
         * New feature: EBNF-style paramterized macros, thanks to
