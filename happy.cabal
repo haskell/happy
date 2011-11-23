@@ -130,7 +130,6 @@ executable happy
     build-depends: base >= 1.0 && < 2.1
 
   build-depends: base < 5, mtl >= 1.0
-  build-tools: perl
 
   extensions: CPP, MagicHash
   other-modules:
