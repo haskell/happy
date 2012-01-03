@@ -174,7 +174,7 @@ followed by a special identifier.
 This has to match for @}@ that are {\em not} in strings.  The code
 here is a bit tricky, but should work in most cases.
 
-> lexReadCode :: Num a
+> lexReadCode :: (Eq a, Num a)
 >             => String -> a -> String -> (Token -> P b) -> Int
 >             -> ParseResult b
 > lexReadCode s n c = case s of
