@@ -2,7 +2,7 @@ This module demonstrates a Happy bug (in version <= 1.10).
 
 > {
 > module Main where
-> import IO
+> import System.IO
 > import Control.Exception as Exception
 > }
 > 

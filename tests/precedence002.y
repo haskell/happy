@@ -2,7 +2,7 @@
 
 {
 module Main where
-import IO
+import System.IO
 import Control.Exception as Exception
 }
 

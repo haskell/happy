@@ -5,7 +5,7 @@ Test for monadic Happy Parsers, Simon Marlow 1996.
 > {-# OPTIONS_GHC -fglasgow-exts #-}
 > -- -fglasgow-exts required because P is a type synonym, and Happy uses it
 > -- unsaturated.
-> import Char
+> import Data.Char
 > }
 
 > %name calc

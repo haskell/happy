@@ -3,8 +3,8 @@
 {
 module Main where
 
-import IO
-import Char
+import System.IO
+import Data.Char
 }
 
 %name calc
