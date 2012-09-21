@@ -10,7 +10,7 @@ import Distribution.Simple.LocalBuildInfo ( LocalBuildInfo(..) )
 import Distribution.Simple.Program
 
 import System.FilePath ((</>))
-import System.IO.Error ( try )
+import Control.Exception ( try )
 import System.Directory (removeFile)
 
 main :: IO ()
@@ -50,7 +50,9 @@ myPostBuild _ flags _ lbi = do
              [ cpp_template "GLR_Base.hs"       dst opts | (dst,opts) <- glr_base_templates ] ++
              [ cpp_template "GLR_Lib.hs"        dst opts | (dst,opts) <- glr_templates ])
 
-myPostClean _ _ _ _ = mapM_ (try . removeFile) all_template_files
+myPostClean _ _ _ _ = mapM_ (try' . removeFile) all_template_files
+  where try' :: IO a -> IO (Either IOError a)
+        try' = try
 
 myInstall pkg_descr lbi hooks flags =
   instHook defaultUserHooks pkg_descr' lbi hooks flags
