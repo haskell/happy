@@ -10,14 +10,14 @@ stability: stable
 homepage: http://www.haskell.org/happy/
 synopsis: Happy is a parser generator for Haskell
 category: Development
-cabal-version: >= 1.2.3
-
--- Later, this isn't compatible with Cabal 1.2:
--- source-repository head
---   type:     darcs
---   location: http://darcs.haskell.org/happy/
-
+cabal-version: >= 1.6
 build-type: Custom
+
+Description:
+  Happy is a parser generator for Haskell.  Given a grammar
+  specification in BNF, Happy generates Haskell code to parse the
+  grammar.  Happy works in a similar way to the @yacc@ tool for C.
+
 extra-source-files:
 	ANNOUNCE
 	CHANGES
@@ -116,6 +116,10 @@ extra-source-files:
 	tests/Test.ly
 	tests/precedence002.y
 	tests/test_rules.y
+
+source-repository head
+  type:     git
+  location: http://github.com/simonmar/happy.git
 
 flag small_base
   description: Choose the new smaller, split-up base package.
