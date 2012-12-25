@@ -1,5 +1,5 @@
 HAPPY=../dist/build/happy/happy
-HC=ghc
+HC=ghc -hide-all-packages -package base -package array -package mtl
 
 TESTS = Test.ly TestMulti.ly TestPrecedence.ly bug001.ly \
 	monad001.y monad002.ly precedence001.ly precedence002.y \
