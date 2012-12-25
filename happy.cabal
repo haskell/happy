@@ -100,10 +100,13 @@ extra-source-files:
 	templates/GLR_Base.hs
 	templates/GenericTemplate.hs
 	templates/GLR_Lib.hs
+	tests/AttrGrammar001.y
+	tests/AttrGrammar002.y
 	tests/error001.y
 	tests/error001.stdout
 	tests/error001.stderr
 	tests/monad001.y
+	tests/monaderror.y
 	tests/Makefile
 	tests/TestMulti.ly
 	tests/Partial.ly
