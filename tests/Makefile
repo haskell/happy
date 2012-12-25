@@ -63,7 +63,7 @@ CHECK_ERROR_TESTS = $(patsubst %, check.%, $(ERROR_TESTS))
 
 HC_OPTS += -fglasgow-exts -fforce-recomp
 
-.PRECIOUS: *.hs *.o *.bin *.exe
+.PRECIOUS: %.hs %.o %.bin %.$(HS_PROG_EXT)
 
 %.run : %$(HS_PROG_EXT)
 	@echo "--> Checking $<..."
@@ -93,3 +93,8 @@ check-todo::
 	$(HC) Test.hs -o happy_test
 	./happy_test
 	-rm -f ./happy_test
+
+.PHONY: clean
+
+clean:
+	$(RM) $(CLEAN_FILES)
