@@ -3947,7 +3947,7 @@ exp     : atom op exp
 <programlisting>HAPPY = happy
 HAPPY_OPTS = 
 
-all: MyParser.y
+all: MyParser.hs
 
 %.hs: %.y
 	$(HAPPY) $(HAPPY_OPTS) $&lt; -o $@</programlisting>
@@ -3958,8 +3958,8 @@ all: MyParser.y
           <literal>:reload</literal> command, like so (type this all
           on one line):</para>
 
-<screen>:def rh (\_ -> System.system "make -f Makefile_happysrcs"
-   >>= \rr -> case rr of { System.ExitSuccess -> return ":reload" ; 
+<screen>:def myreload (\_ -> System.system "make -f Makefile_happysrcs"
+   >>= \rr -> case rr of { System.ExitSuccess -> return ":reload" ;
                            _ -> return "" })</screen>
 	</listitem>
 
