@@ -27,7 +27,7 @@
 
   <!-- Table of contents -->
   <toc></toc>
-  
+
 <!-- Introduction ========================================================= -->
 
   <chapter id="happy-introduction">
@@ -40,7 +40,7 @@
     <application>yacc</application>, it takes a file containing an
     annotated BNF specification of a grammar and produces a Haskell
     module containing a parser for the grammar. </para>
-    
+
     <indexterm><primary>yacc</primary></indexterm>
 
     <para> <application>Happy</application> is flexible: you can have several
@@ -76,14 +76,14 @@
     see which is the best, and compiler writers can use the different
     types of parser to tune their compilers.  The types of parser
     supported are: </para>
-    
+
     <orderedlist>
-      
+
       <listitem id="item-default-backend">
 	<para>`standard' Haskell 98 (should work with any compiler
 	that compiles Haskell 98).</para>
       </listitem>
-      
+
       <listitem>
 	<indexterm scope="all"><primary>arrays</primary></indexterm>
 	<indexterm scope="all"><primary>back-ends</primary><secondary>arrays</secondary></indexterm>
@@ -164,7 +164,7 @@
       distributing <application>Happy</application> with a less
       restrictive BSD-style license.  If this license doesn't work for
       you, please get in touch.</para>
-      
+
       <blockquote>
 	<para> Copyright 2009, Simon Marlow and Andy Gill.  All rights
 	reserved. </para>
@@ -179,7 +179,7 @@
             copyright notice, this list of conditions and the
             following disclaimer.</para>
 	  </listitem>
- 
+
 	  <listitem>
 	    <para> Redistributions in binary form must reproduce the
             above copyright notice, this list of conditions and the
@@ -211,7 +211,7 @@
       url="http://www.haskell.org/happy/">http://www.haskell.org/happy/</ulink>.
       <application>Happy</application> source and binaries can be downloaded from
       there.</para>
-      
+
     </sect1>
 
   </chapter>
@@ -306,7 +306,7 @@ module Main where
     <para>Now we declare all the possible tokens:</para>
 
 <programlisting>
-%token 
+%token
       let             { TokenLet }
       in              { TokenIn }
       int             { TokenInt $$ }
@@ -362,7 +362,7 @@ Term  : Term '*' Factor         { Times $1 $3 }
       | Term '/' Factor         { Div $1 $3 }
       | Factor                  { Factor $1 }
 
-Factor			  
+Factor
       : int                     { Int $1 }
       | var                     { Var $1 }
       | '(' Exp ')'             { Brack $2 }
@@ -427,26 +427,26 @@ parseError _ = error "Parse error"
     expression:</para>
 
 <programlisting>
-data Exp  
+data Exp
       = Let String Exp Exp
       | Exp1 Exp1
       deriving Show
 
-data Exp1 
-      = Plus Exp1 Term 
-      | Minus Exp1 Term 
+data Exp1
+      = Plus Exp1 Term
+      | Minus Exp1 Term
       | Term Term
       deriving Show
 
-data Term 
-      = Times Term Factor 
-      | Div Term Factor 
+data Term
+      = Times Term Factor
+      | Div Term Factor
       | Factor Factor
       deriving Show
 
-data Factor 
-      = Int Int 
-      | Var String 
+data Factor
+      = Int Int
+      | Var String
       | Brack Exp
       deriving Show
 </programlisting>
@@ -475,7 +475,7 @@ data Token
 <programlisting>
 lexer :: String -> [Token]
 lexer [] = []
-lexer (c:cs) 
+lexer (c:cs)
       | isSpace c = lexer cs
       | isAlpha c = lexVar (c:cs)
       | isDigit c = lexNum (c:cs)
@@ -563,7 +563,7 @@ Term  : Term '*' Factor         { \p -> $1 p * $3 p }
       | Term '/' Factor         { \p -> $1 p `div` $3 p }
       | Factor                  { $1 }
 
-Factor			  
+Factor
       : int                     { \p -> $1 }
       | var                     { \p -> case lookup $1 p of
 	                                    Nothing -> error "no var"
@@ -580,7 +580,7 @@ Factor
 
     </sect1>
 
-    <sect1 id="sec-sequences"> 
+    <sect1 id="sec-sequences">
       <title>Parsing sequences</title>
 
       <para>A common feature in grammars is a <emphasis>sequence</emphasis> of a
@@ -691,7 +691,7 @@ stmts : stmts ';' stmt          { $3 : $1 }
 
     </sect2>
     </sect1>
-    
+
 <!--
     <sect1 id="sec-ambiguities">
       <title>Ambiguities</title>
@@ -700,7 +700,7 @@ stmts : stmts ';' stmt          { $3 : $1 }
 
     </sect1>
 -->
-    
+
     <sect1 id="sec-Precedences">
       <title>Using Precedences</title>
       <indexterm><primary>precedences</primary></indexterm>
@@ -749,7 +749,7 @@ Exp   : let var '=' Exp in Exp  { Let $2 $4 $6 }
 <indexterm><primary><literal>%left</literal> directive</primary></indexterm>
 <indexterm><primary><literal>%right</literal> directive</primary></indexterm>
 <indexterm><primary><literal>%nonassoc</literal> directive</primary></indexterm>
-      
+
       <para>The <literal>%left</literal> or <literal>%right</literal>
       directive is followed by a list of terminals, and declares all
       these tokens to be left or right-associative respectively.  The
@@ -836,7 +836,7 @@ Exp   : let var '=' Exp in Exp  { Let $2 $4 $6 }
 
       <sect2 id="context-precedence">
 	<title>Context-dependent Precedence</title>
-	
+
 	<para>The precedence of an individual rule can be overriden,
 	using <firstterm>context precedence</firstterm>.  This is
 	useful when, for example, a particular token has a different
@@ -942,7 +942,7 @@ stmts   :: { [ Stmt ] }
 	<option>-fglasgow-exts</option> option) and Hugs are known to support
 	this.</para>
     </sect1>
-    
+
     <sect1 id="sec-monads">
       <title>Monadic Parsers</title>
 
@@ -966,7 +966,7 @@ stmts   :: { [ Stmt ] }
 	    <primary>error</primary>
 	    <secondary>parse</secondary>
 	    <see>parse errors</see>
-	  </indexterm> 
+	  </indexterm>
 -->
 	  <para> Handling parse errors by using an exception monad
           (see <xref linkend="sec-exception"/>).</para>
@@ -1088,7 +1088,7 @@ return &lt;expr3&gt;
 	  <primary>parse errors</primary>
 	  <secondary>handling</secondary>
 	</indexterm>
-	    
+
       <para>It's not very convenient to just call <literal>error</literal> when
       a parse error is detected: in a robust setting, you'd like the
       program to recover gracefully and report a useful error message
@@ -1100,8 +1100,8 @@ return &lt;expr3&gt;
 data E a = Ok a | Failed String
 
 thenE :: E a -> (a -> E b) -> E b
-m `thenE` k = 
-   case m of 
+m `thenE` k =
+   case m of
        Ok a -> k a
 	 Failed e -> Failed e
 
@@ -1112,7 +1112,7 @@ failE :: String -> E a
 failE err = Failed err
 
 catchE :: E a -> (String -> E a) -> E a
-catchE m k = 
+catchE m k =
    case m of
       Ok a -> OK a
 	Failed e -> k e
@@ -1148,7 +1148,7 @@ parseError tokens = failE "Parse error"
         values in infix declarations must be between 0 and 9:</para>
 
 <programlisting>prec :: { Int }
-      : int    {% if $1 &lt; 0 || $1 > 9 
+      : int    {% if $1 &lt; 0 || $1 > 9
 	                then failE "Precedence out of range"
 		        else returnE $1
 		}</programlisting>
@@ -1157,7 +1157,7 @@ parseError tokens = failE "Parse error"
 	parser itself, where it belongs.</para>
 
     </sect2>
-    
+
     <sect2 id="sec-lexers">
       <title>Threaded Lexers</title>
 	<indexterm>
@@ -1205,7 +1205,7 @@ parseError tokens = failE "Parse error"
 <programlisting>
 %lexer { &lt;lexer&gt; } { &lt;eof&gt; }
 </programlisting>
-	
+
 	<indexterm>
 	  <primary><literal>%lexer</literal></primary>
 	</indexterm>
@@ -1259,7 +1259,7 @@ type P a = String -> ParseResult a
 
 thenP :: P a -> (a -> P b) -> P b
 m `thenP` k = \s ->
-   case m s of 
+   case m s of
        Ok a -> k a s
 	 Failed e -> Failed e
 
@@ -1282,7 +1282,7 @@ catchP m k = \s ->
 
 <programlisting>
 lexer :: (Token -> P a) -> P a
-lexer cont s = 
+lexer cont s =
     ... lexical analysis code ...
     cont token s'
 </programlisting>
@@ -1400,7 +1400,7 @@ lexer cont s =
 
 <programlisting>
 parseError :: Token -> P a
-parseError = getLineNo `thenP` \line -> 
+parseError = getLineNo `thenP` \line ->
              failP (show line ++ ": parse error")
 </programlisting>
 
@@ -1497,7 +1497,7 @@ lexer      :: (Token -> P a) -> P a
 	    </formalpara>
 	  </listitem>
 	</itemizedlist>
-      
+
       </sect2>
     </sect1>
 
@@ -1603,42 +1603,42 @@ close : '}'                  { () }
     <title>Generalized LR Parsing</title>
 
     <para>This chapter explains how to use the GLR parsing extension,
-    which allows <application>Happy</application> to parse ambiguous 
+    which allows <application>Happy</application> to parse ambiguous
     grammars and produce useful results.
-    This extension is triggered with the <option>--glr</option> flag, 
+    This extension is triggered with the <option>--glr</option> flag,
     which causes <application>Happy</application>
     to use a different driver for the LALR(1) parsing
     tables. The result of parsing is a structure which encodes compactly
-    <emphasis>all</emphasis> of the possible parses. 
+    <emphasis>all</emphasis> of the possible parses.
     There are two options for how semantic information is combined with
-    the structural information. 
+    the structural information.
     </para>
 
     <para>
     This extension was developed by Paul Callaghan and Ben Medlock
     (University of Durham). It is based on the structural parser
     implemented in Medlock's undergraduate project, but significantly
-    extended and improved by Callaghan. 
-    Bug reports, comments, questions etc should be sent to 
-    <email>P.C.Callaghan@durham.ac.uk</email>. 
+    extended and improved by Callaghan.
+    Bug reports, comments, questions etc should be sent to
+    <email>P.C.Callaghan@durham.ac.uk</email>.
     Further information can be found on Callaghan's
     <ulink url="http://www.dur.ac.uk/p.c.callaghan/happy-glr">GLR parser
     page</ulink>.
 
-	
+
     </para>
 
     <sect1 id="sec-glr-intro">
       <title>Introduction</title>
 
       <para>
-      Here's an ambiguous grammar. It has no information about the 
+      Here's an ambiguous grammar. It has no information about the
       associativity of <literal>+</literal>, so for example,
-      <literal>1+2+3</literal> can be parsed as 
-      <literal>(1+(2+3))</literal> or <literal>((1+2)+3)</literal>. 
+      <literal>1+2+3</literal> can be parsed as
+      <literal>(1+(2+3))</literal> or <literal>((1+2)+3)</literal>.
       In conventional mode, <application>Happy</application>,
-      would complain about a shift/reduce 
-      conflict, although it would generate a parser which always shifts 
+      would complain about a shift/reduce
+      conflict, although it would generate a parser which always shifts
       in such a conflict, and hence would produce <emphasis>only</emphasis>
       the first alternative above.
       </para>
@@ -1653,9 +1653,9 @@ close : '}'                  { () }
       a result which encodes <emphasis>both</emphasis> alternatives
       simultaneously. Now consider the more interesting example of
       <literal>1+2+3+4</literal>, which has five distinct parses -- try to
-      list them! You will see that some of the subtrees are identical. 
-      A further property of the GLR output is that such sub-results are 
-      shared, hence efficiently represented: there is no combinatorial 
+      list them! You will see that some of the subtrees are identical.
+      A further property of the GLR output is that such sub-results are
+      shared, hence efficiently represented: there is no combinatorial
       explosion.
       Below is the simplified output of the GLR parser for this example.
       </para>
@@ -1679,16 +1679,16 @@ close : '}'                  { () }
       </programlisting>
 
       <para>
-      This is a directed, acyclic and-or graph. 
+      This is a directed, acyclic and-or graph.
       The node "names" are of form <literal>(a,b,c)</literal>
       where <literal>a</literal> and <literal>b</literal>
       are the start and end points (as positions in the input string)
-      and <literal>c</literal> is a category (or name of grammar rule). 
+      and <literal>c</literal> is a category (or name of grammar rule).
       For example <literal>(2,7,G_E)</literal> spans positions 2 to 7
       and contains analyses which match the <literal>E</literal>
       grammar rule.
-      Such analyses are given as a list of alternatives (disjunctions), 
-      each corresponding to some use of a production of that 
+      Such analyses are given as a list of alternatives (disjunctions),
+      each corresponding to some use of a production of that
       category, which in turn are a conjunction of sub-analyses,
       each represented as a node in the graph or an instance of a token.
       </para>
@@ -1697,39 +1697,39 @@ close : '}'                  { () }
       Hence <literal>(2,7,G_E)</literal> contains two alternatives,
       one which has <literal>(2,3,G_E)</literal> as its first child
       and the other with <literal>(2,5,G_E)</literal> as its first child,
-      respectively corresponding to sub-analyses 
+      respectively corresponding to sub-analyses
       <literal>(2+(3+4))</literal> and <literal>((2+3)+4)</literal>.
       Both alternatives have the token <literal>+</literal> as their
       second child, but note that they are difference occurrences of
-      <literal>+</literal> in the input! 
-      We strongly recommend looking at such results in graphical form 
-      to understand these points. If you build the 
+      <literal>+</literal> in the input!
+      We strongly recommend looking at such results in graphical form
+      to understand these points. If you build the
       <literal>expr-eval</literal> example in the directory
       <literal>examples/glr</literal> (NB you need to use GHC for this,
       unless you know how to use the <option>-F</option> flag for Hugs),
       running the example will produce a file which can be viewed with
       the <emphasis>daVinci</emphasis> graph visualization tool.
       (See <ulink url="http://www.informatik.uni-bremen.de/~davinci/"/>
-       for more information. Educational use licenses are currently 
-	available without charge.)  
+       for more information. Educational use licenses are currently
+	available without charge.)
       </para>
 
       <para>
-      The GLR extension also allows semantic information to be attached 
-      to productions, as in conventional <application>Happy</application>, 
+      The GLR extension also allows semantic information to be attached
+      to productions, as in conventional <application>Happy</application>,
       although there are further issues to consider.
       Two modes are provided, one for simple applications and one for more
       complex use.
       See <xref linkend="sec-glr-semantics"/>.
       The extension is also integrated with <application>Happy</application>'s
-      token handling, e.g. extraction of information from tokens. 
+      token handling, e.g. extraction of information from tokens.
       </para>
 
       <para>
-      One key feature of this implementation in Haskell is that its main 
+      One key feature of this implementation in Haskell is that its main
       result is a <emphasis>graph</emphasis>.
       Other implementations effectively produce a list of trees, but this
-      limits practical use to small examples. 
+      limits practical use to small examples.
       For large and interesting applications, some of which are discussed
       in <xref linkend="sec-glr-misc-applications"/>, a graph is essential due
       to the large number of possibilities and the need to analyse the
@@ -1738,23 +1738,23 @@ close : '}'                  { () }
       </para>
 
       <para>
-      One final comment. You may have learnt through using 
-      <application>yacc</application>-style tools that ambiguous grammars 
-      are to be avoided, and that ambiguity is something that appears 
-      only in Natural Language processing. 
-      This is definitely not true. 
-      Many interesting grammars are ambiguous, and with GLR tools they 
-      can be used effectively. 
+      One final comment. You may have learnt through using
+      <application>yacc</application>-style tools that ambiguous grammars
+      are to be avoided, and that ambiguity is something that appears
+      only in Natural Language processing.
+      This is definitely not true.
+      Many interesting grammars are ambiguous, and with GLR tools they
+      can be used effectively.
       We hope you enjoy exploring this fascinating area!
       </para>
 
     </sect1>
-     
+
     <sect1 id="sec-glr-using">
       <title>Basic use of a Happy-generated GLR parser</title>
 
       <para>
-      This section explains how to generate and to use a GLR parser to 
+      This section explains how to generate and to use a GLR parser to
       produce structural results.
       Please check the examples for further information.
       Discussion of semantic issues comes later; see
@@ -1766,21 +1766,21 @@ close : '}'                  { () }
         <para>
 	The process of generating a GLR parser is broadly the same as
 	for standard <application>Happy</application>. You write a grammar
-	specification, run <application>Happy</application> on this to 
+	specification, run <application>Happy</application> on this to
 	generate some Haskell code, then compile and link this into your
-	program. 
+	program.
         </para>
         <para>
-	An alternative to using Happy directly is to use the 
+	An alternative to using Happy directly is to use the
 	<ulink url="http://www.cs.chalmers.se/~markus/BNFC/">
 	<application>BNF Converter</application></ulink> tool by
 	Markus Forsberg, Peter Gammie, Michael Pellauer and Aarne Ranta.
 	This tool creates an abstract syntax, grammar, pretty-printer
 	and other useful items from a single grammar formalism, thus
-	it saves a lot of work and improves maintainability. 
+	it saves a lot of work and improves maintainability.
 	The current output of BNFC can be used with GLR mode now
 	with just a few small changes, but from January 2005 we expect
-	to have a fully-compatible version of BNFC. 
+	to have a fully-compatible version of BNFC.
         </para>
         <para>
 	Most of the features of <application>Happy</application> still
@@ -1791,20 +1791,20 @@ close : '}'                  { () }
 	     <term>module header</term>
 	     <listitem>
 	       <para>
-	       The GLR parser is generated in TWO files, one for data and 
-	       one for the driver. This is because the driver code needs 
+	       The GLR parser is generated in TWO files, one for data and
+	       one for the driver. This is because the driver code needs
 	       to be optimized, but for large parsers with lots of data,
-	       optimizing the data tables too causes compilation to be 
-	       too slow. 
+	       optimizing the data tables too causes compilation to be
+	       too slow.
 	       </para>
 	       <para>
 	       Given a file <literal>Foo.y</literal>, file
-	       <literal>FooData.hs</literal> is generated with basic type 
-	       information, the parser tables, and the header and tail code 
-	       that was included in the parser specification. 
-	       Note that <application>Happy</application> generates the 
-	       module declaration line, so you should NOT give it in the 
-	       grammar file. 
+	       <literal>FooData.hs</literal> is generated with basic type
+	       information, the parser tables, and the header and tail code
+	       that was included in the parser specification.
+	       Note that <application>Happy</application> generates the
+	       module declaration line, so you should NOT give it in the
+	       grammar file.
 	       The driver is placed in file <literal>Foo.hs</literal>, and
 	       does not contain any user-supplied text.
 	       </para>
@@ -1815,11 +1815,11 @@ close : '}'                  { () }
 	     <term>export of lexer</term>
 	     <listitem>
 	       <para>
-	       You can declare a lexer (and error token) with the 
-	       <literal>%lexer</literal> directive as normal, but the 
+	       You can declare a lexer (and error token) with the
+	       <literal>%lexer</literal> directive as normal, but the
 	       generated parser does NOT call this lexer automatically.
-	       The action of the directive is only to 
-	       <emphasis>export</emphasis> the lexer function to the top 
+	       The action of the directive is only to
+	       <emphasis>export</emphasis> the lexer function to the top
 	       level. This is because some applications need finer control
 	       of the lexing process.
 	       </para>
@@ -1831,19 +1831,19 @@ close : '}'                  { () }
 	     <listitem>
 	       <para>
 	       This still works, but note the reasons.
-	       The precedence and associativity declarations are used in 
-	       <application>Happy</application>'s LR table creation to 
-	       resolve certain conflicts. It does this by retaining the 
-	       actions implied by the declarations and removing the ones 
-	       which clash with these. 
-	       The GLR parser back-end then produces code from these 
+	       The precedence and associativity declarations are used in
+	       <application>Happy</application>'s LR table creation to
+	       resolve certain conflicts. It does this by retaining the
+	       actions implied by the declarations and removing the ones
+	       which clash with these.
+	       The GLR parser back-end then produces code from these
 	       filtered tables, hence the rejected actions are never
-	       considered by the GLR parser. 
+	       considered by the GLR parser.
 	       </para>
 	       <para>
-	       Hence, declaring precedence and associativity is still 
+	       Hence, declaring precedence and associativity is still
 	       a good thing, since it avoids a certain amount of ambiguity
-	       that the user knows how to remove. 
+	       that the user knows how to remove.
 	       </para>
 	     </listitem>
 	   </varlistentry>
@@ -1852,17 +1852,17 @@ close : '}'                  { () }
 	     <listitem>
 	       <para>
 	       There is some support for monadic parsers.
-	       The "tree decoding" mode 
+	       The "tree decoding" mode
 	       (see <xref linkend="sec-glr-semantics-tree"/>) can use the
-	       information given in the <literal>%monad</literal> 
-	       declaration to monadify the decoding process. 
+	       information given in the <literal>%monad</literal>
+	       declaration to monadify the decoding process.
 	       This is explained in more detail in
 	       <xref linkend="sec-glr-semantics-tree-monad"/>.
 	       </para>
 	       <para>
 	       <emphasis>Note</emphasis>: the generated parsers don't include
 	       Ashley Yakeley's monad context information yet. It is currently
-	       just ignored. 
+	       just ignored.
 	       If this is a problem, email and I'll make the changes required.
 	       </para>
 	     </listitem>
@@ -1871,8 +1871,8 @@ close : '}'                  { () }
 	     <term>parser name directive</term>
 	     <listitem>
 	       <para>
-	       This has no effect at present. It will probably remain this 
-	       way: if you want to control names, you could use qualified 
+	       This has no effect at present. It will probably remain this
+	       way: if you want to control names, you could use qualified
 	       import.
 	       </para>
 	     </listitem>
@@ -1883,10 +1883,10 @@ close : '}'                  { () }
 	       <para>
 	       The generation of semantic code relies on type information
 	       given in the grammar specification. If you don't give an
-	       explicit signature, the type <literal>()</literal> is 
-	       assumed. If you get type clashes mentioning 
+	       explicit signature, the type <literal>()</literal> is
+	       assumed. If you get type clashes mentioning
 	       <literal>()</literal> you may need to add type annotations.
-	       Similarly, if you don't supply code for the semantic rule 
+	       Similarly, if you don't supply code for the semantic rule
 	       portion, then the value <literal>()</literal> is used.
 	       </para>
 	     </listitem>
@@ -1896,7 +1896,7 @@ close : '}'                  { () }
 		</term>
 	     <listitem>
 	       <para>
-	       No attempt to implement this yet. Any use of 
+	       No attempt to implement this yet. Any use of
 	       <literal>error</literal> in grammars is thus ignored, and
 	       parse errors will eventually mean a parse will fail.
 	       </para>
@@ -1906,14 +1906,14 @@ close : '}'                  { () }
 	     <term>the token type</term>
 	     <listitem>
 	       <para>
-	       The type used for tokens <emphasis>must</emphasis> be in 
-	       the <literal>Ord</literal> type class (and hence in 
+	       The type used for tokens <emphasis>must</emphasis> be in
+	       the <literal>Ord</literal> type class (and hence in
 	       <literal>Eq</literal>), plus it is recommended that they
-	       are in the <literal>Show</literal> class too. 
-	       The ordering is required for the implementation of 
-	       ambiguity packing. 
-	       It may be possible to relax this requirement, but it 
-	       is probably simpler just to require instances of the type 
+	       are in the <literal>Show</literal> class too.
+	       The ordering is required for the implementation of
+	       ambiguity packing.
+	       It may be possible to relax this requirement, but it
+	       is probably simpler just to require instances of the type
 	       classes. Please tell us if this is a problem.
 	       </para>
 	     </listitem>
@@ -1925,11 +1925,11 @@ close : '}'                  { () }
       <sect2 id="sec-glr-using-main">
         <title>The main function</title>
         <para>
-	The driver file exports a function 
-	<literal>doParse :: [[UserDefTok]] -> GLRResult</literal>. 
-	If you are using several parsers, use qualified naming to 
+	The driver file exports a function
+	<literal>doParse :: [[UserDefTok]] -> GLRResult</literal>.
+	If you are using several parsers, use qualified naming to
 	distinguish them.
-	<literal>UserDefTok</literal> is a synonym for the type declared with 
+	<literal>UserDefTok</literal> is a synonym for the type declared with
 	the <literal>%tokentype</literal> directive.
         </para>
       </sect2>
@@ -1937,31 +1937,31 @@ close : '}'                  { () }
       <sect2 id="sec-glr-using-input">
         <title>The input</title>
         <para>
-	The input to <literal>doParse</literal> is a list of 
-	<emphasis>list of</emphasis> token values. 
-	The outer level represents the sequence of input symbols, and 
+	The input to <literal>doParse</literal> is a list of
+	<emphasis>list of</emphasis> token values.
+	The outer level represents the sequence of input symbols, and
 	the inner list represents ambiguity in the tokenisation of each
-	input symbol. 
-	For example, the word "run" can be at least a noun or a verb, 
+	input symbol.
+	For example, the word "run" can be at least a noun or a verb,
 	hence the inner list will contain at least two values.
 	If your tokens are not ambiguous, you will need to convert each
-	token to a singleton list before parsing. 
+	token to a singleton list before parsing.
         </para>
       </sect2>
 
       <sect2 id="sec-glr-using-output">
         <title>The Parse Result</title>
         <para>
-	The parse result is expressed with the following types. 
-	A successful parse yields a forest (explained below) and a single 
+	The parse result is expressed with the following types.
+	A successful parse yields a forest (explained below) and a single
 	root node for the forest.
 	A parse may fail for one of two reasons: running out of input or
-	a (global) parse error. A global parse error means that it was 
+	a (global) parse error. A global parse error means that it was
 	not possible to continue parsing <emphasis>any</emphasis> of the
 	live alternatives; this is different from a local error, which simply
-	means that the current alternative dies and we try some other 
-	alternative. In both error cases, the forest at failure point is 
-	returned, since it may contain useful information. 
+	means that the current alternative dies and we try some other
+	alternative. In both error cases, the forest at failure point is
+	returned, since it may contain useful information.
 	Unconsumed tokens are returned when there is a global parse error.
         </para>
         <programlisting>
@@ -1981,24 +1981,24 @@ close : '}'                  { () }
 	<para>
 	Conceptually, the parse forest is a directed, acyclic and-or
 	graph. It is represented by a mapping of <literal>ForestId</literal>s
-	to lists of possible analyses. The <literal>FiniteMap</literal> 
+	to lists of possible analyses. The <literal>FiniteMap</literal>
 	type is used to provide efficient and convenient access.
-	The <literal>ForestId</literal> type identifies nodes in the 
+	The <literal>ForestId</literal> type identifies nodes in the
 	graph, named by the range of input they span and the category of
-	analysis they license. <literal>GSymbol</literal> is generated 
-	automatically as a union of the names of grammar rules (prefixed 
+	analysis they license. <literal>GSymbol</literal> is generated
+	automatically as a union of the names of grammar rules (prefixed
 	by <literal>G_</literal> to avoid name clashes) and of tokens and
 	an EOF symbol. Tokens are wrapped in the constructor
-	<literal>HappyTok :: UserDefTok -> GSymbol</literal>. 
+	<literal>HappyTok :: UserDefTok -> GSymbol</literal>.
 	</para>
 	<para>
-	The <literal>Branch</literal> type represents a match for some 
-	right-hand side of a production, containing semantic information 
+	The <literal>Branch</literal> type represents a match for some
+	right-hand side of a production, containing semantic information
 	(see below)
 	and a list of sub-analyses. Each of these is a node in the graph.
-	Note that tokens are represented as childless nodes that span 
+	Note that tokens are represented as childless nodes that span
 	one input position. Empty productions will appear as childless nodes
-	that start and end at the same position. 
+	that start and end at the same position.
 	</para>
       </sect2>
 
@@ -2006,48 +2006,48 @@ close : '}'                  { () }
         <title>Compiling the parser</title>
         <para>
 	<application>Happy</application> will generate two files, and these
-	should be compiled as normal Haskell files. 
+	should be compiled as normal Haskell files.
 	If speed is an issue, then you should use the <option>-O</option>
-	flags etc with the driver code, and if feasible, with the parser 
-	tables too. 
+	flags etc with the driver code, and if feasible, with the parser
+	tables too.
         </para>
         <para>
         You can also use the <option>--ghc</option> flag to trigger certain
 	<application>GHC</application>-specific optimizations. At present,
 	this just causes use of unboxed types in the tables and in some key
-	code. 
+	code.
 	Using this flag causes relevant <application>GHC</application>
 	option pragmas to be inserted into the generated code, so you shouldn't
 	have to use any strange flags (unless you want to...).
         </para>
       </sect2>
     </sect1>
-    
+
     <sect1 id="sec-glr-semantics">
       <title>Including semantic results</title>
 
       <para>
       This section discusses the options for including semantic information
-      in grammars. 
+      in grammars.
       </para>
 
       <sect2 id="sec-glr-semantics-intro">
         <title>Forms of semantics</title>
         <para>
-	Semantic information may be attached to productions in the 
-	conventional way, but when more than one analysis is possible, 
-	the use of the semantic information must change. 
-	Two schemes have been implemented, which we call 
+	Semantic information may be attached to productions in the
+	conventional way, but when more than one analysis is possible,
+	the use of the semantic information must change.
+	Two schemes have been implemented, which we call
 	<emphasis>tree decoding</emphasis>
-	and <emphasis>label decoding</emphasis>. 
-	The former is for simple applications, where there is not much 
+	and <emphasis>label decoding</emphasis>.
+	The former is for simple applications, where there is not much
 	ambiguity and hence where the effective unpacking of the parse
-	forest isn't a factor. This mode is quite similar to the 
+	forest isn't a factor. This mode is quite similar to the
 	standard mode in <application>Happy</application>.
 	The latter is for serious applications, where sharing is important
-	and where processing of the forest (eg filtering) is needed. 
+	and where processing of the forest (eg filtering) is needed.
 	Here, the emphasis is about providing rich labels in nodes of the
-	the parse forest, to support such processing. 
+	the parse forest, to support such processing.
         </para>
 	<para>
 	The default mode is labelling. If you want the tree decode mode,
@@ -2059,12 +2059,12 @@ close : '}'                  { () }
         <title>Tree decoding</title>
         <para>
 	Tree decoding corresponds to unpacking the parse forest to individual
-	trees and collecting the list of semantic results computed from 
-	each of these. It is a mode intended for simple applications, 
+	trees and collecting the list of semantic results computed from
+	each of these. It is a mode intended for simple applications,
 	where there is limited ambiguity.
-	You may access semantic results from components of a reduction 
-	using the dollar variables. 
-	As a working example, the following is taken from the 
+	You may access semantic results from components of a reduction
+	using the dollar variables.
+	As a working example, the following is taken from the
 	<literal>expr-tree</literal> grammar in the examples.
 	Note that the type signature is required, else the types in use
 	can't be determined by the parser generator.
@@ -2080,29 +2080,29 @@ close : '}'                  { () }
 	functions (abstracted over the dollar variables mentioned),
 	and labelling each <literal>Branch</literal> created from a
 	reduction of that rule with the function value.
-	This amounts to <emphasis>delaying</emphasis> the action of the 
-	rule, since we must wait until we know the results of all of 
+	This amounts to <emphasis>delaying</emphasis> the action of the
+	rule, since we must wait until we know the results of all of
 	the sub-analyses before computing any of the results. (Certain
 	cases of packing can add new analyses at a later stage.)
 	</para>
 	<para>
-	At the end of parsing, the functions are applied across relevant 
+	At the end of parsing, the functions are applied across relevant
 	sub-analyses via a recursive descent. The main interface to this
-	is via the class and entry function below. Typically, 
-	<literal>decode</literal> should be called on the root of the 
+	is via the class and entry function below. Typically,
+	<literal>decode</literal> should be called on the root of the
 	forest, also supplying a function which maps node names to their
 	list of analyses (typically a partial application of lookup in
 	the forest value).
 	The result is a list of semantic values.
 	Note that the context of the call to <literal>decode</literal>
-	should (eventually) supply a concrete type to allow selection 
+	should (eventually) supply a concrete type to allow selection
 	of appropriate instance. Ie, you have to indicate in some way
 	what type the semantic result should have.
 	<literal>Decode_Result a</literal> is a synonym generated by
 	<application>Happy</application>: for non-monadic semantics,
-	it is equivalent to <literal>a</literal>; when monads are 
+	it is equivalent to <literal>a</literal>; when monads are
 	in use, it becomes the declared monad type.
-	See the full <literal>expr-eval</literal> example for more 
+	See the full <literal>expr-eval</literal> example for more
 	information.
 	</para>
         <programlisting>
@@ -2113,20 +2113,20 @@ close : '}'                  { () }
 
 	<para>
 	The GLR parser generator identifies the types involved in each
-	semantic rule, hence the types of the functions, then creates 
-	a union containing distinct types. Values of this union are 
+	semantic rule, hence the types of the functions, then creates
+	a union containing distinct types. Values of this union are
 	stored in the branches. (The union is actually a bit more complex:
 	it must also distinguish patterns of dollar-variable usage, eg
-	a function <literal>\x y -> x + y </literal> could be applied to 
+	a function <literal>\x y -> x + y </literal> could be applied to
 	the first and second constituents, or to the first and third.)
-	The parser generator also creates instances of the 
+	The parser generator also creates instances of the
 	<literal>TreeDecode</literal> class, which unpacks the semantic
 	function and applies it across the decodings of the possible
 	combinations of children. Effectively, it does a cartesian product
-	operation across the lists of semantic results from each of the 
+	operation across the lists of semantic results from each of the
 	children. Eg <literal>[1,2] "+" [3,4]</literal> produces
 	<literal>[4,5,5,6]</literal>.
-	Information is extracted from token values using the patterns 
+	Information is extracted from token values using the patterns
 	supplied by the user when declaring tokens and their Haskell
 	representation, so the dollar-dollar convention works also.
 	</para>
@@ -2143,15 +2143,15 @@ close : '}'                  { () }
       <sect2 id="sec-glr-semantics-label">
         <title>Label decoding</title>
         <para>
-	The labelling mode aims to label branches in the forest with 
+	The labelling mode aims to label branches in the forest with
 	information that supports subsequent processing, for example
 	the filtering and prioritisation of analyses prior to extraction
 	of favoured solutions. As above, code fragments are given in
-	braces and can contain dollar-variables. But these variables 
+	braces and can contain dollar-variables. But these variables
 	are expanded to node names in the graph, with the intention of
 	easing navigation.
 	The following grammar is from the <literal>expr-tree</literal>
-	example. 
+	example.
         </para>
         <programlisting>
 	E :: {Tree ForestId Int}
@@ -2161,38 +2161,38 @@ close : '}'                  { () }
         </programlisting>
 
         <para>
-	Here, the semantic values provide more meaningful labels than 
-	the plain structural information. In particular, only the 
-	interesting parts of the branch are represented, and the 
-	programmer can clearly select or label the useful constituents 
-	if required. There is no need to remember that it is the first 
+	Here, the semantic values provide more meaningful labels than
+	the plain structural information. In particular, only the
+	interesting parts of the branch are represented, and the
+	programmer can clearly select or label the useful constituents
+	if required. There is no need to remember that it is the first
 	and third child in the branch which we need to extract, because
 	the label only contains those values (the `noise' has been dropped).
 	Consider also the difference between concrete and abstract syntax.
 	The labels are oriented towards abstract syntax.
 	Tokens are handled slightly differently here: when they appear
-	as children in a reduction, their informational content can 
+	as children in a reduction, their informational content can
 	be extracted directly, hence the <literal>Const</literal> value
-	above will be built with the <literal>Int</literal> value from 
+	above will be built with the <literal>Int</literal> value from
 	the token, not some <literal>ForestId</literal>.
         </para>
 
         <para>
-	Note the useful technique of making the label types polymorphic 
+	Note the useful technique of making the label types polymorphic
 	in the position used for forest indices. This allows replacement
 	at a later stage with more appropriate values, eg. inserting
-	lists of actual subtrees from the final decoding. 
+	lists of actual subtrees from the final decoding.
         </para>
 	<para>
 	Use of these labels is supported by a type class
-	<literal>LabelDecode</literal>, which unpacks values of the 
+	<literal>LabelDecode</literal>, which unpacks values of the
 	automatically-generated union type <literal>GSem</literal>
 	to the original type(s). The parser generator will create
 	appropriate instances of this class, based on the type information
 	in the grammar file. (Note that omitting type information leads
 	to a default of <literal>()</literal>.)
 	Observe that use of the labels is often like traversing an abstract
-	syntax, and the structure of the abstract syntax type usually 
+	syntax, and the structure of the abstract syntax type usually
 	constrains the types of constituents; so once the overall type
 	is fixed (eg. with a type cast or signature) then there are no
 	problems with resolution of class instances.
@@ -2205,10 +2205,10 @@ close : '}'                  { () }
 
         <para>
 	Internally, the semantic values are packed in a union type as
-	before, but there is no direct abstraction step. Instead, the 
+	before, but there is no direct abstraction step. Instead, the
 	<literal>ForestId</literal> values (from the dollar-variables)
-	are bound when the corresponding branch is created from the 
-	list of constituent nodes. At this stage, token information 
+	are bound when the corresponding branch is created from the
+	list of constituent nodes. At this stage, token information
 	is also extracted, using the patterns supplied by the user
 	when declaring the tokens.
         </para>
@@ -2217,10 +2217,10 @@ close : '}'                  { () }
       <sect2 id="sec-glr-semantics-tree-monad">
         <title>Monadic tree decoding</title>
         <para>
-	You can use the <literal>%monad</literal> directive in the 
-	tree-decode mode. 
-	Essentially, the decoding process now creates a list of monadic 
-	values, using the monad type declared in the directive. 
+	You can use the <literal>%monad</literal> directive in the
+	tree-decode mode.
+	Essentially, the decoding process now creates a list of monadic
+	values, using the monad type declared in the directive.
 	The default handling of the semantic functions is to apply the
 	relevant <literal>return</literal> function to the value being
 	returned. You can over-ride this using the <literal>{% ... }</literal>
@@ -2228,17 +2228,17 @@ close : '}'                  { () }
 	used to assemble the computations.
 	</para>
 	<para>
-	Note that no attempt is made to share the results of monadic 
-	computations from sub-trees. (You could possibly do this by 
+	Note that no attempt is made to share the results of monadic
+	computations from sub-trees. (You could possibly do this by
 	supplying a memoising lookup function for the decoding process.)
-	Hence, the usual behaviour is that decoding produces whole 
+	Hence, the usual behaviour is that decoding produces whole
 	monadic computations, each part of which is computed afresh
 	(in depth-first order) when the whole is computed.
-	Hence you should take care to initialise any relevant state 
-	before computing the results from multiple solutions. 
+	Hence you should take care to initialise any relevant state
+	before computing the results from multiple solutions.
 	</para>
 	<para>
-	This facility is experimental, and we welcome comments or 
+	This facility is experimental, and we welcome comments or
 	observations on the approach taken!
 	An example is provided (<literal>examples/glr/expr-monad</literal>).
 	It is the standard example of arithmetic expressions, except that
@@ -2261,9 +2261,9 @@ close : '}'                  { () }
       <sect2 id="sec-glr-misc-examples">
         <title>The GLR examples</title>
         <para>
-	The directory <literal>examples/glr</literal> contains several examples 
-	from the small to the large. Please consult these or use them as a 
-	base for your experiments. 
+	The directory <literal>examples/glr</literal> contains several examples
+	from the small to the large. Please consult these or use them as a
+	base for your experiments.
         </para>
       </sect2>
 
@@ -2272,22 +2272,22 @@ close : '}'                  { () }
         <para>
 	If you run the examples with <application>GHC</application>, each
 	run will produce a file <literal>out.daVinci</literal>. This is a
-	graph in the format expected by the <emphasis>daVinci</emphasis> 
-	graph visualization tool. 
+	graph in the format expected by the <emphasis>daVinci</emphasis>
+	graph visualization tool.
 	(See <ulink url="http://www.informatik.uni-bremen.de/~davinci/"/>
 	for more information. Educational use licenses are currently
-	available without charge.) 
+	available without charge.)
         </para>
 	<para>
-	We highly recommend looking at graphs of parse results - it really 
-	helps to understand the results. 
-	The graphs files are created with Sven Panne's library for 
-	communicating with <emphasis>daVinci</emphasis>, supplemented 
-	with some extensions due to Callaghan. Copies of this code are 
+	We highly recommend looking at graphs of parse results - it really
+	helps to understand the results.
+	The graphs files are created with Sven Panne's library for
+	communicating with <emphasis>daVinci</emphasis>, supplemented
+	with some extensions due to Callaghan. Copies of this code are
 	included in the examples directory, for convenience.
 	If you are trying to view large and complex graphs, contact Paul
-	Callaghan (there are tools and techniques to make the graphs more 
-	manageable). 
+	Callaghan (there are tools and techniques to make the graphs more
+	manageable).
 	</para>
       </sect2>
 
@@ -2295,12 +2295,12 @@ close : '}'                  { () }
         <title>Some Applications of GLR parsing</title>
         <para>
 	GLR parsing (and related techniques) aren't just for badly written
-	grammars or for things like natural language (NL) where ambiguity is 
+	grammars or for things like natural language (NL) where ambiguity is
 	inescapable. There are applications where ambiguity can represent
 	possible alternatives in pattern-matching tasks, and the flexibility
 	of these parsing techniques and the resulting graphs support deep
-	analyses. Below, we briefly discuss some examples, a mixture from 
-	our recent work and from the literature. 
+	analyses. Below, we briefly discuss some examples, a mixture from
+	our recent work and from the literature.
         </para>
 
 	<variablelist>
@@ -2308,12 +2308,12 @@ close : '}'                  { () }
 	     <term>Gene sequence analysis</term>
 	     <listitem>
 	       <para>
-	       Combinations of structures within gene sequences can be 
+	       Combinations of structures within gene sequences can be
 	       expressed as a grammar, for example a "start" combination
-	       followed by a "promoter" combination then the gene proper. 
+	       followed by a "promoter" combination then the gene proper.
 	       A recent undergraduate project has used this GLR implementation
 	       to detect candiate matches in data, and then to filter these
-	       matches with a mixture of local and global information. 
+	       matches with a mixture of local and global information.
 	       </para>
 	     </listitem>
 	   </varlistentry>
@@ -2321,17 +2321,17 @@ close : '}'                  { () }
 	     <term>Rhythmic structure in poetry</term>
 	     <listitem>
 	       <para>
-	       Rhythmic patterns in (English) poetry obey certain rules, 
+	       Rhythmic patterns in (English) poetry obey certain rules,
 	       and in more modern poetry can break rules in particular ways
 	       to achieve certain effects. The standard rhythmic patterns
-	       (eg. iambic pentameter) can be encoded as a grammar, and 
-	       deviations from the patterns also encoded as rules. 
-	       The neutral reading can be parsed with this grammar, to 
-	       give a forest of alternative matches. The forest can be 
-	       analysed to give a preferred reading, and to highlight 
-	       certain technical features of the poetry. 
-	       An undergraduate project in Durham has used this implementation 
-	       for this purpose, with promising results. 
+	       (eg. iambic pentameter) can be encoded as a grammar, and
+	       deviations from the patterns also encoded as rules.
+	       The neutral reading can be parsed with this grammar, to
+	       give a forest of alternative matches. The forest can be
+	       analysed to give a preferred reading, and to highlight
+	       certain technical features of the poetry.
+	       An undergraduate project in Durham has used this implementation
+	       for this purpose, with promising results.
 	       </para>
 	     </listitem>
 	   </varlistentry>
@@ -2339,16 +2339,16 @@ close : '}'                  { () }
 	     <term>Compilers -- instruction selection</term>
 	     <listitem>
 	       <para>
-	       Recent work has phrased the translation problem in 
-	       compilers from intermediate representation to an 
+	       Recent work has phrased the translation problem in
+	       compilers from intermediate representation to an
 	       instruction set for a given processor as a matching
-	       problem. Different constructs at the intermediate 
-	       level can map to several combinations of machine 
-	       instructions. This knowledge can be expressed as a 
-	       grammar, and instances of the problem solved by 
+	       problem. Different constructs at the intermediate
+	       level can map to several combinations of machine
+	       instructions. This knowledge can be expressed as a
+	       grammar, and instances of the problem solved by
 	       parsing. The parse forest represents competing solutions,
 	       and allows selection of optimum solutions according
-	       to various measures. 
+	       to various measures.
 	       </para>
 	     </listitem>
 	   </varlistentry>
@@ -2363,9 +2363,9 @@ close : '}'                  { () }
 	       from Html text which doesn't follow the rules precisely,
 	       eg missing start tags or missing end tags.
 	       Html with missing tags can be written as an ambiguous grammar,
-	       and it should be a simple matter to extract a usable 
-	       interpretation from a forest of parses. 
-	       Notice the technique: we widen the scope of the grammar, 
+	       and it should be a simple matter to extract a usable
+	       interpretation from a forest of parses.
+	       Notice the technique: we widen the scope of the grammar,
 	       parse with GLR, then extract a reasonable solution.
 	       This is arguably simpler than pushing an LR(1) or LL(1)
 	       parser past its limits, and also more maintainable.
@@ -2379,19 +2379,19 @@ close : '}'                  { () }
 	       Ambiguity is inescapable in the syntax of most human languages.
 	       In realistic systems, parse forests are useful to encode
 	       competing analyses in an efficient way, and they also provide
-	       a framework for further analysis and disambiguation. Note 
-	       that ambiguity can have many forms, from simple phrase 
-	       attachment uncertainty to more subtle forms involving mixtures 
+	       a framework for further analysis and disambiguation. Note
+	       that ambiguity can have many forms, from simple phrase
+	       attachment uncertainty to more subtle forms involving mixtures
 	       of word senses. If some degree of ungrammaticality is to be
-	       tolerated in a system, which can be done by extending the 
-	       grammar with productions incorporating common forms of 
+	       tolerated in a system, which can be done by extending the
+	       grammar with productions incorporating common forms of
 	       infelicity, the degree of ambiguity increases further. For
-	       systems used on arbitrary text, such as on newspapers, 
-	       it is not uncommon that many sentences permit several 
+	       systems used on arbitrary text, such as on newspapers,
+	       it is not uncommon that many sentences permit several
 	       hundred or more analyses. With such grammars, parse forest
-	       techniques are essential. 
+	       techniques are essential.
 	       Many recent NLP systems use such techniques, including
-	       the Durham's earlier LOLITA system - which was mostly 
+	       the Durham's earlier LOLITA system - which was mostly
 	       written in Haskell.
 	       </para>
 	     </listitem>
@@ -2402,12 +2402,12 @@ close : '}'                  { () }
       <sect2 id="sec-glr-misc-workings">
         <title>Technical details</title>
         <para>
-	The original implementation was developed by Ben Medlock, 
-	as his undergraduate final year project, 
+	The original implementation was developed by Ben Medlock,
+	as his undergraduate final year project,
 	using ideas from Peter Ljungloef's Licentiate thesis
-	(see <ulink url="http://www.cs.chalmers.se/~peb/parsing"/>, and 
-	we recommend the thesis for its clear analysis of parsing 
-	algorithms). 
+	(see <ulink url="http://www.cs.chalmers.se/~peb/parsing"/>, and
+	we recommend the thesis for its clear analysis of parsing
+	algorithms).
 	Ljungloef's version produces lists of parse trees, but Medlock
 	adapted this to produce an explicit graph containing parse structure
 	information. He also incorporated
@@ -2415,9 +2415,9 @@ close : '}'                  { () }
         </para>
 
         <para>
-	After Medlock's graduation, Callaghan extended the code to 
+	After Medlock's graduation, Callaghan extended the code to
 	incorporate semantic information, and made several improvements
-	to the original code, such as improved local packing and 
+	to the original code, such as improved local packing and
 	support for hidden left recursion. The performance of the
 	code was significantly improved, after changes of representation
 	(eg to a chart-style data structure)
@@ -2427,47 +2427,47 @@ close : '}'                  { () }
         </para>
 
         <para>
-	The current code implements the standard GLR algorithm extended 
+	The current code implements the standard GLR algorithm extended
 	to handle hidden left recursion. Such recursion, as in the grammar
-	below from Rekers [1992], causes the standard algorithm to loop 
-	because the empty reduction <literal>A -> </literal> is always 
+	below from Rekers [1992], causes the standard algorithm to loop
+	because the empty reduction <literal>A -> </literal> is always
 	possible and the LR parser will not change state. Alternatively,
-	there is a problem because an unknown (at the start of parsing) 
+	there is a problem because an unknown (at the start of parsing)
 	number of <literal>A</literal>
 	items are required, to match the number of <literal>i</literal>
 	tokens in the input.
         </para>
         <programlisting>
-	S -> A Q i | + 
-	A -> 
+	S -> A Q i | +
+	A ->
         </programlisting>
 	<para>
-	The solution to this is not surprising. Problematic recursions 
-	are detected as zero-span reductions in a state which has a 
-	<literal>goto</literal> table entry looping to itself. A special 
-	symbol is pushed to the stack on the first such reduction, 
-	and such reductions are done at most once for any token 
+	The solution to this is not surprising. Problematic recursions
+	are detected as zero-span reductions in a state which has a
+	<literal>goto</literal> table entry looping to itself. A special
+	symbol is pushed to the stack on the first such reduction,
+	and such reductions are done at most once for any token
 	alternative for any input position.
-	When popping from the stack, if the last token being popped 
-	is such a special symbol, then two stack tails are returned: one 
+	When popping from the stack, if the last token being popped
+	is such a special symbol, then two stack tails are returned: one
 	corresponding to a conventional pop (which removes the
 	symbol) and the other to a duplication of the special symbol
-	(the stack is not changed, but a copy of the symbol is returned). 
+	(the stack is not changed, but a copy of the symbol is returned).
 	This allows sufficient copies of the empty symbol to appear
 	on some stack, hence allowing the parse to complete.
 	</para>
 
 	<para>
 	The forest is held in a chart-style data structure, and this supports
-	local ambiguity packing (chart parsing is discussed in Ljungloef's 
-	thesis, among other places). 
-	A limited amount of packing of live stacks is also done, to avoid 
-	some repetition of work. 
+	local ambiguity packing (chart parsing is discussed in Ljungloef's
+	thesis, among other places).
+	A limited amount of packing of live stacks is also done, to avoid
+	some repetition of work.
 	</para>
 
         <para>
 	[Rekers 1992] Parser Generation for Interactive Environments,
-	PhD thesis, University of Amsterdam, 1992. 
+	PhD thesis, University of Amsterdam, 1992.
         </para>
       </sect2>
 
@@ -2475,7 +2475,7 @@ close : '}'                  { () }
         <title>The <option>--filter</option> option</title>
         <para>
 	You might have noticed this GLR-related option. It is an experimental
-	feature intended to restrict the amount of structure retained in the 
+	feature intended to restrict the amount of structure retained in the
 	forest by discarding everything not required for the semantic
 	results. It may or it may not work, and may be fixed in a future
 	release.
@@ -2486,15 +2486,15 @@ close : '}'                  { () }
         <title>Limitations and future work</title>
 	<para>
 	The parser supports hidden left recursion, but makes no attempt
-	to handle cyclic grammars that have rules which do not consume any 
+	to handle cyclic grammars that have rules which do not consume any
 	input. If you have a grammar like this, for example with rules like
-	<literal>S -> S</literal> or 
-	<literal>S -> A S | x; A -> empty</literal>, the implementation will 
-	loop until you run out of stack - but if it will happen, it often 
-	happens quite quickly! 
+	<literal>S -> S</literal> or
+	<literal>S -> A S | x; A -> empty</literal>, the implementation will
+	loop until you run out of stack - but if it will happen, it often
+	happens quite quickly!
 	</para>
         <para>
-	The code has been used and tested frequently over the past few years, 
+	The code has been used and tested frequently over the past few years,
 	including being used in several undergraduate projects. It should be
 	fairly stable, but as usual, can't be guaranteed bug-free. One day
 	I will write it in Epigram!
@@ -2502,8 +2502,8 @@ close : '}'                  { () }
         <para>
 	If you have suggestions for improvements, or requests for features,
 	please contact Paul
-	Callaghan. There are some changes I am considering, and some 
-	views and/or encouragement from users will be much appreciated. 
+	Callaghan. There are some changes I am considering, and some
+	views and/or encouragement from users will be much appreciated.
 	Further information can be found on Callaghan's
 	<ulink url="http://www.dur.ac.uk/p.c.callaghan/happy-glr">GLR parser
 	page</ulink>.
@@ -2528,8 +2528,8 @@ close : '}'                  { () }
     <sect1 id="sec-introAttributeGrammars">
     <title>Introduction</title>
 
-    <para>Attribute grammars are a formalism for expressing syntax directed 
-    translation of a context-free grammar.  An introduction to attribute grammars 
+    <para>Attribute grammars are a formalism for expressing syntax directed
+    translation of a context-free grammar.  An introduction to attribute grammars
     may be found <ulink
     url="http://www-rocq.inria.fr/oscar/www/fnc2/manual/node32.html">here</ulink>.
     There is also an article in the Monad Reader about attribute grammars and a
@@ -2554,14 +2554,14 @@ close : '}'                  { () }
 
     <para>
     Embedding attribute grammars in Happy is easy because because Haskell supports
-    three important features: higher order functions, labeled records, and 
+    three important features: higher order functions, labeled records, and
     lazy evaluation.  Attributes are encoded as fields in a labeled record. The parse
-    result of each non-terminal in the grammar is a function which takes a record 
+    result of each non-terminal in the grammar is a function which takes a record
     of inherited attributes and returns a record of synthesized attributes.  In each
     production, the attributes of various non-terminals are bound together using
     <literal>let</literal>.
-    Finally, at the end of the parse, a distinguished attribute is evaluated to be 
-    the final result.  Lazy evaluation takes care of evaluating each attribute in the 
+    Finally, at the end of the parse, a distinguished attribute is evaluated to be
+    the final result.  Lazy evaluation takes care of evaluating each attribute in the
     correct order, resulting in an attribute grammar system that is capable of evaluating
     a fairly large class of attribute grammars.
     </para>
@@ -2572,7 +2572,7 @@ close : '}'                  { () }
     Currently, attribute grammars cannot be generated for GLR parsers (It's not
     exactly clear how these features should interact...)
     </para>
-    
+
     </sect1>
 
     <sect1 id="sec-AtrributeGrammarsInHappy">
@@ -2583,7 +2583,7 @@ close : '}'                  { () }
 
       <para>
       The presence of one or more <literal>%attribute</literal> directives indicates
-      that a grammar is an attribute grammar.  Attributes are calculated properties 
+      that a grammar is an attribute grammar.  Attributes are calculated properties
       that are associated with the non-terminals in a parse tree.  Each
       <literal>%attribute</literal> directive generates a field in the attributes
       record with the given name and type.
@@ -2592,10 +2592,10 @@ close : '}'                  { () }
       <para>
       The first <literal>%attribute</literal>
       directive in a grammar defines the default attribute.  The
-      default attribute is distinguished in two ways: 1) if no attribute specifier is 
+      default attribute is distinguished in two ways: 1) if no attribute specifier is
       given on an attribute reference,
       the default attribute is assumed (see <xref linkend="sec-semanticRules"/>)
-      and 2) the value for the default attribute of the starting non-terminal becomes the 
+      and 2) the value for the default attribute of the starting non-terminal becomes the
       return value of the parse.
       </para>
 
@@ -2603,7 +2603,7 @@ close : '}'                  { () }
       Optionally, one may specify a type declaration for the attribute record using
       the <literal>%attributetype</literal> declaration.  This allows you to define the
       type given to the attribute record and, more importantly, allows you to introduce
-      type variables that can be subsequently used in <literal>%attribute</literal> 
+      type variables that can be subsequently used in <literal>%attribute</literal>
       declarations.  If the <literal>%attributetype</literal> directive is given without
       any <literal>%attribute</literal> declarations, then the <literal>%attributetype</literal>
       declaration has no effect.
@@ -2641,27 +2641,27 @@ data MyAttributes a =
 
     <sect2 id="sec-semanticRules">
       <title>Semantic Rules</title>
-      
+
       <para>In an ordinary Happy grammar, a production consists of a list
       of terminals and/or non-terminals followed by an uninterpreted
-      code fragment enclosed in braces.  With an attribute grammar, the 
+      code fragment enclosed in braces.  With an attribute grammar, the
       format is very similar, but the braces enclose a set of semantic rules
       rather than uninterpreted Haskell code.  Each semantic rule is either
       an attribute calculation or a conditional, and rules are separated by
       semicolons<footnote><para>Note that semantic rules must not rely on
-      layout, because whitespace alignment is not guaranteed to be 
+      layout, because whitespace alignment is not guaranteed to be
       preserved</para></footnote>.
       </para>
 
       <para>
       Both attribute calculations and conditionals may contain attribute references
-      and/or terminal references.  Just like regular Happy grammars, the tokens 
-      <literal>$1</literal> through <literal>$&lt;n&gt;</literal>, where 
+      and/or terminal references.  Just like regular Happy grammars, the tokens
+      <literal>$1</literal> through <literal>$&lt;n&gt;</literal>, where
       <literal>n</literal> is the number of symbols in the production, refer to
       subtrees of the parse.  If the referenced symbol is a terminal, then the
       value of the reference is just the value of the terminal, the same way as
-      in a regular Happy grammar.  If the referenced symbol is a non-terminal, 
-      then the reference may be followed by an attribute specifier, which is 
+      in a regular Happy grammar.  If the referenced symbol is a non-terminal,
+      then the reference may be followed by an attribute specifier, which is
       a dot followed by an attribute name.  If the attribute specifier is omitted,
       then the default attribute is assumed (the default attribute is the first
       attribute appearing in an <literal>%attribute</literal> declaration).
@@ -2671,7 +2671,7 @@ data MyAttributes a =
       always references the rightmost symbol in the production.
       </para>
 
-      <para>      
+      <para>
       An attribute calculation rule is of the form:
       </para>
 <programlisting>
@@ -2696,7 +2696,7 @@ $$ = $1 : $2
       <para>
       This rule calculates the length attribute of a non-terminal in terms of the
       length of the current non-terminal (an inherited attribute):
-      </para>      
+      </para>
 <programlisting>
 $1.length = $$.length + 1
 </programlisting>
@@ -2711,15 +2711,15 @@ where &lt;Haskell expression&gt;
       <para>
       For non-monadic parsers, all conditional expressions
       must be of the same (monomorphic) type.  At
-      the end of the parse, the conditionals will be reduced using 
-      <literal>seq</literal>, which gives the grammar an opportunity to call 
+      the end of the parse, the conditionals will be reduced using
+      <literal>seq</literal>, which gives the grammar an opportunity to call
       <literal>error</literal> with an informative message.  For monadic parsers,
       all conditional statements must have type <literal>Monad m => m ()</literal> where
       <literal>m</literal> is the monad in which the parser operates.  All conditionals
       will be sequenced at the end of the parse, which allows the conditionals to call
       <literal>fail</literal> with an informative message.
       </para>
-      
+
       <para>
       The following conditional rule will cause the (non-monadic) parser to fail
       if the inherited length attribute is not 0.
@@ -2727,7 +2727,7 @@ where &lt;Haskell expression&gt;
 <programlisting>
 where if $$.length == 0 then () else error "length not equal to 0"
 </programlisting>
-      
+
       <para>
       This conditional is the monadic equivalent:
       </para>
@@ -2748,7 +2748,7 @@ where unless ($$.length == 0) (fail "length not equal to 0")
 	are written which cause a circular dependency on the value of
 	an attribute.  Even if the value of the attribute is well-defined (that is,
 	if a fixpoint calculation over attribute values will eventually converge to
-	a unique solution), this attribute grammar system will not evaluate such 
+	a unique solution), this attribute grammar system will not evaluate such
 	grammars.
       </para>
       <para>
@@ -2762,12 +2762,12 @@ where unless ($$.length == 0) (fail "length not equal to 0")
       </para>
     </sect1>
 
-	    
+
     <sect1 id="sec-AttributeGrammarExample">
       <title>Example Attribute Grammars</title>
       <para>
       The following two toy attribute grammars may prove instructive.  The first is
-      an attribute grammar for the classic context-sensitive grammar 
+      an attribute grammar for the classic context-sensitive grammar
       { a^n b^n c^n | n >= 0 }.  It demonstrates the use of conditionals,
       inherited and synthesized attributes.
       </para>
@@ -2792,27 +2792,27 @@ module ABCParser (parse) where
 
 %%
 
-abcstring 
+abcstring
    : alist blist clist newline
         { $$ = $1 ++ $2 ++ $3
         ; $2.len = $1.len
         ; $3.len = $1.len
         }
 
-alist 
-   : a alist 
+alist
+   : a alist
         { $$ = $1 : $2
         ; $$.len = $2.len + 1
         }
    |    { $$ = []; $$.len = 0 }
 
-blist 
+blist
    : b blist
         { $$ = $1 : $2
         ; $2.len = $$.len - 1
         }
    |    { $$ = []
-        ; where failUnless ($$.len == 0) "blist wrong length" 
+        ; where failUnless ($$.len == 0) "blist wrong length"
         }
 
 clist
@@ -2821,7 +2821,7 @@ clist
         ; $2.len = $$.len - 1
         }
    |    { $$ = []
-        ; where failUnless ($$.len == 0) "clist wrong length" 
+        ; where failUnless ($$.len == 0) "clist wrong length"
         }
 
 {
@@ -2858,17 +2858,17 @@ module BitsParser (parse) where
 
 %%
 
-start 
+start
    : num newline { $$ = $1 }
 
-num 
+num
    : bits        { $$ = $1       ; $1.pos = 0 }
    | plus bits   { $$ = $2       ; $2.pos = 0 }
    | minus bits  { $$ = negate $2; $2.pos = 0 }
 
 bits
    : bit         { $$ = $1
-                 ; $1.pos = $$.pos 
+                 ; $1.pos = $$.pos
                  }
 
    | bits bit    { $$ = $1 + $2
@@ -2884,7 +2884,7 @@ bit
 happyError = error "parse error"
 }
 </programlisting>
-      
+
 
     </sect1>
 
@@ -2954,7 +2954,7 @@ happyError = error "parse error"
 
       <varlistentry>
 	<term><option>-t</option> <replaceable>dir</replaceable></term>
-	<term><option>--template</option>=<replaceable>dir</replaceable></term> 
+	<term><option>--template</option>=<replaceable>dir</replaceable></term>
 	<listitem>
 	  <indexterm>
 	    <primary>template files</primary>
@@ -3036,7 +3036,7 @@ happyError = error "parse error"
 
       <varlistentry>
 	<term><option>-a</option></term>
-	<term><option>--arrays</option></term> 
+	<term><option>--arrays</option></term>
 	<listitem>
 	  <indexterm>
 	    <primary>arrays</primary>
@@ -3095,14 +3095,14 @@ happyError = error "parse error"
 	  actually implemented.</para>
 	</listitem>
       </varlistentry>
-      
+
     </variablelist>
 
   </chapter>
 
   <chapter id="sec-grammar-files">
     <title>Syntax of Grammar Files</title>
-    
+
     <para>The input to <application>Happy</application> is a text file containing
     the grammar of the language you want to parse, together with some
     annotations that help the parser generator make a legal Haskell
@@ -3135,7 +3135,7 @@ happyError = error "parse error"
     (lines beginning with <literal>&gt;</literal>) and comment section.
     Grammars not using the literate notation must be in a file with
     the <literal>.y</literal> suffix.</para>
-    
+
     <sect1 id="sec-lexical-rules">
       <title>Lexical Rules</title>
 
@@ -3168,7 +3168,7 @@ the BNF syntax from the Haskell Report):</para>
       following form:</para>
 
 <programlisting>
-{  
+{
 &lt;Haskell module header&gt;
 }
 </programlisting>
@@ -3342,7 +3342,7 @@ any projection function.</para>
 
 	<para>Monad declarations are described in more detail in <xref
         linkend="sec-monads"/>.</para>
-	
+
       </sect2>
 
       <sect2 id="sec-lexer-decl">
@@ -3362,7 +3362,7 @@ any projection function.</para>
 
 	<para>Lexer declarations are described in more detail in <xref
         linkend="sec-lexers"/>.</para>
-	
+
       </sect2>
 
       <sect2 id="sec-prec-decls">
@@ -3399,7 +3399,7 @@ any projection function.</para>
 	<para>Precedence declarations are described in more detail in
 	<xref linkend="sec-Precedences"/>.</para>
       </sect2>
-      
+
       <sect2 id="sec-expect">
       	<title>Expect declarations</title>
 <programlisting>
@@ -3408,7 +3408,7 @@ any projection function.</para>
 	<indexterm>
 	  <primary><literal>%expect</literal> directive</primary>
 	</indexterm>
-	
+
 	<para>(optional) More often than not the grammar you write
 	will have conflicts. These conflicts generate warnings. But
 	when you have checked the warnings and made sure that Happy
@@ -3423,7 +3423,7 @@ any projection function.</para>
 	will check the actual number of conflicts against the
 	<literal>%expect</literal> declaration if any, and if there is
 	a discrepancy then an error will be reported.</para>
-	
+
 	<para>Happy's <literal>%expect</literal> directive works
 	exactly like that of yacc.</para>
       </sect2>
@@ -3452,7 +3452,7 @@ any projection function.</para>
         <indexterm>
 	  <primary><literal>%attributetype</literal> directive</primary>
 	</indexterm>
- 
+
 	<para>(optional) This directive allows you to declare the type of the
 	attributes record when defining an attribute grammar.  If this declaration
 	is not given, Happy will choose a default.  This declaration may only
@@ -3476,7 +3476,7 @@ any projection function.</para>
        grammar is an attribute grammar.  The first attribute listed becomes the
        default attribute.  Each <literal>%attribute</literal> directive generates a
        field in the attributes record with the given label and type.  If there
-       is an <literal>%attributetype</literal> declaration in the grammar which 
+       is an <literal>%attributetype</literal> declaration in the grammar which
        introduces type variables, then the type of an attribute may mention any
        such type variables.
        </para>
@@ -3657,7 +3657,7 @@ snd(SEP,EXPR)
 
       </sect1>
     </chapter>
-  
+
   <chapter id="sec-info-files">
     <title>Info Files</title>
     <indexterm>
@@ -3667,7 +3667,7 @@ snd(SEP,EXPR)
     <para>(section under construction)</para>
 
   </chapter>
-  
+
   <chapter id="sec-tips">
     <title>Tips</title>
 
@@ -3678,7 +3678,7 @@ snd(SEP,EXPR)
       <title>Performance Tips</title>
 
       <para>How to make your parser go faster:</para>
-      
+
       <itemizedlist>
 
 	<listitem>
@@ -3723,7 +3723,7 @@ snd(SEP,EXPR)
 
 
     </sect1>
-    
+
     <sect1 id="sec-compilation-time">
       <title>Compilation-Time Tips</title>
 
@@ -3773,7 +3773,7 @@ snd(SEP,EXPR)
       </itemizedlist>
 
     </sect1>
-    
+
     <sect1 id="sec-finding-errors">
       <title>Finding Type Errors</title>
 
@@ -3828,7 +3828,7 @@ HappyAbsSyn&lt;n&gt; ( E )
       <indexterm>
 	<primary>conflicts</primary>
       </indexterm>
-      
+
       <para>Conflicts arise from ambiguities in the grammar.  That is,
       some input sequences may possess more than one parse.
       Shift/reduce conflicts are benign in the sense that they are
@@ -3932,7 +3932,7 @@ exp     : atom op exp
       <title>Using Happy with <application>GHCi</application></title>
       <indexterm><primary><application>GHCi</application></primary>
       </indexterm>
-      
+
       <para><application>GHCi</application>'s compilation manager
       doesn't understand Happy grammars, but with some creative use of
       macros and makefiles we can give the impression that
@@ -3945,7 +3945,7 @@ exp     : atom op exp
 	  <filename>Makefile_happysrcs</filename>:</para>
 
 <programlisting>HAPPY = happy
-HAPPY_OPTS = 
+HAPPY_OPTS =
 
 all: MyParser.hs
 
