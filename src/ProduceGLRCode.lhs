@@ -18,7 +18,6 @@ This module is designed as an extension to the Haskell parser generator Happy.
 > import GenUtils ( thd3, mapDollarDollar )
 > import GenUtils ( str, char, nl, brack, brack', interleave, maybestr )
 > import Grammar
-> import System.IO
 > import Data.Array
 > import Data.Char ( isSpace )
 > import Data.List ( nub, (\\), sort )
