@@ -15,3 +15,5 @@ HappyTemplate-arrays-ghc
 HappyTemplate-arrays-ghc-debug
 HappyTemplate-coerce
 HappyTemplate-ghc
+.*.swp
+.*.swo
