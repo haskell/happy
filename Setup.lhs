@@ -4,17 +4,19 @@
 module Main where
 
 import Distribution.PackageDescription (PackageDescription(..))
-import Distribution.Simple.Setup ( BuildFlags(..), buildVerbose )
-import Distribution.Simple ( defaultMainWithHooks, defaultUserHooks, UserHooks(..) )
+import Distribution.Simple.Setup ( BuildFlags(..), buildVerbosity, fromFlagOrDefault )
+import Distribution.Simple ( defaultMainWithHooks, simpleUserHooks, UserHooks(..) )
 import Distribution.Simple.LocalBuildInfo ( LocalBuildInfo(..) )
 import Distribution.Simple.Program
+import Distribution.Verbosity ( normal )
 
+import Data.Monoid ((<>))
 import System.FilePath ((</>))
 import Control.Exception ( try )
 import System.Directory (removeFile)
 
 main :: IO ()
-main = defaultMainWithHooks defaultUserHooks{ postBuild = myPostBuild,
+main = defaultMainWithHooks simpleUserHooks { postBuild = myPostBuild,
 					      postClean = myPostClean,
 					      copyHook  = myCopy,
 					      instHook  = myInstall }
@@ -39,7 +41,9 @@ symbols cs = case lex cs of
               _ -> []
 
 myPostBuild _ flags _ lbi = do
-  let runProgram p = rawSystemProgramConf (buildVerbose flags) p (withPrograms lbi)
+  let runProgram p = rawSystemProgramConf (fromFlagOrDefault normal (buildVerbosity flags))
+                                          p
+                                          (withPrograms lbi)
       cpp_template src dst opts = do
         let tmp = dst ++ ".tmp"
         runProgram ghcProgram (["-o", tmp, "-E", "-cpp", "templates" </> src] ++ opts)
@@ -55,13 +59,13 @@ myPostClean _ _ _ _ = mapM_ (try' . removeFile) all_template_files
         try' = try
 
 myInstall pkg_descr lbi hooks flags =
-  instHook defaultUserHooks pkg_descr' lbi hooks flags
+  instHook simpleUserHooks pkg_descr' lbi hooks flags
   where pkg_descr' = pkg_descr {
           dataFiles = dataFiles pkg_descr ++ all_template_files
 	}
 
 myCopy pkg_descr lbi hooks copy_flags =
-  copyHook defaultUserHooks pkg_descr' lbi hooks copy_flags
+  copyHook simpleUserHooks pkg_descr' lbi hooks copy_flags
   where pkg_descr' = pkg_descr {
           dataFiles = dataFiles pkg_descr ++ all_template_files
 	}
