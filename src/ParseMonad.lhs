@@ -15,8 +15,8 @@ The parser monad.
 > lineP = P $ \_ l -> OkP l
 
 > instance Monad P where
->	return m = P $ \ _ _ -> OkP m
->	m >>= k =  P $ \s l -> case runP m s l of
->		OkP a -> runP (k a) s l
->		FailP err -> FailP err
->	fail s = P $ \ _ _ -> FailP s
+>       return m = P $ \ _ _ -> OkP m
+>       m >>= k =  P $ \s l -> case runP m s l of
+>               OkP a -> runP (k a) s l
+>               FailP err -> FailP err
+>       fail s = P $ \ _ _ -> FailP s
