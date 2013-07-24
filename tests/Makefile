@@ -1,5 +1,5 @@
 HAPPY=../dist/build/happy/happy
-HC=ghc
+HC=ghc -hide-all-packages -package base -package array -package mtl
 
 TESTS = Test.ly TestMulti.ly TestPrecedence.ly bug001.ly \
 	monad001.y monad002.ly precedence001.ly precedence002.y \
@@ -63,7 +63,7 @@ CHECK_ERROR_TESTS = $(patsubst %, check.%, $(ERROR_TESTS))
 
 HC_OPTS += -fglasgow-exts -fforce-recomp
 
-.PRECIOUS: *.hs *.o *.bin *.exe
+.PRECIOUS: %.hs %.o %.bin %.$(HS_PROG_EXT)
 
 %.run : %$(HS_PROG_EXT)
 	@echo "--> Checking $<..."
@@ -93,3 +93,8 @@ check-todo::
 	$(HC) Test.hs -o happy_test
 	./happy_test
 	-rm -f ./happy_test
+
+.PHONY: clean
+
+clean:
+	$(RM) $(CLEAN_FILES)
