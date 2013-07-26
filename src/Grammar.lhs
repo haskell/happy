@@ -409,7 +409,7 @@ So is this.
    now check that $i references are in range
 
 >            in do let prods = mentionedProductions rules
->                  mapM checkArity prods
+>                  mapM_ checkArity prods
 
    and output the rules
 
