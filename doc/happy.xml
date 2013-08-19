@@ -2534,7 +2534,7 @@ close : '}'                  { () }
     url="http://www-rocq.inria.fr/oscar/www/fnc2/manual/node32.html">here</ulink>.
     There is also an article in the Monad Reader about attribute grammars and a
     different approach to attribute grammars using Haskell
-    <ulink url="http://www.haskell.org/tmrwiki/WhyAttributeGrammarsMatter">here</ulink>.
+    <ulink url="http://www.haskell.org/haskellwiki/The_Monad.Reader/Issue4/Why_Attribute_Grammars_Matter">here</ulink>.
     </para>
 
     <para>
