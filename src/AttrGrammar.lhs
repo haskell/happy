@@ -1,4 +1,4 @@
-> module AttrGrammar 
+> module AttrGrammar
 > ( AgToken (..)
 > , AgRule (..)
 > , agLexAll
@@ -11,7 +11,7 @@
 > import Data.Char
 > import ParseMonad
 
-> data AgToken 
+> data AgToken
 >   = AgTok_LBrace
 >   | AgTok_RBrace
 >   | AgTok_Where
@@ -83,9 +83,9 @@
 > agLexer' cont ('$':'>':rest) = agLexAttribute cont (\a -> AgTok_RightmostRef a) rest
 > agLexer' cont s@('$':rest) =
 >     let (n,rest') = span isDigit rest
->     in if null n 
+>     in if null n
 >           then agLexUnknown cont s
->	    else agLexAttribute cont (\a -> AgTok_SubRef (read n,a)) rest'
+>           else agLexAttribute cont (\a -> AgTok_SubRef (read n,a)) rest'
 > agLexer' cont s@(c:rest)
 >     | isSpace c = agLexer' cont (dropWhile isSpace rest)
 >     | otherwise = agLexUnknown cont s
@@ -98,10 +98,10 @@
 >            | otherwise                    = (reverse t,'$':c:cs)
 >         aux t (c:cs)
 >            | isSpace c || c `elem` "{};=" = (reverse t,c:cs)
->	     | otherwise                    = aux (c:t) cs
+>            | otherwise                    = aux (c:t) cs
 
 > agLexAttribute :: (AgToken -> Pfunc a) -> (String -> AgToken) -> Pfunc a
-> agLexAttribute cont k ('.':x:xs) 
->	 | isLower x = let (ident,rest) = span (\c -> isAlphaNum c || c == '\'') xs in cont (k (x:ident)) rest
->	 | otherwise = \_ -> FailP "bad attribute identifier"
+> agLexAttribute cont k ('.':x:xs)
+>        | isLower x = let (ident,rest) = span (\c -> isAlphaNum c || c == '\'') xs in cont (k (x:ident)) rest
+>        | otherwise = \_ -> FailP "bad attribute identifier"
 > agLexAttribute cont k rest = cont (k "") rest

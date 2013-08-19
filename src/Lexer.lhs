@@ -9,15 +9,15 @@ The lexer.
 >       TokenId(..),
 >       lexer ) where
 
-> import ParseMonad        
+> import ParseMonad
 
 > import Data.Char ( isSpace, isAlphaNum, isDigit, digitToInt )
 
-> data Token 
+> data Token
 >       = TokenInfo String TokenId
 >       | TokenNum  Int    TokenId
 >       | TokenKW          TokenId
->	| TokenEOF
+>       | TokenEOF
 
 > tokenToId :: Token -> TokenId
 > tokenToId (TokenInfo _ i) = i
@@ -31,7 +31,7 @@ The lexer.
 > instance Ord Token where
 >       i <= i' = tokenToId i <= tokenToId i'
 
-> data TokenId 
+> data TokenId
 >       = TokId                 -- words and symbols
 >       | TokSpecId_TokenType   -- %tokentype
 >       | TokSpecId_Token       -- %token
@@ -62,11 +62,11 @@ The lexer.
 
 #ifdef DEBUG
 
->       	,Show
+>               ,Show
 
 #endif
 
->		)
+>               )
 
 ToDo: proper text instance here, for use in parser error messages.
 
@@ -82,47 +82,47 @@ ToDo: proper text instance here, for use in parser error messages.
 
 > nextLex :: (Token -> P a) -> Char -> String -> Int -> ParseResult a
 > nextLex cont c = case c of
->  	'\n' 	-> \rest line -> returnToken lexer cont rest (line+1)
->  	'%' 	-> lexPercent cont
->  	':' 	-> lexColon cont
->  	';' 	-> returnToken cont (TokenKW TokSemiColon)
+>       '\n'    -> \rest line -> returnToken lexer cont rest (line+1)
+>       '%'     -> lexPercent cont
+>       ':'     -> lexColon cont
+>       ';'     -> returnToken cont (TokenKW TokSemiColon)
 
->  	'|' 	-> returnToken cont (TokenKW TokBar)
->  	'\''	-> lexChar cont
->  	'"'{-"-}-> lexString cont
->  	'{' 	-> lexCode cont
+>       '|'     -> returnToken cont (TokenKW TokBar)
+>       '\''    -> lexChar cont
+>       '"'{-"-}-> lexString cont
+>       '{'     -> lexCode cont
 
 >       '('     -> returnToken cont (TokenKW TokParenL)
 >       ')'     -> returnToken cont (TokenKW TokParenR)
 >       ','     -> returnToken cont (TokenKW TokComma)
 
->  	_ 	
->	  | isSpace c -> runP (lexer cont)
->	  |  c >= 'a' && c <= 'z' 
->	     || c >= 'A' && c <= 'Z' -> lexId cont c
+>       _
+>         | isSpace c -> runP (lexer cont)
+>         |  c >= 'a' && c <= 'z'
+>            || c >= 'A' && c <= 'Z' -> lexId cont c
 >         | isDigit c -> lexNum cont c
->	_       -> lexError ("lexical error before `" ++ c : "'")
+>       _       -> lexError ("lexical error before `" ++ c : "'")
 
-Percents come in two forms, in pairs, or 
+Percents come in two forms, in pairs, or
 followed by a special identifier.
 
 > lexPercent :: (Token -> P a) -> [Char] -> Int -> ParseResult a
 > lexPercent cont s = case s of
-> 	'%':rest -> returnToken cont (TokenKW TokDoublePercent) rest
-> 	't':'o':'k':'e':'n':'t':'y':'p':'e':rest -> 
->		returnToken cont (TokenKW TokSpecId_TokenType) rest
-> 	't':'o':'k':'e':'n':rest ->
-> 		returnToken cont (TokenKW TokSpecId_Token) rest
-> 	'n':'a':'m':'e':rest ->
-> 		returnToken cont (TokenKW TokSpecId_Name) rest
-> 	'p':'a':'r':'t':'i':'a':'l':rest ->
-> 		returnToken cont (TokenKW TokSpecId_Partial) rest
-> 	'i':'m':'p':'o':'r':'t':'e':'d':'i':'d':'e':'n':'t':'i':'t':'y':rest ->
-> 		returnToken cont (TokenKW TokSpecId_ImportedIdentity) rest
-> 	'm':'o':'n':'a':'d':rest ->
-> 		returnToken cont (TokenKW TokSpecId_Monad) rest
-> 	'l':'e':'x':'e':'r':rest ->
-> 		returnToken cont (TokenKW TokSpecId_Lexer) rest
+>       '%':rest -> returnToken cont (TokenKW TokDoublePercent) rest
+>       't':'o':'k':'e':'n':'t':'y':'p':'e':rest ->
+>               returnToken cont (TokenKW TokSpecId_TokenType) rest
+>       't':'o':'k':'e':'n':rest ->
+>               returnToken cont (TokenKW TokSpecId_Token) rest
+>       'n':'a':'m':'e':rest ->
+>               returnToken cont (TokenKW TokSpecId_Name) rest
+>       'p':'a':'r':'t':'i':'a':'l':rest ->
+>               returnToken cont (TokenKW TokSpecId_Partial) rest
+>       'i':'m':'p':'o':'r':'t':'e':'d':'i':'d':'e':'n':'t':'i':'t':'y':rest ->
+>               returnToken cont (TokenKW TokSpecId_ImportedIdentity) rest
+>       'm':'o':'n':'a':'d':rest ->
+>               returnToken cont (TokenKW TokSpecId_Monad) rest
+>       'l':'e':'x':'e':'r':rest ->
+>               returnToken cont (TokenKW TokSpecId_Lexer) rest
 >       'n':'o':'n':'a':'s':'s':'o':'c':rest ->
 >               returnToken cont (TokenKW TokSpecId_Nonassoc) rest
 >       'l':'e':'f':'t':rest ->
@@ -139,36 +139,36 @@ followed by a special identifier.
 >               returnToken cont (TokenKW TokSpecId_Attributetype) rest
 >       'a':'t':'t':'r':'i':'b':'u':'t':'e':rest ->
 >               returnToken cont (TokenKW TokSpecId_Attribute) rest
->	_ -> lexError ("unrecognised directive: %" ++ 
->				takeWhile (not.isSpace) s) s
+>       _ -> lexError ("unrecognised directive: %" ++
+>                               takeWhile (not.isSpace) s) s
 
 > lexColon :: (Token -> P a) -> [Char] -> Int -> ParseResult a
 > lexColon cont (':':rest) = returnToken cont (TokenKW TokDoubleColon) rest
 > lexColon cont rest       = returnToken cont (TokenKW TokColon) rest
 
 > lexId :: (Token -> P a) -> Char -> String -> Int -> ParseResult a
-> lexId cont c rest = 
->	readId rest (\ ident rest' -> returnToken cont (TokenInfo (c:ident) TokId) rest')
+> lexId cont c rest =
+>       readId rest (\ ident rest' -> returnToken cont (TokenInfo (c:ident) TokId) rest')
 
 > lexChar :: (Token -> P a) -> String -> Int -> ParseResult a
-> lexChar cont rest = lexReadChar rest 
->	(\ ident -> returnToken cont (TokenInfo ("'" ++ ident ++ "'") TokId))
+> lexChar cont rest = lexReadChar rest
+>       (\ ident -> returnToken cont (TokenInfo ("'" ++ ident ++ "'") TokId))
 
 > lexString :: (Token -> P a) -> String -> Int -> ParseResult a
-> lexString cont rest = lexReadString rest 
->	(\ ident -> returnToken cont (TokenInfo ("\"" ++ ident ++ "\"") TokId))
+> lexString cont rest = lexReadString rest
+>       (\ ident -> returnToken cont (TokenInfo ("\"" ++ ident ++ "\"") TokId))
 
 > lexCode :: (Token -> P a) -> String -> Int -> ParseResult a
 > lexCode cont rest = lexReadCode rest (0 :: Integer) "" cont
 
 > lexNum :: (Token -> P a) -> Char -> String -> Int -> ParseResult a
-> lexNum cont c rest = 
->        readNum rest (\ num rest' -> 
+> lexNum cont c rest =
+>        readNum rest (\ num rest' ->
 >                         returnToken cont (TokenNum (stringToInt (c:num)) TokNum) rest')
 >  where stringToInt = foldl (\n c' -> digitToInt c' + 10*n) 0
 
 > cleanupCode :: String -> String
-> cleanupCode s = 
+> cleanupCode s =
 >    dropWhile isSpace (reverse (dropWhile isSpace (reverse s)))
 
 This has to match for @}@ that are {\em not} in strings.  The code
@@ -178,26 +178,26 @@ here is a bit tricky, but should work in most cases.
 >             => String -> a -> String -> (Token -> P b) -> Int
 >             -> ParseResult b
 > lexReadCode s n c = case s of
->	'\n':r -> \cont l ->  lexReadCode r n ('\n':c) cont (l+1)
+>       '\n':r -> \cont l ->  lexReadCode r n ('\n':c) cont (l+1)
 >
-> 	'{' :r -> lexReadCode r (n+1) ('{':c)
+>       '{' :r -> lexReadCode r (n+1) ('{':c)
 >
-> 	'}' :r
->		| n == 0    -> \cont -> returnToken cont (TokenInfo (
->				cleanupCode (reverse c)) TokCodeQuote) r
->		| otherwise -> lexReadCode r (n-1) ('}':c)
+>       '}' :r
+>               | n == 0    -> \cont -> returnToken cont (TokenInfo (
+>                               cleanupCode (reverse c)) TokCodeQuote) r
+>               | otherwise -> lexReadCode r (n-1) ('}':c)
 >
-> 	'"'{-"-}:r -> lexReadString r (\ str r' -> 
->         	      lexReadCode r' n ('"' : (reverse str) ++ '"' : c))
+>       '"'{-"-}:r -> lexReadString r (\ str r' ->
+>                     lexReadCode r' n ('"' : (reverse str) ++ '"' : c))
 >
-> 	a: '\'':r | isAlphaNum a -> lexReadCode r n ('\'':a:c)
+>       a: '\'':r | isAlphaNum a -> lexReadCode r n ('\'':a:c)
 >
-> 	'\'' :r	-> lexReadSingleChar r (\ str r' -> 
->         	   lexReadCode r' n ((reverse str) ++ '\'' : c))
+>       '\'' :r -> lexReadSingleChar r (\ str r' ->
+>                  lexReadCode r' n ((reverse str) ++ '\'' : c))
 >
-> 	ch:r -> lexReadCode r n (ch:c)
+>       ch:r -> lexReadCode r n (ch:c)
 >
-> 	[] -> \_cont -> lexError "No closing '}' in code segment" []
+>       [] -> \_cont -> lexError "No closing '}' in code segment" []
 
 ----------------------------------------------------------------------------
 Utilities that read the rest of a token.
@@ -212,10 +212,10 @@ Utilities that read the rest of a token.
 
 > isIdPart :: Char -> Bool
 > isIdPart c =
->	   c >= 'a' && c <= 'z' 
->	|| c >= 'A' && c <= 'Z' 
->	|| c >= '0' && c <= '9' 
->	|| c == '_'
+>          c >= 'a' && c <= 'z'
+>       || c >= 'A' && c <= 'Z'
+>       || c >= '0' && c <= '9'
+>       || c == '_'
 
 > lexReadSingleChar :: String -> (String -> String -> a) -> a
 > lexReadSingleChar (c:'\'':r)      fn = fn (c:"'") r
@@ -241,11 +241,11 @@ Utilities that read the rest of a token.
 
 > lexNestedComment :: Int -> ([Char] -> Int -> ParseResult a) -> [Char] -> Int
 >                  -> ParseResult a
-> lexNestedComment l cont r = 
+> lexNestedComment l cont r =
 >   case r of
->	'-':'}':r' -> cont r'
->	'{':'-':r' -> \line -> lexNestedComment line 
->			(\r'' -> lexNestedComment l cont r'') r' line
->	'\n':r'    -> \line -> lexNestedComment l cont r' (line+1)
->	_:r'       -> lexNestedComment l cont r'
->	""	   -> \_ -> lexError "unterminated comment" r l
+>       '-':'}':r' -> cont r'
+>       '{':'-':r' -> \line -> lexNestedComment line
+>                       (\r'' -> lexNestedComment l cont r'') r' line
+>       '\n':r'    -> \line -> lexNestedComment l cont r' (line+1)
+>       _:r'       -> lexNestedComment l cont r'
+>       ""         -> \_ -> lexError "unterminated comment" r l
