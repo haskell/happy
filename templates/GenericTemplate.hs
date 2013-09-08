@@ -2,7 +2,7 @@
 
 #ifdef HAPPY_GHC
 #define ILIT(n) n#
-#define FAST_INT_BINDING(n) (n)
+#define FAST_INT_BINDING(n) !(n)
 #define IBOX(n) (Happy_GHC_Exts.I# (n))
 #define FAST_INT Happy_GHC_Exts.Int#
 #define LT(n,m) (n Happy_GHC_Exts.<# m)
