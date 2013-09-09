@@ -2,7 +2,6 @@
 
 #ifdef HAPPY_GHC
 #define ILIT(n) n#
-#define FAST_INT_BINDING(n) (n)
 #define IBOX(n) (Happy_GHC_Exts.I# (n))
 #define FAST_INT Happy_GHC_Exts.Int#
 #define LT(n,m) (n Happy_GHC_Exts.<# m)
@@ -15,7 +14,6 @@
 #define IF_GHC(x) (x)
 #else
 #define ILIT(n) (n)
-#define FAST_INT_BINDING(n) (n)
 #define IBOX(n) (n)
 #define FAST_INT Int
 #define LT(n,m) (n < m)
@@ -109,13 +107,13 @@ happyDoAction i tk st
 						 ++ show IBOX(new_state)
 						 ++ "\n")
 				     happyShift new_state i tk st
-				     where FAST_INT_BINDING(new_state) = MINUS(n,(ILIT(1) :: FAST_INT))
-   where FAST_INT_BINDING(off)    = indexShortOffAddr happyActOffsets st
-         FAST_INT_BINDING(off_i)  = PLUS(off,i)
+                                     where new_state = MINUS(n,(ILIT(1) :: FAST_INT))
+   where off    = indexShortOffAddr happyActOffsets st
+         off_i  = PLUS(off,i)
 	 check  = if GTE(off_i,(ILIT(0) :: FAST_INT))
 			then EQ(indexShortOffAddr happyCheck off_i, i)
 			else False
-         FAST_INT_BINDING(action)
+         action
           | check     = indexShortOffAddr happyTable off_i
           | otherwise = indexShortOffAddr happyDefActions st
 
@@ -165,7 +163,7 @@ newtype HappyState b c = HappyState
 -- Shifting a token
 
 happyShift new_state ERROR_TOK tk st sts stk@(x `HappyStk` _) =
-     let FAST_INT_BINDING(i) = GET_ERROR_TOKEN(x) in
+     let i = GET_ERROR_TOKEN(x) in
 --     trace "shifting the error token" $
      DO_ACTION(new_state,i,tk,CONS(st,sts),stk)
 
@@ -208,23 +206,26 @@ happyReduce k nt fn j tk st sts stk
 happyMonadReduce k nt fn ERROR_TOK tk st sts stk
      = happyFail ERROR_TOK tk st sts stk
 happyMonadReduce k nt fn j tk st sts stk =
-        happyThen1 (fn stk tk) (\r -> GOTO(action) nt j tk st1 sts1 (r `HappyStk` drop_stk))
-       where FAST_INT_BINDING(sts1@(CONS(st1@HAPPYSTATE(action),_))) = happyDrop k CONS(st,sts)
-             drop_stk = happyDropStk k stk
+      case happyDrop k CONS(st,sts) of
+        sts1@(CONS(st1@HAPPYSTATE(action),_)) ->
+          let drop_stk = happyDropStk k stk in
+          happyThen1 (fn stk tk) (\r -> GOTO(action) nt j tk st1 sts1 (r `HappyStk` drop_stk))
 
 happyMonad2Reduce k nt fn ERROR_TOK tk st sts stk
      = happyFail ERROR_TOK tk st sts stk
 happyMonad2Reduce k nt fn j tk st sts stk =
-       happyThen1 (fn stk tk) (\r -> happyNewToken new_state sts1 (r `HappyStk` drop_stk))
-       where FAST_INT_BINDING(sts1@(CONS(st1@HAPPYSTATE(action),_))) = happyDrop k CONS(st,sts)
-             drop_stk = happyDropStk k stk
+      case happyDrop k CONS(st,sts) of
+        sts1@(CONS(st1@HAPPYSTATE(action),_)) ->
+         let drop_stk = happyDropStk k stk
 #if defined(HAPPY_ARRAY)
-             FAST_INT_BINDING(off) = indexShortOffAddr happyGotoOffsets st1
-             FAST_INT_BINDING(off_i) = PLUS(off,nt)
-             FAST_INT_BINDING(new_state) = indexShortOffAddr happyTable off_i
+             off = indexShortOffAddr happyGotoOffsets st1
+             off_i = PLUS(off,nt)
+             new_state = indexShortOffAddr happyTable off_i
 #else
              new_state = action
 #endif
+          in
+          happyThen1 (fn stk tk) (\r -> happyNewToken new_state sts1 (r `HappyStk` drop_stk))
 
 happyDrop ILIT(0) l = l
 happyDrop n CONS(_,t) = happyDrop MINUS(n,(ILIT(1) :: FAST_INT)) t
@@ -239,9 +240,9 @@ happyDropStk n (x `HappyStk` xs) = happyDropStk MINUS(n,(ILIT(1)::FAST_INT)) xs
 happyGoto nt j tk st = 
    DEBUG_TRACE(", goto state " ++ show IBOX(new_state) ++ "\n")
    happyDoAction j tk new_state
-   where FAST_INT_BINDING(off) = indexShortOffAddr happyGotoOffsets st
-         FAST_INT_BINDING(off_i) = PLUS(off,nt)
-         FAST_INT_BINDING(new_state) = indexShortOffAddr happyTable off_i
+   where off = indexShortOffAddr happyGotoOffsets st
+         off_i = PLUS(off,nt)
+         new_state = indexShortOffAddr happyTable off_i
 #else
 happyGoto action j tk st = action j j tk (HappyState action)
 #endif
@@ -251,7 +252,7 @@ happyGoto action j tk st = action j j tk (HappyState action)
 
 -- parse error if we are in recovery and we fail again
 happyFail ERROR_TOK tk old_st _ stk@(x `HappyStk` _) =
-     let FAST_INT_BINDING(i) = GET_ERROR_TOKEN(x) in
+     let i = GET_ERROR_TOKEN(x) in
 --	trace "failing" $ 
         happyError_ i tk
 
