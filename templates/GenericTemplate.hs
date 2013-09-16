@@ -1,12 +1,29 @@
 -- $Id: GenericTemplate.hs,v 1.26 2005/01/14 14:47:22 simonmar Exp $
 
 #ifdef HAPPY_GHC
+#undef __GLASGOW_HASKELL__
+#define HAPPY_IF_GHC_GT_500 #if __GLASGOW_HASKELL__ > 500
+#define HAPPY_IF_GHC_GE_503 #if __GLASGOW_HASKELL__ >= 503
+#define HAPPY_ELIF_GHC_500 #elif __GLASGOW_HASKELL__ == 500
+#define HAPPY_IF_GHC_GT_706 #if __GLASGOW_HASKELL__ > 706
+#define HAPPY_ELSE #else
+#define HAPPY_ENDIF #endif
+#define HAPPY_DEFINE #define
+#endif
+
+#ifdef HAPPY_GHC
 #define ILIT(n) n#
 #define IBOX(n) (Happy_GHC_Exts.I# (n))
 #define FAST_INT Happy_GHC_Exts.Int#
-#define LT(n,m) (n Happy_GHC_Exts.<# m)
-#define GTE(n,m) (n Happy_GHC_Exts.>=# m)
-#define EQ(n,m) (n Happy_GHC_Exts.==# m)
+HAPPY_IF_GHC_GT_706
+HAPPY_DEFINE LT(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.<# m)) :: Bool)
+HAPPY_DEFINE GTE(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.>=# m)) :: Bool)
+HAPPY_DEFINE EQ(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.==# m)) :: Bool)
+HAPPY_ELSE
+HAPPY_DEFINE LT(n,m) (n Happy_GHC_Exts.<# m)
+HAPPY_DEFINE GTE(n,m) (n Happy_GHC_Exts.>=# m)
+HAPPY_DEFINE EQ(n,m) (n Happy_GHC_Exts.==# m)
+HAPPY_ENDIF
 #define PLUS(n,m) (n Happy_GHC_Exts.+# m)
 #define MINUS(n,m) (n Happy_GHC_Exts.-# m)
 #define TIMES(n,m) (n Happy_GHC_Exts.*# m)
@@ -111,20 +128,11 @@ happyDoAction i tk st
    where off    = indexShortOffAddr happyActOffsets st
          off_i  = PLUS(off,i)
 	 check  = if GTE(off_i,(ILIT(0) :: FAST_INT))
-			then EQ(indexShortOffAddr happyCheck off_i, i)
-			else False
+                  then EQ(indexShortOffAddr happyCheck off_i, i)
+		  else False
          action
           | check     = indexShortOffAddr happyTable off_i
           | otherwise = indexShortOffAddr happyDefActions st
-
-#ifdef HAPPY_GHC
-#undef __GLASGOW_HASKELL__
-#define HAPPY_IF_GHC_GT_500 #if __GLASGOW_HASKELL__ > 500
-#define HAPPY_IF_GHC_GE_503 #if __GLASGOW_HASKELL__ >= 503
-#define HAPPY_ELIF_GHC_500 #elif __GLASGOW_HASKELL__ == 500
-#define HAPPY_ELSE #else
-#define HAPPY_ENDIF #endif
-#endif
 
 #ifdef HAPPY_GHC
 indexShortOffAddr (HappyA# arr) off =
