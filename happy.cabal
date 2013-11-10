@@ -1,5 +1,5 @@
 name: happy
-version: 1.19.0
+version: 1.19.0.1
 license: BSD3
 license-file: LICENSE
 copyright: (c) Andy Gill, Simon Marlow
@@ -17,10 +17,6 @@ Description:
   Happy is a parser generator for Haskell.  Given a grammar
   specification in BNF, Happy generates Haskell code to parse the
   grammar.  Happy works in a similar way to the @yacc@ tool for C.
-  .
-  Changes in 1.19:
-  .
-  * necessary changes to work with GHC 7.8
 
 extra-source-files:
 	ANNOUNCE
