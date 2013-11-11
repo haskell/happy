@@ -10,7 +10,7 @@ stability: stable
 homepage: http://www.haskell.org/happy/
 synopsis: Happy is a parser generator for Haskell
 category: Development
-cabal-version: >= 1.6
+cabal-version: >= 1.8
 build-type: Custom
 
 Description:
