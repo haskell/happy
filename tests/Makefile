@@ -1,5 +1,14 @@
 HAPPY=../dist/build/happy/happy
-HC=ghc -hide-all-packages -package base -package array -package mtl -Werror
+HC=ghc
+HC_OPTS=-hide-all-packages -package base -package array -package mtl -Werror
+
+.PRECIOUS: %.n.hs %.g.hs %.o %.exe %.bin
+
+ifeq "$(TARGETPLATFORM)" "i386-unknown-mingw32"
+HS_PROG_EXT = .exe
+else
+HS_PROG_EXT = .bin
+endif
 
 TESTS = Test.ly TestMulti.ly TestPrecedence.ly bug001.ly \
 	monad001.y monad002.ly precedence001.ly precedence002.y \
@@ -10,12 +19,6 @@ TESTS = Test.ly TestMulti.ly TestPrecedence.ly bug001.ly \
 ERROR_TESTS = error001.y
 
 TEST_HAPPY_OPTS = --strict --template=..
-
-ifeq "$(TARGETPLATFORM)" "i386-unknown-mingw32"
-HS_PROG_EXT = .exe
-else
-HS_PROG_EXT = .bin
-endif
 
 %.n.hs : %.ly
 	$(HAPPY) $(TEST_HAPPY_OPTS) $< -o $@
