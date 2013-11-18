@@ -15,6 +15,7 @@
 #define ILIT(n) n#
 #define IBOX(n) (Happy_GHC_Exts.I# (n))
 #define FAST_INT Happy_GHC_Exts.Int#
+
 HAPPY_IF_GHC_GT_706
 HAPPY_DEFINE LT(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.<# m)) :: Bool)
 HAPPY_DEFINE GTE(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.>=# m)) :: Bool)
