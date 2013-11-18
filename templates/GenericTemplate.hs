@@ -15,7 +15,7 @@
 #define ILIT(n) n#
 #define IBOX(n) (Happy_GHC_Exts.I# (n))
 #define FAST_INT Happy_GHC_Exts.Int#
-
+-- Do not remove this comment. Required to fix CPP parsing when using GCC and a clang-compiled alex.
 HAPPY_IF_GHC_GT_706
 HAPPY_DEFINE LT(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.<# m)) :: Bool)
 HAPPY_DEFINE GTE(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.>=# m)) :: Bool)
