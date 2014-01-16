@@ -1,6 +1,7 @@
 #!/usr/bin/runhaskell
 
 \begin{code}
+{-# OPTIONS -fwarn-unused-imports #-}
 module Main where
 
 import Distribution.PackageDescription (PackageDescription(..))
@@ -10,7 +11,6 @@ import Distribution.Simple.LocalBuildInfo ( LocalBuildInfo(..) )
 import Distribution.Simple.Program
 import Distribution.Verbosity ( normal )
 
-import Data.Monoid ((<>))
 import System.FilePath ((</>))
 import Control.Exception ( try )
 import System.Directory (removeFile)
