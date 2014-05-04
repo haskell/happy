@@ -138,7 +138,7 @@ executable happy
 
   build-depends: base < 5, mtl >= 1.0
 
-  extensions: CPP, MagicHash
+  extensions: CPP, MagicHash, FlexibleContexts
   ghc-options: -Wall -fno-warn-type-defaults
   other-modules:
         AbsSyn
