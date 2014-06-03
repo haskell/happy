@@ -485,7 +485,8 @@ GHC version-dependent stuff in it.
 >       | otherwise                 = ""
 
 > importsToInject :: Target -> [CLIFlags] -> String
-> importsToInject tgt cli = "\n" ++ array_import ++ glaexts_import ++ debug_imports
+> importsToInject tgt cli =
+>     concat ["\n", array_import, glaexts_import, debug_imports, applicative_imports]
 >   where
 >       glaexts_import | is_ghc         = import_glaexts
 >                      | otherwise      = ""
@@ -495,6 +496,9 @@ GHC version-dependent stuff in it.
 >
 >       debug_imports  | is_debug       = import_debug
 >                      | otherwise      = ""
+>
+>       applicative_imports | is_ghc    = import_applicative
+>                           | otherwise = ""
 >
 >       is_ghc   = OptGhcTarget `elem` cli
 >       is_debug = OptDebugParser `elem` cli
@@ -513,6 +517,9 @@ CPP is turned on for -fglasgow-exts, so we can use conditional compilation:
 >                "import qualified System.IO as Happy_System_IO\n" ++
 >                "import qualified System.IO.Unsafe as Happy_System_IO_Unsafe\n" ++
 >                "import qualified Debug.Trace as Happy_Debug_Trace\n"
+
+> import_applicative :: String
+> import_applicative = "import Control.Applicative(Applicative(..))\n"
 
 ------------------------------------------------------------------------------
 Extract various command-line options.
