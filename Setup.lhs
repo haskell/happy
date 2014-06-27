@@ -1,28 +1,34 @@
-#!/usr/bin/runhaskell
+#!/usr/bin/env runhaskell
 
 \begin{code}
 {-# OPTIONS -fwarn-unused-imports #-}
 module Main where
 
 import Distribution.PackageDescription (PackageDescription(..))
-import Distribution.Simple.Setup ( BuildFlags(..), buildVerbosity, fromFlagOrDefault )
-import Distribution.Simple ( defaultMainWithHooks, simpleUserHooks, UserHooks(..) )
-import Distribution.Simple.LocalBuildInfo ( LocalBuildInfo(..) )
+import Distribution.Simple.Setup (BuildFlags(..), buildVerbosity, fromFlagOrDefault)
+import Distribution.Simple (defaultMainWithHooks, simpleUserHooks, UserHooks(..))
+import Distribution.Simple.LocalBuildInfo (LocalBuildInfo(..))
 import Distribution.Simple.Program
-import Distribution.Verbosity ( normal )
+import Distribution.Simple.Utils (notice)
+import Distribution.Verbosity (normal)
 
-import System.FilePath ((</>))
-import Control.Exception ( try )
-import System.Directory (removeFile)
+import Control.Exception (try)
+import Control.Monad (unless, when)
 import Data.Char (isDigit)
+import Data.Maybe (isJust)
+import System.Directory (removeFile, createDirectoryIfMissing, copyFile)
+import System.FilePath (splitFileName, (</>))
 
 main :: IO ()
-main = defaultMainWithHooks simpleUserHooks { postBuild = myPostBuild,
-					      postClean = myPostClean,
-					      copyHook  = myCopy,
-					      instHook  = myInstall }
+main = defaultMainWithHooks simpleUserHooks {
+    buildHook      = myBuild
+  , postBuild      = myPostBuild
+  , postClean      = myPostClean
+  , copyHook       = myCopy
+  , instHook       = myInstall
+  }
 
--- hack to turn cpp-style '# 27 "GenericTemplate.hs"' into 
+-- hack to turn cpp-style '# 27 "GenericTemplate.hs"' into
 -- '{-# LINE 27 "GenericTemplate.hs" #-}'.
 mungeLinePragma line = case symbols line of
  syms | Just prag <- getLinePrag syms  -> prag
@@ -43,6 +49,43 @@ symbols :: String -> [String]
 symbols cs = case lex cs of
               (sym, cs'):_ | not (null sym) -> sym : symbols cs'
               _ -> []
+
+{-|
+  Since Happy technically depends on itself (it has .ly source files
+  that need to be parsed in order to compile it), we ship pre-parsed
+  versions of those files in the case that a Happy executable is not
+  already available for use.  This hook checks whether we are in the
+  position of requiring these saved build artifacts or being able to
+  produce them (which are mutually exclusive scenarios) and performs
+  the corresponding action before, resp. after, the build procedure.
+ -}
+shippedArtifacts :: [FilePath]
+shippedArtifacts =
+  [ "happy" </> "happy-tmp" </> "AttrGrammarParser.hs"
+  , "happy" </> "happy-tmp" </> "Parser.hs"
+  ]
+
+copyArtifact :: FilePath -> FilePath -> FilePath -> IO ()
+copyArtifact src dst f = do
+  createDirectoryIfMissing True $ dst </> (fst $ splitFileName f)
+  copyFile (src </> f) (dst </> f)
+
+myBuild pkg_descr lbi hooks flags = do
+  let verbosity = fromFlagOrDefault normal $ buildVerbosity flags
+  happyExistence <- programFindLocation happyProgram verbosity
+                    (getProgramSearchPath (withPrograms lbi))
+
+  unless (isJust happyExistence) $ do
+    -- life is not all sunshine and roses
+    notice verbosity "No existing happy parser; using saved artifacts..."
+    mapM_ (copyArtifact "artifacts" (buildDir lbi)) shippedArtifacts
+
+  buildHook simpleUserHooks pkg_descr lbi hooks flags
+
+  when (isJust happyExistence) $ do
+    -- life is all sunshine and roses
+    notice verbosity "Saving build artifacts for future generations..."
+    mapM_ (copyArtifact (buildDir lbi) "artifacts") shippedArtifacts
 
 myPostBuild _ flags _ lbi = do
   let runProgram p = rawSystemProgramConf (fromFlagOrDefault normal (buildVerbosity flags))

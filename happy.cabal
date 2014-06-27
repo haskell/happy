@@ -24,6 +24,8 @@ extra-source-files:
 	Makefile
 	README
 	TODO
+	artifacts/happy/happy-tmp/AttrGrammarParser.hs
+	artifacts/happy/happy-tmp/Parser.hs
 	doc/Makefile
 	doc/aclocal.m4
 	doc/config.mk.in
