@@ -497,8 +497,7 @@ GHC version-dependent stuff in it.
 >       debug_imports  | is_debug       = import_debug
 >                      | otherwise      = ""
 >
->       applicative_imports | is_ghc    = import_applicative
->                           | otherwise = ""
+>       applicative_imports = import_applicative
 >
 >       is_ghc   = OptGhcTarget `elem` cli
 >       is_debug = OptDebugParser `elem` cli
