@@ -518,7 +518,8 @@ CPP is turned on for -fglasgow-exts, so we can use conditional compilation:
 >                "import qualified Debug.Trace as Happy_Debug_Trace\n"
 
 > import_applicative :: String
-> import_applicative = "import Control.Applicative(Applicative(..))\n"
+> import_applicative = "import Control.Applicative(Applicative(..))\n" ++
+>                      "import Control.Monad (ap)\n"
 
 ------------------------------------------------------------------------------
 Extract various command-line options.
