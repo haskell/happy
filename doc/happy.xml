@@ -3970,6 +3970,94 @@ all: MyParser.hs
 	</listitem>
       </itemizedlist>
     </sect1>
+
+    <sect1 id="sec-monad-alex">
+      <title>Basic monadic Happy use with Alex</title>
+      <indexterm>
+        <primary><application>Alex</application></primary>
+        <secondary>monad</secondary>
+      </indexterm>
+
+      <para>
+        <application>Alex</application> lexers are often used by
+        <application>Happy</application> parsers, for example in
+        GHC. While many of these applications are quite sophisticated,
+        it is still quite useful to combine the basic
+        <application>Happy</application> <literal>%monad</literal>
+        directive with the <application>Alex</application>
+        <literal>monad</literal> wrapper. By using monads for both,
+        the resulting parser and lexer can handle errors far more
+        gracefully than by throwing an exception.
+      </para>
+
+      <para>
+        The most straightforward way to use a monadic
+        <application>Alex</application> lexer is to simply use the
+        <literal>Alex</literal> monad as the
+        <application>Happy</application> monad:
+      </para>
+
+      <example><title>Lexer.x</title>
+<programlisting>{
+module Lexer where
+}
+
+%wrapper "monad"
+
+tokens :-
+  ...
+
+{
+data Token = ... | EOF
+  deriving (Eq, Show)
+
+alexEOF = return EOF
+}</programlisting></example>
+      <example><title>Parser.y</title>
+<programlisting>{
+module Parser where
+
+import Lexer
+}
+
+%name pFoo
+%tokentype { Token }
+%error { parseError }
+%monad { Alex } { >>= } { return }
+%lexer { lexer } { EOF }
+
+%token
+  ...
+
+%%
+  ...
+
+parseError :: Token -> Alex a
+parseError _ = do
+  ((AlexPn _ line column), _, _, _) &lt;- alexGetInput
+  alexError ("parse error at line " ++ (show line) ++ ", column " ++ (show column))
+
+lexer :: (Token -> Alex a) -> Alex a
+lexer = (alexMonadScan >>=)
+}</programlisting></example>
+
+      <para>
+        We can then run the finished parser in the
+        <literal>Alex</literal> monad using
+        <literal>runAlex</literal>, which returns an
+        <literal>Either</literal> value rather than throwing an
+        exception in case of a parse or lexical error:
+      </para>
+
+<programlisting>
+import qualified Lexer as Lexer
+import qualified Parser as Parser
+
+parseFoo :: String -> Either String Foo
+parseFoo s = Lexer.runAlex s Parser.pFoo
+</programlisting>
+
+    </sect1>
   </chapter>
   <index/>
 </book>
