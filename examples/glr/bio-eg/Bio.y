@@ -3,7 +3,7 @@
 -- (c) 2004 University of Durham, Julia Fischer
 -- Portions of the grammar are derived from work by Leung/Mellish/Robertson
 
-import Char
+import Data.Char
 }
 
 %tokentype { Token }

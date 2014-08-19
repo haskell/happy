@@ -1,5 +1,5 @@
 > module Main where
-> import System(getArgs)
+> import System.Environment(getArgs)
 > import Data.Maybe(fromJust)
 > import Bio
 > import qualified Data.Map as Map
