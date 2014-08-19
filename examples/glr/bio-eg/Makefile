@@ -11,7 +11,7 @@ FILTER =
 	@ dummy 
 
 ${PROG} : Bio.o Main.lhs 
-	${GHC} -cpp -fglasgow-exts  -o ${PROG} --make Main.lhs
+	${GHC} -cpp -fglasgow-exts -rtsopts  -o ${PROG} --make Main.lhs
 
 BioData.hs Bio.hs : Bio.y
 	${HAPPY} --info --glr --ghc ${FILTER} $< 
