@@ -7,7 +7,6 @@ expr : Expr.hs Main.lhs
 NUM=20
 run : expr
 	./expr +RTS -s -RTS ${NUM} | grep ^Ok
-	egrep '' expr.stat > out${NUM}
 
 run30 : 
 	make run NUM=30
