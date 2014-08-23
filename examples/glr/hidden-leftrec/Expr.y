@@ -1,6 +1,6 @@
 {
 -- only list imports here
-import Char
+import Data.Char
 }
 
 %tokentype { Token }

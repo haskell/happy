@@ -1,5 +1,5 @@
 > module Main where
-> import System(getArgs)
+> import System.Environment(getArgs)
 > import Data.Maybe(fromJust)
 > import qualified Data.Map as Map
 > import English
