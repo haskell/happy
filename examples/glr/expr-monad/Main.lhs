@@ -1,5 +1,6 @@
 > module Main where
-> import System(getArgs)
+> import System.IO.Error(catchIOError)
+> import System.Environment(getArgs)
 > import Data.Maybe(fromJust)
 > import qualified Data.Map as Map
 > import Expr
@@ -16,7 +17,7 @@ This requires CPP / preprocessing; use Hugs.lhs for tests with Hugs
 >			    putStrLn $ "Ok " ++ show r ++ "\n" 
 >						++ unlines (map show $ Map.toList f)
 >			    let ms = decode (forest_lookup f) r ::[IO Int]
->			    mapM_ (\ma -> catch ma (\_ -> return 0) >>= print) ms
+>			    mapM_ (\ma -> catchIOError ma (\_ -> return 0) >>= print) ms
 >			    toDV $ Map.toList f
 >	  ParseEOF f  -> do 
 >			    putStrLn $ "Premature end of input:\n" 

@@ -1,0 +1,7 @@
+*.hi
+*.o
+*.bin
+*.g.hs
+*.n.hs
+*.stderr
+*.stdout

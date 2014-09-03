@@ -40,7 +40,6 @@
   where
 
 import Data.Char
-import System
 import qualified Data.Map as Map
 
 import Control.Monad (foldM)
