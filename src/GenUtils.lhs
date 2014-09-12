@@ -6,7 +6,6 @@ All the code below is understood to be in the public domain.
 
 > module GenUtils (
 
->       MaybeErr(..),
 >       mkClosure,
 >       foldb,
 >       listArray',
@@ -22,8 +21,6 @@ All the code below is understood to be in the public domain.
 > import Data.Array (Array, listArray)
 
 %------------------------------------------------------------------------------
-
-> data MaybeErr a err = Succeeded a | Failed err deriving (Eq,Show)
 
 @mkClosure@ makes a closure, when given a comparison and iteration loop.
 Be careful, because if the functional always makes the object different,

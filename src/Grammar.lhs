@@ -174,10 +174,10 @@ This bit is a real mess, mainly because of the error message support.
 > addErr :: ErrMsg -> M ()
 > addErr e = tell [e]
 
-> mangler :: FilePath -> AbsSyn -> MaybeErr Grammar [ErrMsg]
+> mangler :: FilePath -> AbsSyn -> Either [ErrMsg] Grammar
 > mangler file abssyn
->   | null errs = Succeeded g
->   | otherwise = Failed errs
+>   | null errs = Right g
+>   | otherwise = Left errs
 >   where (g, errs) = runWriter (manglerM file abssyn)
 
 > manglerM :: FilePath -> AbsSyn -> M Grammar
