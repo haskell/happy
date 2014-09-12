@@ -13,7 +13,6 @@ All the code below is understood to be in the public domain.
 >       ljustify,
 >       space,
 >       combinePairs,
->       thd3,
 >       mapDollarDollar,
 >       str, char, nl, brack, brack',
 >       interleave, interleave',
@@ -50,9 +49,6 @@ This will never terminate.
 
 
 Gofer-like stuff:
-
-> thd3 :: (a, b, c) -> c
-> thd3 (_,_,a) = a
 
 > ljustify :: Int -> String -> String
 > ljustify n s = s ++ space (max 0 (n - length s))
