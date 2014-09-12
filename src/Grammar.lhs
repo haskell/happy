@@ -7,7 +7,7 @@ The Grammar data type.
 Here is our mid-section datatype
 
 > module Grammar (
->       Name, isEmpty,
+>       Name,
 >
 >       Production, Grammar(..), mangler,
 >
@@ -158,10 +158,6 @@ In hindsight, this was probably a bad idea.
 > dummyTok        = 2
 > errorTok        = 1
 > epsilonTok      = 0
-
-> isEmpty :: Name -> Bool
-> isEmpty n | n == epsilonTok = True
->           | otherwise       = False
 
 -----------------------------------------------------------------------------
 -- The Mangler

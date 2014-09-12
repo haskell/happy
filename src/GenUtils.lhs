@@ -7,7 +7,6 @@ All the code below is understood to be in the public domain.
 > module GenUtils (
 
 >       mkClosure,
->       foldb,
 >       listArray',
 >       combinePairs,
 >       mapDollarDollar,
@@ -32,15 +31,6 @@ This will never terminate.
 >       match (a:b:_) | a `eq` b = a
 >       match (_:c)              = match c
 >       match [] = error "Can't happen: match []"
-
-> foldb :: (a -> a -> a) -> [a] -> a
-> foldb _ [] = error "can't reduce an empty list using foldb"
-> foldb _ [x] = x
-> foldb f l  = foldb f (foldb' l)
->    where
->       foldb' (x:y:x':y':xs) = f (f x y) (f x' y') : foldb' xs
->       foldb' (x:y:xs) = f x y : foldb' xs
->       foldb' xs = xs
 
 
 Gofer-like stuff:
