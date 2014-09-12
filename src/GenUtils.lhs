@@ -10,8 +10,6 @@ All the code below is understood to be in the public domain.
 >       mkClosure,
 >       foldb,
 >       listArray',
->       ljustify,
->       space,
 >       combinePairs,
 >       mapDollarDollar,
 >       str, char, nl, brack, brack',
@@ -49,12 +47,6 @@ This will never terminate.
 
 
 Gofer-like stuff:
-
-> ljustify :: Int -> String -> String
-> ljustify n s = s ++ space (max 0 (n - length s))
-
-> space       :: Int -> String
-> space n      = replicate n ' '
 
 > combinePairs :: (Ord a) => [(a,b)] -> [(a,[b])]
 > combinePairs xs =

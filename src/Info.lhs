@@ -8,7 +8,7 @@ Generating info files.
 
 > import Paths_happy            ( version )
 > import LALR                   ( Lr0Item(..) )
-> import GenUtils               ( str, interleave, interleave', ljustify )
+> import GenUtils               ( str, interleave, interleave' )
 > import Data.Set ( Set )
 > import qualified Data.Set as Set hiding ( Set )
 > import Grammar
@@ -201,6 +201,9 @@ Produce a file of parser information, useful for debugging the parser.
 >   nameOf n    = env ! n
 >   showName    = str . nameOf
 >   showJName j = str . ljustify j . nameOf
+
+> ljustify :: Int -> String -> String
+> ljustify n s = s ++ replicate (max 0 (n - length s)) ' '
 
 > ljuststr :: Int -> (String -> String) -> String -> String
 > ljuststr n s = str (ljustify n (s ""))
