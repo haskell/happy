@@ -88,8 +88,8 @@ Open the file.
 Parse, using bootstrapping parser.
 
 >       case coerceParser (runP ourParser file 1) of {
->               FailP err -> die (fl_name ++ ':' : err);
->               OkP abssyn@(AbsSyn hd _ _ tl) ->
+>               Left err -> die (fl_name ++ ':' : err);
+>               Right abssyn@(AbsSyn hd _ _ tl) ->
 
 Mangle the syntax into something useful.
 

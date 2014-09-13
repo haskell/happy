@@ -65,12 +65,12 @@
 > type Pfunc a = String -> Int -> ParseResult a
 
 > agLexAll :: P [AgToken]
-> agLexAll = P $ aux []
->  where aux toks [] _ = OkP (reverse toks)
+> agLexAll = mkP $ aux []
+>  where aux toks [] _ = Right (reverse toks)
 >        aux toks s l  = agLexer' (\t -> aux (t:toks)) s l
 
 > agLexer :: (AgToken -> P a) -> P a
-> agLexer m = P $ agLexer' (\x -> runP (m x))
+> agLexer m = mkP $ agLexer' (\x -> runP (m x))
 
 > agLexer' :: (AgToken -> Pfunc a) -> Pfunc a
 > agLexer' cont []         = cont AgTok_EOF []
@@ -103,5 +103,5 @@
 > agLexAttribute :: (AgToken -> Pfunc a) -> (String -> AgToken) -> Pfunc a
 > agLexAttribute cont k ('.':x:xs)
 >        | isLower x = let (ident,rest) = span (\c -> isAlphaNum c || c == '\'') xs in cont (k (x:ident)) rest
->        | otherwise = \_ -> FailP "bad attribute identifier"
+>        | otherwise = \_ -> Left "bad attribute identifier"
 > agLexAttribute cont k rest = cont (k "") rest

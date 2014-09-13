@@ -391,9 +391,9 @@ So is this.
    first we need to parse the body of the code block
 
 >     case runP agParser code 0 of
->        FailP msg  -> do addErr ("error in attribute grammar rules: "++msg)
->                         return ("",[])
->        OkP rules  ->
+>        Left msg  -> do addErr ("error in attribute grammar rules: "++msg)
+>                        return ("",[])
+>        Right rules  ->
 
    now we break the rules into three lists, one for synthesized attributes,
    one for inherited attributes, and one for conditionals
