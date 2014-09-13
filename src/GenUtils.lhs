@@ -7,7 +7,6 @@ All the code below is understood to be in the public domain.
 > module GenUtils (
 
 >       mkClosure,
->       listArray',
 >       combinePairs,
 >       mapDollarDollar,
 >       str, char, nl, brack, brack',
@@ -16,8 +15,8 @@ All the code below is understood to be in the public domain.
 >        ) where
 
 > import Data.Char  (isAlphaNum)
+> import Data.Ord   (comparing)
 > import Data.List
-> import Data.Array (Array, listArray)
 
 %------------------------------------------------------------------------------
 
@@ -37,18 +36,12 @@ Gofer-like stuff:
 
 > combinePairs :: (Ord a) => [(a,b)] -> [(a,[b])]
 > combinePairs xs =
->       combine [ (a,[b]) | (a,b) <- sortBy (\ (a,_) (b,_) -> compare a b) xs]
+>       combine [ (a,[b]) | (a,b) <- sortBy (comparing fst) xs]
 >  where
 >       combine [] = []
 >       combine ((a,b):(c,d):r) | a == c = combine ((a,b++d) : r)
 >       combine (a:r) = a : combine r
 >
-
-> listArray' :: (Int,Int) -> [a] -> Array Int a
-> listArray' (low,up) elems =
->       if length elems /= up-low+1 then error "wibble" else
->       listArray (low,up) elems
-
 
 
 Replace $$ with an arbitrary string, being careful to avoid ".." and '.'.

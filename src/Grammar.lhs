@@ -321,7 +321,7 @@ Get the token specs in terms of Names.
 >          lookup_prods _ = error "lookup_prods"
 >
 >          productions' = start_prods ++ concat rules2
->          prod_array  = listArray' (0,length productions' - 1) productions'
+>          prod_array  = listArray (0,length productions' - 1) productions'
 >   -- in
 
 >   return  (Grammar {
