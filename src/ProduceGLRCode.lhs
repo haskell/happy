@@ -15,7 +15,7 @@ This module is designed as an extension to the Haskell parser generator Happy.
 >                       ) where
 
 > import Paths_happy ( version )
-> import GenUtils ( thd3, mapDollarDollar )
+> import GenUtils ( mapDollarDollar )
 > import GenUtils ( str, char, nl, brack, brack', interleave, maybestr )
 > import Grammar
 > import Data.Array
@@ -118,7 +118,7 @@ the driver and data strs (large template).
 > mkFiles basename tables start templdir header trailer (debug,options) g
 >  = do
 >       let debug_ext = if debug then "-debug" else ""
->       let (ext,imps,opts) = case thd3 options of
+>       let (ext,imps,opts) = case ghcExts_opt of
 >                               UseGhcExts is os -> ("-ghc", is, os)
 >                               _                -> ("", "", "")
 >       base <- readFile (base_template templdir)
@@ -128,11 +128,13 @@ the driver and data strs (large template).
 >       lib <- readFile (lib_template templdir ++ ext ++ debug_ext)
 >       writeFile (basename ++ ".hs") (lib_content imps opts lib)
 >  where
+>   (_,_,ghcExts_opt) = options
+
 >   mod_name = reverse $ takeWhile (`notElem` "\\/") $ reverse basename
 >   data_mod = mod_name ++ "Data"
 
 >   (sem_def, sem_info) = mkGSemType options g
->   table_text = mkTbls tables sem_info (thd3 options) g
+>   table_text = mkTbls tables sem_info (ghcExts_opt) g
 
 >   header_parts = fmap (span (\x -> take 3 (dropWhile isSpace x) == "{-#")
 >                                  . lines)
@@ -695,6 +697,6 @@ remove Happy-generated start symbols.
 ---
 
 > mkHappyVar :: Int -> String -> String
-> mkHappyVar n = showString "happy_var_" . shows n
+> mkHappyVar n = str "happy_var_" . shows n
 
 

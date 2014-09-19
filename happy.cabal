@@ -125,18 +125,16 @@ source-repository head
   location: http://github.com/simonmar/happy.git
 
 flag small_base
-  description: Choose the new smaller, split-up base package.
+  description: Deprecated. Does nothing.
 
 executable happy
   hs-source-dirs: src
   main-is: Main.lhs
 
-  if flag(small_base)
-    build-depends: base >= 2.1, array, containers
-  else
-    build-depends: base >= 1.0 && < 2.1
-
-  build-depends: base < 5, mtl >= 1.0
+  build-depends: base < 5,
+                 array,
+                 containers,
+                 mtl >= 1.0
 
   extensions: CPP, MagicHash, FlexibleContexts
   ghc-options: -Wall -fno-warn-type-defaults

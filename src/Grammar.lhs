@@ -7,7 +7,7 @@ The Grammar data type.
 Here is our mid-section datatype
 
 > module Grammar (
->       Name, isEmpty,
+>       Name,
 >
 >       Production, Grammar(..), mangler,
 >
@@ -159,10 +159,6 @@ In hindsight, this was probably a bad idea.
 > errorTok        = 1
 > epsilonTok      = 0
 
-> isEmpty :: Name -> Bool
-> isEmpty n | n == epsilonTok = True
->           | otherwise       = False
-
 -----------------------------------------------------------------------------
 -- The Mangler
 
@@ -174,10 +170,10 @@ This bit is a real mess, mainly because of the error message support.
 > addErr :: ErrMsg -> M ()
 > addErr e = tell [e]
 
-> mangler :: FilePath -> AbsSyn -> MaybeErr Grammar [ErrMsg]
+> mangler :: FilePath -> AbsSyn -> Either [ErrMsg] Grammar
 > mangler file abssyn
->   | null errs = Succeeded g
->   | otherwise = Failed errs
+>   | null errs = Right g
+>   | otherwise = Left errs
 >   where (g, errs) = runWriter (manglerM file abssyn)
 
 > manglerM :: FilePath -> AbsSyn -> M Grammar
@@ -325,7 +321,7 @@ Get the token specs in terms of Names.
 >          lookup_prods _ = error "lookup_prods"
 >
 >          productions' = start_prods ++ concat rules2
->          prod_array  = listArray' (0,length productions' - 1) productions'
+>          prod_array  = listArray (0,length productions' - 1) productions'
 >   -- in
 
 >   return  (Grammar {
@@ -395,9 +391,9 @@ So is this.
    first we need to parse the body of the code block
 
 >     case runP agParser code 0 of
->        FailP msg  -> do addErr ("error in attribute grammar rules: "++msg)
->                         return ("",[])
->        OkP rules  ->
+>        Left msg  -> do addErr ("error in attribute grammar rules: "++msg)
+>                        return ("",[])
+>        Right rules  ->
 
    now we break the rules into three lists, one for synthesized attributes,
    one for inherited attributes, and one for conditionals

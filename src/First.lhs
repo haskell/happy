@@ -15,19 +15,11 @@ Implementation of FIRST
 \subsection{Utilities}
 
 > joinSymSets :: (a -> NameSet) -> [a] -> NameSet
-> joinSymSets f = foldr
->       (\ h b -> let
->                   h' = f h
->                 in
->                    if incEmpty h'
->                    then Set.filter (not. isEmpty) h' `Set.union` b
->                    else h')
->        (Set.singleton epsilonTok)
-
-Does the Set include the $\epsilon$ symbol ?
-
-> incEmpty :: NameSet -> Bool
-> incEmpty set = any isEmpty (Set.toAscList set)
+> joinSymSets f = foldr go (Set.singleton epsilonTok) . map f
+>    where
+>       go h b
+>           | Set.member epsilonTok h = Set.delete epsilonTok h `Set.union` b
+>           | otherwise = h
 
 \subsection{Implementation of FIRST}
 
@@ -37,9 +29,7 @@ Does the Set include the $\epsilon$ symbol ?
 >                  , lookupProdsOfName = prodsOfName
 >                  , non_terminals = nts
 >                  })
->       = joinSymSets (\ h -> case lookup h env of
->                               Nothing -> Set.singleton h
->                               Just ix -> ix)
+>       = joinSymSets (\ h -> maybe (Set.singleton h) id (lookup h env) )
 >   where
 >       env = mkClosure (==) (getNext fst_term prodNo prodsOfName)
 >               [ (name,Set.empty) | name <- nts ]
@@ -50,14 +40,11 @@ Does the Set include the $\epsilon$ symbol ?
 >               [ (nm, next nm) | (nm,_) <- env ]
 >    where
 >       fn t | t == errorTok || t >= fst_term = Set.singleton t
->       fn x = case lookup x env of
->                       Just t -> t
->                       Nothing -> error "attempted FIRST(e) :-("
+>       fn x = maybe (error "attempted FIRST(e) :-(") id (lookup x env)
 
 >       next :: Name -> NameSet
 >       next t | t >= fst_term = Set.singleton t
->       next n =
->               foldb Set.union
+>       next n = Set.unions
 >                       [ joinSymSets fn (snd4 (prodNo rl)) |
 >                               rl <- prodsOfName n ]
 

@@ -71,7 +71,7 @@ The lexer.
 ToDo: proper text instance here, for use in parser error messages.
 
 > lexer :: (Token -> P a) -> P a
-> lexer cont = P lexer'
+> lexer cont = mkP lexer'
 >   where lexer' "" = returnToken cont TokenEOF ""
 >         lexer' ('-':'-':r) = lexer' (dropWhile (/= '\n') r)
 >         lexer' ('{':'-':r) = \line -> lexNestedComment line lexer' r line
