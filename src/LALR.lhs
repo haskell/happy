@@ -297,11 +297,12 @@ calcLookaheads pass.
 >               spontaneous :: [(Int, Lr0Item, NameSet)]
 >               spontaneous = do
 >                   (Lr1 rule' dot' ts) <- j
->                   guard $ NameSet.member dummyTok ts
+>                   let ts' = NameSet.delete dummyTok ts
+>                   guard (not $ NameSet.null ts')
 >                   maybeToList $ do r <- findRule gram rule' dot'
 >                                    return ( lookupGoto "spontaneous" r
 >                                           , Lr0 rule' (dot' + 1)
->                                           , NameSet.delete dummyTok ts )
+>                                           , ts' )
 
 >               propagated :: [(Lr0Item, Int, Lr0Item)]
 >               propagated = do
