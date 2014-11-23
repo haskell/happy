@@ -11,7 +11,7 @@ Happy is built using Cabal.  First install GHC, then:
 
 Complete documentation can be found in the directory 'doc', in
 DocBook XML format.  To format the documentation, the DocBook-Tools
-suite (see http://www.http://sourceware.cygnus.com/docbook-tools/)
+suite (see http://sourceware.cygnus.com/docbook-tools/)
 provides all the bits & pieces you need.  Alternatively, pre-formatted
 documentation is available from Happy's homepage (URL above).
 
