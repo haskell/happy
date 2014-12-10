@@ -85,17 +85,19 @@
       </listitem>
 
       <listitem>
+        <para>standard Haskell using arrays
 	<indexterm scope="all"><primary>arrays</primary></indexterm>
 	<indexterm scope="all"><primary>back-ends</primary><secondary>arrays</secondary></indexterm>
-	<para>standard Haskell using arrays (this is not the default
+	(this is not the default
 	because we have found this generates slower parsers than <xref
 	linkend="item-default-backend"/>).</para>
       </listitem>
 
       <listitem>
+        <para>Haskell with GHC
 	<indexterm><primary>GHC</primary></indexterm>
 	<indexterm><primary>back-ends</primary><secondary>GHC</secondary></indexterm>
-	<para>Haskell with GHC (Glasgow Haskell) extensions. This is a
+	(Glasgow Haskell) extensions. This is a
 	slightly faster option than <xref
 	linkend="item-default-backend"/> for Glasgow Haskell
 	users.</para>
@@ -958,6 +960,7 @@ stmts   :: { [ Stmt ] }
       <itemizedlist>
 
 	<listitem>
+          <para> Handling parse errors
 	  <indexterm>
 	    <primary>parse errors</primary>
 	    <secondary>handling</secondary>
@@ -968,15 +971,16 @@ stmts   :: { [ Stmt ] }
 	    <see>parse errors</see>
 	  </indexterm>
 -->
-	  <para> Handling parse errors by using an exception monad
+	  by using an exception monad
           (see <xref linkend="sec-exception"/>).</para>
 	</listitem>
 
 	<listitem>
+          <para> Keeping track of line numbers
 	  <indexterm>
 	    <primary>line numbers</primary>
 	  </indexterm>
-	  <para> Keeping track of line numbers in the input file, for
+	  in the input file, for
           example for use in error messages (see <xref
           linkend="sec-line-numbers"/>).</para>
 	</listitem>
@@ -3682,10 +3686,11 @@ snd(SEP,EXPR)
       <itemizedlist>
 
 	<listitem>
-	  <indexterm>
+	  <para> If you are using GHC
+          <indexterm>
 	    <primary>GHC</primary>
 	  </indexterm>
-	  <para> If you are using GHC, generate parsers using the
+	  , generate parsers using the
           <literal>-a -g -c</literal> options, and compile them using GHC with
           the <literal>-fglasgow-exts</literal> option.  This is worth a
           <emphasis>lot</emphasis>, in terms of compile-time,
@@ -3741,11 +3746,12 @@ snd(SEP,EXPR)
 	</listitem>
 
 	<listitem>
+          <para> Give type signatures
 	  <indexterm>
 	    <primary>type</primary>
 	    <secondary>signatures in grammar</secondary>
 	  </indexterm>
-	  <para> Give type signatures for everything (see <xref
+	  for everything (see <xref
           linkend="sec-type-signatures"/>.  This is reported to improve
           things by about 50%.  If there is a type signature for every
           single non-terminal in the grammar, then <application>Happy</application>
