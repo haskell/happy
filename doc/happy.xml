@@ -251,7 +251,7 @@
   <literal>/</literal>, and the form <literal>let var = exp in exp</literal>.
   The grammar file starts off like this:</para>
 
-    <programlisting>
+<programlisting>
 {
 module Main where
 }
@@ -1647,10 +1647,10 @@ close : '}'                  { () }
       the first alternative above.
       </para>
 
-      <programlisting>
-      E -> E + E
-      E -> i       -- any integer
-      </programlisting>
+<programlisting>
+E -> E + E
+E -> i       -- any integer
+</programlisting>
 
       <para>
       GLR parsing will accept this grammar without complaint, and produce
@@ -1664,23 +1664,23 @@ close : '}'                  { () }
       Below is the simplified output of the GLR parser for this example.
       </para>
 
-      <programlisting>
-	Root (0,7,G_E)
-	(0,1,G_E)     => [[(0,1,Tok '1'))]]
-	(0,3,G_E)     => [[(0,1,G_E),(1,2,Tok '+'),(2,3,G_E)]]
-	(0,5,G_E)     => [[(0,1,G_E),(1,2,Tok '+'),(2,5,G_E)]
-	                 ,[(0,3,G_E),(3,4,Tok '+'),(4,5,G_E)]]
-	(0,7,G_E)     => [[(0,3,G_E),(3,4,Tok '+'),(4,7,G_E)]
-	                 ,[(0,1,G_E),(1,2,Tok '+'),(2,7,G_E)]
-	                 ,[(0,5,G_E),(5,6,Tok '+'),(6,7,G_E)]}]
-	(2,3,G_E)     => [[(2,3,Tok '2'))]}]
-	(2,5,G_E)     => [[(2,3,G_E),(3,4,Tok '+'),(4,5,G_E)]}]
-	(2,7,G_E)     => [[(2,3,G_E),(3,4,Tok '+'),(4,7,G_E)]}
-	                 ,[(2,5,G_E),(5,6,Tok '+'),(6,7,G_E)]}]
-	(4,5,G_E)     => [[(4,5,Tok '3'))]}]
-	(4,7,G_E)     => [[(4,5,G_E),(5,6,Tok '+'),(6,7,G_E)]}]
-	(6,7,G_E)     => [[(6,7,Tok '4'))]}]
-      </programlisting>
+<programlisting>
+Root (0,7,G_E)
+(0,1,G_E)     => [[(0,1,Tok '1'))]]
+(0,3,G_E)     => [[(0,1,G_E),(1,2,Tok '+'),(2,3,G_E)]]
+(0,5,G_E)     => [[(0,1,G_E),(1,2,Tok '+'),(2,5,G_E)]
+                  ,[(0,3,G_E),(3,4,Tok '+'),(4,5,G_E)]]
+(0,7,G_E)     => [[(0,3,G_E),(3,4,Tok '+'),(4,7,G_E)]
+                  ,[(0,1,G_E),(1,2,Tok '+'),(2,7,G_E)]
+                  ,[(0,5,G_E),(5,6,Tok '+'),(6,7,G_E)]}]
+(2,3,G_E)     => [[(2,3,Tok '2'))]}]
+(2,5,G_E)     => [[(2,3,G_E),(3,4,Tok '+'),(4,5,G_E)]}]
+(2,7,G_E)     => [[(2,3,G_E),(3,4,Tok '+'),(4,7,G_E)]}
+                  ,[(2,5,G_E),(5,6,Tok '+'),(6,7,G_E)]}]
+(4,5,G_E)     => [[(4,5,Tok '3'))]}]
+(4,7,G_E)     => [[(4,5,G_E),(5,6,Tok '+'),(6,7,G_E)]}]
+(6,7,G_E)     => [[(6,7,Tok '4'))]}]
+</programlisting>
 
       <para>
       This is a directed, acyclic and-or graph.
@@ -1968,20 +1968,20 @@ close : '}'                  { () }
 	returned, since it may contain useful information.
 	Unconsumed tokens are returned when there is a global parse error.
         </para>
-        <programlisting>
-	type ForestId = (Int,Int,GSymbol)
-	data GSymbol  = &lt;... automatically generated ...&gt;
-	type Forest   = FiniteMap ForestId [Branch]
-	type RootNode = ForestId
-	type Tokens   = [[(Int, GSymbol)]]
-	data Branch   = Branch {b_sem :: GSem, b_nodes :: [ForestId]}
-	data GSem     = &lt;... automatically generated ...&gt;
+<programlisting>
+type ForestId = (Int,Int,GSymbol)
+data GSymbol  = &lt;... automatically generated ...&gt;
+type Forest   = FiniteMap ForestId [Branch]
+type RootNode = ForestId
+type Tokens   = [[(Int, GSymbol)]]
+data Branch   = Branch {b_sem :: GSem, b_nodes :: [ForestId]}
+data GSem     = &lt;... automatically generated ...&gt;
 
-	data GLRResult
-	 = ParseOK     RootNode Forest    -- forest with root
-	 | ParseError  Tokens   Forest    -- partial forest with bad input
-	 | ParseEOF             Forest    -- partial forest (missing input)
-        </programlisting>
+data GLRResult
+  = ParseOK     RootNode Forest    -- forest with root
+  | ParseError  Tokens   Forest    -- partial forest with bad input
+  | ParseEOF             Forest    -- partial forest (missing input)
+</programlisting>
 	<para>
 	Conceptually, the parse forest is a directed, acyclic and-or
 	graph. It is represented by a mapping of <literal>ForestId</literal>s
@@ -2073,12 +2073,12 @@ close : '}'                  { () }
 	Note that the type signature is required, else the types in use
 	can't be determined by the parser generator.
         </para>
-        <programlisting>
-	E :: {Int}		-- type signature needed
-	  : E '+' E  { $1 + $3 }
-	  | E '*' E  { $1 * $3 }
-	  | i        { $1 }
-        </programlisting>
+<programlisting>
+E :: {Int} -- type signature needed
+  : E '+' E  { $1 + $3 }
+  | E '*' E  { $1 * $3 }
+  | i        { $1 }
+</programlisting>
 	<para>
 	This mode works by converting each of the semantic rules into
 	functions (abstracted over the dollar variables mentioned),
@@ -2109,11 +2109,11 @@ close : '}'                  { () }
 	See the full <literal>expr-eval</literal> example for more
 	information.
 	</para>
-        <programlisting>
-	class TreeDecode a where
-	       decode_b :: (ForestId -> [Branch]) -> Branch -> [Decode_Result a]
-	decode :: TreeDecode a => (ForestId -> [Branch]) -> ForestId -> [Decode_Result a]
-        </programlisting>
+<programlisting>
+class TreeDecode a where
+        decode_b :: (ForestId -> [Branch]) -> Branch -> [Decode_Result a]
+decode :: TreeDecode a => (ForestId -> [Branch]) -> ForestId -> [Decode_Result a]
+</programlisting>
 
 	<para>
 	The GLR parser generator identifies the types involved in each
@@ -2157,12 +2157,12 @@ close : '}'                  { () }
 	The following grammar is from the <literal>expr-tree</literal>
 	example.
         </para>
-        <programlisting>
-	E :: {Tree ForestId Int}
-	  : E '+' E      { Plus  $1 $3 }
-	  | E '*' E      { Times $1 $3 }
-	  | i            { Const $1 }
-        </programlisting>
+<programlisting>
+E :: {Tree ForestId Int}
+  : E '+' E      { Plus  $1 $3 }
+  | E '*' E      { Times $1 $3 }
+  | i            { Const $1 }
+</programlisting>
 
         <para>
 	Here, the semantic values provide more meaningful labels than
@@ -2202,10 +2202,10 @@ close : '}'                  { () }
 	problems with resolution of class instances.
 	</para>
 
-        <programlisting>
-	class LabelDecode a where
-	       unpack :: GSem -> a
-        </programlisting>
+<programlisting>
+class LabelDecode a where
+        unpack :: GSem -> a
+</programlisting>
 
         <para>
 	Internally, the semantic values are packed in a union type as
@@ -2441,10 +2441,10 @@ close : '}'                  { () }
 	items are required, to match the number of <literal>i</literal>
 	tokens in the input.
         </para>
-        <programlisting>
-	S -> A Q i | +
-	A ->
-        </programlisting>
+<programlisting>
+S -> A Q i | +
+A ->
+</programlisting>
 	<para>
 	The solution to this is not surprising. Problematic recursions
 	are detected as zero-span reductions in a state which has a
@@ -3147,16 +3147,16 @@ happyError = error "parse error"
 the BNF syntax from the Haskell Report):</para>
 
 <programlisting>
-        id      ::= alpha { idchar }
-                  | ' { any{^'} | \' } '
-                  | " { any{^"} | \" } "
+id      ::= alpha { idchar }
+          | ' { any{^'} | \' } '
+          | " { any{^"} | \" } "
 
-        alpha   ::= A | B | ... | Z
-                  | a | b | ... | z
+alpha   ::= A | B | ... | Z
+          | a | b | ... | z
 
-        idchar  ::= alpha
-                  | 0 | 1 | ... | 9
-                  | _
+idchar  ::= alpha
+          | 0 | 1 | ... | 9
+          | _
 </programlisting>
 
     </sect1>
