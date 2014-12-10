@@ -80,7 +80,7 @@
     <orderedlist>
 
       <listitem id="item-default-backend">
-	<para>`standard' Haskell 98 (should work with any compiler
+        <para><quote>standard</quote> Haskell 98 (should work with any compiler
 	that compiles Haskell 98).</para>
       </listitem>
 
@@ -239,7 +239,7 @@
     <listitem>
       <para> Use this module as part of your Haskell program, usually
       in conjunction with a lexical analyser (a function that splits
-      the input into ``tokens'', the basic unit of parsing).</para>
+      the input into <quote>tokens</quote>, the basic unit of parsing).</para>
     </listitem>
   </itemizedlist>
 
@@ -378,7 +378,7 @@ Factor
     usual.</para>
 
     <para>The way to think about a parser is with each symbol having a
-    `value': we defined the values of the tokens above, and the
+    <quote>value</quote>: we defined the values of the tokens above, and the
     grammar defines the values of non-terminal symbols in terms of
     sequences of other symbols (either tokens or non-terminals).  In a
     production like this:</para>
@@ -3175,7 +3175,7 @@ the BNF syntax from the Haskell Report):</para>
 
       <para>The Haskell module header contains the module name,
       exports, and imports.  No other code is allowed in the
-      header---this is because <application>Happy</application> may need to include
+      header&mdash;this is because <application>Happy</application> may need to include
       its own <literal>import</literal> statements directly after the user
       defined header.</para>
 
