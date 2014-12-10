@@ -3080,6 +3080,43 @@ happyError = error "parse error"
       </varlistentry>
 
       <varlistentry>
+        <term><option>-l</option></term>
+        <term><option>--glr</option></term>
+        <listitem>
+          <indexterm>
+            <primary>glr</primary>
+          </indexterm>
+          <indexterm>
+            <primary>back-ends</primary>
+            <secondary>glr</secondary>
+          </indexterm>
+          <para>Generate a GLR parser for ambiguous grammars.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-k</option></term>
+        <term><option>--decode</option></term>
+        <listitem>
+          <indexterm>
+            <primary>decode</primary>
+          </indexterm>
+          <para>Generate simple decoding code for GLR result.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-f</option></term>
+        <term><option>--filter</option></term>
+        <listitem>
+          <indexterm>
+            <primary>filter</primary>
+          </indexterm>
+          <para>Filter the GLR parse forest with respect to semantic usage.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
 	<term><option>-?</option></term>
 	<term><option>--help</option></term>
 	<listitem>
