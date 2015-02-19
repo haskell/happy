@@ -3029,7 +3029,7 @@ happyError = error "parse error"
           generate smaller faster parsers.  Type-safety isn't
           compromised.</para>
 
-	  <para>This option may only be used in conjuction with
+	  <para>This option may only be used in conjunction with
           <option>-g</option>.</para>
 	</listitem>
       </varlistentry>

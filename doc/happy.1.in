@@ -85,7 +85,7 @@ This option has quite a significant effect on the performance of the
 resulting parser, but remember that parsers generated this way can
 only be compiled by GHC\ 3.02 and above.
 
-This option may only be used in conjuction with
+This option may only be used in conjunction with
 .BR \-g .
 
 .TP
@@ -95,7 +95,7 @@ Generate a parser that will print debugging information to
 at run-time, including all the shifts, reductions, state transitions
 and token inputs performed by the parser.
 
-This option may only be used in conjuction with
+This option may only be used in conjunction with
 .BR \-a .
 
 .TP
