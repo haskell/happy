@@ -80,22 +80,24 @@
     <orderedlist>
 
       <listitem id="item-default-backend">
-	<para>`standard' Haskell 98 (should work with any compiler
+        <para><quote>standard</quote> Haskell 98 (should work with any compiler
 	that compiles Haskell 98).</para>
       </listitem>
 
       <listitem>
+        <para>standard Haskell using arrays
 	<indexterm scope="all"><primary>arrays</primary></indexterm>
 	<indexterm scope="all"><primary>back-ends</primary><secondary>arrays</secondary></indexterm>
-	<para>standard Haskell using arrays (this is not the default
+	(this is not the default
 	because we have found this generates slower parsers than <xref
 	linkend="item-default-backend"/>).</para>
       </listitem>
 
       <listitem>
+        <para>Haskell with GHC
 	<indexterm><primary>GHC</primary></indexterm>
 	<indexterm><primary>back-ends</primary><secondary>GHC</secondary></indexterm>
-	<para>Haskell with GHC (Glasgow Haskell) extensions. This is a
+	(Glasgow Haskell) extensions. This is a
 	slightly faster option than <xref
 	linkend="item-default-backend"/> for Glasgow Haskell
 	users.</para>
@@ -124,7 +126,7 @@
 
       <para> Remember: parsers produced using
       <application>Happy</application> should compile without
-      difficulty under any Haskell 98 compiler or interpreter<footnote><para>With one
+      difficulty under any Haskell 98 compiler or interpreter.<footnote><para>With one
 	exception: if you have a production with a polymorphic type signature,
 	then a compiler that supports local universal quantification is
 	required.  See <xref linkend="sec-type-signatures" />.</para>
@@ -239,7 +241,7 @@
     <listitem>
       <para> Use this module as part of your Haskell program, usually
       in conjunction with a lexical analyser (a function that splits
-      the input into ``tokens'', the basic unit of parsing).</para>
+      the input into <quote>tokens</quote>, the basic unit of parsing).</para>
     </listitem>
   </itemizedlist>
 
@@ -249,7 +251,7 @@
   <literal>/</literal>, and the form <literal>let var = exp in exp</literal>.
   The grammar file starts off like this:</para>
 
-    <programlisting>
+<programlisting>
 {
 module Main where
 }
@@ -378,7 +380,7 @@ Factor
     usual.</para>
 
     <para>The way to think about a parser is with each symbol having a
-    `value': we defined the values of the tokens above, and the
+    <quote>value</quote>: we defined the values of the tokens above, and the
     grammar defines the values of non-terminal symbols in terms of
     sequences of other symbols (either tokens or non-terminals).  In a
     production like this:</para>
@@ -958,6 +960,7 @@ stmts   :: { [ Stmt ] }
       <itemizedlist>
 
 	<listitem>
+          <para> Handling parse errors
 	  <indexterm>
 	    <primary>parse errors</primary>
 	    <secondary>handling</secondary>
@@ -968,15 +971,16 @@ stmts   :: { [ Stmt ] }
 	    <see>parse errors</see>
 	  </indexterm>
 -->
-	  <para> Handling parse errors by using an exception monad
+	  by using an exception monad
           (see <xref linkend="sec-exception"/>).</para>
 	</listitem>
 
 	<listitem>
+          <para> Keeping track of line numbers
 	  <indexterm>
 	    <primary>line numbers</primary>
 	  </indexterm>
-	  <para> Keeping track of line numbers in the input file, for
+	  in the input file, for
           example for use in error messages (see <xref
           linkend="sec-line-numbers"/>).</para>
 	</listitem>
@@ -1643,10 +1647,10 @@ close : '}'                  { () }
       the first alternative above.
       </para>
 
-      <programlisting>
-      E -> E + E
-      E -> i       -- any integer
-      </programlisting>
+<programlisting>
+E -> E + E
+E -> i       -- any integer
+</programlisting>
 
       <para>
       GLR parsing will accept this grammar without complaint, and produce
@@ -1660,23 +1664,23 @@ close : '}'                  { () }
       Below is the simplified output of the GLR parser for this example.
       </para>
 
-      <programlisting>
-	Root (0,7,G_E)
-	(0,1,G_E)     => [[(0,1,Tok '1'))]]
-	(0,3,G_E)     => [[(0,1,G_E),(1,2,Tok '+'),(2,3,G_E)]]
-	(0,5,G_E)     => [[(0,1,G_E),(1,2,Tok '+'),(2,5,G_E)]
-	                 ,[(0,3,G_E),(3,4,Tok '+'),(4,5,G_E)]]
-	(0,7,G_E)     => [[(0,3,G_E),(3,4,Tok '+'),(4,7,G_E)]
-	                 ,[(0,1,G_E),(1,2,Tok '+'),(2,7,G_E)]
-	                 ,[(0,5,G_E),(5,6,Tok '+'),(6,7,G_E)]}]
-	(2,3,G_E)     => [[(2,3,Tok '2'))]}]
-	(2,5,G_E)     => [[(2,3,G_E),(3,4,Tok '+'),(4,5,G_E)]}]
-	(2,7,G_E)     => [[(2,3,G_E),(3,4,Tok '+'),(4,7,G_E)]}
-	                 ,[(2,5,G_E),(5,6,Tok '+'),(6,7,G_E)]}]
-	(4,5,G_E)     => [[(4,5,Tok '3'))]}]
-	(4,7,G_E)     => [[(4,5,G_E),(5,6,Tok '+'),(6,7,G_E)]}]
-	(6,7,G_E)     => [[(6,7,Tok '4'))]}]
-      </programlisting>
+<programlisting>
+Root (0,7,G_E)
+(0,1,G_E)     => [[(0,1,Tok '1'))]]
+(0,3,G_E)     => [[(0,1,G_E),(1,2,Tok '+'),(2,3,G_E)]]
+(0,5,G_E)     => [[(0,1,G_E),(1,2,Tok '+'),(2,5,G_E)]
+                  ,[(0,3,G_E),(3,4,Tok '+'),(4,5,G_E)]]
+(0,7,G_E)     => [[(0,3,G_E),(3,4,Tok '+'),(4,7,G_E)]
+                  ,[(0,1,G_E),(1,2,Tok '+'),(2,7,G_E)]
+                  ,[(0,5,G_E),(5,6,Tok '+'),(6,7,G_E)]}]
+(2,3,G_E)     => [[(2,3,Tok '2'))]}]
+(2,5,G_E)     => [[(2,3,G_E),(3,4,Tok '+'),(4,5,G_E)]}]
+(2,7,G_E)     => [[(2,3,G_E),(3,4,Tok '+'),(4,7,G_E)]}
+                  ,[(2,5,G_E),(5,6,Tok '+'),(6,7,G_E)]}]
+(4,5,G_E)     => [[(4,5,Tok '3'))]}]
+(4,7,G_E)     => [[(4,5,G_E),(5,6,Tok '+'),(6,7,G_E)]}]
+(6,7,G_E)     => [[(6,7,Tok '4'))]}]
+</programlisting>
 
       <para>
       This is a directed, acyclic and-or graph.
@@ -1964,20 +1968,20 @@ close : '}'                  { () }
 	returned, since it may contain useful information.
 	Unconsumed tokens are returned when there is a global parse error.
         </para>
-        <programlisting>
-	type ForestId = (Int,Int,GSymbol)
-	data GSymbol  = &lt;... automatically generated ...&gt;
-	type Forest   = FiniteMap ForestId [Branch]
-	type RootNode = ForestId
-	type Tokens   = [[(Int, GSymbol)]]
-	data Branch   = Branch {b_sem :: GSem, b_nodes :: [ForestId]}
-	data GSem     = &lt;... automatically generated ...&gt;
+<programlisting>
+type ForestId = (Int,Int,GSymbol)
+data GSymbol  = &lt;... automatically generated ...&gt;
+type Forest   = FiniteMap ForestId [Branch]
+type RootNode = ForestId
+type Tokens   = [[(Int, GSymbol)]]
+data Branch   = Branch {b_sem :: GSem, b_nodes :: [ForestId]}
+data GSem     = &lt;... automatically generated ...&gt;
 
-	data GLRResult
-	 = ParseOK     RootNode Forest    -- forest with root
-	 | ParseError  Tokens   Forest    -- partial forest with bad input
-	 | ParseEOF             Forest    -- partial forest (missing input)
-        </programlisting>
+data GLRResult
+  = ParseOK     RootNode Forest    -- forest with root
+  | ParseError  Tokens   Forest    -- partial forest with bad input
+  | ParseEOF             Forest    -- partial forest (missing input)
+</programlisting>
 	<para>
 	Conceptually, the parse forest is a directed, acyclic and-or
 	graph. It is represented by a mapping of <literal>ForestId</literal>s
@@ -2069,12 +2073,12 @@ close : '}'                  { () }
 	Note that the type signature is required, else the types in use
 	can't be determined by the parser generator.
         </para>
-        <programlisting>
-	E :: {Int}		-- type signature needed
-	  : E '+' E  { $1 + $3 }
-	  | E '*' E  { $1 * $3 }
-	  | i        { $1 }
-        </programlisting>
+<programlisting>
+E :: {Int} -- type signature needed
+  : E '+' E  { $1 + $3 }
+  | E '*' E  { $1 * $3 }
+  | i        { $1 }
+</programlisting>
 	<para>
 	This mode works by converting each of the semantic rules into
 	functions (abstracted over the dollar variables mentioned),
@@ -2105,11 +2109,11 @@ close : '}'                  { () }
 	See the full <literal>expr-eval</literal> example for more
 	information.
 	</para>
-        <programlisting>
-	class TreeDecode a where
-	       decode_b :: (ForestId -> [Branch]) -> Branch -> [Decode_Result a]
-	decode :: TreeDecode a => (ForestId -> [Branch]) -> ForestId -> [Decode_Result a]
-        </programlisting>
+<programlisting>
+class TreeDecode a where
+        decode_b :: (ForestId -> [Branch]) -> Branch -> [Decode_Result a]
+decode :: TreeDecode a => (ForestId -> [Branch]) -> ForestId -> [Decode_Result a]
+</programlisting>
 
 	<para>
 	The GLR parser generator identifies the types involved in each
@@ -2153,12 +2157,12 @@ close : '}'                  { () }
 	The following grammar is from the <literal>expr-tree</literal>
 	example.
         </para>
-        <programlisting>
-	E :: {Tree ForestId Int}
-	  : E '+' E      { Plus  $1 $3 }
-	  | E '*' E      { Times $1 $3 }
-	  | i            { Const $1 }
-        </programlisting>
+<programlisting>
+E :: {Tree ForestId Int}
+  : E '+' E      { Plus  $1 $3 }
+  | E '*' E      { Times $1 $3 }
+  | i            { Const $1 }
+</programlisting>
 
         <para>
 	Here, the semantic values provide more meaningful labels than
@@ -2198,10 +2202,10 @@ close : '}'                  { () }
 	problems with resolution of class instances.
 	</para>
 
-        <programlisting>
-	class LabelDecode a where
-	       unpack :: GSem -> a
-        </programlisting>
+<programlisting>
+class LabelDecode a where
+        unpack :: GSem -> a
+</programlisting>
 
         <para>
 	Internally, the semantic values are packed in a union type as
@@ -2437,10 +2441,10 @@ close : '}'                  { () }
 	items are required, to match the number of <literal>i</literal>
 	tokens in the input.
         </para>
-        <programlisting>
-	S -> A Q i | +
-	A ->
-        </programlisting>
+<programlisting>
+S -> A Q i | +
+A ->
+</programlisting>
 	<para>
 	The solution to this is not surprising. Problematic recursions
 	are detected as zero-span reductions in a state which has a
@@ -2752,7 +2756,7 @@ where unless ($$.length == 0) (fail "length not equal to 0")
 	grammars.
       </para>
       <para>
-	On practical way to overcome this limitation is to ensure that each attribute
+	One practical way to overcome this limitation is to ensure that each attribute
 	is always used in either a top-down (inherited) fashion or in a bottom-up
 	(synthesized) fashion.  If the calculations are sufficiently lazy, one can
 	"tie the knot" by synthesizing a value in one attribute, and then assigning
@@ -3076,6 +3080,43 @@ happyError = error "parse error"
       </varlistentry>
 
       <varlistentry>
+        <term><option>-l</option></term>
+        <term><option>--glr</option></term>
+        <listitem>
+          <indexterm>
+            <primary>glr</primary>
+          </indexterm>
+          <indexterm>
+            <primary>back-ends</primary>
+            <secondary>glr</secondary>
+          </indexterm>
+          <para>Generate a GLR parser for ambiguous grammars.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-k</option></term>
+        <term><option>--decode</option></term>
+        <listitem>
+          <indexterm>
+            <primary>decode</primary>
+          </indexterm>
+          <para>Generate simple decoding code for GLR result.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>-f</option></term>
+        <term><option>--filter</option></term>
+        <listitem>
+          <indexterm>
+            <primary>filter</primary>
+          </indexterm>
+          <para>Filter the GLR parse forest with respect to semantic usage.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
 	<term><option>-?</option></term>
 	<term><option>--help</option></term>
 	<listitem>
@@ -3143,16 +3184,16 @@ happyError = error "parse error"
 the BNF syntax from the Haskell Report):</para>
 
 <programlisting>
-        id      ::= alpha { idchar }
-                  | ' { any{^'} | \' } '
-                  | " { any{^"} | \" } "
+id      ::= alpha { idchar }
+          | ' { any{^'} | \' } '
+          | " { any{^"} | \" } "
 
-        alpha   ::= A | B | ... | Z
-                  | a | b | ... | z
+alpha   ::= A | B | ... | Z
+          | a | b | ... | z
 
-        idchar  ::= alpha
-                  | 0 | 1 | ... | 9
-                  | _
+idchar  ::= alpha
+          | 0 | 1 | ... | 9
+          | _
 </programlisting>
 
     </sect1>
@@ -3175,7 +3216,7 @@ the BNF syntax from the Haskell Report):</para>
 
       <para>The Haskell module header contains the module name,
       exports, and imports.  No other code is allowed in the
-      header---this is because <application>Happy</application> may need to include
+      header&mdash;this is because <application>Happy</application> may need to include
       its own <literal>import</literal> statements directly after the user
       defined header.</para>
 
@@ -3439,7 +3480,7 @@ any projection function.</para>
 	</indexterm>
 
 	<para>Specifies the function to be called in the event of a
-	parse error.  The type of <literal>&lt;f&gt;</literal> varies
+	parse error.  The type of <literal>&lt;identifier&gt;</literal> varies
 	depending on the presence of <literal>%lexer</literal> (see
 	<xref linkend="sec-monad-summary" />).</para>
       </sect2>
@@ -3891,16 +3932,17 @@ State 49
       <itemizedlist>
 
 	<listitem>
-	  <indexterm>
+	  <para> If you are using GHC
+          <indexterm>
 	    <primary>GHC</primary>
 	  </indexterm>
-	  <para> If you are using GHC, generate parsers using the
+	  , generate parsers using the
           <literal>-a -g -c</literal> options, and compile them using GHC with
           the <literal>-fglasgow-exts</literal> option.  This is worth a
           <emphasis>lot</emphasis>, in terms of compile-time,
-          execution speed and binary size <footnote><para>omitting the
+          execution speed and binary size.<footnote><para>omitting the
           <literal>-a</literal> may generate slightly faster parsers,
-          but they will be much bigger.</para></footnote>.</para>
+          but they will be much bigger.</para></footnote></para>
 	</listitem>
 
 	<listitem>
@@ -3919,10 +3961,10 @@ State 49
 	</listitem>
 
 	<listitem>
-	  <indexterm>
+	  <para> Use left recursion rather than right recursion
+          <indexterm>
 	    <primary>recursion, left vs. right</primary>
 	  </indexterm>
-	  <para> Use left recursion rather than right recursion
           wherever possible.  While not strictly a performance issue,
           this affects the size of the parser stack, which is kept on
           the heap and thus needs to be garbage collected.</para>
@@ -3950,11 +3992,12 @@ State 49
 	</listitem>
 
 	<listitem>
+          <para> Give type signatures
 	  <indexterm>
 	    <primary>type</primary>
 	    <secondary>signatures in grammar</secondary>
 	  </indexterm>
-	  <para> Give type signatures for everything (see <xref
+	  for everything (see <xref
           linkend="sec-type-signatures"/>.  This is reported to improve
           things by about 50%.  If there is a type signature for every
           single non-terminal in the grammar, then <application>Happy</application>
