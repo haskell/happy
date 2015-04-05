@@ -47,6 +47,7 @@ Produce the complete output file.
 >               , first_nonterm = first_nonterm'
 >               , eof_term = eof
 >               , first_term = fst_term
+>               , token_names = token_names'
 >               , lexer = lexer'
 >               , imported_identity = imported_identity'
 >               , monad = (use_monad,monad_context,monad_tycon,monad_then,monad_return)
@@ -54,6 +55,7 @@ Produce the complete output file.
 >               , token_type = token_type'
 >               , starts = starts'
 >               , error_handler = error_handler'
+>               , error_sig = error_sig'
 >               , attributetype = attributetype'
 >               , attributes = attributes'
 >               })
@@ -393,10 +395,10 @@ The token conversion function.
 >       . str "let cont i = " . doAction . str " sts stk tks in\n\t"
 >       . str "case tk of {\n\t"
 >       . interleave ";\n\t" (map doToken token_rep)
->       . str "_ -> happyError' (tk:tks)\n\t"
+>       . str "_ -> happyError' ((tk:tks), [])\n\t"
 >       . str "}\n\n"
->       . str "happyError_ " . eofTok . str " tk tks = happyError' tks\n"
->       . str "happyError_ _ tk tks = happyError' (tk:tks)\n";
+>       . str "happyError_ explist " . eofTok . str " tk tks = happyError' (tks, explist)\n"
+>       . str "happyError_ explist _ tk tks = happyError' ((tk:tks), explist)\n";
 >             -- when the token is EOF, tk == _|_ (notHappyAtAll)
 >             -- so we must not pass it to happyError'
 
@@ -411,10 +413,10 @@ The token conversion function.
 >       . str (eof' ++ " -> ")
 >       . eofAction "tk" . str ";\n\t"
 >       . interleave ";\n\t" (map doToken token_rep)
->       . str "_ -> happyError' tk\n\t"
+>       . str "_ -> happyError' (tk, [])\n\t"
 >       . str "})\n\n"
->       . str "happyError_ " . eofTok . str " tk = happyError' tk\n"
->       . str "happyError_ _ tk = happyError' tk\n";
+>       . str "happyError_ explist " . eofTok . str " tk = happyError' (tk, explist)\n"
+>       . str "happyError_ explist _ tk = happyError' (tk, explist)\n";
 >             -- superfluous pattern match needed to force happyError_ to
 >             -- have the correct type.
 >       }
@@ -519,7 +521,19 @@ machinery to discard states in the parser...
 >       . produceReduceArray
 >       . str "happy_n_terms = " . shows n_terminals . str " :: Int\n"
 >       . str "happy_n_nonterms = " . shows n_nonterminals . str " :: Int\n\n"
-
+>       . str "happy_explist_per_state st =\n"
+>       . str "    case st of\n"
+>       . foldr (.) id (map f (assocs action))
+>       . str "      _ -> []\n\n"
+>       where f (state, acts)
+>                = str "      " . (shows state) . str " ->"
+>                . (possibleShifts acts) . str "\n"
+>
+>    possibleShifts acts = str " " . (str $ show $ concat $ map f $ assocs acts)
+>       where
+>         f (t, LR'Shift _ _ ) = [token_names' ! t]
+>         f (_, _) = []
+>
 >    produceStateFunction goto' (state, acts)
 >       = foldr (.) id (map produceActions assocs_acts)
 >       . foldr (.) id (map produceGotos   (assocs gotos))
@@ -528,6 +542,10 @@ machinery to discard states in the parser...
 >              then str " x = happyTcHack x "
 >              else str " _ = ")
 >       . mkAction default_act
+>       . (case default_act of
+>            LR'Fail -> possibleShifts acts
+>            LR'MustFail -> possibleShifts acts
+>            _ -> str "")
 >       . str "\n\n"
 >
 >       where gotos = goto' ! state
@@ -536,10 +554,18 @@ machinery to discard states in the parser...
 >             produceActions (t, action'@(LR'Reduce{-'-} _ _))
 >                | action' == default_act = id
 >                | otherwise = actionFunction t
->                            . mkAction action' . str "\n"
+>                            . productAction action'
 >             produceActions (t, action')
 >               = actionFunction t
->               . mkAction action' . str "\n"
+>               . productAction action'
+>
+>             productAction action'
+>               = mkAction action'
+>                 . (case action' of
+>                     LR'Fail -> str " []"
+>                     LR'MustFail -> str " []"
+>                     _ -> str "")
+>                 . str "\n"
 >
 >             produceGotos (t, Goto i)
 >               = actionFunction t
@@ -733,9 +759,9 @@ MonadStuff:
 >                . str "happyReturn1 :: " . pcont . str " => a -> b -> " . pty . str " a\n"
 >                . str "happyReturn1 = \\a tks -> " . brack monad_return
 >                . str " a\n"
->                . str "happyError' :: " . str monad_context . str " => ["
+>                . str "happyError' :: " . str monad_context . str " => (["
 >                . token
->                . str "] -> "
+>                . str "], [String]) -> "
 >                . str monad_tycon
 >                . str " a\n"
 >                . str "happyError' = "
@@ -746,8 +772,8 @@ MonadStuff:
 >                  str "happyThen1 = happyThen\n"
 >                . str "happyReturn1 :: " . pcont . str " => a -> " . pty . str " a\n"
 >                . str "happyReturn1 = happyReturn\n"
->                . str "happyError' :: " . str monad_context . str " => "
->                                        . token . str " -> "
+>                . str "happyError' :: " . str monad_context . str " => ("
+>                                        . token . str ", [String]) -> "
 >                . str monad_tycon
 >                . str " a\n"
 >                . str "happyError' tk = "
@@ -757,14 +783,18 @@ MonadStuff:
 
 An error handler specified with %error is passed the current token
 when used with %lexer, but happyError (the old way but kept for
-compatibility) is not passed the current token.
+compatibility) is not passed the current token. Also, the %errorsig
+directive determins the API of the provided function.
 
 >    errorHandler =
 >       case error_handler' of
->               Just h  -> str h
+>               Just h  -> case error_sig' of
+>                              "explist" -> str h
+>                              "default" -> str "(\\(tokens, _) -> " . str h . str " tokens)"
+>                              _ -> error "unsupported %errorsig value"
 >               Nothing -> case lexer' of
->                               Nothing -> str "happyError"
->                               Just _  -> str "(\\token -> happyError)"
+>                               Nothing -> str "(\\(tokens, _) -> happyError tokens)"
+>                               Just _  -> str "(\\(tokens, explist) -> happyError)"
 
 >    reduceArrElem n
 >      = str "\t(" . shows n . str " , "

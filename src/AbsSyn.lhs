@@ -10,7 +10,7 @@ Here is the abstract syntax of the language we parse.
 >       AbsSyn(..), Directive(..),
 >       getTokenType, getTokenSpec, getParserNames, getLexer,
 >       getImportedIdentity, getMonad, getError,
->       getPrios, getPrioNames, getExpect,
+>       getPrios, getPrioNames, getExpect, getErrorSig,
 >       getAttributes, getAttributetype,
 >       Rule,Prod,Term(..)
 >  ) where
@@ -45,6 +45,7 @@ generate some error messages.
 >       | TokenSpec     [(a,String)]            -- %token
 >       | TokenName     String (Maybe String) Bool -- %name/%partial (True <=> %partial)
 >       | TokenLexer    String String           -- %lexer
+>       | TokenErrorSig String                  -- %errorsig
 >       | TokenImportedIdentity                                 -- %importedidentity
 >       | TokenMonad    String String String String -- %monad
 >       | TokenNonassoc [String]                -- %nonassoc
@@ -124,6 +125,13 @@ generate some error messages.
 >               [t] -> Just t
 >               []  -> Nothing
 >               _   -> error "multiple error directives"
+
+> getErrorSig :: [Directive t] -> String
+> getErrorSig ds
+>       = case [ a | (TokenErrorSig a) <- ds ] of
+>               [t] -> t
+>               []  -> "default"
+>               _   -> error "multiple errorsig directives"
 
 > getAttributes :: [Directive t] -> [(String, String)]
 > getAttributes ds

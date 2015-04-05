@@ -114,7 +114,7 @@ happyDoAction i tk st
                       ",\taction: ")
           case action of
                 ILIT(0)           -> DEBUG_TRACE("fail.\n")
-                                     happyFail i tk st
+                                     happyFail (happy_explist_per_state (IBOX(st) :: Int)) i tk st
                 ILIT(-1)          -> DEBUG_TRACE("accept.\n")
                                      happyAccept i tk st
                 n | LT(n,(ILIT(0) :: FAST_INT)) -> DEBUG_TRACE("reduce (rule " ++ show rule
@@ -182,30 +182,30 @@ happyShift new_state i tk st sts stk =
 -- happyReduce is specialised for the common cases.
 
 happySpecReduce_0 i fn ERROR_TOK tk st sts stk
-     = happyFail ERROR_TOK tk st sts stk
+     = happyFail [] ERROR_TOK tk st sts stk
 happySpecReduce_0 nt fn j tk st@(HAPPYSTATE(action)) sts stk
      = GOTO(action) nt j tk st CONS(st,sts) (fn `HappyStk` stk)
 
 happySpecReduce_1 i fn ERROR_TOK tk st sts stk
-     = happyFail ERROR_TOK tk st sts stk
+     = happyFail [] ERROR_TOK tk st sts stk
 happySpecReduce_1 nt fn j tk _ sts@(CONS(st@HAPPYSTATE(action),_)) (v1`HappyStk`stk')
      = let r = fn v1 in
        happySeq r (GOTO(action) nt j tk st sts (r `HappyStk` stk'))
 
 happySpecReduce_2 i fn ERROR_TOK tk st sts stk
-     = happyFail ERROR_TOK tk st sts stk
+     = happyFail [] ERROR_TOK tk st sts stk
 happySpecReduce_2 nt fn j tk _ CONS(_,sts@(CONS(st@HAPPYSTATE(action),_))) (v1`HappyStk`v2`HappyStk`stk')
      = let r = fn v1 v2 in
        happySeq r (GOTO(action) nt j tk st sts (r `HappyStk` stk'))
 
 happySpecReduce_3 i fn ERROR_TOK tk st sts stk
-     = happyFail ERROR_TOK tk st sts stk
+     = happyFail [] ERROR_TOK tk st sts stk
 happySpecReduce_3 nt fn j tk _ CONS(_,CONS(_,sts@(CONS(st@HAPPYSTATE(action),_)))) (v1`HappyStk`v2`HappyStk`v3`HappyStk`stk')
      = let r = fn v1 v2 v3 in
        happySeq r (GOTO(action) nt j tk st sts (r `HappyStk` stk'))
 
 happyReduce k i fn ERROR_TOK tk st sts stk
-     = happyFail ERROR_TOK tk st sts stk
+     = happyFail [] ERROR_TOK tk st sts stk
 happyReduce k nt fn j tk st sts stk
      = case happyDrop MINUS(k,(ILIT(1) :: FAST_INT)) sts of
          sts1@(CONS(st1@HAPPYSTATE(action),_)) ->
@@ -213,7 +213,7 @@ happyReduce k nt fn j tk st sts stk
                 happyDoSeq r (GOTO(action) nt j tk st1 sts1 r)
 
 happyMonadReduce k nt fn ERROR_TOK tk st sts stk
-     = happyFail ERROR_TOK tk st sts stk
+     = happyFail [] ERROR_TOK tk st sts stk
 happyMonadReduce k nt fn j tk st sts stk =
       case happyDrop k CONS(st,sts) of
         sts1@(CONS(st1@HAPPYSTATE(action),_)) ->
@@ -221,7 +221,7 @@ happyMonadReduce k nt fn j tk st sts stk =
           happyThen1 (fn stk tk) (\r -> GOTO(action) nt j tk st1 sts1 (r `HappyStk` drop_stk))
 
 happyMonad2Reduce k nt fn ERROR_TOK tk st sts stk
-     = happyFail ERROR_TOK tk st sts stk
+     = happyFail [] ERROR_TOK tk st sts stk
 happyMonad2Reduce k nt fn j tk st sts stk =
       case happyDrop k CONS(st,sts) of
         sts1@(CONS(st1@HAPPYSTATE(action),_)) ->
@@ -260,10 +260,10 @@ happyGoto action j tk st = action j j tk (HappyState action)
 -- Error recovery (ERROR_TOK is the error token)
 
 -- parse error if we are in recovery and we fail again
-happyFail ERROR_TOK tk old_st _ stk@(x `HappyStk` _) =
+happyFail explist ERROR_TOK tk old_st _ stk@(x `HappyStk` _) =
      let i = GET_ERROR_TOKEN(x) in
 --      trace "failing" $ 
-        happyError_ i tk
+        happyError_ explist i tk
 
 {-  We don't need state discarding for our restricted implementation of
     "error".  In fact, it can cause some bogus parses, so I've disabled it
@@ -278,7 +278,7 @@ happyFail  ERROR_TOK tk old_st CONS(HAPPYSTATE(action),sts)
 
 -- Enter error recovery: generate an error token,
 --                       save the old token and carry on.
-happyFail  i tk HAPPYSTATE(action) sts stk =
+happyFail explist i tk HAPPYSTATE(action) sts stk =
 --      trace "entering error recovery" $
         DO_ACTION(action,ERROR_TOK,tk,sts, MK_ERROR_TOKEN(i) `HappyStk` stk)
 
