@@ -31,7 +31,7 @@ The parser.
 >       spec_prec       { TokenKW      TokSpecId_Prec }
 >       spec_expect     { TokenKW      TokSpecId_Expect }
 >       spec_error      { TokenKW      TokSpecId_Error }
->       spec_errorsig   { TokenKW      TokSpecId_ErrorSig }
+>       spec_errorhandlertype   { TokenKW      TokSpecId_ErrorHandlerType }
 >       spec_attribute  { TokenKW      TokSpecId_Attribute }
 >       spec_attributetype      { TokenKW      TokSpecId_Attributetype }
 >       code            { TokenInfo $$ TokCodeQuote }
@@ -119,7 +119,7 @@ The parser.
 >       | spec_left ids                 { TokenLeft $2 }
 >       | spec_expect int               { TokenExpect $2 }
 >       | spec_error code               { TokenError $2 }
->       | spec_errorsig id              { TokenErrorSig $2 }
+>       | spec_errorhandlertype id              { TokenErrorHandlerType $2 }
 >       | spec_attributetype code       { TokenAttributetype $2 }
 >       | spec_attribute id code        { TokenAttribute $2 $3 }
 

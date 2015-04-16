@@ -553,19 +553,18 @@ machinery to discard states in the parser...
 >             produceActions (_, LR'Fail{-'-}) = id
 >             produceActions (t, action'@(LR'Reduce{-'-} _ _))
 >                | action' == default_act = id
->                | otherwise = actionFunction t
->                            . productAction action'
+>                | otherwise = producePossiblyFailingAction t action'
 >             produceActions (t, action')
->               = actionFunction t
->               . productAction action'
+>               = producePossiblyFailingAction t action'
 >
->             productAction action'
->               = mkAction action'
->                 . (case action' of
->                     LR'Fail -> str " []"
->                     LR'MustFail -> str " []"
->                     _ -> str "")
->                 . str "\n"
+>             producePossiblyFailingAction t action'
+>               = actionFunction t
+>               . mkAction action'
+>               . (case action' of
+>                   LR'Fail -> str " []"
+>                   LR'MustFail -> str " []"
+>                   _ -> str "")
+>               . str "\n"
 >
 >             produceGotos (t, Goto i)
 >               = actionFunction t
@@ -783,15 +782,14 @@ MonadStuff:
 
 An error handler specified with %error is passed the current token
 when used with %lexer, but happyError (the old way but kept for
-compatibility) is not passed the current token. Also, the %errorsig
+compatibility) is not passed the current token. Also, the %errorhandlertype
 directive determins the API of the provided function.
 
 >    errorHandler =
 >       case error_handler' of
 >               Just h  -> case error_sig' of
->                              "explist" -> str h
->                              "default" -> str "(\\(tokens, _) -> " . str h . str " tokens)"
->                              _ -> error "unsupported %errorsig value"
+>                              ErrorHandlerTypeExpList -> str h
+>                              ErrorHandlerTypeDefault -> str "(\\(tokens, _) -> " . str h . str " tokens)"
 >               Nothing -> case lexer' of
 >                               Nothing -> str "(\\(tokens, _) -> happyError tokens)"
 >                               Just _  -> str "(\\(tokens, explist) -> happyError)"

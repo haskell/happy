@@ -9,7 +9,7 @@ Here is our mid-section datatype
 > module Grammar (
 >       Name,
 >
->       Production, Grammar(..), mangler,
+>       Production, Grammar(..), mangler, ErrorHandlerType(..),
 >
 >       LRAction(..), ActionTable, Goto(..), GotoTable, Priority(..),
 >       Assoc(..),
@@ -65,7 +65,7 @@ Here is our mid-section datatype
 >               attributetype     :: String,
 >               lexer             :: Maybe (String,String),
 >               error_handler     :: Maybe String,
->               error_sig         :: String
+>               error_sig         :: ErrorHandlerType
 >       }
 
 #ifdef DEBUG
@@ -372,7 +372,7 @@ Get the token specs in terms of Names.
 >               monad             = getMonad dirs,
 >               lexer             = getLexer dirs,
 >               error_handler     = getError dirs,
->               error_sig         = getErrorSig dirs,
+>               error_sig         = getErrorHandlerType dirs,
 >               token_type        = getTokenType dirs,
 >               expect            = getExpect dirs,
 >               attributes        = attrs,

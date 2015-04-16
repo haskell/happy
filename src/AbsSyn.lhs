@@ -7,10 +7,10 @@ Abstract syntax for grammar files.
 Here is the abstract syntax of the language we parse.
 
 > module AbsSyn (
->       AbsSyn(..), Directive(..),
+>       AbsSyn(..), Directive(..), ErrorHandlerType(..),
 >       getTokenType, getTokenSpec, getParserNames, getLexer,
 >       getImportedIdentity, getMonad, getError,
->       getPrios, getPrioNames, getExpect, getErrorSig,
+>       getPrios, getPrioNames, getExpect, getErrorHandlerType,
 >       getAttributes, getAttributetype,
 >       Rule,Prod,Term(..)
 >  ) where
@@ -40,12 +40,16 @@ Parser Generator Directives.
 ToDo: find a consistent way to analyse all the directives together and
 generate some error messages.
 
+> data ErrorHandlerType
+>   = ErrorHandlerTypeDefault
+>   | ErrorHandlerTypeExpList
+>
 > data Directive a
 >       = TokenType     String                  -- %tokentype
 >       | TokenSpec     [(a,String)]            -- %token
 >       | TokenName     String (Maybe String) Bool -- %name/%partial (True <=> %partial)
 >       | TokenLexer    String String           -- %lexer
->       | TokenErrorSig String                  -- %errorsig
+>       | TokenErrorHandlerType String          -- %errorhandlertype
 >       | TokenImportedIdentity                                 -- %importedidentity
 >       | TokenMonad    String String String String -- %monad
 >       | TokenNonassoc [String]                -- %nonassoc
@@ -126,12 +130,15 @@ generate some error messages.
 >               []  -> Nothing
 >               _   -> error "multiple error directives"
 
-> getErrorSig :: [Directive t] -> String
-> getErrorSig ds
->       = case [ a | (TokenErrorSig a) <- ds ] of
->               [t] -> t
->               []  -> "default"
->               _   -> error "multiple errorsig directives"
+> getErrorHandlerType :: [Directive t] -> ErrorHandlerType
+> getErrorHandlerType ds
+>       = case [ a | (TokenErrorHandlerType a) <- ds ] of
+>               [t] -> case t of
+>                        "explist" -> ErrorHandlerTypeExpList
+>                        "default" -> ErrorHandlerTypeDefault
+>                        _ -> error "unsupported %errorhandlertype value"
+>               []  -> ErrorHandlerTypeDefault
+>               _   -> error "multiple errorhandlertype directives"
 
 > getAttributes :: [Directive t] -> [(String, String)]
 > getAttributes ds

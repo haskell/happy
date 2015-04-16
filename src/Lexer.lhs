@@ -37,7 +37,7 @@ The lexer.
 >       | TokSpecId_Token       -- %token
 >       | TokSpecId_Name        -- %name
 >       | TokSpecId_Partial     -- %partial
->       | TokSpecId_ErrorSig  -- %errorsig
+>       | TokSpecId_ErrorHandlerType    -- %errorhandlertype
 >       | TokSpecId_Lexer       -- %lexer
 >       | TokSpecId_ImportedIdentity -- %importedidentity
 >       | TokSpecId_Monad       -- %monad
@@ -134,8 +134,8 @@ followed by a special identifier.
 >               returnToken cont (TokenKW TokSpecId_Prec) rest
 >       'e':'x':'p':'e':'c':'t':rest ->
 >               returnToken cont (TokenKW TokSpecId_Expect) rest
->       'e':'r':'r':'o':'r':'s':'i':'g':rest ->
->               returnToken cont (TokenKW TokSpecId_ErrorSig) rest
+>       'e':'r':'r':'o':'r':'h':'a':'n':'d':'l':'e':'r':'t':'y':'p':'e':rest ->
+>               returnToken cont (TokenKW TokSpecId_ErrorHandlerType) rest
 >       'e':'r':'r':'o':'r':rest ->
 >               returnToken cont (TokenKW TokSpecId_Error) rest
 >       'a':'t':'t':'r':'i':'b':'u':'t':'e':'t':'y':'p':'e':rest ->

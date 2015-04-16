@@ -3482,7 +3482,29 @@ any projection function.</para>
 	<para>Specifies the function to be called in the event of a
 	parse error.  The type of <literal>&lt;identifier&gt;</literal> varies
 	depending on the presence of <literal>%lexer</literal> (see
-	<xref linkend="sec-monad-summary" />).</para>
+	<xref linkend="sec-monad-summary" />) and <literal>%errorhandlertype</literal>
+	(see the following).</para>
+      </sect2>
+
+      <sect2 id="sec-errorhandlertype-directive">
+	<title>Additional error information</title>
+
+<programlisting>
+%errorhandlertype (explist | default)
+</programlisting>
+
+	<indexterm>
+	  <primary><literal>%errorhandlertype</literal></primary>
+	</indexterm>
+
+	<para>(optional) The expected type of the user-supplied error handling can be
+	applied with additional information. By default, no information is added, for
+	compatibility with previous versions. However, if <literal>explist</literal>
+	is provided with this directive, then the first application will be of
+	type <literal>[String]</literal>, providing a description of possible tokens
+	that would not have failed the parser in place of the token that has caused
+	the error.
+	</para>
       </sect2>
 
       <sect2 id="sec-attributes">

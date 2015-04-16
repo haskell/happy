@@ -10,7 +10,7 @@ import Data.List (isPrefixOf)
 
 %name parseFoo
 %tokentype { Token }
-%errorsig explist
+%errorhandlertype explist
 %error { handleErrorExpList }
 
 %monad { ParseM } { (>>=) } { return }
