@@ -44,8 +44,9 @@ HAPPY_ENDIF
 #define IF_GHC(x)
 #endif
 
-#if defined(HAPPY_ARRAY)
 data Happy_IntList = HappyCons FAST_INT Happy_IntList
+
+#if defined(HAPPY_ARRAY)
 #define CONS(h,t) (HappyCons (h) (t))
 #else
 #define CONS(h,t) ((h):(t))
@@ -114,7 +115,7 @@ happyDoAction i tk st
                       ",\taction: ")
           case action of
                 ILIT(0)           -> DEBUG_TRACE("fail.\n")
-                                     happyFail (happy_explist_per_state (IBOX(st) :: Int)) i tk st
+                                     happyFail (happyExpListPerState (IBOX(st) :: Int)) i tk st
                 ILIT(-1)          -> DEBUG_TRACE("accept.\n")
                                      happyAccept i tk st
                 n | LT(n,(ILIT(0) :: FAST_INT)) -> DEBUG_TRACE("reduce (rule " ++ show rule
@@ -135,6 +136,8 @@ happyDoAction i tk st
           | check     = indexShortOffAddr happyTable off_i
           | otherwise = indexShortOffAddr happyDefActions st
 
+#endif /* HAPPY_ARRAY */
+
 #ifdef HAPPY_GHC
 indexShortOffAddr (HappyA# arr) off =
         Happy_GHC_Exts.narrow16Int# i
@@ -147,11 +150,18 @@ indexShortOffAddr (HappyA# arr) off =
 indexShortOffAddr arr off = arr Happy_Data_Array.! off
 #endif
 
+
+readArrayBit arr bit =
+    Bits.testBit IBOX(indexShortOffAddr arr (unbox_int $ bit `div` 16)) (bit `mod` 16)
+#ifdef HAPPY_GHC
+  where unbox_int (Happy_GHC_Exts.I# x) = x
+#else
+  where unbox_int = id
+#endif
+
 #ifdef HAPPY_GHC
 data HappyAddr = HappyA# Happy_GHC_Exts.Addr#
 #endif
-
-#endif /* HAPPY_ARRAY */
 
 -----------------------------------------------------------------------------
 -- HappyState data type (not arrays)

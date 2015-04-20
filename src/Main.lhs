@@ -195,7 +195,7 @@ Add any special options or imports required by the parsing machinery.
 >       let
 >           header = Just (
 >                       (case hd of Just s -> s; Nothing -> "")
->                       ++ importsToInject target cli
+>                       ++ importsToInject cli
 >                    )
 >       in
 
@@ -208,7 +208,7 @@ Branch off to GLR parser production
 >           filtering  | OptGLR_Filter `elem` cli = UseFiltering
 >                      | otherwise                = NoFiltering
 >           ghc_exts   | OptGhcTarget `elem` cli  = UseGhcExts
->                                                   (importsToInject target cli)
+>                                                   (importsToInject cli)
 >                                                   (optsToInject target cli)
 >                      | otherwise                = NoGhcExts
 >           debug      = OptDebugParser `elem` cli
@@ -483,14 +483,12 @@ GHC version-dependent stuff in it.
 >       | OptDebugParser `elem` cli = "-cpp"
 >       | otherwise                 = ""
 
-> importsToInject :: Target -> [CLIFlags] -> String
-> importsToInject tgt cli =
->     concat ["\n", array_import, glaexts_import, debug_imports, applicative_imports]
+> importsToInject :: [CLIFlags] -> String
+> importsToInject cli =
+>     concat ["\n", import_array, import_bits,
+>             glaexts_import, debug_imports, applicative_imports]
 >   where
 >       glaexts_import | is_ghc         = import_glaexts
->                      | otherwise      = ""
->
->       array_import   | is_array       = import_array
 >                      | otherwise      = ""
 >
 >       debug_imports  | is_debug       = import_debug
@@ -500,7 +498,6 @@ GHC version-dependent stuff in it.
 >
 >       is_ghc   = OptGhcTarget `elem` cli
 >       is_debug = OptDebugParser `elem` cli
->       is_array = tgt == TargetArrayBased
 
 CPP is turned on for -fglasgow-exts, so we can use conditional compilation:
 
@@ -509,6 +506,9 @@ CPP is turned on for -fglasgow-exts, so we can use conditional compilation:
 
 > import_array :: String
 > import_array = "import qualified Data.Array as Happy_Data_Array\n"
+
+> import_bits :: String
+> import_bits = "import qualified Data.Bits as Bits\n"
 
 > import_debug :: String
 > import_debug =
