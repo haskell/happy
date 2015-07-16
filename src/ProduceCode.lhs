@@ -912,7 +912,8 @@ directive determins the API of the provided function.
 >       . maybe_tks
 >       . str " = "
 >       . str unmonad
->       . str "happyThen (happyParse "
+>       . str "happySomeParser where\n"
+>       . str " happySomeParser = happyThen (happyParse "
 >       . case target of
 >            TargetHaskell -> str "action_" . shows no
 >            TargetArrayBased
