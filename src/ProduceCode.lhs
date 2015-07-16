@@ -340,7 +340,17 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >                           | otherwise                  = nt
 >
 >               mkReductionHdr lt' s =
->                       mkReduceFun i . str " = "
+>                       let pcont = str monad_context in
+>                       let pty = str monad_tycon in
+>                       let intMaybeHash | ghc       = str "Happy_GHC_Exts.Int#"
+>                                        | otherwise = str "Int" in
+>                       mkReduceFun i . str " :: " . pcont
+>                       . str " => " . intMaybeHash
+>                       . str " -> " . str token_type'
+>                       . str " -> " . intMaybeHash
+>                       . str " -> Happy_IntList -> HappyStk HappyAbsSyn -> "
+>                       . pty . str " HappyAbsSyn\n"
+>                       . mkReduceFun i . str " = "
 >                       . str s . strspace . lt' . strspace . showInt adjusted_nt
 >                       . strspace . reductionFun . nl
 >                       . reductionFun . strspace
@@ -788,6 +798,8 @@ MonadStuff:
 >    produceMonadStuff =
 >            let pcont = str monad_context in
 >            let pty = str monad_tycon in
+>            let intMaybeHash | ghc       = str "Happy_GHC_Exts.Int#"
+>                             | otherwise = str "Int" in
 >            str "happyThen :: " . pcont . str " => " . pty
 >          . str " a -> (a -> "  . pty
 >          . str " b) -> " . pty . str " b\n"
@@ -808,10 +820,30 @@ MonadStuff:
 >                . str " a\n"
 >                . str "happyError' = "
 >                . str (if use_monad then "" else "HappyIdentity . ")
->                . errorHandler
->                . str "\n\n"
+>                . errorHandler . str "\n"
+>                . str "happyParse :: " . pcont . str " => " . intMaybeHash
+>                . str " -> " . pty . str " HappyAbsSyn\n"
+>                . str "\n"
+>                . str "happyNewToken :: " . pcont . str " => " . intMaybeHash
+>                . str " -> Happy_IntList -> HappyStk HappyAbsSyn -> "
+>                . pty . str " HappyAbsSyn\n"
+>                . str "\n"
+>                . str "happyDoAction :: " . pcont . str " => " . intMaybeHash
+>                . str " -> " . str token_type' . str " -> " . intMaybeHash
+>                . str " -> Happy_IntList -> HappyStk HappyAbsSyn -> "
+>                . pty . str " HappyAbsSyn\n"
+>                . str "\n"
+>                . str "happyReduceArr :: " . pcont
+>                . str " => Happy_Data_Array.Array Int (" . intMaybeHash
+>                . str " -> " . str token_type' . str " -> " . intMaybeHash
+>                . str " -> Happy_IntList -> HappyStk HappyAbsSyn -> "
+>                . pty . str " HappyAbsSyn)\n"
+>                . str "\n"
 >               _ ->
->                  str "happyThen1 = happyThen\n"
+>                  str "happyThen1 :: " . pcont . str " => " . pty
+>                . str " a -> (a -> "  . pty
+>                . str " b) -> " . pty . str " b\n"
+>                . str "happyThen1 = happyThen\n"
 >                . str "happyReturn1 :: " . pcont . str " => a -> " . pty . str " a\n"
 >                . str "happyReturn1 = happyReturn\n"
 >                . str "happyError' :: " . str monad_context . str " => ("
@@ -821,6 +853,23 @@ MonadStuff:
 >                . str "happyError' tk = "
 >                . str (if use_monad then "" else "HappyIdentity ")
 >                . errorHandler . str " tk\n"
+>                . str "happyParse :: " . pcont . str " => " . intMaybeHash
+>                . str " -> " . pty . str " HappyAbsSyn\n"
+>                . str "\n"
+>                . str "happyNewToken :: " . pcont . str " => " . intMaybeHash
+>                . str " -> Happy_IntList -> HappyStk HappyAbsSyn -> "
+>                . pty . str " HappyAbsSyn\n"
+>                . str "\n"
+>                . str "happyDoAction :: " . pcont . str " => " . intMaybeHash
+>                . str " -> " . str token_type' . str " -> " . intMaybeHash
+>                . str " -> Happy_IntList -> HappyStk HappyAbsSyn -> "
+>                . pty . str " HappyAbsSyn\n"
+>                . str "\n"
+>                . str "happyReduceArr :: " . pcont
+>                . str " => Happy_Data_Array.Array Int (" . intMaybeHash
+>                . str " -> " . str token_type' . str " -> " . intMaybeHash
+>                . str " -> Happy_IntList -> HappyStk HappyAbsSyn -> "
+>                . pty . str " HappyAbsSyn)\n"
 >                . str "\n"
 
 An error handler specified with %error is passed the current token
@@ -854,8 +903,7 @@ directive determins the API of the provided function.
 >       . maybe_tks
 >       . str " = "
 >       . str unmonad
->       . str "happySomeParser where\n"
->       . str "  happySomeParser = happyThen (happyParse "
+>       . str "happyThen (happyParse "
 >       . case target of
 >            TargetHaskell -> str "action_" . shows no
 >            TargetArrayBased
