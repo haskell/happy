@@ -340,19 +340,26 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >                           | otherwise                  = nt
 >
 >               mkReductionHdr lt' s =
->                       let pcont = str monad_context in
->                       let pty = str monad_tycon in
->                       let intMaybeHash | ghc       = str "Happy_GHC_Exts.Int#"
->                                        | otherwise = str "Int" in
->                       let tysig
->                             | target == TargetArrayBased =
->                               mkReduceFun i . str " :: " . pcont
->                               . str " => " . intMaybeHash
->                               . str " -> " . str token_type'
->                               . str " -> " . intMaybeHash
->                               . str " -> Happy_IntList -> HappyStk HappyAbsSyn -> "
->                               . pty . str " HappyAbsSyn\n"
->                             | otherwise = id in
+>                       let pcont = str monad_context
+>                           pty = str monad_tycon
+>                           all_tyvars = [ 't':show n | (n, Nothing) <-
+>                                             assocs nt_types ]
+>                           str_tyvars = str (unwords all_tyvars)
+>                           happyAbsSyn = str "(HappyAbsSyn "
+>                                         . str_tyvars . str ")"
+>                           intMaybeHash | ghc       = str "Happy_GHC_Exts.Int#"
+>                                        | otherwise = str "Int"
+>                           tysig = case lexer' of
+>                             Nothing -> id
+>                             _ | target == TargetArrayBased ->
+>                                 mkReduceFun i . str " :: " . pcont
+>                                 . str " => " . intMaybeHash
+>                                 . str " -> " . str token_type'
+>                                 . str " -> " . intMaybeHash
+>                                 . str " -> Happy_IntList -> HappyStk "
+>                                 . happyAbsSyn . str " -> "
+>                                 . pty . str " " . happyAbsSyn . str "\n"
+>                               | otherwise -> id in
 >                       tysig . mkReduceFun i . str " = "
 >                       . str s . strspace . lt' . strspace . showInt adjusted_nt
 >                       . strspace . reductionFun . nl
@@ -800,46 +807,13 @@ MonadStuff:
 
 >    produceMonadStuff =
 >            let pcont = str monad_context
->                pty = str monad_tycon
->                intMaybeHash | ghc       = str "Happy_GHC_Exts.Int#"
->                             | otherwise = str "Int"
->                happyParseSig
->                  | target == TargetArrayBased =
->                    str "happyParse :: " . pcont . str " => " . intMaybeHash
->                    . str " -> " . pty . str " HappyAbsSyn\n"
->                    . str "\n"
->                  | otherwise = id
->                newTokenSig
->                  | target == TargetArrayBased =
->                    str "happyNewToken :: " . pcont . str " => " . intMaybeHash
->                    . str " -> Happy_IntList -> HappyStk HappyAbsSyn -> "
->                    . pty . str " HappyAbsSyn\n"
->                    . str "\n"
->                  | otherwise = id
->                doActionSig
->                  | target == TargetArrayBased =
->                    str "happyDoAction :: " . pcont . str " => " . intMaybeHash
->                    . str " -> " . str token_type' . str " -> " . intMaybeHash
->                    . str " -> Happy_IntList -> HappyStk HappyAbsSyn -> "
->                    . pty . str " HappyAbsSyn\n"
->                    . str "\n"
->                  | otherwise = id
->                reduceArrSig
->                  | target == TargetArrayBased =
->                    str "happyReduceArr :: " . pcont
->                    . str " => Happy_Data_Array.Array Int (" . intMaybeHash
->                    . str " -> " . str token_type' . str " -> " . intMaybeHash
->                    . str " -> Happy_IntList -> HappyStk HappyAbsSyn -> "
->                    . pty . str " HappyAbsSyn)\n"
->                    . str "\n"
->                  | otherwise = id in
+>                pty = str monad_tycon  in
 >            str "happyThen :: " . pcont . str " => " . pty
 >          . str " a -> (a -> "  . pty
 >          . str " b) -> " . pty . str " b\n"
 >          . str "happyThen = " . brack monad_then . nl
 >          . str "happyReturn :: " . pcont . str " => a -> " . pty . str " a\n"
 >          . str "happyReturn = " . brack monad_return . nl
->          . happyParseSig . newTokenSig . doActionSig . reduceArrSig
 >          . case lexer' of
 >               Nothing ->
 >                  str "happyThen1 m k tks = (" . str monad_then
@@ -856,7 +830,44 @@ MonadStuff:
 >                . str (if use_monad then "" else "HappyIdentity . ")
 >                . errorHandler . str "\n"
 >               _ ->
->                  str "happyThen1 :: " . pcont . str " => " . pty
+>                let
+>                  all_tyvars = [ 't':show n | (n, Nothing) <- assocs nt_types ]
+>                  str_tyvars = str (unwords all_tyvars)
+>                  happyAbsSyn = str "(HappyAbsSyn " . str_tyvars . str ")"
+>                  intMaybeHash | ghc       = str "Happy_GHC_Exts.Int#"
+>                               | otherwise = str "Int"
+>                  happyParseSig
+>                    | target == TargetArrayBased =
+>                      str "happyParse :: " . pcont . str " => " . intMaybeHash
+>                      . str " -> " . pty . str " " . happyAbsSyn . str "\n"
+>                      . str "\n"
+>                    | otherwise = id
+>                  newTokenSig
+>                    | target == TargetArrayBased =
+>                      str "happyNewToken :: " . pcont . str " => " . intMaybeHash
+>                      . str " -> Happy_IntList -> HappyStk " . happyAbsSyn
+>                      . str " -> " . pty . str " " . happyAbsSyn . str"\n"
+>                      . str "\n"
+>                    | otherwise = id
+>                  doActionSig
+>                    | target == TargetArrayBased =
+>                      str "happyDoAction :: " . pcont . str " => " . intMaybeHash
+>                      . str " -> " . str token_type' . str " -> " . intMaybeHash
+>                      . str " -> Happy_IntList -> HappyStk " . happyAbsSyn
+>                      . str " -> " . pty . str " " . happyAbsSyn . str "\n"
+>                      . str "\n"
+>                    | otherwise = id
+>                  reduceArrSig
+>                    | target == TargetArrayBased =
+>                      str "happyReduceArr :: " . pcont
+>                      . str " => Happy_Data_Array.Array Int (" . intMaybeHash
+>                      . str " -> " . str token_type' . str " -> " . intMaybeHash
+>                      . str " -> Happy_IntList -> HappyStk " . happyAbsSyn
+>                      . str " -> " . pty . str " " . happyAbsSyn . str ")\n"
+>                      . str "\n"
+>                    | otherwise = id in
+>                  happyParseSig . newTokenSig . doActionSig . reduceArrSig
+>                . str "happyThen1 :: " . pcont . str " => " . pty
 >                . str " a -> (a -> "  . pty
 >                . str " b) -> " . pty . str " b\n"
 >                . str "happyThen1 = happyThen\n"
