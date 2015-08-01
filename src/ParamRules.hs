@@ -17,12 +17,13 @@ expand_rules rs = do let (funs,rs1) = split_rules rs
 type RuleName = String
 type Inst     = (RuleName, [RuleName])
 type Funs     = M.Map RuleName Rule
-type Rule1    = (RuleName,[Prod1],Maybe String)
+type Rule1    = (RuleName,[Prod1],Maybe (String, Subst))
 type Prod1    = ([RuleName],String,Int,Maybe String)
 
 inst_name :: Inst -> RuleName
 inst_name (f,[])  = f
-inst_name (f,xs)  = f ++ "(" ++ concat (intersperse "," xs) ++ ")"
+--inst_name (f,xs)  = f ++ "(" ++ concat (intersperse "," xs) ++ ")"
+inst_name (f,xs)  = f ++ "__" ++ concat (intersperse "__" xs) ++ "__"
 
 
 -- | A renaming substitution used when we instantiate a parameterized rule.
@@ -54,7 +55,7 @@ inst_rule :: Rule -> [RuleName] -> M2 Rule1
 inst_rule (x,xs,ps,t) ts  = do s <- build xs ts []
                                ps1 <- lift $ mapM (inst_prod s) ps
                                let y = inst_name (x,ts)
-                               return (y,ps1,t)    -- XXX: type?
+                               return (y,ps1,fmap (\x -> (x,s)) t)
   where build (x':xs') (t':ts') m = build xs' ts' ((x',t'):m)
         build [] [] m  = return m
         build xs' [] _  = err ("Need " ++ show (length xs') ++ " more arguments")

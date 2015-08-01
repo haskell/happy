@@ -297,8 +297,35 @@ Translate the rules from string to name-based.
 >   rules2 <- mapM transRule rules1
 
 >   let
->       tys = accumArray (\_ x -> x) Nothing (first_nt, last_nt)
->                       [ (nm, Just ty) | (nm, _, Just ty) <- rules1 ]
+>       type_env = [(nt, t) | (nt, _, Just (t,[])) <- rules] ++
+>                  [(nt, getTokenType dirs) | nt <- terminal_strs] -- XXX: Doesn't handle $$ type!
+>
+>       fixType (ty,s) = go "" ty
+>         where go acc [] = return (reverse acc)
+>               go acc (c:r) | isLower c = -- look for a run of alphanumerics starting with a lower case letter
+>                                let (cs,r1) = span isAlphaNum r
+>                                    go1 x = go (reverse x ++ acc) r1
+>                                in case lookup (c:cs) s of
+>                                        Nothing -> go1 (c:cs) -- no binding found
+>                                        Just a -> case lookup a type_env of
+>                                          Nothing -> do
+>                                            addErr ("Parameterized rule argument '" ++ a ++ "' does not have type")
+>                                            go1 (c:cs)
+>                                          Just t -> go1 $ "(" ++ t ++ ")"
+>                            | otherwise = go (c:acc) r
+>
+>       convType (nm, t)
+>         = do t' <- fixType t
+>              return (nm, t')
+>
+>   -- in
+>   tys <- mapM convType [ (nm, t) | (nm, _, Just t) <- rules1 ]
+>
+
+>   let
+>       type_array :: Array Int (Maybe String)
+>       type_array = accumArray (\_ x -> x) Nothing (first_nt, last_nt)
+>                    [ (nm, Just t) | (nm, t) <- tys ]
 
 >       env_array :: Array Int String
 >       env_array = array (errorTok, last_t) name_env
@@ -334,7 +361,7 @@ Get the token specs in terms of Names.
 >                                       -- INCLUDES the %start tokens
 >               starts            = zip4 parser_names start_names start_toks
 >                                       start_partials,
->               types             = tys,
+>               types             = type_array,
 >               token_names       = env_array,
 >               first_nonterm     = first_nt,
 >               first_term        = first_t,
