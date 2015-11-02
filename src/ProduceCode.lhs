@@ -291,7 +291,9 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >       = mkReductionHdr (showInt lt) monad_reduce
 >       . char '(' . interleave " `HappyStk`\n\t" tokPatterns
 >       . str "happyRest) tk\n\t = happyThen ("
+>       . str "("
 >       . tokLets (char '(' . str code' . char ')')
+>       . str ")"
 >       . (if monad_pass_token then str " tk" else id)
 >       . str "\n\t) (\\r -> happyReturn (" . this_absSynCon . str " r))"
 
