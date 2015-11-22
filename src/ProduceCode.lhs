@@ -687,10 +687,10 @@ outlaw them inside { }
 >          . str "instance Functor HappyIdentity where\n"
 >          . str "    fmap f (HappyIdentity a) = HappyIdentity (f a)\n\n"
 >          . str "instance Applicative HappyIdentity where\n"
->          . str "    pure  = return\n"
+>          . str "    pure  = HappyIdentity\n"
 >          . str "    (<*>) = ap\n"
 >          . str "instance Monad HappyIdentity where\n"
->          . str "    return = HappyIdentity\n"
+>          . str "    return = pure\n"
 >          . str "    (HappyIdentity p) >>= q = q p\n\n"
 
 MonadStuff:
