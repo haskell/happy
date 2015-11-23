@@ -18,11 +18,11 @@ import Data.Char (isDigit)
 
 main :: IO ()
 main = defaultMainWithHooks simpleUserHooks { postBuild = myPostBuild,
-					      postClean = myPostClean,
-					      copyHook  = myCopy,
-					      instHook  = myInstall }
+                                              postClean = myPostClean,
+                                              copyHook  = myCopy,
+                                              instHook  = myInstall }
 
--- hack to turn cpp-style '# 27 "GenericTemplate.hs"' into 
+-- hack to turn cpp-style '# 27 "GenericTemplate.hs"' into
 -- '{-# LINE 27 "GenericTemplate.hs" #-}'.
 mungeLinePragma line = case symbols line of
  syms | Just prag <- getLinePrag syms  -> prag
@@ -66,40 +66,40 @@ myInstall pkg_descr lbi hooks flags =
   instHook simpleUserHooks pkg_descr' lbi hooks flags
   where pkg_descr' = pkg_descr {
           dataFiles = dataFiles pkg_descr ++ all_template_files
-	}
+        }
 
 myCopy pkg_descr lbi hooks copy_flags =
   copyHook simpleUserHooks pkg_descr' lbi hooks copy_flags
   where pkg_descr' = pkg_descr {
           dataFiles = dataFiles pkg_descr ++ all_template_files
-	}
+        }
 
 all_template_files :: [FilePath]
 all_template_files = map fst (templates ++ glr_base_templates ++ glr_templates)
 
 templates :: [(FilePath,[String])]
 templates = [
-  ("HappyTemplate"			, []),
-  ("HappyTemplate-ghc"			, ["-DHAPPY_GHC"]),
-  ("HappyTemplate-coerce"		, ["-DHAPPY_GHC","-DHAPPY_COERCE"]),
-  ("HappyTemplate-arrays"		, ["-DHAPPY_ARRAY"]),
-  ("HappyTemplate-arrays-ghc"		, ["-DHAPPY_ARRAY","-DHAPPY_GHC"]),
-  ("HappyTemplate-arrays-coerce"	, ["-DHAPPY_ARRAY","-DHAPPY_GHC","-DHAPPY_COERCE"]),
-  ("HappyTemplate-arrays-debug"		, ["-DHAPPY_ARRAY","-DHAPPY_DEBUG"]),
-  ("HappyTemplate-arrays-ghc-debug"	, ["-DHAPPY_ARRAY","-DHAPPY_GHC","-DHAPPY_DEBUG"]),
-  ("HappyTemplate-arrays-coerce-debug"	, ["-DHAPPY_ARRAY","-DHAPPY_GHC","-DHAPPY_COERCE","-DHAPPY_DEBUG"])
+  ("HappyTemplate"                      , []),
+  ("HappyTemplate-ghc"                  , ["-DHAPPY_GHC"]),
+  ("HappyTemplate-coerce"               , ["-DHAPPY_GHC","-DHAPPY_COERCE"]),
+  ("HappyTemplate-arrays"               , ["-DHAPPY_ARRAY"]),
+  ("HappyTemplate-arrays-ghc"           , ["-DHAPPY_ARRAY","-DHAPPY_GHC"]),
+  ("HappyTemplate-arrays-coerce"        , ["-DHAPPY_ARRAY","-DHAPPY_GHC","-DHAPPY_COERCE"]),
+  ("HappyTemplate-arrays-debug"         , ["-DHAPPY_ARRAY","-DHAPPY_DEBUG"]),
+  ("HappyTemplate-arrays-ghc-debug"     , ["-DHAPPY_ARRAY","-DHAPPY_GHC","-DHAPPY_DEBUG"]),
+  ("HappyTemplate-arrays-coerce-debug"  , ["-DHAPPY_ARRAY","-DHAPPY_GHC","-DHAPPY_COERCE","-DHAPPY_DEBUG"])
  ]
 
 glr_base_templates :: [(FilePath,[String])]
 glr_base_templates = [
-  ("GLR_Base"		, [])
+  ("GLR_Base"           , [])
  ]
 
 glr_templates :: [(FilePath,[String])]
 glr_templates = [
-  ("GLR_Lib"		, []),
-  ("GLR_Lib-ghc"	, ["-DHAPPY_GHC"]),
-  ("GLR_Lib-ghc-debug"	, ["-DHAPPY_GHC", "-DHAPPY_DEBUG"])
+  ("GLR_Lib"            , []),
+  ("GLR_Lib-ghc"        , ["-DHAPPY_GHC"]),
+  ("GLR_Lib-ghc-debug"  , ["-DHAPPY_GHC", "-DHAPPY_DEBUG"])
  ]
 
 \end{code}
