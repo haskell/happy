@@ -19,8 +19,8 @@ This module is designed as an extension to the Haskell parser generator Happy.
 > import GenUtils ( str, char, nl, brack, brack', interleave, maybestr )
 > import Grammar
 > import Data.Array
-> import Data.Char ( isSpace )
-> import Data.List ( nub, (\\), sort )
+> import Data.Char ( isSpace, isAlphaNum )
+> import Data.List ( nub, (\\), sort, find, tails )
 > import Data.Version ( showVersion )
 
 %-----------------------------------------------------------------------------
@@ -130,15 +130,46 @@ the driver and data strs (large template).
 >  where
 >   (_,_,ghcExts_opt) = options
 
->   mod_name = reverse $ takeWhile (`notElem` "\\/") $ reverse basename
+Extract the module name from the given module declaration, if it exists.
+
+>   m_mod_decl = find isModKW . zip [0..] . tails . (' ':) =<< header
+>   isModKW (_, c0:'m':'o':'d':'u':'l':'e':c1:_) = not (validIDChar c0 || validIDChar c1)
+>   isModKW _                                    = False
+>   validIDChar c      = isAlphaNum c || c `elem` "_'"
+>   validModNameChar c = validIDChar c || c == '.'
 >   data_mod = mod_name ++ "Data"
+>   mod_name = case m_mod_decl of
+>     Just (_, md) -> takeWhile validModNameChar (dropWhile (not . validModNameChar) (drop 8 md))
+
+Or use a default based upon the filename (original behaviour).
+
+>     Nothing      -> reverse . takeWhile (`notElem` "\\/") $ reverse basename
+
+Remove the module declaration from the header so that the remainder of
+the header can be used in the generated code.
+
+>   header_sans_mod = flip (maybe header) m_mod_decl $ \ (mi, _) -> do
+>       hdr <- header
+
+Extract the string that comes before the module declaration...
+
+>       let (before, mod_decl) = splitAt mi hdr
+
+>       let isWhereKW (c0:'w':'h':'e':'r':'e':c1:_) = not (validIDChar c0 || validIDChar c1)
+>           isWhereKW _ = False
+>       let where_after = dropWhile (not . isWhereKW) . tails . (++ "\n") $ mod_decl
+>       let after = drop 6 . concat . take 1 $ where_after
+
+...and combine it with the string that comes after the 'where' keyword.
+
+>       return $ before ++ "\n" ++ after
 
 >   (sem_def, sem_info) = mkGSemType options g
 >   table_text = mkTbls tables sem_info (ghcExts_opt) g
 
 >   header_parts = fmap (span (\x -> take 3 (dropWhile isSpace x) == "{-#")
 >                                  . lines)
->                       header
+>                       header_sans_mod
 >       -- Split off initial options, if they are present
 >       -- Assume these options ONLY related to code which is in
 >       --   parser tail or in sem. rules
@@ -157,7 +188,7 @@ the driver and data strs (large template).
 >     . nl
 
 >    . let count_nls     = length . filter (=='\n')
->          pre_trailer   = maybe 0 count_nls header     -- check fmt below
+>          pre_trailer   = maybe 0 count_nls header_sans_mod -- check fmt below
 >                        + count_nls base_defs
 >                        + 10                           -- for the other stuff
 >          post_trailer  = pre_trailer + maybe 0 count_nls trailer + 4
@@ -698,5 +729,3 @@ remove Happy-generated start symbols.
 
 > mkHappyVar :: Int -> String -> String
 > mkHappyVar n = str "happy_var_" . shows n
-
-
