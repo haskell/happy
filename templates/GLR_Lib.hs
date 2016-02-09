@@ -42,7 +42,8 @@
 import Data.Char
 import qualified Data.Map as Map
 
-import Control.Monad (foldM)
+import Control.Applicative (Applicative(..))
+import Control.Monad (foldM, ap)
 import Data.Maybe (fromJust)
 import Data.List (insertBy, nub, maximumBy, partition, find, groupBy, delete)
 #if defined(HAPPY_GHC)
@@ -63,18 +64,30 @@ fakeimport DATA
 
 #ifdef HAPPY_GHC
 #define ILIT(n) n#
+#define BANG !
 #define IBOX(n) (I# (n))
 #define FAST_INT Int#
+
+#if __GLASGOW_HASKELL__ >= 708
+#define ULT(n,m) (isTrue# (n <# m))
+#define GTE(n,m) (isTrue# (n >=# m))
+#define UEQ(n,m) (isTrue# (n ==# m))
+#else
 #define ULT(n,m) (n <# m)
 #define GTE(n,m) (n >=# m)
 #define UEQ(n,m) (n ==# m)
+#endif
+
 #define PLUS(n,m) (n +# m)
 #define MINUS(n,m) (n -# m)
 #define TIMES(n,m) (n *# m)
 #define NEGATE(n) (negateInt# (n))
 #define IF_GHC(x) (x)
+
 #else
+
 #define ILIT(n) (n)
+#define BANG
 #define IBOX(n) (n)
 #define FAST_INT Int
 #define ULT(n,m) (n < m)
@@ -407,7 +420,7 @@ merge stks
    | IBOX(st) <- nub (map (\s -> IBOX(top s)) stks)
    , let ch  = concat  [ x | TS st2 _ _ x <- stks, UEQ(st,st2) ]
          ss  = mkss    [ s | TS st2 _ s _ <- stks, UEQ(st,st2) ]
-         IBOX(id) = head [ IBOX(i) | TS st2 i _ _ <- stks, UEQ(st,st2) ]
+         (BANG IBOX(id)) = head [ IBOX(i) | TS st2 i _ _ <- stks, UEQ(st,st2) ]
 	  -- reuse of id is ok, since merge discards old stacks
    ]
    where
@@ -430,8 +443,12 @@ instance Functor (ST s i) where
  fmap f (MkST sf)
   = MkST $ \s i -> case sf s i of (a,s',i') -> (f a,s',i')
 
+instance Applicative (ST s i) where
+ pure a = MkST $ \s i -> (a,s,i)
+ (<*>) = ap
+
 instance Monad (ST s i) where
- return a = MkST $ \s i -> (a,s,i)
+ return = pure
  MkST sf >>= k
   = MkST $ \s i ->
 	case sf s i of

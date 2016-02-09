@@ -31,7 +31,7 @@ run6 : ${PROG}
 
 run12 : ${PROG}
 	rm -f out.1200
-	./${PROG} +RTS -s -K15M -RTS `cat 1-1200.dna` >& out.1200
+	./${PROG} +RTS -s -K15M -RTS `cat 1-1200.dna` > out.1200 2>&1
 	echo Expect NINE matches, got `grep '^[(,0-9]*G_Match' out.1200 | wc -l`
 
 clean :

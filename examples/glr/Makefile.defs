@@ -1,7 +1,7 @@
 .SUFFIXES: .y .hs .exe
 
 OPT=
-GHC=ghc -rtsopts -I../common -i../common  ${OPT}
+GHC=ghc -rtsopts -I../common -i../common -fno-warn-tabs ${OPT}
 # -dshow-passes
 HAPPY=happy
 

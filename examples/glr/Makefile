@@ -10,4 +10,4 @@ DIRS = expr-eval expr-tree expr-monad \
        nlp bio-eg
 
 loop :
-	for d in ${DIRS}; do (cd $$d && make ${CMD}); done
+	for d in ${DIRS}; do (cd $$d && make ${CMD}) || exit 1; done
