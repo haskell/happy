@@ -13,23 +13,34 @@ module ParserM (
     -- Positions
     get_pos, show_pos,
     -- Input
-    alexGetChar, alexInputPrevChar, input, position,
+    alexGetByte, alexInputPrevChar, input, position,
     -- Other
     happyError
  ) where
 
-import Control.Monad.Error (throwError)
+import Control.Applicative (Applicative(..))
+import Control.Monad (ap, liftM)
+import Control.Monad.Except (throwError)
 import Control.Monad.State (StateT, evalStateT, get, put)
 import Control.Monad.Trans (lift)
+import Data.Char (ord)
+import Data.Word (Word8)
 
 -- Parser Monad
 newtype ParserM a = ParserM (AlexInput -> StateT St (Either String) (AlexInput, a))
 
+instance Functor ParserM where
+    fmap = liftM
+
+instance Applicative ParserM where
+    pure a = ParserM $ \i -> return (i, a)
+    (<*>) = ap
+
 instance Monad ParserM where
+    return = pure
     ParserM m >>= k = ParserM $ \i -> do (i', x) <- m i
                                          case k x of
                                              ParserM y -> y i'
-    return a = ParserM $ \i -> return (i, a)
     fail err = ParserM $ \_ -> fail err
 
 run_parser :: ParserM a -> (String -> Either String a)
@@ -95,9 +106,10 @@ show_pos (Pos l c) = "line " ++ show l ++ ", column " ++ show c
 
 data AlexInput = AlexInput {position :: !Pos, input :: String}
 
-alexGetChar :: AlexInput -> Maybe (Char,AlexInput)
-alexGetChar (AlexInput p (x:xs)) = Just (x, AlexInput (alexMove p x) xs)
-alexGetChar (AlexInput _ []) = Nothing
+alexGetByte :: AlexInput -> Maybe (Word8,AlexInput)
+alexGetByte (AlexInput p (x:xs)) = Just (fromIntegral (ord x),
+                                         AlexInput (alexMove p x) xs)
+alexGetByte (AlexInput _ []) = Nothing
 
 alexInputPrevChar :: AlexInput -> Char
 alexInputPrevChar _ = error "Lexer doesn't implement alexInputPrevChar"

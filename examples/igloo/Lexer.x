@@ -6,7 +6,7 @@ import Control.Monad.State (StateT, get)
 import ParserM (ParserM (..), mkT, Token(..), St, start_code,
                 StartCode, Action, set_start_code,
                 show_pos, position, input,
-                AlexInput, alexGetChar, alexInputPrevChar)
+                AlexInput, alexGetByte, alexInputPrevChar)
 }
 
 words :-

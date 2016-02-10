@@ -6,8 +6,9 @@ all:
 
 test:
 	echo fork leaf leaf | ./foo
-	echo fork leaf leafqleaf | ./foo
-	echo leaf leaf leaf leaf leaf | ./foo
+	-echo fork leaf leafqleaf | ./foo
+	-echo leaf leaf leaf leaf leaf | ./foo
+	@echo ok
 
 clean:
 	rm -f *.o *.hi Parser.hs Lexer.hs foo
