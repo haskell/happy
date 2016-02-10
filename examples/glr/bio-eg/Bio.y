@@ -14,20 +14,20 @@ import Data.Char
 	g 	{ Base_G }
 	t 	{ Base_T }
 
-%lexer { lexer } { TokenEOF } 
+%lexer { lexer } { TokenEOF }
 
 %%
 
-M 
- :  Intergenic_noise Match Intergenic_noise {}				
+M
+ :  Intergenic_noise Match Intergenic_noise {}
 		-- replace NSkip by Intergenic_noise?
 
-Intergenic_noise 
+Intergenic_noise
  : {}
  | Intergenic_noise N {}		-- Left-assoc, less stack?
 
-Match  
- : Promoter Translation {} 
+Match
+ : Promoter Translation {}
 
 Promoter :: {Int}
  : Promoter_consensus {1}
@@ -40,7 +40,7 @@ Promoter :: {Int}
 -- HCV SMALL
 --------------------
 -- regions [data from Leung (hvc_small.gr)]
-Promoter_hcv_small 
+Promoter_hcv_small
  : N V N7_skip K B K N20_skip R N12_skip  {}	--mod 3 = 0
  | K N B N N D N18_skip H N9_skip V N     {}	--mod 3 = 0
  | t N20_skip N6_skip t N4_skip t N6_skip {}	--mod 3 = 0
@@ -52,25 +52,25 @@ Promoter_hcv_small
 --------------------
 -- regions [data from Leung (consensus.gr)]
 
-Promoter_consensus 
+Promoter_consensus
  : Minus_35 N15_skip Minus_10 {}
  | Minus_35 N15_skip N1_skip Minus_10 N5_skip {}
  | Minus_35 N15_skip N2_skip Minus_10 N5_skip {}
  | Minus_35 N15_skip N3_skip Minus_10 N5_skip {}
  | Minus_35 N15_skip N4_skip Minus_10 N5_skip {}
 
-Minus_35  
+Minus_35
  : t t g a c a {}
 
-Minus_10  
+Minus_10
  : t a t a a t {}
 
 --------------------
 -- HVC LARGE
 --------------------
 -- regions [data from Leung (hvc_large.gr)]
-    
-Promoter_hcv_large 
+
+Promoter_hcv_large
  : H N11_skip D Y B N3_skip H N12_skip B N5_skip Y N2_skip W N4_skip {}
  | N D N3_skip V N1_skip B N12_skip H N2_skip B D N2_skip H N2_skip H B N4_skip W N6_skip H H {}
  | N H N B N D N6_skip H N4_skip K B N6_skip D B N3_skip B N4_skip V N4_skip H N2_skip D N7_skip {}
@@ -85,9 +85,9 @@ Promoter_hcv_large
  | H V N4_skip B N1_skip D N6_skip D N4_skip D N4_skip H H N3_skip B N6_skip B N1_skip D N3_skip D N1_skip D N4_skip {}
  | W N3_skip V N9_skip D N11_skip B N1_skip D H N5_skip D H N1_skip D N1_skip H D N6_skip   {}
  | K N2_skip D N3_skip H N1_skip H N6_skip H N2_skip B N5_skip D D N7_skip V N2_skip D N1_skip H H N7_skip   {}
- | D N11_skip H D D N2_skip D N6_skip D N3_skip H N6_skip V N1_skip D D N2_skip H B N1_skip B N1_skip   {}            
+ | D N11_skip H D D N2_skip D N6_skip D N3_skip H N6_skip V N1_skip D D N2_skip H B N1_skip B N1_skip   {}
  | H N3_skip B N1_skip H N6_skip V N1_skip B N2_skip V N2_skip D N7_skip B N8_skip H N3_skip H D N1_skip H N1_skip H N1_skip   {}
- | B N4_skip B N12_skip H N4_skip V N2_skip H D N2_skip V H N1_skip H N2_skip H N3_skip B N1_skip K N4_skip   {}              
+ | B N4_skip B N12_skip H N4_skip V N2_skip H D N2_skip V H N1_skip H N2_skip H N3_skip B N1_skip K N4_skip   {}
  | W D N7_skip B N1_skip D N2_skip D N2_skip W N1_skip D H N2_skip D N12_skip D N5_skip H   {}
  | a N2_skip t N4_skip g N18_skip {}
 
@@ -96,7 +96,7 @@ Promoter_hcv_large
 --------------------
 -- regions [data from Leung (cart.gr)]
 
-Promoter_cart 
+Promoter_cart
  : N N t a N N N N N N N N N N N {}
  | N N V a N N N t N N N N N N N {}
  | t N N N N N N N N N N N N N N N N N N N N N N N N N N N N N N N N t B N N N t N N N N N N N t N N N N N N N {}
@@ -105,7 +105,7 @@ Promoter_cart
 --------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------
 
-Translation 
+Translation
  : Start Mincodon Stop {}
  | Start Mincodon Codon Stop {}
  | Start Mincodon Codon Codon Stop {}
@@ -184,64 +184,64 @@ Mincodon : Codon Codon Codon Codon Codon Codon Codon Codon Codon Codon Codon Cod
 
 
 
-N0_skip 
+N0_skip
  : {}
-N1_skip 
+N1_skip
  : N {}				-- match starts one place on
-N2_skip 
+N2_skip
  : N N {}			-- match starts two places on
-N3_skip  
+N3_skip
  : N N N {}			-- missing an entire codon
-N4_skip 
+N4_skip
  : N N N N {}			-- missing 4 bases
-N5_skip 
+N5_skip
  : N N N N N {}			-- missing 5 bases
-N6_skip 
+N6_skip
  : N N N N N N {}		-- missing 6 bases
-N7_skip 
+N7_skip
  : N N N N N N N {}		-- missing 8 bases
-N8_skip 
+N8_skip
  : N N N N N N N N {}		-- missing 7 bases
-N9_skip 
+N9_skip
  : N N N N N N N N N {}		-- missing 9 bases
-N10_skip 
+N10_skip
  : N N N N N N N N N N {}	-- missing 10 bases
-N11_skip 
+N11_skip
  : N10_skip N1_skip {}		-- missing 11 bases
-N12_skip 
+N12_skip
  : N10_skip N2_skip {}		-- missing 12 bases
-N13_skip 
+N13_skip
  : N10_skip N3_skip {}		-- missing 13 bases
-N14_skip 
+N14_skip
  : N10_skip N4_skip {}		-- missing 14 bases
-N15_skip 
+N15_skip
  : N10_skip N5_skip {}		-- missing 15 bases
-N16_skip 
+N16_skip
  : N10_skip N6_skip {}		-- missing 16 bases
-N17_skip 
+N17_skip
  : N10_skip N7_skip {}		-- missing 17 bases
-N18_skip 
+N18_skip
  : N10_skip N8_skip {}		-- missing 18 bases
-N19_skip 
+N19_skip
  : N10_skip N9_skip {}		-- missing 19 bases
-N20_skip 
+N20_skip
  : N10_skip N10_skip {}		-- missing 20 bases
-N30_skip 
+N30_skip
  : N10_skip N10_skip N10_skip {}		-- missing 30 bases
-N40_skip 
+N40_skip
  : N10_skip N10_skip N10_skip N10_skip {}		-- missing 40 bases
-N50_skip 
+N50_skip
  : N10_skip N10_skip N10_skip N10_skip N10_skip {}		-- missing 50 bases
-N60_skip 
+N60_skip
  : N10_skip N50_skip {}		-- missing 40 bases
-N70_skip 
+N70_skip
  : N10_skip N10_skip N50_skip {}		-- missing 50 bases
-N80_skip 
+N80_skip
  : N10_skip N10_skip N10_skip N50_skip {}		-- missing 40 bases
-N90_skip 
+N90_skip
  : N10_skip N10_skip N10_skip N10_skip N50_skip{}		-- missing 50 bases
-N100_skip 
- : N50_skip N50_skip {}		
+N100_skip
+ : N50_skip N50_skip {}
 
 
 
@@ -301,7 +301,7 @@ V			-- not base t
 
 
 
-Base 
+Base
  : a {}
  | c {}
  | g {}

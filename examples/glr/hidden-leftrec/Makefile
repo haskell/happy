@@ -12,7 +12,7 @@ eof : expr
 	./expr ""
 
 err : expr
-	echo testing syntax error 
+	echo testing syntax error
 	./expr "+ 1 +"
 
 test : run eof err

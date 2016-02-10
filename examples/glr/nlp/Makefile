@@ -1,7 +1,7 @@
 TOP=..
 include ${TOP}/Makefile.defs
 
-english : English.hs Main.lhs 
+english : English.hs Main.lhs
 	${GHC} -cpp -fglasgow-exts  -o english --make Main.lhs
 
 run : english
@@ -12,7 +12,7 @@ eof : english
 	./english "the man saw a"
 
 err : english
-	echo testing syntax error 
+	echo testing syntax error
 	./english "the the man saw race"
 
 test : run eof err

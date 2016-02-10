@@ -2,9 +2,9 @@ TOP = ..
 include $(TOP)/Makefile.defs
 
 FILTER = --filter
-FILTER = 
+FILTER =
 
-.y.hs : 
+.y.hs :
 	${HAPPY} -i -l $*.y ${FILTER}
 
 expr : Expr.hs Main.lhs
@@ -18,7 +18,7 @@ eof : expr
 	./expr ""
 
 err : expr
-	echo testing syntax error 
+	echo testing syntax error
 	./expr "+ 1 +"
 
 test : run eof err
