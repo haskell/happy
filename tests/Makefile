@@ -56,7 +56,7 @@ TEST_HAPPY_OPTS = --strict --template=..
 %.agc.hs : %.y
 	$(HAPPY) $(TEST_HAPPY_OPTS) -agc $< -o $@
 
-CLEAN_FILES += *.n.hs *.a.hs *.g.hs *.gc.hs *.ag.hs *.agc.hs *.info *.hi *.bin *.exe
+CLEAN_FILES += *.n.hs *.a.hs *.g.hs *.gc.hs *.ag.hs *.agc.hs *.info *.hi *.bin *.exe *.o *.run.stdout *.run.stderr
 
 ALL_TEST_HS = $(shell echo $(TESTS) | sed -e 's/\([^\. ]*\)\.\(l\)\{0,1\}y/\1.n.hs \1.a.hs \1.g.hs \1.gc.hs \1.ag.hs \1.agc.hs/g')
 
