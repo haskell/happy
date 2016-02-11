@@ -4,7 +4,7 @@
 #
 # NB. the Cabal that shipped with GHC 6.6 isn't enough for this, because it
 # is missing this patch:
-# 
+#
 # Fri Oct 13 11:09:41 BST 2006  Simon Marlow <simonmar@microsoft.com>
 #   * Fix getDataDir etc. when bindir=$prefix
 #
