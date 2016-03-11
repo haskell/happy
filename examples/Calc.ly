@@ -5,7 +5,7 @@
 
 First thing to declare is the name of your parser,
 and the type of the tokens the parser reads.
-
+d
 > %name calc
 > %tokentype { Token }
 
@@ -56,7 +56,7 @@ and make in complete:
 
 > {
 
-All parsers must declair this function, 
+All parsers must declare this function, 
 which is called when an error is detected.
 Note that currently we do no error recovery.
 
