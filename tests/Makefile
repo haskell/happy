@@ -75,8 +75,8 @@ HC_OPTS += -fforce-recomp
 check.%.y : %.y
 	@echo "--> Checking $<..."
 	$(HAPPY) $(TEST_HAPPY_OPTS) $< 1>$*.run.stdout 2>$*.run.stderr || true
-	@diff -u $*.stdout $*.run.stdout
-	@diff -u $*.stderr $*.run.stderr
+	@diff -u --ignore-all-space $*.stdout $*.run.stdout
+	@diff -u --ignore-all-space $*.stderr $*.run.stderr
 
 %$(HS_PROG_EXT) : %.hs
 	$(HC) $(HC_OPTS) $($*_LD_OPTS) $< -o $@
