@@ -248,7 +248,7 @@ Finally, do some fiddling around to get this all in the form we want.
 > indexInto :: Eq a => Int -> a -> [a] -> Maybe Int
 > indexInto _ _ []                 = Nothing
 > indexInto i x (y:ys) | x == y    = Just i
->                      | otherwise = indexInto (i+1) x ys
+>                      | otherwise = let j = i + 1 in j `seq` indexInto j x ys
 
 -----------------------------------------------------------------------------
 Computing propagation of lookaheads
@@ -572,7 +572,7 @@ Count the conflicts
 
 > countConflicts :: ActionTable -> (Array Int (Int,Int), (Int,Int))
 > countConflicts action
->   = (conflictArray, foldr (\(a,b) (c,d) -> (a+c, b+d)) (0,0) conflictList)
+>   = (conflictArray, foldl' (\(a,b) (c,d) -> let ac = a + c; bd = b + d in ac `seq` bd `seq` (ac,bd)) (0,0) conflictList)
 >
 >   where
 >
