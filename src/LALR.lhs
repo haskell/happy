@@ -22,7 +22,7 @@ Generation of LALR parsing tables.
 > import Control.Monad.ST
 > import Data.Array.ST
 > import Data.Array as Array
-> import Data.List (nub)
+> import Data.List (nub,foldl')
 > import Data.Maybe (listToMaybe, maybeToList)
 
 > unionMap :: (Ord b) => (a -> Set b) -> Set a -> Set b
