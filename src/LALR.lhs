@@ -248,7 +248,7 @@ Finally, do some fiddling around to get this all in the form we want.
 > indexInto :: Eq a => Int -> a -> [a] -> Maybe Int
 > indexInto _ _ []                 = Nothing
 > indexInto i x (y:ys) | x == y    = Just i
->                      | otherwise = indexInto (i+1) x ys
+>                      | otherwise = let j = i + 1 in j `seq` indexInto j x ys
 
 -----------------------------------------------------------------------------
 Computing propagation of lookaheads
