@@ -572,7 +572,7 @@ Count the conflicts
 
 > countConflicts :: ActionTable -> (Array Int (Int,Int), (Int,Int))
 > countConflicts action
->   = (conflictArray, foldr (\(a,b) (c,d) -> (a+c, b+d)) (0,0) conflictList)
+>   = (conflictArray, foldl' (\(a,b) (c,d) -> let ac = a + c; bd = b + d in ac `seq` bd `seq` (ac,bd)) (0,0) conflictList)
 >
 >   where
 >
