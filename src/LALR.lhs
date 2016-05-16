@@ -22,7 +22,8 @@ Generation of LALR parsing tables.
 > import Control.Monad.ST
 > import Data.Array.ST
 > import Data.Array as Array
-> import Data.List (nub,foldl')
+> import Data.List (nub,foldl',groupBy,sortBy)
+> import Data.Function (on)
 > import Data.Maybe (listToMaybe, maybeToList)
 
 > unionMap :: (Ord b) => (a -> Set b) -> Set a -> Set b
@@ -335,7 +336,7 @@ Special version using a mutable array:
 > calcLookaheads n_states spont prop
 >       = runST $ do
 >           arr <- newArray (0,n_states) []
->           propagate arr (foldr fold_lookahead [] spont)
+>           propagate arr (fold_lookahead spont)
 >           freeze arr
 
 >   where
@@ -388,13 +389,12 @@ the spontaneous lookaheads in the right form to begin with (ToDo).
 >       | otherwise =
 >               get_new' l las new
 
-> fold_lookahead :: (Int,Lr0Item,NameSet) -> [(Int,Lr0Item,NameSet)]
->               -> [(Int,Lr0Item,NameSet)]
-> fold_lookahead l [] = [l]
-> fold_lookahead l@(i,item,s) (m@(i',item',s'):las)
->       | i == i' && item == item' = (i,item, s `NameSet.union` s'):las
->       | i < i' = (i,item,s):m:las
->       | otherwise = m : fold_lookahead l las
+> fold_lookahead :: [(Int,Lr0Item,NameSet)] -> [(Int,Lr0Item,NameSet)]
+> fold_lookahead =
+>     map (\cs@(((a,b),_):_) -> (a,b,NameSet.unions $ map snd cs)) .
+>     groupBy ((==) `on` fst) .
+>     sortBy (compare `on` fst) .
+>     map (\(a,b,c) -> ((a,b),c))
 
 -----------------------------------------------------------------------------
 Merge lookaheads
