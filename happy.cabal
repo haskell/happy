@@ -18,6 +18,8 @@ Description:
   specification in BNF, Happy generates Haskell code to parse the
   grammar.  Happy works in a similar way to the @yacc@ tool for C.
 
+tested-with:  GHC==7.11.*, GHC==7.10.3, GHC==7.8.4, GHC==7.6.3, GHC==7.4.2, GHC==7.2.2, GHC==7.0.4
+
 extra-source-files:
 	ANNOUNCE
 	CHANGES
@@ -161,3 +163,4 @@ test-suite tests
   type: exitcode-stdio-1.0
   main-is: test.hs
   build-depends: base, process
+
