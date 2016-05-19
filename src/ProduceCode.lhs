@@ -401,7 +401,24 @@ The token conversion function.
 >             -- so we must not pass it to happyError'
 
 >       Just (lexer'',eof') ->
->         str "happyNewToken action sts stk\n\t= "
+>       case (target, ghc) of
+>          (TargetHaskell, True) ->
+>                 str "happyNewToken :: (Happy_GHC_Exts.Int#\n"
+>               . str "                   -> Happy_GHC_Exts.Int#\n"
+>               . str "                   -> Token\n"
+>               . str "                   -> HappyState Token (t -> [Char] -> Int -> ParseResult a)\n"
+>               . str "                   -> [HappyState Token (t -> [Char] -> Int -> ParseResult a)]\n"
+>               . str "                   -> t\n"
+>               . str "                   -> [Char]\n"
+>               . str "                   -> Int\n"
+>               . str "                   -> ParseResult a)\n"
+>               . str "                 -> [HappyState Token (t -> [Char] -> Int -> ParseResult a)]\n"
+>               . str "                 -> t\n"
+>               . str "                 -> [Char]\n"
+>               . str "                 -> Int\n"
+>               . str "                 -> ParseResult a\n"
+>          _ -> id
+>       . str "happyNewToken action sts stk\n\t= "
 >       . str lexer''
 >       . str "(\\tk -> "
 >       . str "\n\tlet cont i = "
