@@ -478,7 +478,7 @@ GHC version-dependent stuff in it.
 
 > optsToInject :: Target -> [CLIFlags] -> String
 > optsToInject tgt cli
->       | OptGhcTarget `elem` cli   = "-fglasgow-exts -XBangPatterns -cpp"
+>       | OptGhcTarget `elem` cli   = "-XMagicHash -XBangPatterns -XTypeSynonymInstances -XFlexibleInstances -cpp"
 >       | tgt == TargetArrayBased   = "-cpp"
 >       | OptDebugParser `elem` cli = "-cpp"
 >       | otherwise                 = ""
