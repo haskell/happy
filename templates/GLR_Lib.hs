@@ -19,15 +19,15 @@
 
 {- supplied by Happy
 <> module XYZ (
-<>              lexer	-- conditional
+<>              lexer   -- conditional
 -}
 
-	-- probable, but might want to parametrise
+        -- probable, but might want to parametrise
            , doParse
-           , TreeDecode(..), decode	-- only for tree decode
-           , LabelDecode(..)		-- only for label decode
+           , TreeDecode(..), decode     -- only for tree decode
+           , LabelDecode(..)            -- only for label decode
 
-	-- standard exports
+        -- standard exports
            , Tokens
            , GLRResult(..)
            , NodeMap
@@ -131,7 +131,7 @@ type Forest       = Map.Map ForestId [Branch]
 
 type NodeMap = [(ForestId, [Branch])]
 type RootNode = ForestId
-type Tokens = [[(Int, GSymbol)]]	-- list of ambiguous lexemes
+type Tokens = [[(Int, GSymbol)]]        -- list of ambiguous lexemes
 
 data GLRResult
  = ParseOK     RootNode Forest    -- forest with root
@@ -144,15 +144,15 @@ data GLRResult
 forestResult :: Int -> Forest -> GLRResult
 forestResult length f
  = case roots of
-	[]       -> ParseEOF f
-	[r]      -> ParseOK r f
-	rs@(_:_) -> error $ "multiple roots in forest, = " ++ show rs
-						++ unlines (map show ns_map)
+        []       -> ParseEOF f
+        [r]      -> ParseOK r f
+        rs@(_:_) -> error $ "multiple roots in forest, = " ++ show rs
+                                                ++ unlines (map show ns_map)
    where
        ns_map = Map.toList f
        roots  = [ r | (r@(0,sz,sym),_) <- ns_map
-	            , sz == length
-	            , sym == top_symbol ]
+                    , sz == length
+                    , sym == top_symbol ]
 
 
 ----------------------------------------------------------------------------
@@ -161,12 +161,12 @@ glr_parse :: [[UserDefTok]] -> GLRResult
 glr_parse toks
  = case runST Map.empty [0..] (tp toks) of
     (f,Left ts)   -> ParseError ts f
-						-- Error within sentence
+                                                -- Error within sentence
     (f,Right ss)  -> forestResult (length toks) f
-						-- Either good parse or EOF
+                                                -- Either good parse or EOF
    where
-	tp tss = doActions [initTS 0]
-	       $ zipWith (\i ts -> [(i, t) | t <- ts]) [0..]
+        tp tss = doActions [initTS 0]
+               $ zipWith (\i ts -> [(i, t) | t <- ts]) [0..]
               $ [ [ HappyTok {-j-} t | (j,t) <- zip [0..] ts ] | ts <- tss ]
                 ++ [[HappyEOF]]
 
@@ -181,23 +181,23 @@ type FStack = TStack ForestId
 
 doActions :: [FStack] -> Tokens -> PM (Either Tokens [FStack])
 
-doActions ss [] 		-- no more tokens (this is ok)
- = return (Right ss)		-- return the stacks (may be empty)
+doActions ss []                 -- no more tokens (this is ok)
+ = return (Right ss)            -- return the stacks (may be empty)
 
 doActions stks (tok:toks)
  = do
-	stkss <- sequence [ do
+        stkss <- sequence [ do
                              stks' <- reduceAll [] tok_form stks
                              shiftAll tok_form stks'
                          | tok_form <- tok ]
-	let new_stks = merge $ concat stkss
-	DEBUG_TRACE(unlines $ ("Stacks after R*/S pass" ++ show tok)
-				: map show new_stks)
-	case new_stks of            -- did this token kill stacks?
-	  [] -> case toks of
-		  []  -> return $ Right []	   -- ok if no more tokens
-		  _:_ -> return $ Left (tok:toks)  -- not ok if some input left
-	  _  -> doActions new_stks toks
+        let new_stks = merge $ concat stkss
+        DEBUG_TRACE(unlines $ ("Stacks after R*/S pass" ++ show tok)
+                                : map show new_stks)
+        case new_stks of            -- did this token kill stacks?
+          [] -> case toks of
+                  []  -> return $ Right []         -- ok if no more tokens
+                  _:_ -> return $ Left (tok:toks)  -- not ok if some input left
+          _  -> doActions new_stks toks
 
 reduceAll
  :: [GSymbol] -> (Int, GSymbol) -> [FStack] -> PM [(FStack, Int)]
@@ -213,28 +213,28 @@ reduceAll cyclic_names itok@(i,tok) (stk:stks)
   this_state = top stk
   redAll rs
    = do
-	let reds = [ (bf fids,stk',m)
-	           | (m,n,bf) <- rs
-	           , not (n == 0 && m `elem` cyclic_names)  -- remove done ones
-	           , (fids,stk') <- pop n stk
-	           ]
-	           -- WARNING: incomplete if more than one Empty in a prod(!)
-	           -- WARNING: can avoid by splitting emps/non-emps
-	DEBUG_TRACE(unlines $ ("Packing reds = " ++ show (length reds))
-			    : map show reds)
-	stks' <- foldM (pack i) stks reds
-	let new_cyclic = [ m | (m,0,_) <- rs
-	                     , UEQ(this_state, goto this_state m)
-	                     , m `notElem` cyclic_names ]
-	reduceAll (cyclic_names ++ new_cyclic) itok $ merge stks'
+        let reds = [ (bf fids,stk',m)
+                   | (m,n,bf) <- rs
+                   , not (n == 0 && m `elem` cyclic_names)  -- remove done ones
+                   , (fids,stk') <- pop n stk
+                   ]
+                   -- WARNING: incomplete if more than one Empty in a prod(!)
+                   -- WARNING: can avoid by splitting emps/non-emps
+        DEBUG_TRACE(unlines $ ("Packing reds = " ++ show (length reds))
+                            : map show reds)
+        stks' <- foldM (pack i) stks reds
+        let new_cyclic = [ m | (m,0,_) <- rs
+                             , UEQ(this_state, goto this_state m)
+                             , m `notElem` cyclic_names ]
+        reduceAll (cyclic_names ++ new_cyclic) itok $ merge stks'
 
 shiftAll :: (Int, GSymbol) -> [(FStack, Int)] -> PM [FStack]
 shiftAll tok [] = return []
 shiftAll (j,tok) stks
  = do
-	let end = j + 1
-	let key = end `seq` (j,end,tok)
-	newNode key
+        let end = j + 1
+        let key = end `seq` (j,end,tok)
+        newNode key
         let mss = [ (stk, st)
                   | ss@((_,st):_) <- groupBy (\a b -> snd a == snd b) stks
                   , stk <- merge $ map fst ss ]
@@ -254,28 +254,28 @@ pack e_i stks (fids,stk,m)
        let s_i = endpoint stk
        let key = (s_i,e_i,m)
        DEBUG_TRACE( unlines
-	           $ ("Pack at " ++ show key ++ " " ++ show fids)
-		   : ("**" ++ show stk)
-		   : map show stks)
+                   $ ("Pack at " ++ show key ++ " " ++ show fids)
+                   : ("**" ++ show stk)
+                   : map show stks)
 
        duplicate <- addBranch key fids
 
        let stack_matches = [ s | s <- stks
-	                        , UEQ(top s, st)
+                                , UEQ(top s, st)
                                , let (k,s') = case ts_tail s of x:_ -> x
-	                        , stk == s'
-	                        , k == key
-	                        ]  -- look for first obvious packing site
+                                , stk == s'
+                                , k == key
+                                ]  -- look for first obvious packing site
        let appears_in = not $ null stack_matches
 
        DEBUG_TRACE( unlines
-	           $ ("Stack Matches: " ++ show (length stack_matches))
-	           : map show stack_matches)
+                   $ ("Stack Matches: " ++ show (length stack_matches))
+                   : map show stack_matches)
        DEBUG_TRACE( if not (duplicate && appears_in) then "" else
-	             unlines
-	           $ ("DROP:" ++ show (IBOX(st),key) ++ " -- " ++ show stk)
-	           : "*****"
-	           : map show stks)
+                     unlines
+                   $ ("DROP:" ++ show (IBOX(st),key) ++ " -- " ++ show stk)
+                   : "*****"
+                   : map show stks)
 
        if duplicate && appears_in
         then return stks       -- because already there
@@ -283,10 +283,10 @@ pack e_i stks (fids,stk,m)
               nid <- getID
               case stack_matches of
                 []  -> return $ insertStack (push key st nid stk) stks
-				-- No prior stacks
+                                -- No prior stacks
 
                 s:_ -> return $ insertStack (push key st nid stk) (delete s stks)
-				-- pack into an existing stack
+                                -- pack into an existing stack
     where
        st = goto (top stk) m
 
@@ -308,7 +308,7 @@ newNode i
 addBranch :: ForestId -> Branch -> PM Bool
 addBranch i b
  = do
-	f <- useS id
+        f <- useS id
         case Map.lookup i f of
          Nothing               -> chgS $ \f -> (False, Map.insert i [b] f)
          Just bs | b `elem` bs -> return True
@@ -321,7 +321,7 @@ getBranches ::  ForestId -> PM [Branch]
 getBranches i
  = useS $ \s -> Map.findWithDefault no_such_node i s
    where
-	no_such_node = error $ "No such node in Forest: " ++ show i
+        no_such_node = error $ "No such node in Forest: " ++ show i
 
 
 
@@ -339,10 +339,10 @@ getBranches i
 
 
 data TStack a
- = TS { top      :: FAST_INT		-- state
-      , ts_id    :: FAST_INT		-- ID
-      , stoup    :: !(Maybe a)		-- temp holding place, for left rec.
-      , ts_tail  :: ![(a,TStack a)]	-- [(element on arc , child)]
+ = TS { top      :: FAST_INT            -- state
+      , ts_id    :: FAST_INT            -- ID
+      , stoup    :: !(Maybe a)          -- temp holding place, for left rec.
+      , ts_tail  :: ![(a,TStack a)]     -- [(element on arc , child)]
       }
 
 instance Show a => Show (TStack a) where
@@ -351,9 +351,9 @@ instance Show a => Show (TStack a) where
 #if defined(HAPPY_DEBUG)
      ++ "\n" ++ render (spp $ ts_tail ts)
      where
-	spp ss = nest 2
-		$ vcat [ vcat [text (show (v,IBOX(top s))), spp (ts_tail s)]
-		       | (v,s) <- ss ]
+        spp ss = nest 2
+                $ vcat [ vcat [text (show (v,IBOX(top s))), spp (ts_tail s)]
+                       | (v,s) <- ss ]
 #endif
 
 
@@ -384,7 +384,7 @@ push :: ForestId -> FAST_INT -> Int -> TStack ForestId -> TStack ForestId
 push x@(s_i,e_i,m) st IBOX(id) stk
  = TS st id stoup [(x,stk)]
    where
-	-- only fill stoup for cyclic states that don't consume input
+        -- only fill stoup for cyclic states that don't consume input
        stoup | s_i == e_i && UEQ(st, goto st m) = Just x
              | otherwise                        = Nothing
 
@@ -395,8 +395,8 @@ pop 0 ts = [([],ts)]
 pop 1 st@TS{stoup=Just x}
  = pop 1 st{stoup=Nothing} ++ [ ([x],st) ]
 pop n ts = [ (xs ++ [x] , stk')
-	    | (x,stk) <- ts_tail ts
-	    , (xs,stk') <- pop (n-1) stk ]
+            | (x,stk) <- ts_tail ts
+            , (xs,stk') <- pop (n-1) stk ]
 
 ---
 
@@ -421,14 +421,14 @@ merge stks
    , let ch  = concat  [ x | TS st2 _ _ x <- stks, UEQ(st,st2) ]
          ss  = mkss    [ s | TS st2 _ s _ <- stks, UEQ(st,st2) ]
          (BANG IBOX(id)) = head [ IBOX(i) | TS st2 i _ _ <- stks, UEQ(st,st2) ]
-	  -- reuse of id is ok, since merge discards old stacks
+          -- reuse of id is ok, since merge discards old stacks
    ]
    where
         mkss s = case nub [ x | Just x <- s ] of
                    []  -> Nothing
                    [x] -> Just x
                    xs  -> error $ unlines $ ("Stoup merge: " ++ show xs)
-					   : map show stks
+                                           : map show stks
 
 
 
@@ -451,12 +451,12 @@ instance Monad (ST s i) where
  return = pure
  MkST sf >>= k
   = MkST $ \s i ->
-	case sf s i of
-	 (a,s',i') -> let (MkST sf') = k a in  sf' s' i'
+        case sf s i of
+         (a,s',i') -> let (MkST sf') = k a in  sf' s' i'
 
 runST :: s -> i -> ST s i a -> (s,a)
 runST s i (MkST sf) = case sf s i of
-			   (a,s,_) -> (s,a)
+                           (a,s,_) -> (s,a)
 
 chgS :: (s -> (a,s)) -> ST s i a
 chgS sf = MkST $ \s i -> let (a,s') = sf s in (a,s',i)
