@@ -197,8 +197,8 @@ the driver and data strs (large template).
 >              , "module " ++ mod_name ++ "("
 >              , case lexer g of
 >                  Nothing     -> ""
->                  Just (lf,_) -> "\t" ++ lf ++ ","
->              , "\t" ++ start
+>                  Just (lf,_) -> "  " ++ lf ++ ","
+>              , "  " ++ start
 >              , ""
 >              , unlines pre
 >              , imps
@@ -221,9 +221,9 @@ the driver and data strs (large template).
 > user_def_token_code tokenType
 >  = str "type UserDefTok = " . str tokenType                     . nl
 >  . str "instance TreeDecode " . brack tokenType . str " where"  . nl
->  . str "\tdecode_b f (Branch (SemTok t) []) = [happy_return t]" . nl
+>  . str "  decode_b f (Branch (SemTok t) []) = [happy_return t]" . nl
 >  . str "instance LabelDecode " . brack tokenType . str " where" . nl
->  . str "\tunpack (SemTok t) = t"                                . nl
+>  . str "  unpack (SemTok t) = t"                                . nl
 
 
 %-----------------------------------------------------------------------------
@@ -384,8 +384,8 @@ easy, eg input type of "action".
 plus, issues about how token info gets into TreeDecode sem values - which
 might be tricky to arrange.
 <>   eq_inst = "instance Eq GSymbol where"
-<>           : "\tHappyTok i _ == HappyTok j _ = i == j"
-<>           : [ "\ti == j = fromEnum i == fromEnum j"
+<>           : "  HappyTok i _ == HappyTok j _ = i == j"
+<>           : [ "  i == j = fromEnum i == fromEnum j"
 
 
 
@@ -421,7 +421,7 @@ Creating a type for storing semantic rules
 >        . interleave "\n" [ str " | " . str sym . str " "
 >                          | sym <- map fst syms ]
 >        . str "instance Show GSem where" . nl
->        . interleave "\n" [ str "\tshow " . str c . str "{} = " . str (show c)
+>        . interleave "\n" [ str "  show " . str c . str "{} = " . str (show c)
 >                          | (_,c,_,_) <- map snd syms ]
 
 >   syms = [ (c_name ++ " (" ++ ty ++ ")", (rty, c_name, mask, prod_info))
@@ -536,7 +536,7 @@ Creates the appropriate semantic values.
 >      . str (nodes filter_opt)
 >    | (_ty, c_name, mask, prod_info) <- sem_info
 >    , (ij, (pats,code), _) <- prod_info
->    , let indent c = init $ unlines $ map (replicate 2 '\t'++) $ lines c
+>    , let indent c = init $ unlines $ map (replicate 4 ' '++) $ lines c
 >    , let mcode = case monad_info of
 >                    Nothing -> code
 >                    Just (_,_,rtn) -> case code of
@@ -602,7 +602,7 @@ only unpacked when needed. Using classes here to manage the unpacking.
 >       mk_inst (ty, cs_vs)
 >        = str ("instance TreeDecode (" ++ ty ++ ") where ") . nl
 >        . interleave "\n"
->          [   char '\t'
+>          [   str "  "
 >            . str ("decode_b f (Branch (" ++ c_name ++ " s)")
 >            . str (" (" ++ var_pat ++ ")) = ")
 >            . cross_prod monad_info "s" (nodes filter_opt)
@@ -647,7 +647,7 @@ only unpacked when needed. Using classes here to manage the unpacking.
 
 >       mk_inst (ty, cns)
 >        = ("instance LabelDecode (" ++ ty ++ ") where ")
->        : [ "\tunpack (" ++ c_name ++ " s) = s"
+>        : [ "  unpack (" ++ c_name ++ " s) = s"
 >          | (c_name, _mask) <- cns ]
 
 
