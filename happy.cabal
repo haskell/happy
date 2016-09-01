@@ -24,7 +24,7 @@ extra-source-files:
 	ANNOUNCE
 	CHANGES
 	Makefile
-	README
+	README.md
 	TODO
 	doc/Makefile
 	doc/aclocal.m4
