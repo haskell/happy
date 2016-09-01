@@ -3653,7 +3653,7 @@ list(p)         : list1(p)            { $1 }
         The second one, <literal>list</literal> is like <literal>p*</literal>.
         </para>
 
-        <para>Parameterized productions are implemented as a prepossessing
+        <para>Parameterized productions are implemented as a preprocessing
         pass in Happy:  each instantiation of a production turns into a
         separate non-terminal, but are careful to avoid generating the
         same rule multiple times, as this would lead to an ambiguous grammar.
