@@ -2,8 +2,7 @@ module ParamRules(expand_rules) where
 
 import AbsSyn
 import Control.Monad.Writer
-import Control.Monad.Error
-import Control.Monad.Instances()  -- mtl is broken, so we use Either monad
+import Control.Monad.Except
 import Data.List(partition,intersperse)
 import qualified Data.Set as S
 import qualified Data.Map as M    -- XXX: Make it work with old GHC.
@@ -29,7 +28,7 @@ inst_name (f,xs)  = f ++ "__" ++ concat (intersperse "__" xs) ++ "__"
 -- | A renaming substitution used when we instantiate a parameterized rule.
 type Subst    = [(RuleName,RuleName)]
 type M1       = Writer (S.Set Inst)
-type M2       = ErrorT String M1
+type M2       = ExceptT String M1
 
 -- | Collects the instances arising from a term.
 from_term :: Subst -> Term -> M1 RuleName
@@ -55,7 +54,7 @@ inst_rule :: Rule -> [RuleName] -> M2 Rule1
 inst_rule (x,xs,ps,t) ts  = do s <- build xs ts []
                                ps1 <- lift $ mapM (inst_prod s) ps
                                let y = inst_name (x,ts)
-                               return (y,ps1,fmap (\x -> (x,s)) t)
+                               return (y,ps1,fmap (\x' -> (x',s)) t)
   where build (x':xs') (t':ts') m = build xs' ts' ((x',t'):m)
         build [] [] m  = return m
         build xs' [] _  = err ("Need " ++ show (length xs') ++ " more arguments")
@@ -69,8 +68,8 @@ make_rule funs (f,xs) =
     Just r  -> inst_rule r xs
     Nothing -> throwError ("Undefined rule: " ++ f)
 
-runM2 :: ErrorT e (Writer w) a -> Either e (a, w)
-runM2 m = case runWriter (runErrorT m) of
+runM2 :: ExceptT e (Writer w) a -> Either e (a, w)
+runM2 m = case runWriter (runExceptT m) of
             (Left e,_)   -> Left e
             (Right a,xs) -> Right (a,xs)
 

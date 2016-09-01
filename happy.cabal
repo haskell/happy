@@ -139,7 +139,7 @@ executable happy
                  mtl >= 1.0
 
   extensions: CPP, MagicHash, FlexibleContexts
-  ghc-options: -Wall -fno-warn-type-defaults
+  ghc-options: -Wall
   other-modules:
         AbsSyn
         First

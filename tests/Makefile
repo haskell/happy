@@ -1,5 +1,5 @@
 HAPPY=../dist/build/happy/happy
-HC_OPTS=-hide-all-packages -package base -package array -package mtl -Werror
+HC_OPTS=-hide-all-packages -package base -package array -package mtl -Wall -Werror
 
 ifeq ($(wildcard ../cabal.sandbox.config),)
     HC = ghc
