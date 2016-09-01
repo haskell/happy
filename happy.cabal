@@ -1,6 +1,6 @@
 name: happy
 version: 1.19.6
-license: BSD3
+license: BSD2
 license-file: LICENSE
 copyright: (c) Andy Gill, Simon Marlow
 author: Andy Gill and Simon Marlow
