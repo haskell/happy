@@ -87,9 +87,7 @@ extra-source-files:
 	examples/igloo/Parser.y
 	examples/igloo/Foo.hs
 	examples/igloo/README
-	examples/igloo/Lexer.hs
 	examples/igloo/Lexer.x
-	examples/igloo/Parser.hs
 	examples/README
 	examples/Calc.ly
 	examples/DavesExample.ly
