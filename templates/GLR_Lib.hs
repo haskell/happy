@@ -191,8 +191,7 @@ doActions stks (tok:toks)
                              shiftAll tok_form stks'
                          | tok_form <- tok ]
 	let new_stks = merge $ concat stkss
-	DEBUG_TRACE(unlines $ ("Stacks after R*/S pass" ++ show tok)
-				: map show new_stks)
+	DEBUG_TRACE(unlines $ ("Stacks after R*/S pass" ++ show tok) : map show new_stks)
 	case new_stks of            -- did this token kill stacks?
 	  [] -> case toks of
 		  []  -> return $ Right []	   -- ok if no more tokens
@@ -220,8 +219,7 @@ reduceAll cyclic_names itok@(i,tok) (stk:stks)
 	           ]
 	           -- WARNING: incomplete if more than one Empty in a prod(!)
 	           -- WARNING: can avoid by splitting emps/non-emps
-	DEBUG_TRACE(unlines $ ("Packing reds = " ++ show (length reds))
-			    : map show reds)
+	DEBUG_TRACE(unlines $ ("Packing reds = " ++ show (length reds)) : map show reds)
 	stks' <- foldM (pack i) stks reds
 	let new_cyclic = [ m | (m,0,_) <- rs
 	                     , UEQ(this_state, goto this_state m)
