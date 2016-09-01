@@ -848,6 +848,7 @@ directive determins the API of the provided function.
 >       = interleave "\n\n" (map produceEntry (zip starts' [0..]))
 >       . if null attributes' then id else produceAttrEntries starts'
 
+>    produceEntry :: ((String, t0, Int, t1), Int) -> String -> String
 >    produceEntry ((name, _start_nonterm, accept_nonterm, _partial), no)
 >       = (if null attributes' then str name else str "do_" . str name)
 >       . maybe_tks
@@ -1319,7 +1320,7 @@ slot is free or not.
 > hexChars acts = concat (map hexChar acts)
 
 > hexChar :: Int -> String
-> hexChar i | i < 0 = hexChar (i + 2^16)
+> hexChar i | i < 0 = hexChar (i + 65536)
 > hexChar i =  toHex (i `mod` 256) ++ toHex (i `div` 256)
 
 > toHex :: Int -> String

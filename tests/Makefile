@@ -1,6 +1,13 @@
 HAPPY=../dist/build/happy/happy
-HC=ghc
-HC_OPTS=-hide-all-packages -package base -package array -package mtl -Werror
+HC_OPTS=-hide-all-packages -package base -package array -package mtl -Wall -Werror
+
+ifeq ($(wildcard ../cabal.sandbox.config),)
+    HC = ghc
+    SANDBOX_CONFIG =
+else
+    HC = cabal exec -- ghc
+    SANDBOX_CONFIG = cabal.sandbox.config
+endif
 
 .PRECIOUS: %.n.hs %.g.hs %.o %.exe %.bin
 
@@ -56,7 +63,7 @@ TEST_HAPPY_OPTS = --strict --template=..
 %.agc.hs : %.y
 	$(HAPPY) $(TEST_HAPPY_OPTS) -agc $< -o $@
 
-CLEAN_FILES += *.n.hs *.a.hs *.g.hs *.gc.hs *.ag.hs *.agc.hs *.info *.hi *.bin *.exe *.o *.run.stdout *.run.stderr
+CLEAN_FILES += *.n.hs *.a.hs *.g.hs *.gc.hs *.ag.hs *.agc.hs *.info *.hi *.bin *.exe *.o *.run.stdout *.run.stderr $(SANDBOX_CONFIG)
 
 ALL_TEST_HS = $(shell echo $(TESTS) | sed -e 's/\([^\. ]*\)\.\(l\)\{0,1\}y/\1.n.hs \1.a.hs \1.g.hs \1.gc.hs \1.ag.hs \1.agc.hs/g')
 
@@ -81,7 +88,7 @@ check.%.y : %.y
 %$(HS_PROG_EXT) : %.hs
 	$(HC) $(HC_OPTS) $($*_LD_OPTS) $< -o $@
 
-all :: $(CHECK_ERROR_TESTS) $(ALL_TESTS)
+all :: $(SANDBOX_CONFIG) $(CHECK_ERROR_TESTS) $(ALL_TESTS)
 
 check-todo::
 	$(HAPPY) $(TEST_HAPPY_OPTS) -ad Test.ly
@@ -101,3 +108,6 @@ check-todo::
 
 clean:
 	$(RM) $(CLEAN_FILES)
+
+cabal.sandbox.config:
+	cabal sandbox init --sandbox=../.cabal-sandbox

@@ -1,13 +1,13 @@
 name: happy
 version: 1.19.6
-license: BSD3
+license: BSD2
 license-file: LICENSE
 copyright: (c) Andy Gill, Simon Marlow
 author: Andy Gill and Simon Marlow
 maintainer: Simon Marlow <marlowsd@gmail.com>
 bug-reports: https://github.com/simonmar/happy/issues
 stability: stable
-homepage: http://www.haskell.org/happy/
+homepage: https://www.haskell.org/happy/
 synopsis: Happy is a parser generator for Haskell
 category: Development
 cabal-version: >= 1.8
@@ -18,13 +18,13 @@ Description:
   specification in BNF, Happy generates Haskell code to parse the
   grammar.  Happy works in a similar way to the @yacc@ tool for C.
 
-tested-with:  GHC==7.11.*, GHC==7.10.3, GHC==7.8.4, GHC==7.6.3, GHC==7.4.2
+tested-with:  GHC==8.0.1, GHC==7.10.3, GHC==7.8.4, GHC==7.6.3
 
 extra-source-files:
 	ANNOUNCE
 	CHANGES
 	Makefile
-	README
+	README.md
 	TODO
 	doc/Makefile
 	doc/aclocal.m4
@@ -87,9 +87,7 @@ extra-source-files:
 	examples/igloo/Parser.y
 	examples/igloo/Foo.hs
 	examples/igloo/README
-	examples/igloo/Lexer.hs
 	examples/igloo/Lexer.x
-	examples/igloo/Parser.hs
 	examples/README
 	examples/Calc.ly
 	examples/DavesExample.ly
@@ -124,7 +122,7 @@ extra-source-files:
 
 source-repository head
   type:     git
-  location: http://github.com/simonmar/happy.git
+  location: https://github.com/simonmar/happy.git
 
 flag small_base
   description: Deprecated. Does nothing.
@@ -139,7 +137,7 @@ executable happy
                  mtl >= 1.0
 
   extensions: CPP, MagicHash, FlexibleContexts
-  ghc-options: -Wall -fno-warn-type-defaults
+  ghc-options: -Wall
   other-modules:
         AbsSyn
         First
