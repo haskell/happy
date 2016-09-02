@@ -1802,15 +1802,26 @@ Root (0,7,G_E)
 	       too slow.
 	       </para>
 	       <para>
-	       Given a file <literal>Foo.y</literal>, file
-	       <literal>FooData.hs</literal> is generated with basic type
-	       information, the parser tables, and the header and tail code
-	       that was included in the parser specification.
-	       Note that <application>Happy</application> generates the
-	       module declaration line, so you should NOT give it in the
-	       grammar file.
-	       The driver is placed in file <literal>Foo.hs</literal>, and
-	       does not contain any user-supplied text.
+	       Given a file <literal>Foo.y</literal>, the file
+	       <literal>FooData.hs</literal>, containing the data
+	       module, is generated with basic type information, the
+	       parser tables, and the header and tail code that was
+	       included in the parser specification.  Note that
+	       <application>Happy</application> can automatically
+	       generate the necessary module declaration statements,
+	       if you do not choose to provide one in the grammar
+	       file. But, if you do choose to provide the module
+	       declaration statement, then the name of the module will
+	       be parsed and used as the name of the driver
+	       module. The parsed name will also be used to form the
+	       name of the data module, but with the string
+	       <literal>Data</literal> appended to it. The driver
+	       module, which is to be found in the file
+	       <literal>Foo.hs</literal>, will not contain any other
+	       user-supplied text besides the module name. Do not
+	       bother to supply any export declarations in your module
+	       declaration statement: they will be ignored and
+	       dropped, in favor of the standard export declaration.
 	       </para>
 
 	     </listitem>
