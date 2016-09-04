@@ -29,6 +29,7 @@ Here is our mid-section datatype
 > import Data.Char
 > import Data.List
 > import Data.Maybe (fromMaybe)
+> import Data.Traversable (traverse)
 
 > import Control.Monad.Writer
 
@@ -298,39 +299,36 @@ Translate the rules from string to name-based.
 >   rules2 <- mapM transRule rules1
 
 >   let
->       fixType :: (String, [(String,String)]) -> M (Array Int (Maybe String) -> String -> String)
->       fixType (ty,env) = go ty $ const id
+>       -- tys :: Array Int (M (Maybe (String -> String)))
+>       tys = accumArray (\_ x -> x) (return Nothing) (0, last_t) $
+>               [ (nm, liftM Just $ fixType ty env) | (nm,_,Just (ty, env)) <- rules1 ] ++
+>               [ (nm, return . Just . str . getTokenType  $ dirs) | nm <- terminal_names ] -- XXX: Doesn't handle $$ in token
+>
+>       -- fixType :: String -> Subst -> M (String -> String)
+>       fixType ty env = go ty id
 >         where
 >               isIdent c = isAlphaNum c || c == '_'
->               go [] f = return f
->               go r@(c:_) f | isLower c = -- an identifier starting with a lower case letter
+>               go [] s = return s
+>               go r@(c:_) s | isLower c = -- an identifier starting with a lower case letter
 >                                let (cs,r1) = span isIdent r
 >                                in case lookup cs env of -- try to map formal to actual
 >                                    Nothing -> -- no formal found
->                                      go r1 $ \tys -> f tys . str cs -- do not expand
+>                                      go r1 $ s . str cs -- do not expand
 >                                    Just a -> do -- found actual
 >                                      nm <- mapToName a
->                                      go r1 $ \tys ->
->                                           let t = fromMaybe cs (tys ! nm)
->                                           in f tys . brack t
+>                                      t <- tys ! nm
+>                                      go r1 $ s . brack' (fromMaybe (str cs) t)
 >                            | isIdent c = -- an identifier not starting with a lower case letter
 >                                let (cs,r1) = span isIdent r
->                                in go r1 $ \tys -> f tys . str cs -- do not expand
+>                                in go r1 $ s . str cs -- do not expand
 >                            | otherwise = -- not an identifier
 >                                let (cs,r1) = break isIdent r
->                                in go r1 $ \tys -> f tys . str cs -- do not expand
->       mapSndM :: Monad m => (a -> m b) -> (c, a) -> m (c, b)
->       mapSndM f (c, a) = f a >>= \b -> return (c, b)
+>                                in go r1 $ s . str cs -- do not expand
 >   -- in
 
->   tys <- (mapM . mapSndM) fixType [ (nm,ty) | (nm,_,Just ty) <- rules1 ]
+>   type_array <- traverse ((fmap . fmap) ($ "")) tys
 
 >   let
->       type_array :: Array Int (Maybe String)
->       type_array = accumArray (\_ x -> x) Nothing (0, last_t) $
->                      [ (nm, Just (f type_array "")) | (nm, f) <- tys ] ++ -- tied a knot!
->                      [ (nm, Just (getTokenType dirs)) | nm <- terminal_names ] -- XXX: Doesn't handle $$ in token
->
 >       env_array :: Array Int String
 >       env_array = array (errorTok, last_t) name_env
 >   -- in
