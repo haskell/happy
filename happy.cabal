@@ -1,5 +1,5 @@
 name: happy
-version: 1.19.6
+version: 1.19.7
 license: BSD2
 license-file: LICENSE
 copyright: (c) Andy Gill, Simon Marlow
@@ -156,6 +156,7 @@ executable happy
         AttrGrammar
         AttrGrammarParser
         ParamRules
+        PrettyGrammar
 
 test-suite tests
   type: exitcode-stdio-1.0
