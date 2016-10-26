@@ -2968,6 +2968,25 @@ happyError = error "parse error"
       </varlistentry>
 
       <varlistentry>
+	<term><option>-p</option><optional><replaceable>file</replaceable></optional></term>
+	<term><option>--pretty</option><optional>=<replaceable>file</replaceable></optional></term>
+	<listitem>
+	  <indexterm>
+	    <primary>pretty print</primary>
+	  </indexterm>
+	  <para> Directs <application>Happy</application> to produce a file
+          containing a pretty-printed form of the grammar, containing only
+          the productions, withouth any semantic actions or type signatures.
+          If no file name is provided, then the file name will be computed
+          by replacing the extension of the input file with
+          <literal>.grammar</literal>.
+          <para>
+	</listitem>
+      </varlistentry>
+
+
+
+      <varlistentry>
 	<term><option>-t</option> <replaceable>dir</replaceable></term>
 	<term><option>--template</option>=<replaceable>dir</replaceable></term>
 	<listitem>
