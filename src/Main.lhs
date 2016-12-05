@@ -164,14 +164,32 @@ Report any conflicts in the grammar.
 
 Print out the info file.
 
+>       getInfoFileName name cli                >>= \info_filename ->
+>       let info = genInfoFile
+>                       (map fst sets)
+>                       g
+>                       action
+>                       goto
+>                       (token_specs g)
+>                       conflictArray
+>                       fl_name
+>                       unused_rules
+>                       unused_terminals
+>       in
+>       (case info_filename of
+>               Just s  -> writeFile s info
+>               Nothing -> return ())                   >>
+
+
+Pretty print the grammar.
+
 >       getPrettyFileName name cli                >>= \info_filename ->
 >       (let out = render (ppAbsSyn abssyn)
 >        in
 >        case info_filename of
->          Just s  -> writeFile s out
->          Nothing -> putStrLn out) >>
+>          Just s   -> writeFile s out
+>          Nothing  -> return ()) >>
 
-Pretty print the grammar.
 
 
 
