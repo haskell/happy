@@ -428,20 +428,22 @@ The token conversion function.
 >       Just (lexer'',eof') ->
 >       case (target, ghc) of
 >          (TargetHaskell, True) ->
->                 str "happyNewToken :: (Happy_GHC_Exts.Int#\n"
+>             let pcont = str monad_context
+>                 pty = str monad_tycon  in
+>                 str "happyNewToken :: " . pcont . str " => "
+>               . str "(Happy_GHC_Exts.Int#\n"
 >               . str "                   -> Happy_GHC_Exts.Int#\n"
 >               . str "                   -> Token\n"
->               . str "                   -> HappyState Token (t -> [Char] -> Int -> ParseResult a)\n"
->               . str "                   -> [HappyState Token (t -> [Char] -> Int -> ParseResult a)]\n"
+>               . str "                   -> HappyState Token (t -> "
+>               . pty . str " a)\n"
+>               . str "                   -> [HappyState Token (t -> "
+>               . pty . str " a)]\n"
 >               . str "                   -> t\n"
->               . str "                   -> [Char]\n"
->               . str "                   -> Int\n"
->               . str "                   -> ParseResult a)\n"
->               . str "                 -> [HappyState Token (t -> [Char] -> Int -> ParseResult a)]\n"
+>               . str "                   -> " . pty . str " a)\n"
+>               . str "                 -> [HappyState Token (t -> "
+>               . pty . str " a)]\n"
 >               . str "                 -> t\n"
->               . str "                 -> [Char]\n"
->               . str "                 -> Int\n"
->               . str "                 -> ParseResult a\n"
+>               . str "                 -> " . pty . str " a\n"
 >          _ -> id
 >       . str "happyNewToken action sts stk\n\t= "
 >       . str lexer''
