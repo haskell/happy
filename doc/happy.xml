@@ -796,7 +796,7 @@ Exp   : let var '=' Exp in Exp  { Let $2 $4 $6 }
 	<literal>%right</literal> and <literal>%nonassoc</literal>,
 	assign precedence levels to the tokens in the declaration.  A
 	rule in the grammar may also have a precedence: if the last
-	terminal in the left hand side of the rule has a precedence,
+	terminal in the right hand side of the rule has a precedence,
 	then this is the precedence of the whole rule.</para>
 
 	<para>The precedences are used to resolve ambiguities in the
