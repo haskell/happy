@@ -183,10 +183,10 @@ Print out the info file.
 
 Pretty print the grammar.
 
->       getPrettyFileName name cli                >>= \info_filename ->
+>       getPrettyFileName name cli                >>= \pretty_filename ->
 >       (let out = render (ppAbsSyn abssyn)
 >        in
->        case info_filename of
+>        case pretty_filename of
 >          Just s   -> writeFile s out
 >          Nothing  -> return ()) >>
 

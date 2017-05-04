@@ -1,7 +1,6 @@
 module PrettyGrammar where
 
 import AbsSyn
-import Data.List(intersperse)
 
 render :: Doc -> String
 render = maybe "" ($ "")
@@ -20,8 +19,8 @@ ppDirective dir =
   prec x xs = text x <+> hsep (map text xs)
 
 ppRule :: Rule -> Doc
-ppRule (name,params,prods,_) = text name
-                            $$ vcat (zipWith (<+>) starts (map ppProd prods))
+ppRule (name,_,prods,_) = text name
+                       $$ vcat (zipWith (<+>) starts (map ppProd prods))
   where
   starts = text "  :" : repeat (text "  |")
 
