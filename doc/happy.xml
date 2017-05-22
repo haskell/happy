@@ -389,7 +389,7 @@ Factor
 n   : t_1 ... t_n   { E }
 </programlisting>
 
-    <para>whenever the parser finds the symbols <literal>t_1..t_n</literal> in
+    <para>whenever the parser finds the symbols <literal>t_1...t_n</literal> in
     the token stream, it constructs the symbol <literal>n</literal> and gives
     it the value <literal>E</literal>, which may refer to the values of
     <literal>t_1...t_n</literal> using the symbols
@@ -677,7 +677,7 @@ stmt : stmt1 ';'              { $1 }
         statements, to be a bit more liberal in what we allow as legal
         syntax.  We probably just want the parser to ignore these
         extra semicolons, and not generate a ``null statement'' value
-        or something.  The following rule parses a sequence or zero or
+        or something.  The following rule parses a sequence of zero or
         more statements separated by semicolons, in which the
         statements may be empty:</para>
 
