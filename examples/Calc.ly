@@ -5,7 +5,7 @@
 
 First thing to declare is the name of your parser,
 and the type of the tokens the parser reads.
-
+d
 > %name calc
 > %tokentype { Token }
 
