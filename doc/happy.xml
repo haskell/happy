@@ -389,7 +389,7 @@ Factor
 n   : t_1 ... t_n   { E }
 </programlisting>
 
-    <para>whenever the parser finds the symbols <literal>t_1..t_n</literal> in
+    <para>whenever the parser finds the symbols <literal>t_1...t_n</literal> in
     the token stream, it constructs the symbol <literal>n</literal> and gives
     it the value <literal>E</literal>, which may refer to the values of
     <literal>t_1...t_n</literal> using the symbols
@@ -677,7 +677,7 @@ stmt : stmt1 ';'              { $1 }
         statements, to be a bit more liberal in what we allow as legal
         syntax.  We probably just want the parser to ignore these
         extra semicolons, and not generate a ``null statement'' value
-        or something.  The following rule parses a sequence or zero or
+        or something.  The following rule parses a sequence of zero or
         more statements separated by semicolons, in which the
         statements may be empty:</para>
 
@@ -796,7 +796,7 @@ Exp   : let var '=' Exp in Exp  { Let $2 $4 $6 }
 	<literal>%right</literal> and <literal>%nonassoc</literal>,
 	assign precedence levels to the tokens in the declaration.  A
 	rule in the grammar may also have a precedence: if the last
-	terminal in the left hand side of the rule has a precedence,
+	terminal in the right hand side of the rule has a precedence,
 	then this is the precedence of the whole rule.</para>
 
 	<para>The precedences are used to resolve ambiguities in the
