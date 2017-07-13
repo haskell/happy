@@ -1,7 +1,12 @@
 -----------------------------------------------------------------------------
-1.19.7
+1.19.6
         * Manually generate Parser.hs using Makefile and check it into the repo,
           to fix bootstrapping problems with cabal sandboxes & new-build
+        * Documentation fixes
+        * Fixed GLR support
+        * new option -p/--pretty prints the grammar rules (only) to a file
+        * Added generation of additional type signatures to enable use
+          of typeclasses in monadic parsers.
 
 -----------------------------------------------------------------------------
 1.19.5
