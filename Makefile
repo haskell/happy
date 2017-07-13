@@ -1,10 +1,10 @@
-TOP = ..
-include $(TOP)/mk/boilerplate.mk
+HAPPY=happy
+HAPPYFLAGS=-agc
 
-SUBDIRS = src templates doc
+GEN = src/Parser.hs src/AttrGrammarParser.hs
 
-include $(TOP)/mk/target.mk
+all : $(GEN)
 
-
-
+src/%.hs : src/boot/%.ly
+	$(HAPPY) $(HAPPYFLAGS) $< -o $@
 
