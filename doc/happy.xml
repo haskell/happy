@@ -1484,7 +1484,7 @@ parseError :: Token -> T a
 lexer      :: (Token -> T a) -> T a
 </programlisting>
 where the type constructor <literal>T</literal> is whatever you want (usually <literal>T
-a = String -> a</literal>.  I'm not sure if this is useful, or even if it works
+a = String -> a</literal>).  I'm not sure if this is useful, or even if it works
 properly.</para>
 	    </formalpara>
 	  </listitem>
@@ -4221,7 +4221,7 @@ exp     : atom op exp
 
 	<para>LALR(1) (look-ahead LR(1)), the method used by
         <application>Happy</application> and
-        <application>yacc</application>, is tradeoff between the two.
+        <application>yacc</application>, is a tradeoff between the two.
         An LALR(1) parser has the same number of states as an SLR(1)
         parser, but it uses a more complex method to calculate the
         lookahead tokens that are valid at each point, and resolves
