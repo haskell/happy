@@ -429,18 +429,18 @@ The token conversion function.
 >       case (target, ghc) of
 >          (TargetHaskell, True) ->
 >             let pcont = str monad_context
->                 pty = str monad_tycon  in
+>                 pty = str monad_tycon in
 >                 str "happyNewToken :: " . pcont . str " => "
 >               . str "(Happy_GHC_Exts.Int#\n"
 >               . str "                   -> Happy_GHC_Exts.Int#\n"
->               . str "                   -> Token\n"
->               . str "                   -> HappyState Token (t -> "
+>               . str "                   -> " . token . str "\n"
+>               . str "                   -> HappyState " . token . str " (t -> "
 >               . pty . str " a)\n"
->               . str "                   -> [HappyState Token (t -> "
+>               . str "                   -> [HappyState " . token . str " (t -> "
 >               . pty . str " a)]\n"
 >               . str "                   -> t\n"
 >               . str "                   -> " . pty . str " a)\n"
->               . str "                 -> [HappyState Token (t -> "
+>               . str "                 -> [HappyState " . token . str " (t -> "
 >               . pty . str " a)]\n"
 >               . str "                 -> t\n"
 >               . str "                 -> " . pty . str " a\n"
