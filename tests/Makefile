@@ -19,7 +19,7 @@ endif
 
 TESTS = Test.ly TestMulti.ly TestPrecedence.ly bug001.ly \
 	monad001.y monad002.ly precedence001.ly precedence002.y \
-	bogus-token.y bug002.y Partial.ly \
+	bogus-token.y bug002.y Partial.ly bug003.y \
 	AttrGrammar001.y AttrGrammar002.y \
 	test_rules.y monaderror.y monaderror-explist.y \
 	typeclass_monad001.y typeclass_monad002.ly typeclass_monad_lexer.y
