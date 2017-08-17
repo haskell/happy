@@ -1,3 +1,4 @@
+-- See <https://github.com/simonmar/happy/issues/91> for more information
 %name parse prod
 
 %tokentype { Tok }
