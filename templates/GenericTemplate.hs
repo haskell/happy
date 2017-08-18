@@ -139,13 +139,13 @@ happyDoAction i tk st
 #endif /* HAPPY_ARRAY */
 
 #ifdef HAPPY_GHC
-indexShortOffAddr (HappyA# arr) off =
-        Happy_GHC_Exts.narrow16Int# i
+indexShortOffAddr (HappyA# arr) off = i_adjusted
   where
-        i = Happy_GHC_Exts.word2Int# (Happy_GHC_Exts.or# (Happy_GHC_Exts.uncheckedShiftL# high 8#) low)
-        high = Happy_GHC_Exts.int2Word# (Happy_GHC_Exts.ord# (Happy_GHC_Exts.indexCharOffAddr# arr (off' Happy_GHC_Exts.+# 1#)))
-        low  = Happy_GHC_Exts.int2Word# (Happy_GHC_Exts.ord# (Happy_GHC_Exts.indexCharOffAddr# arr off'))
-        off' = off Happy_GHC_Exts.*# 2#
+        !(_, Happy_GHC_Exts.I# n_rules) = Happy_Data_Array.bounds happyReduceArr
+        i = Happy_GHC_Exts.indexInt16OffAddr# arr off
+        i_adjusted = if Happy_GHC_Exts.isTrue# (Happy_GHC_Exts.negateInt# n_rules Happy_GHC_Exts.>=# i)
+                       then i Happy_GHC_Exts.+# 65536#
+                       else i
 #else
 indexShortOffAddr arr off = arr Happy_Data_Array.! off
 #endif

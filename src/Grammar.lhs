@@ -32,12 +32,6 @@ Here is our mid-section datatype
 
 > import Control.Monad.Writer
 
-#ifdef DEBUG
-
-> import System.IOExts
-
-#endif
-
 > type Name = Int
 
 > type Production = (Name,[Name],(String,[Int]),Priority)

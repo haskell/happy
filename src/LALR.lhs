@@ -35,7 +35,15 @@ Generation of LALR parsing tables.
 This means rule $a$, with dot at $b$ (all starting at 0)
 
 > data Lr0Item = Lr0 {-#UNPACK#-}!Int {-#UNPACK#-}!Int                  -- (rule, dot)
->       deriving (Eq,Ord)
+>       deriving (Eq,Ord
+
+#ifdef DEBUG
+
+>       ,Show
+
+#endif
+
+>       )
 
 > data Lr1Item = Lr1 {-#UNPACK#-}!Int {-#UNPACK#-}!Int NameSet  -- (rule, dot, lookahead)
 > type RuleList = [Lr0Item]
