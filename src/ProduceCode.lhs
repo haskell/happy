@@ -1105,12 +1105,12 @@ See notes under "Action Tables" above for some subtleties in this function.
 >               n_terminals n_nonterminals n_starts
 >               token_names_bound
 >
->  = ( elems act_offs,
->    , elems goto_offs,
->    , take max_off (elems table),
->    , def_actions,
->    , take max_off (elems check),
->    , elems explist,
+>  = ( elems act_offs
+>    , elems goto_offs
+>    , take max_off (elems table)
+>    , def_actions
+>    , take max_off (elems check)
+>    , elems explist
 >    , min_off
 >    )
 >  where
