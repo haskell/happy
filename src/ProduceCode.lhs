@@ -676,6 +676,10 @@ action array indexed by (terminal * last_state) + state
 >               . shows (n_states) . str ") (["
 >           . interleave' "," (map shows goto_offs)
 >           . str "\n\t])\n\n"
+>           
+>           . str "happyMinOffset :: Int\n"
+>           . str "happyMinOffset = " . str (show (minBound :: Int))
+>           . str "\n\n"  --"
 >
 >           . str "happyDefActions :: Happy_Data_Array.Array Int Int\n"
 >           . str "happyDefActions = Happy_Data_Array.listArray (0,"
