@@ -637,12 +637,12 @@ action array indexed by (terminal * last_state) + state
 >       | ghc
 >           = str "happyActOffsets :: HappyAddr\n"
 >           . str "happyActOffsets = HappyA# \"" --"
->           . str (hexChars act_offs)
+>           . str (checkedHexChars min_off act_offs)
 >           . str "\"#\n\n" --"
 >
 >           . str "happyGotoOffsets :: HappyAddr\n"
 >           . str "happyGotoOffsets = HappyA# \"" --"
->           . str (hexChars goto_offs)
+>           . str (checkedHexChars min_off goto_offs)
 >           . str "\"#\n\n"  --"
 >
 >           . str "happyMinOffset :: Int\n"
@@ -1401,3 +1401,15 @@ slot is free or not.
 > hexDig :: Int -> Char
 > hexDig i | i <= 9    = chr (i + ord '0')
 >          | otherwise = chr (i - 10 + ord 'a')
+
+This guards against integers that are so large as to (when converted using
+'hexChar') wrap around the maximum value of 16-bit numbers and then end up
+larger than an expected minimum value.
+
+> checkedHexChars :: Int -> [Int] -> String
+> checkedHexChars minValue acts = concat (map hexChar' acts)
+>   where hexChar' i | checkHexChar minValue i = hexChar i
+>                    | otherwise = error "grammar does not fit in 16-bit representation that is used with '--ghc'"
+
+> checkHexChar :: Int -> Int -> Bool
+> checkHexChar minValue i = i <= 32767 || i - 65536 < minValue
