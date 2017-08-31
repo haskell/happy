@@ -2980,7 +2980,7 @@ happyError = error "parse error"
           If no file name is provided, then the file name will be computed
           by replacing the extension of the input file with
           <literal>.grammar</literal>.
-          <para>
+    </para>
 	</listitem>
       </varlistentry>
 
@@ -3639,12 +3639,14 @@ any projection function.</para>
 
       <sect2 id="sec-param-prods">
         <title>Parameterized Productions</title>
+        <para>
         Starting from version 1.17.1, <application>Happy</application> supports
         <emphasis>parameterized productions</emphasis> which provide a
         convenient notation for capturing recurring patterns in context free
         grammars. This gives the benefits of something similar to parsing
         combinators in the context of <application>Happy</application>
         grammars.
+        </para>
         <para>This functionality is best illustrated with an example:
 <programlisting>
 opt(p)          : p                   { Just $1 }
