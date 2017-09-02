@@ -119,6 +119,10 @@ extra-source-files:
 	tests/Test.ly
 	tests/precedence002.y
 	tests/test_rules.y
+        tests/monaderror-explist.y
+        tests/typeclass_monad001.y
+        tests/typeclass_monad002.ly
+        tests/typeclass_monad_lexer.y
 
 custom-setup
   setup-depends: Cabal <2.1,
