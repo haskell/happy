@@ -242,6 +242,7 @@ happyMonad2Reduce k nt fn j tk st sts stk =
              off_i = PLUS(off,nt)
              new_state = indexShortOffAddr happyTable off_i
 #else
+             _ = nt :: FAST_INT
              new_state = action
 #endif
           in
