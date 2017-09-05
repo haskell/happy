@@ -90,6 +90,9 @@ Produce the complete output file.
 >       -- fix, others not so easy, and others would require GHC version
 >       -- #ifdefs.  For now I'm just disabling all of them.
 >
+>    intMaybeHash | ghc       = str "Happy_GHC_Exts.Int#"
+>                 | otherwise = str "Int"
+>
 >    top_opts = nowarn_opts .
 >      case top_options of
 >          "" -> str ""
@@ -219,9 +222,7 @@ based parsers -- types aren't as important there).
 
 >     | otherwise = id
 
->       where intMaybeHash | ghc       = str "Happy_GHC_Exts.Int#"
->                          | otherwise = str "Int"
->             tokens =
+>       where tokens =
 >               case lexer' of
 >                       Nothing -> char '[' . token . str "] -> "
 >                       Just _ -> id
@@ -347,8 +348,6 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >                           str_tyvars = str (unwords all_tyvars)
 >                           happyAbsSyn = str "(HappyAbsSyn "
 >                                         . str_tyvars . str ")"
->                           intMaybeHash | ghc       = str "Happy_GHC_Exts.Int#"
->                                        | otherwise = str "Int"
 >                           tysig = case lexer' of
 >                             Nothing -> id
 >                             _ | target == TargetArrayBased ->
@@ -638,13 +637,17 @@ action array indexed by (terminal * last_state) + state
 >       | ghc
 >           = str "happyActOffsets :: HappyAddr\n"
 >           . str "happyActOffsets = HappyA# \"" --"
->           . str (hexChars act_offs)
+>           . str (checkedHexChars min_off act_offs)
 >           . str "\"#\n\n" --"
 >
 >           . str "happyGotoOffsets :: HappyAddr\n"
 >           . str "happyGotoOffsets = HappyA# \"" --"
->           . str (hexChars goto_offs)
+>           . str (checkedHexChars min_off goto_offs)
 >           . str "\"#\n\n"  --"
+>
+>           . str "happyMinOffset :: Int\n"
+>           . str "happyMinOffset = " . str (show min_off)
+>           . str "\n\n"  --"
 >
 >           . str "happyDefActions :: HappyAddr\n"
 >           . str "happyDefActions = HappyA# \"" --"
@@ -673,6 +676,10 @@ action array indexed by (terminal * last_state) + state
 >               . shows (n_states) . str ") (["
 >           . interleave' "," (map shows goto_offs)
 >           . str "\n\t])\n\n"
+>           
+>           . str "happyMinOffset :: Int\n"
+>           . str "happyMinOffset = " . str (show (minBound :: Int))
+>           . str "\n\n"  --"
 >
 >           . str "happyDefActions :: Happy_Data_Array.Array Int Int\n"
 >           . str "happyDefActions = Happy_Data_Array.listArray (0,"
@@ -710,7 +717,7 @@ action array indexed by (terminal * last_state) + state
 >    n_terminals = length terms
 >    n_nonterminals = length nonterms - n_starts -- lose %starts
 >
->    (act_offs,goto_offs,table,defaults,check,explist)
+>    (act_offs,goto_offs,table,defaults,check,explist,min_off)
 >       = mkTables action goto first_nonterm' fst_term
 >               n_terminals n_nonterminals n_starts (bounds token_names')
 >
@@ -836,8 +843,6 @@ MonadStuff:
 >                  all_tyvars = [ 't':show n | (n, Nothing) <- assocs nt_types ]
 >                  str_tyvars = str (unwords all_tyvars)
 >                  happyAbsSyn = str "(HappyAbsSyn " . str_tyvars . str ")"
->                  intMaybeHash | ghc       = str "Happy_GHC_Exts.Int#"
->                               | otherwise = str "Int"
 >                  happyParseSig
 >                    | target == TargetArrayBased =
 >                      str "happyParse :: " . pcont . str " => " . intMaybeHash
@@ -1091,28 +1096,30 @@ See notes under "Action Tables" above for some subtleties in this function.
 
 > mkTables
 >        :: ActionTable -> GotoTable -> Name -> Int -> Int -> Int -> Int -> (Int, Int) ->
->        ([Int]         -- happyActOffsets
->        ,[Int]         -- happyGotoOffsets
->        ,[Int]         -- happyTable
->        ,[Int]         -- happyDefAction
->        ,[Int]         -- happyCheck
->        ,[Int]         -- happyExpList
+>        ( [Int]         -- happyActOffsets
+>        , [Int]         -- happyGotoOffsets
+>        , [Int]         -- happyTable
+>        , [Int]         -- happyDefAction
+>        , [Int]         -- happyCheck
+>        , [Int]         -- happyExpList
+>        , Int           -- happyMinOffset
 >        )
 >
 > mkTables action goto first_nonterm' fst_term
 >               n_terminals n_nonterminals n_starts
 >               token_names_bound
 >
->  = ( elems act_offs,
->      elems goto_offs,
->      take max_off (elems table),
->      def_actions,
->      take max_off (elems check),
->      elems explist
->   )
+>  = ( elems act_offs
+>    , elems goto_offs
+>    , take max_off (elems table)
+>    , def_actions
+>    , take max_off (elems check)
+>    , elems explist
+>    , min_off
+>    )
 >  where
 >
->        (table,check,act_offs,goto_offs,explist,max_off)
+>        (table,check,act_offs,goto_offs,explist,min_off,max_off)
 >                = runST (genTables (length actions)
 >                         max_token token_names_bound
 >                         sorted_actions explist_actions)
@@ -1180,12 +1187,13 @@ See notes under "Action Tables" above for some subtleties in this function.
 >                | otherwise = GT
 
 > data ActionOrGoto = ActionEntry | GotoEntry
-> type TableEntry = (ActionOrGoto,
->                       Int{-stateno-},
->                       Int{-default-},
->                       Int{-width-},
->                       Int{-tally-},
->                       [(Int,Int)])
+> type TableEntry = ( ActionOrGoto
+>                   , Int {-stateno-}
+>                   , Int {-default-}
+>                   , Int {-width-}
+>                   , Int {-tally-}
+>                   , [(Int,Int)]
+>                   )
 
 > genTables
 >        :: Int                         -- number of actions
@@ -1193,13 +1201,14 @@ See notes under "Action Tables" above for some subtleties in this function.
 >        -> (Int, Int)                  -- token names bounds
 >        -> [TableEntry]                -- entries for the table
 >        -> [(Int, [Int])]              -- expected tokens lists
->        -> ST s (UArray Int Int,       -- table
->                 UArray Int Int,       -- check
->                 UArray Int Int,       -- action offsets
->                 UArray Int Int,       -- goto offsets
->                 UArray Int Int,       -- expected tokens list
->                 Int                   -- highest offset in table
->           )
+>        -> ST s ( UArray Int Int       -- table
+>                , UArray Int Int       -- check
+>                , UArray Int Int       -- action offsets
+>                , UArray Int Int       -- goto offsets
+>                , UArray Int Int       -- expected tokens list
+>                , Int                  -- lowest offset in table
+>                , Int                  -- highest offset in table
+>                )
 >
 > genTables n_actions max_token token_names_bound entries explist = do
 >
@@ -1210,15 +1219,15 @@ See notes under "Action Tables" above for some subtleties in this function.
 >   off_arr    <- newArray (-max_token, mAX_TABLE_SIZE) 0
 >   exp_array  <- newArray (0, (n_actions * n_token_names + 15) `div` 16) 0
 >
->   max_off <- genTables' table check act_offs goto_offs off_arr exp_array entries
->                       explist max_token n_token_names
+>   (min_off,max_off) <- genTables' table check act_offs goto_offs off_arr exp_array entries
+>                          explist max_token n_token_names
 >
 >   table'     <- freeze table
 >   check'     <- freeze check
 >   act_offs'  <- freeze act_offs
 >   goto_offs' <- freeze goto_offs
 >   exp_array' <- freeze exp_array
->   return (table',check',act_offs',goto_offs',exp_array',max_off+1)
+>   return (table',check',act_offs',goto_offs',exp_array',min_off,max_off+1)
 
 >   where
 >        n_states = n_actions - 1
@@ -1238,19 +1247,19 @@ See notes under "Action Tables" above for some subtleties in this function.
 >        -> [(Int, [Int])]              -- expected tokens lists
 >        -> Int                         -- maximum token no.
 >        -> Int                         -- number of token names
->        -> ST s Int                    -- highest offset in table
+>        -> ST s (Int,Int)              -- lowest and highest offsets in table
 >
 > genTables' table check act_offs goto_offs off_arr exp_array entries
 >            explist max_token n_token_names
->       = fill_exp_array >> fit_all entries 0 1
+>       = fill_exp_array >> fit_all entries 0 0 1
 >   where
 >
->        fit_all [] max_off _ = return max_off
->        fit_all (s:ss) max_off fst_zero = do
->          (off, new_max_off, new_fst_zero) <- fit s max_off fst_zero
+>        fit_all [] min_off max_off _ = return (min_off, max_off)
+>        fit_all (s:ss) min_off max_off fst_zero = do
+>          (off, new_min_off, new_max_off, new_fst_zero) <- fit s min_off max_off fst_zero
 >          ss' <- same_states s ss off
 >          writeArray off_arr off 1
->          fit_all ss' new_max_off new_fst_zero
+>          fit_all ss' new_min_off new_max_off new_fst_zero
 >
 >        fill_exp_array =
 >          forM_ explist $ \(state, tokens) ->
@@ -1276,16 +1285,19 @@ See notes under "Action Tables" above for some subtleties in this function.
 >        -- fit a vector into the table.  Return the offset of the vector,
 >        -- the maximum offset used in the table, and the offset of the first
 >        -- entry in the table (used to speed up the lookups a bit).
->        fit (_,_,_,_,_,[]) max_off fst_zero = return (0,max_off,fst_zero)
+>        fit (_,_,_,_,_,[]) min_off max_off fst_zero = return (0,min_off,max_off,fst_zero)
 >
 >        fit (act_or_goto, state_no, _deflt, _, _, state@((t,_):_))
->           max_off fst_zero = do
+>           min_off max_off fst_zero = do
 >                -- start at offset 1 in the table: all the empty states
 >                -- (states with just a default reduction) are mapped to
 >                -- offset zero.
 >          off <- findFreeOffset (-t+fst_zero) check off_arr state
->          let new_max_off | furthest_right > max_off = furthest_right
+>          let new_min_off | furthest_left  < min_off = furthest_left
+>                          | otherwise                = min_off
+>              new_max_off | furthest_right > max_off = furthest_right
 >                          | otherwise                = max_off
+>              furthest_left  = off
 >              furthest_right = off + max_token
 >
 >          -- trace ("fit: state " ++ show state_no ++ ", off " ++ show off ++ ", elems " ++ show state) $ do
@@ -1293,7 +1305,7 @@ See notes under "Action Tables" above for some subtleties in this function.
 >          writeArray (which_off act_or_goto) state_no off
 >          addState off table check state
 >          new_fst_zero <- findFstFreeSlot check fst_zero
->          return (off, new_max_off, new_fst_zero)
+>          return (off, new_min_off, new_max_off, new_fst_zero)
 
 When looking for a free offest in the table, we use the 'check' table
 rather than the main table.  The check table starts off with (-1) in
@@ -1389,3 +1401,15 @@ slot is free or not.
 > hexDig :: Int -> Char
 > hexDig i | i <= 9    = chr (i + ord '0')
 >          | otherwise = chr (i - 10 + ord 'a')
+
+This guards against integers that are so large as to (when converted using
+'hexChar') wrap around the maximum value of 16-bit numbers and then end up
+larger than an expected minimum value.
+
+> checkedHexChars :: Int -> [Int] -> String
+> checkedHexChars minValue acts = concat (map hexChar' acts)
+>   where hexChar' i | checkHexChar minValue i = hexChar i
+>                    | otherwise = error "grammar does not fit in 16-bit representation that is used with '--ghc'"
+
+> checkHexChar :: Int -> Int -> Bool
+> checkHexChar minValue i = i <= 32767 || i - 65536 < minValue
