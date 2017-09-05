@@ -102,23 +102,25 @@ extra-source-files:
 	templates/GLR_Lib.hs
 	tests/AttrGrammar001.y
 	tests/AttrGrammar002.y
-	tests/error001.y
-	tests/error001.stdout
-	tests/error001.stderr
-	tests/monad001.y
-	tests/monaderror.y
 	tests/Makefile
-	tests/TestMulti.ly
 	tests/Partial.ly
-	tests/precedence001.ly
+	tests/Test.ly
+	tests/TestMulti.ly
 	tests/TestPrecedence.ly
 	tests/bogus-token.y
-	tests/monad002.ly
 	tests/bug001.ly
 	tests/bug002.y
-	tests/Test.ly
+	tests/error001.stderr
+	tests/error001.stdout
+	tests/error001.y
+	tests/monad001.y
+	tests/monad002.ly
+	tests/monaderror.y
+	tests/precedence001.ly
 	tests/precedence002.y
 	tests/test_rules.y
+        tests/issue91.y
+        tests/issue95.y
         tests/monaderror-explist.y
         tests/typeclass_monad001.y
         tests/typeclass_monad002.ly
