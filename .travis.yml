@@ -17,7 +17,10 @@ install:
  - cabal-1.24 install --only-dependencies --enable-tests
 
 script:
+ - make sdist
+ - cd dist
+ - tar xvzf happy-*.tar.gz
+ - cd happy-*/
  - cabal-1.24 configure --enable-tests
  - cabal-1.24 build
- - dist/build/tests/tests
- - cabal-1.24 sdist
+ - cabal-1.24 test
