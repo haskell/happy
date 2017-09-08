@@ -146,7 +146,8 @@ executable happy
   build-depends: base < 5,
                  array,
                  containers >= 0.4.2,
-                 mtl >= 1.0
+                 mtl >= 2.2.1
+                     -- mtl-2.2.1 added Control.Monad.Except
 
   extensions: CPP, MagicHash, FlexibleContexts
   ghc-options: -Wall
