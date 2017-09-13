@@ -150,7 +150,11 @@ indexShortOffAddr (HappyA# arr) off =
 indexShortOffAddr arr off = arr Happy_Data_Array.! off
 #endif
 
+{-# INLINE unbox_int #-}
 unbox_int IBOX(x) = x
+
+{-# INLINE lt #-}
+lt x y = LT(x,y)
 
 #ifdef HAPPY_GHC
 readArrayBit arr bit =
