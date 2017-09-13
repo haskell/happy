@@ -645,8 +645,13 @@ action array indexed by (terminal * last_state) + state
 >           . str (checkedHexChars min_off goto_offs)
 >           . str "\"#\n\n"  --"
 >
->           . str "happyMinOffset :: Int\n"
->           . str "happyMinOffset = " . str (show min_off)
+>           . str "happyAdjustOffset :: Happy_GHC_Exts.Int# -> Happy_GHC_Exts.Int#\n"
+>           . str "happyAdjustOffset off = "
+>           . (if length table < 32768
+>                then str "off"
+>                else str "if Happy_GHC_Exts.tagToEnum# (off Happy_GHC_Exts.<# " . shows min_off . str "#)"
+>                   . str " then off Happy_GHC_Exts.+# 65536#"
+>                   . str " else off")
 >           . str "\n\n"  --"
 >
 >           . str "happyDefActions :: HappyAddr\n"
@@ -677,9 +682,8 @@ action array indexed by (terminal * last_state) + state
 >           . interleave' "," (map shows goto_offs)
 >           . str "\n\t])\n\n"
 >           
->           . str "happyMinOffset :: Int\n"
->           . str "happyMinOffset = " . str (show (minBound :: Int))
->           . str "\n\n"  --"
+>           . str "happyAdjustOffset :: Int -> Int\n"
+>           . str "happyAdjustOffset = id\n\n"
 >
 >           . str "happyDefActions :: Happy_Data_Array.Array Int Int\n"
 >           . str "happyDefActions = Happy_Data_Array.listArray (0,"
