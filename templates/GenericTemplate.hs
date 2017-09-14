@@ -150,15 +150,13 @@ indexShortOffAddr (HappyA# arr) off =
 indexShortOffAddr arr off = arr Happy_Data_Array.! off
 #endif
 
-{-# INLINE unbox_int #-}
-unbox_int IBOX(x) = x
-
-{-# INLINE lt #-}
-lt x y = LT(x,y)
+{-# INLINE happyLt #-}
+happyLt x y = LT(x,y)
 
 #ifdef HAPPY_GHC
 readArrayBit arr bit =
     Bits.testBit IBOX(indexShortOffAddr arr ((unbox_int bit) `Happy_GHC_Exts.iShiftRA#` 4#)) (bit `mod` 16)
+  where unbox_int (Happy_GHC_Exts.I# x) = x
 #else
 readArrayBit arr bit =
     Bits.testBit IBOX(indexShortOffAddr arr (bit `div` 16)) (bit `mod` 16)

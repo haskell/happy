@@ -649,7 +649,7 @@ action array indexed by (terminal * last_state) + state
 >           . str "happyAdjustOffset off = "
 >           . (if length table < 32768
 >                then str "off"
->                else str "if lt off (" . shows min_off . str "# :: Happy_GHC_Exts.Int#)"
+>                else str "if happyLt off (" . shows min_off . str "# :: Happy_GHC_Exts.Int#)"
 >                   . str " then off Happy_GHC_Exts.+# 65536#"
 >                   . str " else off")
 >           . str "\n\n"  --"
