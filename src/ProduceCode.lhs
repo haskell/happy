@@ -14,15 +14,15 @@ The code generator.
 >                                 interleave, interleave', maybestr,
 >                                 brack, brack' )
 
-> import Data.Maybe                     ( isJust, isNothing )
+> import Data.Maybe             ( isJust, isNothing, fromMaybe )
 > import Data.Char
 > import Data.List
 
-> import Control.Monad      ( forM_ )
+> import Control.Monad          ( forM_ )
 > import Control.Monad.ST
-> import Data.Bits          ( setBit )
-> import Data.Array.ST      ( STUArray )
-> import Data.Array.Unboxed ( UArray )
+> import Data.Bits              ( setBit )
+> import Data.Array.ST          ( STUArray )
+> import Data.Array.Unboxed     ( UArray )
 > import Data.Array.MArray
 > import Data.Array.IArray
 
@@ -133,14 +133,14 @@ If we're using coercions, we need to generate the injections etc.
 >             bhappy_item = brack' happy_item
 >
 >             inject n ty
->               = mkHappyIn n . str " :: " . type_param n ty
+>               = mkHappyIn n . str " :: " . typeParam n ty
 >               . str " -> " . bhappy_item . char '\n'
 >               . mkHappyIn n . str " x = Happy_GHC_Exts.unsafeCoerce# x\n"
 >               . str "{-# INLINE " . mkHappyIn n . str " #-}"
 >
 >             extract n ty
 >               = mkHappyOut n . str " :: " . bhappy_item
->               . str " -> " . type_param n ty . char '\n'
+>               . str " -> " . typeParam n ty . char '\n'
 >               . mkHappyOut n . str " x = Happy_GHC_Exts.unsafeCoerce# x\n"
 >               . str "{-# INLINE " . mkHappyOut n . str " #-}"
 >         in
@@ -186,7 +186,7 @@ example where this matters.
 >       . str "\n\t= HappyTerminal " . token
 >       . str "\n\t| HappyErrorToken Int\n"
 >       . interleave "\n"
->         [ str "\t| " . makeAbsSynCon n . strspace . type_param n ty
+>         [ str "\t| " . makeAbsSynCon n . strspace . typeParam n ty
 >         | (n, ty) <- assocs nt_types,
 >           (nt_types_index ! n) == n]
 
@@ -315,7 +315,7 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >                 id
 >          else
 >                 nl . reductionFun . strspace
->               . interleave " " (map str (take (length toks) (repeat "_")))
+>               . interleave " " (replicate (length toks) (str "_"))
 >               . str " = notHappyAtAll ")
 
 >     | otherwise
@@ -387,7 +387,7 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >               tokLets code''
 >                  | coerce && not (null cases)
 >                       = interleave "\n\t" cases
->                       . code'' . str (take (length cases) (repeat '}'))
+>                       . code'' . str (replicate (length cases) '}')
 >                  | otherwise = code''
 >
 >               cases = [ str "case " . extract t . strspace . mkDummyVar n
@@ -667,13 +667,13 @@ action array indexed by (terminal * last_state) + state
 >       | otherwise
 >           = str "happyActOffsets :: Happy_Data_Array.Array Int Int\n"
 >           . str "happyActOffsets = Happy_Data_Array.listArray (0,"
->               . shows (n_states) . str ") (["
+>               . shows n_states . str ") (["
 >           . interleave' "," (map shows act_offs)
 >           . str "\n\t])\n\n"
 >
 >           . str "happyGotoOffsets :: Happy_Data_Array.Array Int Int\n"
 >           . str "happyGotoOffsets = Happy_Data_Array.listArray (0,"
->               . shows (n_states) . str ") (["
+>               . shows n_states . str ") (["
 >           . interleave' "," (map shows goto_offs)
 >           . str "\n\t])\n\n"
 >           
@@ -683,7 +683,7 @@ action array indexed by (terminal * last_state) + state
 >
 >           . str "happyDefActions :: Happy_Data_Array.Array Int Int\n"
 >           . str "happyDefActions = Happy_Data_Array.listArray (0,"
->               . shows (n_states) . str ") (["
+>               . shows n_states . str ") (["
 >           . interleave' "," (map shows defaults)
 >           . str "\n\t])\n\n"
 >
@@ -764,9 +764,7 @@ outlaw them inside { }
 >                       [ (a, fn a b) | (a, b) <- assocs nt_types ]
 >     where
 >       fn n Nothing = n
->       fn _ (Just a) = case lookup a assoc_list of
->                         Just v -> v
->                         Nothing -> error ("cant find an item in list")
+>       fn _ (Just a) = fromMaybe (error "can't find an item in list") (lookup a assoc_list)
 >       assoc_list = [ (b,a) | (a, Just b) <- assocs nt_types ]
 
 >    makeAbsSynCon = mkAbsSynCon nt_types_index
@@ -1045,8 +1043,8 @@ See notes under "Action Tables" above for some subtleties in this function.
 >                     (act:_) -> act    -- pick the first one we see for now
 >
 >   where reduces
->           =  [ act | (_,act@(LR'Reduce _ _)) <- actions ]
->           ++ [ act | (_,(LR'Multiple _ act@(LR'Reduce _ _))) <- actions ]
+>           =  [ act | (_, act@(LR'Reduce _ _)) <- actions ]
+>           ++ [ act | (_, LR'Multiple _ act@(LR'Reduce _ _)) <- actions ]
 
 -----------------------------------------------------------------------------
 -- Generate packed parsing tables.
@@ -1141,13 +1139,13 @@ See notes under "Action Tables" above for some subtleties in this function.
 >                | (state, acts) <- assocs action,
 >                  let (err:_dummy:vec) = assocs acts
 >                      vec' = drop (n_starts+n_nonterminals) vec
->                      acts' = filter (notFail) (err:vec')
+>                      acts' = filter notFail (err:vec')
 >                      default_act = getDefault acts'
 >                      acts'' = mkActVals acts' default_act
 >                ]
 >
 >        explist_actions :: [(Int, [Int])]
->        explist_actions = [ (state, concat $ map f $ assocs acts)
+>        explist_actions = [ (state, concatMap f $ assocs acts)
 >                          | (state, acts) <- assocs action ]
 >                          where
 >                            f (t, LR'Shift _ _ ) = [t - fst token_names_bound]
@@ -1180,7 +1178,7 @@ See notes under "Action Tables" above for some subtleties in this function.
 >        mkGotoVals assocs' =
 >                [ (token - first_nonterm', i) | (token, Goto i) <- assocs' ]
 >
->        sorted_actions = reverse (sortBy cmp_state (actions++gotos))
+>        sorted_actions = sortBy (flip cmp_state) (actions ++ gotos)
 >        cmp_state (_,_,_,width1,tally1,_) (_,_,_,width2,tally2,_)
 >                | width1 < width2  = LT
 >                | width1 == width2 = compare tally1 tally2
@@ -1377,9 +1375,9 @@ slot is free or not.
 > mkHappyIn n           = str "happyIn"  . shows n
 > mkHappyOut n          = str "happyOut" . shows n
 
-> type_param :: Int -> Maybe String -> ShowS
-> type_param n Nothing   = char 't' . shows n
-> type_param _ (Just ty) = brack ty
+> typeParam :: Int -> Maybe String -> ShowS
+> typeParam n Nothing   = char 't' . shows n
+> typeParam _ (Just ty) = brack ty
 
 > specReduceFun :: Int -> Bool
 > specReduceFun = (<= 3)
@@ -1389,7 +1387,7 @@ slot is free or not.
 -- for placing in a string.
 
 > hexChars :: [Int] -> String
-> hexChars acts = concat (map hexChar acts)
+> hexChars = concatMap hexChar
 
 > hexChar :: Int -> String
 > hexChar i | i < 0 = hexChar (i + 65536)
@@ -1407,7 +1405,7 @@ This guards against integers that are so large as to (when converted using
 larger than an expected minimum value.
 
 > checkedHexChars :: Int -> [Int] -> String
-> checkedHexChars minValue acts = concat (map hexChar' acts)
+> checkedHexChars minValue = concatMap hexChar'
 >   where hexChar' i | checkHexChar minValue i = hexChar i
 >                    | otherwise = error "grammar does not fit in 16-bit representation that is used with '--ghc'"
 
