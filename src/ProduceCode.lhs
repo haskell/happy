@@ -90,16 +90,42 @@ Produce the complete output file.
 >       -- fix, others not so easy, and others would require GHC version
 >       -- #ifdefs.  For now I'm just disabling all of them.
 >
+>    partTySigs_opts = ifGeGhc710 (str "{-# OPTIONS_GHC -XPartialTypeSignatures #-}" . nl)
+>
 >    intMaybeHash | ghc       = str "Happy_GHC_Exts.Int#"
 >                 | otherwise = str "Int"
 >
->    top_opts = nowarn_opts .
->      case top_options of
->          "" -> str ""
->          _  -> str (unwords [ "{-# OPTIONS"
->                             , top_options
->                             , "#-}"
->                             ]) . nl
+>    -- Parsing monad and its constraints
+>    pty = str monad_tycon
+>    pcont = str monad_context
+>
+>    -- If GHC is enabled, wrap the content in a CPP ifdef that includes the
+>    -- content and tests whether the GHC version is >= 7.10.3
+>    ifGeGhc710 :: (String -> String) -> String -> String
+>    ifGeGhc710 content | ghc = str "#if __GLASGOW_HASKELL__ >= 710" . nl
+>                             . content
+>                             . str "#endif" . nl
+>                       | otherwise = id
+>
+>    n_types = length (filter isNothing (elems nt_types))
+>    happyAbsSyn = str "(HappyAbsSyn " . str wild_tyvars . str ")"
+>      where wild_tyvars = unwords (replicate n_types "_")
+>
+>    -- This decides how to include (if at all) a type signature
+>    -- See <https://github.com/simonmar/happy/issues/94>
+>    filterTypeSig :: (String -> String) -> String -> String
+>    filterTypeSig content | n_types == 0 = content
+>                          | otherwise = ifGeGhc710 content
+>
+>    top_opts =
+>        nowarn_opts
+>      . (case top_options of
+>           "" -> str ""
+>           _  -> str (unwords [ "{-# OPTIONS"
+>                              , top_options
+>                              , "#-}"
+>                              ]) . nl)
+>      . partTySigs_opts
 
 %-----------------------------------------------------------------------------
 Make the abstract syntax type declaration, of the form:
@@ -341,14 +367,7 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >                           | otherwise                  = nt
 >
 >               mkReductionHdr lt' s =
->                       let pcont = str monad_context
->                           pty = str monad_tycon
->                           all_tyvars = [ 't':show n | (n, Nothing) <-
->                                             assocs nt_types ]
->                           str_tyvars = str (unwords all_tyvars)
->                           happyAbsSyn = str "(HappyAbsSyn "
->                                         . str_tyvars . str ")"
->                           tysig = case lexer' of
+>                       let tysig = case lexer' of
 >                             Nothing -> id
 >                             _ | target == TargetArrayBased ->
 >                                 mkReduceFun i . str " :: " . pcont
@@ -359,7 +378,7 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >                                 . happyAbsSyn . str " -> "
 >                                 . pty . str " " . happyAbsSyn . str "\n"
 >                               | otherwise -> id in
->                       tysig . mkReduceFun i . str " = "
+>                       filterTypeSig tysig . mkReduceFun i . str " = "
 >                       . str s . strspace . lt' . strspace . showInt adjusted_nt
 >                       . strspace . reductionFun . nl
 >                       . reductionFun . strspace
@@ -427,8 +446,6 @@ The token conversion function.
 >       Just (lexer'',eof') ->
 >       case (target, ghc) of
 >          (TargetHaskell, True) ->
->             let pcont = str monad_context
->                 pty = str monad_tycon in
 >                 str "happyNewToken :: " . pcont . str " => "
 >               . str "(Happy_GHC_Exts.Int#\n"
 >               . str "                   -> Happy_GHC_Exts.Int#\n"
@@ -813,8 +830,6 @@ MonadStuff:
 
 
 >    produceMonadStuff =
->            let pcont = str monad_context
->                pty = str monad_tycon  in
 >            str "happyThen :: " . pcont . str " => " . pty
 >          . str " a -> (a -> "  . pty
 >          . str " b) -> " . pty . str " b\n"
@@ -838,9 +853,6 @@ MonadStuff:
 >                . errorHandler . str "\n"
 >               _ ->
 >                let
->                  all_tyvars = [ 't':show n | (n, Nothing) <- assocs nt_types ]
->                  str_tyvars = str (unwords all_tyvars)
->                  happyAbsSyn = str "(HappyAbsSyn " . str_tyvars . str ")"
 >                  happyParseSig
 >                    | target == TargetArrayBased =
 >                      str "happyParse :: " . pcont . str " => " . intMaybeHash
@@ -871,7 +883,7 @@ MonadStuff:
 >                      . str " -> " . pty . str " " . happyAbsSyn . str ")\n"
 >                      . str "\n"
 >                    | otherwise = id in
->                  happyParseSig . newTokenSig . doActionSig . reduceArrSig
+>                  filterTypeSig (happyParseSig . newTokenSig . doActionSig . reduceArrSig)
 >                . str "happyThen1 :: " . pcont . str " => " . pty
 >                . str " a -> (a -> "  . pty
 >                . str " b) -> " . pty . str " b\n"
