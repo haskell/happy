@@ -127,8 +127,8 @@ happyDoAction i tk st
                                                  ++ "\n")
                                      happyShift new_state i tk st
                                      where new_state = MINUS(n,(ILIT(1) :: FAST_INT))
-   where off    = indexShortOffAddr happyActOffsets st
-         off_i  = if LT(off, (unbox_int happyMinOffset)) then PLUS(off, PLUS(i, ILIT(65536))) else PLUS(off, i)
+   where off    = happyAdjustOffset (indexShortOffAddr happyActOffsets st)
+         off_i  = PLUS(off, i)
          check  = if GTE(off_i,(ILIT(0) :: FAST_INT))
                   then EQ(indexShortOffAddr happyCheck off_i, i)
                   else False
@@ -150,11 +150,13 @@ indexShortOffAddr (HappyA# arr) off =
 indexShortOffAddr arr off = arr Happy_Data_Array.! off
 #endif
 
-unbox_int IBOX(x) = x
+{-# INLINE happyLt #-}
+happyLt x y = LT(x,y)
 
 #ifdef HAPPY_GHC
 readArrayBit arr bit =
     Bits.testBit IBOX(indexShortOffAddr arr ((unbox_int bit) `Happy_GHC_Exts.iShiftRA#` 4#)) (bit `mod` 16)
+  where unbox_int (Happy_GHC_Exts.I# x) = x
 #else
 readArrayBit arr bit =
     Bits.testBit IBOX(indexShortOffAddr arr (bit `div` 16)) (bit `mod` 16)
@@ -238,8 +240,8 @@ happyMonad2Reduce k nt fn j tk st sts stk =
         sts1@(CONS(st1@HAPPYSTATE(action),_)) ->
          let drop_stk = happyDropStk k stk
 #if defined(HAPPY_ARRAY)
-             off = indexShortOffAddr happyGotoOffsets st1
-             off_i = if LT(off, (unbox_int happyMinOffset)) then PLUS(off, PLUS(nt, ILIT(65536))) else PLUS(off, nt)
+             off = happyAdjustOffset (indexShortOffAddr happyGotoOffsets st1)
+             off_i = PLUS(off, nt)
              new_state = indexShortOffAddr happyTable off_i
 #else
              _ = nt :: FAST_INT
@@ -261,8 +263,8 @@ happyDropStk n (x `HappyStk` xs) = happyDropStk MINUS(n,(ILIT(1)::FAST_INT)) xs
 happyGoto nt j tk st = 
    DEBUG_TRACE(", goto state " ++ show IBOX(new_state) ++ "\n")
    happyDoAction j tk new_state
-   where off = indexShortOffAddr happyGotoOffsets st
-         off_i = if LT(off, (unbox_int happyMinOffset)) then PLUS(off, PLUS(nt, ILIT(65536))) else PLUS(off, nt)
+   where off = happyAdjustOffset (indexShortOffAddr happyGotoOffsets st)
+         off_i = PLUS(off, nt)
          new_state = indexShortOffAddr happyTable off_i
 #else
 happyGoto action j tk st = action j j tk (HappyState action)
