@@ -107,14 +107,14 @@ Produce the complete output file.
 >                             . str "#endif" . nl
 >                       | otherwise = id
 >
->    n_types = length (filter isNothing (elems nt_types))
+>    n_missing_types = length (filter isNothing (elems nt_types))
 >    happyAbsSyn = str "(HappyAbsSyn " . str wild_tyvars . str ")"
->      where wild_tyvars = unwords (replicate n_types "_")
+>      where wild_tyvars = unwords (replicate n_missing_types "_")
 >
 >    -- This decides how to include (if at all) a type signature
 >    -- See <https://github.com/simonmar/happy/issues/94>
 >    filterTypeSig :: (String -> String) -> String -> String
->    filterTypeSig content | n_types == 0 = content
+>    filterTypeSig content | n_missing_types == 0 = content
 >                          | otherwise = ifGeGhc710 content
 >
 >    top_opts =
