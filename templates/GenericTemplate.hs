@@ -2,9 +2,6 @@
 
 #ifdef HAPPY_GHC
 #undef __GLASGOW_HASKELL__
-#define HAPPY_IF_GHC_GT_500 #if __GLASGOW_HASKELL__ > 500
-#define HAPPY_IF_GHC_GE_503 #if __GLASGOW_HASKELL__ >= 503
-#define HAPPY_ELIF_GHC_500 #elif __GLASGOW_HASKELL__ == 500
 #define HAPPY_IF_GHC_GT_706 #if __GLASGOW_HASKELL__ > 706
 #define HAPPY_ELSE #else
 #define HAPPY_ENDIF #endif
