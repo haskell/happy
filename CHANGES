@@ -1,4 +1,10 @@
 -----------------------------------------------------------------------------
+1.19.8
+
+        * Fix issue #94 (some grammars don't compile due to new type
+          signatures introduced to allow overloading to be used)
+
+-----------------------------------------------------------------------------
 1.19.7
 
         * Fix misisng test suite files in the sdist
