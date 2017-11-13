@@ -1,5 +1,6 @@
 module PrettyGrammar where
 
+import Prelude hiding ((<>))
 import AbsSyn
 
 render :: Doc -> String
