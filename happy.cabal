@@ -161,7 +161,6 @@ executable happy
         Info
         LALR
         Lexer
-        Main
         ParseMonad
         Parser
         ProduceCode
