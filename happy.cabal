@@ -154,6 +154,7 @@ executable happy
   extensions: CPP, MagicHash, FlexibleContexts
   ghc-options: -Wall
   other-modules:
+        Paths_happy
         AbsSyn
         First
         GenUtils
