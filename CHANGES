@@ -1,4 +1,11 @@
 -----------------------------------------------------------------------------
+1.19.9
+
+        * Fix cabal warnings
+        * Bump upper bounds
+        * Fix build with GHC 8.4.1-alpha
+
+-----------------------------------------------------------------------------
 1.19.8
 
         * Fix issue #94 (some grammars don't compile due to new type
