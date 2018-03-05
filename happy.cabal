@@ -130,7 +130,7 @@ extra-source-files:
 
 custom-setup
   setup-depends: Cabal <2.2,
-                 base <5,
+                 base >=4.6 && <5,
                  directory <1.4,
                  filepath <1.5
 
