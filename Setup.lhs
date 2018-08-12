@@ -45,9 +45,9 @@ symbols cs = case lex cs of
               _ -> []
 
 myPostBuild _ flags _ lbi = do
-  let runProgram p = rawSystemProgramConf (fromFlagOrDefault normal (buildVerbosity flags))
-                                          p
-                                          (withPrograms lbi)
+  let runProgram p = runDbProgram (fromFlagOrDefault normal (buildVerbosity flags))
+                                  p
+                                  (withPrograms lbi)
       cpp_template src dst opts = do
         let tmp = dst ++ ".tmp"
         runProgram ghcProgram (["-o", tmp, "-E", "-cpp", "templates" </> src] ++ opts)
