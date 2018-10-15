@@ -12,4 +12,4 @@ runP :: P a -> String -> Int -> ParseResult a
 runP f s l = runReaderT f (s, l)
 
 lineP :: P Int
-lineP = asks snd >>= return
+lineP = asks snd
