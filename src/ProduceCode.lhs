@@ -145,8 +145,9 @@ If we're using coercions, we need to generate the injections etc.
 (where ti, tj, tk are type variables for the non-terminals which don't
  have type signatures).
 
+        newtype HappyWrap<n> = HappyWrap<n> ti
         happyIn<n> :: ti -> HappyAbsSyn ti tj tk ...
-        happyIn<n> x = unsafeCoerce# x
+        happyIn<n> x = unsafeCoerce# (HappyWrap<n> x)
         {-# INLINE happyIn<n> #-}
 
         happyOut<n> :: HappyAbsSyn ti tj tk ... -> tn
@@ -159,14 +160,19 @@ If we're using coercions, we need to generate the injections etc.
 >             bhappy_item = brack' happy_item
 >
 >             inject n ty
->               = mkHappyIn n . str " :: " . typeParam n ty
+>               = (case ty of
+>                   Nothing -> id
+>                   Just tystr -> str "newtype " . mkHappyWrap n . str " = " . mkHappyWrap n . strspace . brack tystr . nl)
+>               . mkHappyIn n . str " :: " . typeParam n ty
 >               . str " -> " . bhappy_item . char '\n'
->               . mkHappyIn n . str " x = Happy_GHC_Exts.unsafeCoerce# x\n"
+>               . mkHappyIn n . str " x = Happy_GHC_Exts.unsafeCoerce#" . strspace
+>               . mkHappyWrapCon ty n (str "x")
+>               . nl
 >               . str "{-# INLINE " . mkHappyIn n . str " #-}"
 >
 >             extract n ty
 >               = mkHappyOut n . str " :: " . bhappy_item
->               . str " -> " . typeParam n ty . char '\n'
+>               . str " -> " . typeParamOut n ty . char '\n'
 >               . mkHappyOut n . str " x = Happy_GHC_Exts.unsafeCoerce# x\n"
 >               . str "{-# INLINE " . mkHappyOut n . str " #-}"
 >         in
@@ -392,7 +398,7 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >               tokPattern n _ | n `notElem` vars_used = char '_'
 >               tokPattern n t | t >= firstStartTok && t < fst_term
 >                       = if coerce
->                               then mkHappyVar n
+>                               then mkHappyWrapCon (nt_types ! t) t (mkHappyVar n)
 >                               else brack' (
 >                                    makeAbsSynCon t . str "  " . mkHappyVar n
 >                                    )
@@ -943,8 +949,8 @@ directive determins the API of the provided function.
 >       . maybe_tks
 >       . str ") "
 >       . brack' (if coerce
->                    then str "\\x -> happyReturn (happyOut"
->                       . shows accept_nonterm . str " x)"
+>                    then str "\\x -> happyReturn (let {" . mkHappyWrapCon (nt_types ! accept_nonterm) accept_nonterm (str "x'")
+>                       . str " = " . mkHappyOut accept_nonterm . str " x} in x')"
 >                    else str "\\x -> case x of {HappyAbsSyn"
 >                       . shows (nt_types_index ! accept_nonterm)
 >                       . str " z -> happyReturn z; _other -> notHappyAtAll }"
@@ -1387,13 +1393,22 @@ slot is free or not.
 > mkReduceFun n         = str "happyReduce_"  . shows n
 > mkDummyVar n          = str "happy_x_"      . shows n
 
+> mkHappyWrap :: Int -> String -> String
+> mkHappyWrap n = str "HappyWrap" . shows n
+
+> mkHappyWrapCon :: Maybe a -> Int -> (String -> String) -> String -> String
+> mkHappyWrapCon Nothing  _ s = s
+> mkHappyWrapCon (Just _) n s = brack' (mkHappyWrap n . strspace . s)
+
 > mkHappyIn, mkHappyOut :: Int -> String -> String
 > mkHappyIn n           = str "happyIn"  . shows n
 > mkHappyOut n          = str "happyOut" . shows n
 
-> typeParam :: Int -> Maybe String -> ShowS
+> typeParam, typeParamOut :: Int -> Maybe String -> ShowS
 > typeParam n Nothing   = char 't' . shows n
 > typeParam _ (Just ty) = brack ty
+> typeParamOut n Nothing  = char 't' . shows n
+> typeParamOut n (Just _) = mkHappyWrap n
 
 > specReduceFun :: Int -> Bool
 > specReduceFun = (<= 3)
