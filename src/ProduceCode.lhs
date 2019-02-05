@@ -389,8 +389,10 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >                | coerce = reverse (map mkDummyVar [1 .. length toks])
 >                | otherwise = reverse (zipWith tokPattern [1..] toks)
 >
+>               is_nonterm t = t >= firstStartTok && t < fst_term
+>
 >               tokPattern n _ | n `notElem` vars_used = char '_'
->               tokPattern n t | t >= firstStartTok && t < fst_term
+>               tokPattern n t | is_nonterm t
 >                       = if coerce
 >                               then mkHappyVar n
 >                               else brack' (
@@ -404,18 +406,33 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >                                  . char ')'
 >
 >               tokLets code''
->                  | coerce && not (null cases)
->                       = interleave "\n\t" cases
->                       . code'' . str (replicate (length cases) '}')
+>                  | coerce
+>                       = interleave "\n\t" coerce_bind_terms
+>                       . interleave "\n\t" coerce_bind_nonterms
+>                       . code''
+>                       . str (replicate (length coerce_bind_nonterms) ')')
+>                       . str (replicate (length coerce_bind_terms) '}')
 >                  | otherwise = code''
 >
->               cases = [ str "case " . extract t . strspace . mkDummyVar n
+>               coerce_bind_terms =
+>                       [ str "case " . str "happyOutTok" . strspace . mkDummyVar n
 >                       . str " of { " . tokPattern n t . str " -> "
 >                       | (n,t) <- zip [1..] toks,
->                         n `elem` vars_used ]
+>                         n `elem` vars_used,
+>                         not (is_nonterm t)
+>                       ]
 >
->               extract t | t >= firstStartTok && t < fst_term = mkHappyOut t
->                         | otherwise                     = str "happyOutTok"
+>               coerce_bind_nonterms =
+>                       [ str "(let {"
+>                       . (case nt_types ! t of
+>                           Nothing -> id
+>                           Just ty -> mkHappyVar n . str " :: " . str ty . str "; ")
+>                       . mkHappyVar n . str " = "
+>                       . mkHappyOut t . strspace . mkDummyVar n . str "} in"
+>                       | (n,t) <- zip [1..] toks,
+>                         n `elem` vars_used,
+>                         is_nonterm t
+>                       ]
 >
 >               lt = length toks
 
