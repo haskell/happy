@@ -1,0 +1,5 @@
+error001.y: Multiple rules for 'foo'
+error001.y: 8: unknown identifier ''a''
+error001.y: 10: unknown identifier ''a''
+error001.y: 11: unknown identifier ''b''
+
