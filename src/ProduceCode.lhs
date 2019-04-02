@@ -93,7 +93,7 @@ Produce the complete output file.
 >    partTySigs_opts = ifGeGhc710 (str "{-# OPTIONS_GHC -XPartialTypeSignatures #-}" . nl)
 >
 >    intMaybeHash | ghc       = str "Happy_GHC_Exts.Int#"
->                 | otherwise = str "Int"
+>                 | otherwise = str "Prelude.Int"
 >
 >    -- Parsing monad and its constraints
 >    pty = str monad_tycon
@@ -210,7 +210,7 @@ example where this matters.
 >     | otherwise
 >       = str "data HappyAbsSyn " . str_tyvars
 >       . str "\n\t= HappyTerminal " . token
->       . str "\n\t| HappyErrorToken Int\n"
+>       . str "\n\t| HappyErrorToken Prelude.Int\n"
 >       . interleave "\n"
 >         [ str "\t| " . makeAbsSynCon n . strspace . typeParam n ty
 >         | (n, ty) <- assocs nt_types,
@@ -577,8 +577,8 @@ machinery to discard states in the parser...
 >    produceActionTable TargetArrayBased
 >       = produceActionArray
 >       . produceReduceArray
->       . str "happy_n_terms = " . shows n_terminals . str " :: Int\n"
->       . str "happy_n_nonterms = " . shows n_nonterminals . str " :: Int\n\n"
+>       . str "happy_n_terms = " . shows n_terminals . str " :: Prelude.Int\n"
+>       . str "happy_n_nonterms = " . shows n_nonterminals . str " :: Prelude.Int\n\n"
 >
 >    produceExpListPerState
 >       = produceExpListArray
@@ -586,15 +586,15 @@ machinery to discard states in the parser...
 >       . str "happyExpListPerState st =\n"
 >       . str "    token_strs_expected\n"
 >       . str "  where token_strs = " . str (show $ elems token_names') . str "\n"
->       . str "        bit_start = st * " . str (show nr_tokens) . str "\n"
->       . str "        bit_end = (st + 1) * " . str (show nr_tokens) . str "\n"
+>       . str "        bit_start = st Prelude.* " . str (show nr_tokens) . str "\n"
+>       . str "        bit_end = (st Prelude.+ 1) Prelude.* " . str (show nr_tokens) . str "\n"
 >       . str "        read_bit = readArrayBit happyExpList\n"
->       . str "        bits = map read_bit [bit_start..bit_end - 1]\n"
->       . str "        bits_indexed = zip bits [0.."
+>       . str "        bits = Prelude.map read_bit [bit_start..bit_end Prelude.- 1]\n"
+>       . str "        bits_indexed = Prelude.zip bits [0.."
 >                                        . str (show (nr_tokens - 1)) . str "]\n"
->       . str "        token_strs_expected = concatMap f bits_indexed\n"
->       . str "        f (False, _) = []\n"
->       . str "        f (True, nr) = [token_strs !! nr]\n"
+>       . str "        token_strs_expected = Prelude.concatMap f bits_indexed\n"
+>       . str "        f (Prelude.False, _) = []\n"
+>       . str "        f (Prelude.True, nr) = [token_strs Prelude.!! nr]\n"
 >       . str "\n"
 >       where (first_token, last_token) = bounds token_names'
 >             nr_tokens = last_token - first_token + 1
@@ -687,34 +687,34 @@ action array indexed by (terminal * last_state) + state
 >           . str "\"#\n\n" --"
 
 >       | otherwise
->           = str "happyActOffsets :: Happy_Data_Array.Array Int Int\n"
+>           = str "happyActOffsets :: Happy_Data_Array.Array Prelude.Int Prelude.Int\n"
 >           . str "happyActOffsets = Happy_Data_Array.listArray (0,"
 >               . shows n_states . str ") (["
 >           . interleave' "," (map shows act_offs)
 >           . str "\n\t])\n\n"
 >
->           . str "happyGotoOffsets :: Happy_Data_Array.Array Int Int\n"
+>           . str "happyGotoOffsets :: Happy_Data_Array.Array Prelude.Int Prelude.Int\n"
 >           . str "happyGotoOffsets = Happy_Data_Array.listArray (0,"
 >               . shows n_states . str ") (["
 >           . interleave' "," (map shows goto_offs)
 >           . str "\n\t])\n\n"
->           
->           . str "happyAdjustOffset :: Int -> Int\n"
->           . str "happyAdjustOffset = id\n\n"
 >
->           . str "happyDefActions :: Happy_Data_Array.Array Int Int\n"
+>           . str "happyAdjustOffset :: Prelude.Int -> Prelude.Int\n"
+>           . str "happyAdjustOffset = Prelude.id\n\n"
+>
+>           . str "happyDefActions :: Happy_Data_Array.Array Prelude.Int Prelude.Int\n"
 >           . str "happyDefActions = Happy_Data_Array.listArray (0,"
 >               . shows n_states . str ") (["
 >           . interleave' "," (map shows defaults)
 >           . str "\n\t])\n\n"
 >
->           . str "happyCheck :: Happy_Data_Array.Array Int Int\n"
+>           . str "happyCheck :: Happy_Data_Array.Array Prelude.Int Prelude.Int\n"
 >           . str "happyCheck = Happy_Data_Array.listArray (0,"
 >               . shows table_size . str ") (["
 >           . interleave' "," (map shows check)
 >           . str "\n\t])\n\n"
 >
->           . str "happyTable :: Happy_Data_Array.Array Int Int\n"
+>           . str "happyTable :: Happy_Data_Array.Array Prelude.Int Prelude.Int\n"
 >           . str "happyTable = Happy_Data_Array.listArray (0,"
 >               . shows table_size . str ") (["
 >           . interleave' "," (map shows table)
@@ -727,7 +727,7 @@ action array indexed by (terminal * last_state) + state
 >           . str (hexChars explist)
 >           . str "\"#\n\n" --"
 >       | otherwise
->           = str "happyExpList :: Happy_Data_Array.Array Int Int\n"
+>           = str "happyExpList :: Happy_Data_Array.Array Prelude.Int Prelude.Int\n"
 >           . str "happyExpList = Happy_Data_Array.listArray (0,"
 >               . shows table_size . str ") (["
 >           . interleave' "," (map shows explist)
@@ -800,12 +800,12 @@ outlaw them inside { }
 >            str "newtype HappyIdentity a = HappyIdentity a\n"
 >          . str "happyIdentity = HappyIdentity\n"
 >          . str "happyRunIdentity (HappyIdentity a) = a\n\n"
->          . str "instance Functor HappyIdentity where\n"
+>          . str "instance Prelude.Functor HappyIdentity where\n"
 >          . str "    fmap f (HappyIdentity a) = HappyIdentity (f a)\n\n"
->          . str "instance Applicative HappyIdentity where\n"
+>          . str "instance Prelude.Applicative HappyIdentity where\n"
 >          . str "    pure  = HappyIdentity\n"
 >          . str "    (<*>) = ap\n"
->          . str "instance Monad HappyIdentity where\n"
+>          . str "instance Prelude.Monad HappyIdentity where\n"
 >          . str "    return = pure\n"
 >          . str "    (HappyIdentity p) >>= q = q p\n\n"
 
@@ -849,11 +849,11 @@ MonadStuff:
 >                . str " a\n"
 >                . str "happyError' :: " . str monad_context . str " => (["
 >                . token
->                . str "], [String]) -> "
+>                . str "], [Prelude.String]) -> "
 >                . str monad_tycon
 >                . str " a\n"
 >                . str "happyError' = "
->                . str (if use_monad then "" else "HappyIdentity . ")
+>                . str (if use_monad then "" else "HappyIdentity Prelude.. ")
 >                . errorHandler . str "\n"
 >               _ ->
 >                let
@@ -881,7 +881,7 @@ MonadStuff:
 >                  reduceArrSig
 >                    | target == TargetArrayBased =
 >                      str "happyReduceArr :: " . pcont
->                      . str " => Happy_Data_Array.Array Int (" . intMaybeHash
+>                      . str " => Happy_Data_Array.Array Prelude.Int (" . intMaybeHash
 >                      . str " -> " . str token_type' . str " -> " . intMaybeHash
 >                      . str " -> Happy_IntList -> HappyStk " . happyAbsSyn
 >                      . str " -> " . pty . str " " . happyAbsSyn . str ")\n"
@@ -895,7 +895,7 @@ MonadStuff:
 >                . str "happyReturn1 :: " . pcont . str " => a -> " . pty . str " a\n"
 >                . str "happyReturn1 = happyReturn\n"
 >                . str "happyError' :: " . str monad_context . str " => ("
->                                        . token . str ", [String]) -> "
+>                                        . token . str ", [Prelude.String]) -> "
 >                . str monad_tycon
 >                . str " a\n"
 >                . str "happyError' tk = "
@@ -971,21 +971,21 @@ directive determins the API of the provided function.
 >         . str "do { "
 >         . str "f <- do_" . str name . str "; "
 >         . str "let { (conds,attrs) = f happyEmptyAttrs } in do { "
->         . str "sequence_ conds; "
->         . str "return (". str defaultAttr . str " attrs) }}"
+>         . str "Prelude.sequence_ conds; "
+>         . str "Prelude.return (". str defaultAttr . str " attrs) }}"
 >       monadAE name
 >         = str name . str " toks = "
 >         . str "do { "
 >         . str "f <- do_" . str name . str " toks; "
 >         . str "let { (conds,attrs) = f happyEmptyAttrs } in do { "
->         . str "sequence_ conds; "
->         . str "return (". str defaultAttr . str " attrs) }}"
+>         . str "Prelude.sequence_ conds; "
+>         . str "Prelude.return (". str defaultAttr . str " attrs) }}"
 >       regularAE name
 >         = str name . str " toks = "
 >         . str "let { "
 >         . str "f = do_" . str name . str " toks; "
 >         . str "(conds,attrs) = f happyEmptyAttrs; "
->         . str "x = foldr seq attrs conds; "
+>         . str "x = Prelude.foldr Prelude.seq attrs conds; "
 >         . str "} in (". str defaultAttr . str " x)"
 
 ----------------------------------------------------------------------------
@@ -1000,7 +1000,7 @@ directive determins the API of the provided function.
 >   where attributes'  = foldl1 (\x y -> x . str ", " . y) $ map formatAttribute attrs
 >         formatAttribute (ident,typ) = str ident . str " :: " . str typ
 >         attrsErrors = foldl1 (\x y -> x . str ", " . y) $ map attrError attrs
->         attrError (ident,_) = str ident . str " = error \"invalid reference to attribute '" . str ident . str "'\""
+>         attrError (ident,_) = str ident . str " = Prelude.error \"invalid reference to attribute '" . str ident . str "'\""
 >         attrHeader =
 >             case attributeType of
 >             [] -> str "HappyAttributes"

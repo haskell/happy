@@ -501,7 +501,7 @@ So is this.
 >                     , attrUpdates
 >                     ]
 >
->        formattedConditions = concat $ intersperse "++" $ localConditions : (map (\i -> "happyConditions_"++(show i)) prods)
+>        formattedConditions = concat $ intersperse " Prelude.++ " $ localConditions : (map (\i -> "happyConditions_"++(show i)) prods)
 >        localConditions = "["++(concat $ intersperse ", " $ map formatCondition conditions)++"]"
 >        formatCondition (Conditional toks) = formatTokens toks
 >        formatCondition _ = error "formatCondition: Not a condition"

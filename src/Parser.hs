@@ -511,7 +511,7 @@ happyReduction_33 happy_x_2
 	happy_x_1
 	 =  case happyOutTok happy_x_2 of { (TokenInfo happy_var_2 TokCodeQuote) -> 
 	happyIn17
-		 (TokenMonad "()" happy_var_2 ">>=" "return"
+		 (TokenMonad "()" happy_var_2 "Prelude.>>=" "Prelude.return"
 	)}
 
 happyReduce_34 = happySpecReduce_3  13# happyReduction_34
@@ -521,7 +521,7 @@ happyReduction_34 happy_x_3
 	 =  case happyOutTok happy_x_2 of { (TokenInfo happy_var_2 TokCodeQuote) -> 
 	case happyOutTok happy_x_3 of { (TokenInfo happy_var_3 TokCodeQuote) -> 
 	happyIn17
-		 (TokenMonad happy_var_2 happy_var_3 ">>=" "return"
+		 (TokenMonad happy_var_2 happy_var_3 "Prelude.>>=" "Prelude.return"
 	)}}
 
 happyReduce_35 = happyReduce 4# 13# happyReduction_35
