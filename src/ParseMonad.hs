@@ -1,9 +1,12 @@
 module ParseMonad where
 
-import Control.Monad.Reader
+import           Control.Monad.Reader
 
 type ParseResult = Either String
 type P a = ReaderT (String, Int) ParseResult a
+
+failP :: String -> P a
+failP str = ReaderT (\_ -> Left str)
 
 mkP :: (String -> Int -> ParseResult a) -> P a
 mkP = ReaderT . uncurry
