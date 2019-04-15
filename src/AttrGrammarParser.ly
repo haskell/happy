@@ -64,5 +64,5 @@ or a conditional statement.
 
 > {
 > happyError :: P a
-> happyError = fail ("Parse error\n")
+> happyError = failP ("Parse error\n")
 > }

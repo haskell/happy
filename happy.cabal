@@ -129,7 +129,7 @@ extra-source-files:
         tests/typeclass_monad_lexer.y
 
 custom-setup
-  setup-depends: Cabal <2.4,
+  setup-depends: Cabal <2.6,
                  base >=4.6 && <5,
                  directory <1.4,
                  filepath <1.5
