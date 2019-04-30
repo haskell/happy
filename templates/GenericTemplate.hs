@@ -14,9 +14,9 @@
 #define FAST_INT Happy_GHC_Exts.Int#
 -- Do not remove this comment. Required to fix CPP parsing when using GCC and a clang-compiled alex.
 HAPPY_IF_GHC_GT_706
-HAPPY_DEFINE LT(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.<# m)) :: Prelude.Bool)
-HAPPY_DEFINE GTE(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.>=# m)) :: Prelude.Bool)
-HAPPY_DEFINE EQ(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.==# m)) :: Prelude.Bool)
+HAPPY_DEFINE LT(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.<# m)) :: HappyPrelude.Bool)
+HAPPY_DEFINE GTE(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.>=# m)) :: HappyPrelude.Bool)
+HAPPY_DEFINE EQ(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.==# m)) :: HappyPrelude.Bool)
 HAPPY_ELSE
 HAPPY_DEFINE LT(n,m) (n Happy_GHC_Exts.<# m)
 HAPPY_DEFINE GTE(n,m) (n Happy_GHC_Exts.>=# m)
@@ -30,14 +30,14 @@ HAPPY_ENDIF
 #else
 #define ILIT(n) (n)
 #define IBOX(n) (n)
-#define FAST_INT Prelude.Int
-#define LT(n,m) (n Prelude.< m)
-#define GTE(n,m) (n Prelude.>= m)
-#define EQ(n,m) (n Prelude.== m)
-#define PLUS(n,m) (n Prelude.+ m)
-#define MINUS(n,m) (n Prelude.- m)
-#define TIMES(n,m) (n Prelude.* m)
-#define NEGATE(n) (Prelude.negate (n))
+#define FAST_INT HappyPrelude.Int
+#define LT(n,m) (n HappyPrelude.< m)
+#define GTE(n,m) (n HappyPrelude.>= m)
+#define EQ(n,m) (n HappyPrelude.== m)
+#define PLUS(n,m) (n HappyPrelude.+ m)
+#define MINUS(n,m) (n HappyPrelude.- m)
+#define TIMES(n,m) (n HappyPrelude.* m)
+#define NEGATE(n) (HappyPrelude.negate (n))
 #define IF_GHC(x)
 #endif
 
@@ -107,12 +107,12 @@ happyAccept j tk st sts (HappyStk ans _) =
 #if defined(HAPPY_ARRAY)
 
 happyDoAction i tk st
-        = DEBUG_TRACE("state: " ++ show IBOX(st) ++ 
+        = DEBUG_TRACE("state: " ++ show IBOX(st) ++
                       ",\ttoken: " ++ show IBOX(i) ++
                       ",\taction: ")
           case action of
                 ILIT(0)           -> DEBUG_TRACE("fail.\n")
-                                     happyFail (happyExpListPerState (IBOX(st) :: Prelude.Int)) i tk st
+                                     happyFail (happyExpListPerState (IBOX(st) :: HappyPrelude.Int)) i tk st
                 ILIT(-1)          -> DEBUG_TRACE("accept.\n")
                                      happyAccept i tk st
                 n | LT(n,(ILIT(0) :: FAST_INT)) -> DEBUG_TRACE("reduce (rule " ++ show rule
@@ -128,10 +128,10 @@ happyDoAction i tk st
          off_i  = PLUS(off, i)
          check  = if GTE(off_i,(ILIT(0) :: FAST_INT))
                   then EQ(indexShortOffAddr happyCheck off_i, i)
-                  else Prelude.False
+                  else HappyPrelude.False
          action
           | check     = indexShortOffAddr happyTable off_i
-          | Prelude.otherwise = indexShortOffAddr happyDefActions st
+          | HappyPrelude.otherwise = indexShortOffAddr happyDefActions st
 
 #endif /* HAPPY_ARRAY */
 
@@ -152,11 +152,11 @@ happyLt x y = LT(x,y)
 
 #ifdef HAPPY_GHC
 readArrayBit arr bit =
-    Bits.testBit IBOX(indexShortOffAddr arr ((unbox_int bit) `Happy_GHC_Exts.iShiftRA#` 4#)) (bit `Prelude.mod` 16)
+    Bits.testBit IBOX(indexShortOffAddr arr ((unbox_int bit) `Happy_GHC_Exts.iShiftRA#` 4#)) (bit `HappyPrelude.mod` 16)
   where unbox_int (Happy_GHC_Exts.I# x) = x
 #else
 readArrayBit arr bit =
-    Bits.testBit IBOX(indexShortOffAddr arr (bit `Prelude.div` 16)) (bit `Prelude.mod` 16)
+    Bits.testBit IBOX(indexShortOffAddr arr (bit `HappyPrelude.div` 16)) (bit `HappyPrelude.mod` 16)
 #endif
 
 #ifdef HAPPY_GHC
@@ -296,7 +296,7 @@ happyFail explist i tk HAPPYSTATE(action) sts stk =
 -- Internal happy errors:
 
 notHappyAtAll :: a
-notHappyAtAll = Prelude.error "Internal Happy error\n"
+notHappyAtAll = HappyPrelude.error "Internal Happy error\n"
 
 -----------------------------------------------------------------------------
 -- Hack to get the typechecker to accept our action functions
@@ -308,13 +308,13 @@ happyTcHack x y = y
 #endif
 
 -----------------------------------------------------------------------------
--- Seq-ing.  If the --strict flag is given, then Happy emits 
+-- Seq-ing.  If the --strict flag is given, then Happy emits
 --      happySeq = happyDoSeq
 -- otherwise it emits
 --      happySeq = happyDontSeq
 
 happyDoSeq, happyDontSeq :: a -> b -> b
-happyDoSeq   a b = a `Prelude.seq` b
+happyDoSeq   a b = a `HappyPrelude.seq` b
 happyDontSeq a b = b
 
 -----------------------------------------------------------------------------

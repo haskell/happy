@@ -95,7 +95,7 @@ generate some error messages.
 > getMonad ds
 >       = case [ (True,a,b,c,d) | (TokenMonad a b c d) <- ds ] of
 >               [t] -> t
->               []  -> (False,"()","HappyIdentity","Prelude.>>=","Prelude.return")
+>               []  -> (False,"()","HappyIdentity","HappyPrelude.>>=","HappyPrelude.return")
 >               _   -> error "multiple monad directives"
 
 > getTokenSpec :: [Directive t] -> [(t, String)]

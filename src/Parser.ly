@@ -99,19 +99,19 @@ The parser.
 >       : spec_prec id                  { Just $2 }
 >       |                               { Nothing }
 
-> tokInfos :: { [Directive String] } 
+> tokInfos :: { [Directive String] }
 >       : tokInfos tokInfo              { $2 : $1 }
 >       | tokInfo                       { [$1] }
 
-> tokInfo :: { Directive String } 
+> tokInfo :: { Directive String }
 >       : spec_tokentype code           { TokenType $2 }
 >       | spec_token tokenSpecs         { TokenSpec $2 }
 >       | spec_name id optStart         { TokenName $2 $3 False }
 >       | spec_partial id optStart      { TokenName $2 $3 True  }
 >       | spec_imported_identity        { TokenImportedIdentity }
 >       | spec_lexer code code          { TokenLexer $2 $3 }
->       | spec_monad code               { TokenMonad "()" $2 "Prelude.>>=" "Prelude.return" }
->       | spec_monad code code          { TokenMonad $2 $3 "Prelude.>>=" "Prelude.return" }
+>       | spec_monad code               { TokenMonad "()" $2 "HappyPrelude.>>=" "HappyPrelude.return" }
+>       | spec_monad code code          { TokenMonad $2 $3 "HappyPrelude.>>=" "HappyPrelude.return" }
 >       | spec_monad code code code     { TokenMonad "()" $2 $3 $4 }
 >       | spec_monad code code code code        { TokenMonad $2 $3 $4 $5 }
 >       | spec_nonassoc ids             { TokenNonassoc $2 }

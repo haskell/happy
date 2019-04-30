@@ -490,7 +490,8 @@ GHC version-dependent stuff in it.
 > importsToInject :: [CLIFlags] -> String
 > importsToInject cli =
 >     concat ["\n", import_array, import_bits,
->             glaexts_import, debug_imports, applicative_imports]
+>             glaexts_import, debug_imports, applicative_imports,
+>             import_happyprelude]
 >   where
 >       glaexts_import | is_ghc         = import_glaexts
 >                      | otherwise      = ""
@@ -523,6 +524,9 @@ CPP is turned on for -fglasgow-exts, so we can use conditional compilation:
 > import_applicative :: String
 > import_applicative = "import Control.Applicative(Applicative(..))\n" ++
 >                      "import Control.Monad (ap)\n"
+
+> import_happyprelude :: String
+> import_happyprelude = "import qualified Prelude as HappyPrelude\n"
 
 ------------------------------------------------------------------------------
 Extract various command-line options.
