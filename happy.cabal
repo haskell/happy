@@ -1,5 +1,5 @@
 name: happy
-version: 1.19.9
+version: 1.19.10
 license: BSD2
 license-file: LICENSE
 copyright: (c) Andy Gill, Simon Marlow
@@ -127,6 +127,7 @@ extra-source-files:
         tests/typeclass_monad001.y
         tests/typeclass_monad002.ly
         tests/typeclass_monad_lexer.y
+        tests/rank2.y
 
 custom-setup
   setup-depends: Cabal <2.6,
