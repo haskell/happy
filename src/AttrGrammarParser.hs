@@ -339,7 +339,7 @@ happySeq = happyDontSeq
 
 
 happyError :: P a
-happyError = fail ("Parse error\n")
+happyError = failP ("Parse error\n")
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 {-# LINE 1 "<built-in>" #-}
