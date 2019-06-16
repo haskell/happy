@@ -1,6 +1,5 @@
 #!/usr/bin/runhaskell
 
-\begin{code}
 {-# OPTIONS -fwarn-unused-imports #-}
 module Main where
 
@@ -102,4 +101,3 @@ glr_templates = [
   ("GLR_Lib-ghc-debug"  , ["-DHAPPY_GHC", "-DHAPPY_DEBUG"])
  ]
 
-\end{code}
