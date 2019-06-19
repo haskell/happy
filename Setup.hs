@@ -1,6 +1,5 @@
 #!/usr/bin/runhaskell
 
-\begin{code}
 {-# OPTIONS -fwarn-unused-imports #-}
 module Main where
 
@@ -45,7 +44,7 @@ symbols cs = case lex cs of
               _ -> []
 
 myPostBuild _ flags _ lbi = do
-  let runProgram p = rawSystemProgramConf (fromFlagOrDefault normal (buildVerbosity flags))
+  let runProgram p = runDbProgram (fromFlagOrDefault normal (buildVerbosity flags))
                                           p
                                           (withPrograms lbi)
       cpp_template src dst opts = do
@@ -102,4 +101,3 @@ glr_templates = [
   ("GLR_Lib-ghc-debug"  , ["-DHAPPY_GHC", "-DHAPPY_DEBUG"])
  ]
 
-\end{code}
