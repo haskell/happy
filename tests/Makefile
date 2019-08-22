@@ -1,4 +1,16 @@
+# NOTE: `cabal test` will take care to build the local `happy`
+# executable and place it into $PATH for us to pick up.  
+# 
+# If it doesn't look like the alex binary in $PATH comes from the
+# build tree, then we'll fall back to pointing to
+# ../dist/build/alex/alex to support running tests via "runghc
+# Setup.hs test".
+#
+HAPPY=$(shell which happy)
+ifeq "$(filter $(dir $(shell pwd))%,$(HAPPY))" ""
 HAPPY=../dist/build/happy/happy
+endif
+
 HC_OPTS=-hide-all-packages -package base -package array -package mtl -Wall -Werror
 
 ifeq ($(wildcard ../cabal.sandbox.config),)
@@ -28,7 +40,9 @@ TESTS = Test.ly TestMulti.ly TestPrecedence.ly bug001.ly \
 
 ERROR_TESTS = error001.y
 
-TEST_HAPPY_OPTS = --strict --template=..
+# NOTE: `cabal` will set the `happy_datadir` env-var accordingly before invoking the test-suite
+#TEST_HAPPY_OPTS = --strict --template=..
+TEST_HAPPY_OPTS = --strict
 
 %.n.hs : %.ly
 	$(HAPPY) $(TEST_HAPPY_OPTS) $< -o $@
@@ -84,6 +98,10 @@ HC_OPTS += -fforce-recomp
 
 check.%.y : %.y
 	@echo "--> Checking $<..."
+	@echo "BAR" "$(HAPPY)"
+	@echo "BAR" "$(shell which happy)"
+	@echo "FOO" "$(shell pwd)"
+	@echo "FOO" "$(filter $(dir $(shell pwd))%,$(HAPPY))"
 	$(HAPPY) $(TEST_HAPPY_OPTS) $< 1>$*.run.stdout 2>$*.run.stderr || true
 	@diff -u --ignore-all-space $*.stdout $*.run.stdout
 	@diff -u --ignore-all-space $*.stderr $*.run.stderr
