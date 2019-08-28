@@ -1,8 +1,7 @@
 {
-import Control.Monad.Except
-import Control.Monad.State
-import Control.Monad.Trans
-
+{-# LANGUAGE FunctionalDependencies, FlexibleInstances, UndecidableInstances #-}
+import Control.Monad (liftM, ap)
+import Control.Applicative as A
 }
 
 %name parse exp
@@ -121,5 +120,66 @@ main =
       Just actual
         | expected == actual -> print "Test works\n"
         | otherwise -> print "Test failed\n"
+
+-- vendored in parts of mtl
+
+class Monad m => MonadIO m where liftIO :: IO a -> m a
+instance MonadIO IO where liftIO = id
+
+class Monad m => MonadState s m | m -> s where
+    put :: s -> m ()
+    get :: m s
+
+newtype StateT  s m a = StateT  { runStateT  :: s -> m (a, s) }
+
+instance Monad m => Functor (StateT s m) where
+    fmap = liftM
+
+instance Monad m => A.Applicative (StateT s m) where
+    pure = return
+    (<*>) = ap
+
+instance Monad m => Monad (StateT s m) where
+    return x = StateT $ \s -> return (x, s)
+    m >>= k = StateT $ \s0 -> do
+        (x, s1) <- runStateT m s0
+        runStateT (k x) s1
+
+instance Monad m => MonadState s (StateT s m) where
+    put s = StateT $ \_ -> return ((), s)
+    get   = StateT $ \s -> return (s, s)
+
+instance MonadIO m => MonadIO (StateT e m) where
+    liftIO m = StateT $ \s -> liftM (\x -> (x, s)) (liftIO m)
+
+class Monad m => MonadError e m | m -> e where
+    throwError :: e -> m a
+
+newtype ExceptT e m a = ExceptT { runExceptT :: m (Either e a) }
+
+instance Monad m => Functor (ExceptT e m) where
+    fmap = liftM
+
+instance Monad m => A.Applicative (ExceptT e m) where
+    pure = return
+    (<*>) = ap
+
+instance Monad m => Monad (ExceptT e m) where
+    return = ExceptT . return . Right
+    m >>= k = ExceptT $ do
+        x <- runExceptT m
+        case x of
+            Left e  -> return (Left e)
+            Right y -> runExceptT (k y)
+
+instance MonadState s m => MonadState s (ExceptT e m) where
+    put s = ExceptT (liftM Right (put s))
+    get   = ExceptT (liftM Right get)
+
+instance MonadIO m => MonadIO (ExceptT e m) where
+    liftIO = ExceptT . liftM Right . liftIO
+
+instance Monad m => MonadError e (ExceptT e m) where
+    throwError = ExceptT . return . Left
 
 }

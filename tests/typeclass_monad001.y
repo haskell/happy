@@ -3,7 +3,6 @@
 {
 module Main where
 
-import Control.Monad.Trans
 import System.IO
 import Data.Char
 }
@@ -90,4 +89,9 @@ lexNum cs = TokenNum (read num) : lexer rest
 
 
 happyError tokens = liftIO (ioError (userError "parse error"))
+
+-- vendored in parts of mtl
+
+class Monad m => MonadIO m where liftIO :: IO a -> m a
+instance MonadIO IO where liftIO = id
 }

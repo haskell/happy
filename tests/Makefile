@@ -11,15 +11,8 @@ ifeq "$(filter $(dir $(shell pwd))%,$(HAPPY))" ""
 HAPPY=../dist/build/happy/happy
 endif
 
-HC_OPTS=-hide-all-packages -package base -package array -package mtl -Wall -Werror
-
-ifeq ($(wildcard ../cabal.sandbox.config),)
-    HC = ghc
-    SANDBOX_CONFIG =
-else
-    HC = cabal exec -- ghc
-    SANDBOX_CONFIG = cabal.sandbox.config
-endif
+HC = ghc
+HC_OPTS=-Wall -Werror
 
 .PRECIOUS: %.n.hs %.g.hs %.o %.exe %.bin
 
@@ -98,10 +91,6 @@ HC_OPTS += -fforce-recomp
 
 check.%.y : %.y
 	@echo "--> Checking $<..."
-	@echo "BAR" "$(HAPPY)"
-	@echo "BAR" "$(shell which happy)"
-	@echo "FOO" "$(shell pwd)"
-	@echo "FOO" "$(filter $(dir $(shell pwd))%,$(HAPPY))"
 	$(HAPPY) $(TEST_HAPPY_OPTS) $< 1>$*.run.stdout 2>$*.run.stderr || true
 	@diff -u --ignore-all-space $*.stdout $*.run.stdout
 	@diff -u --ignore-all-space $*.stderr $*.run.stderr
