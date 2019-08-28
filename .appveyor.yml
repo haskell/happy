@@ -36,7 +36,7 @@ build: off
 test_script:
  - "cabal install --only-dependencies --enable-tests"
  - "make sdist"
- - "cd dist"
+ - "cd dist-newstyle/sdist"
  - "tar xvzf happy-*.tar.gz"
  - "cd happy-*/"
  - "cabal configure --enable-tests"
