@@ -1,11 +1,11 @@
 cabal-version:       1.12
-name:                gen-alex-sdist
+name:                gen-happy-sdist
 version:             0
-synopsis:            Tool for generating `alex` sdist
+synopsis:            Tool for generating `happy` sdist
 category:            Development
 build-type:          Simple
 
-executable gen-alex-sdist
+executable gen-happy-sdist
   default-language:    Haskell2010
   main-is:             Main.hs
   build-depends:       base                    < 5
