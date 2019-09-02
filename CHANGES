@@ -1,4 +1,11 @@
 -----------------------------------------------------------------------------
+1.19.12
+
+        * Fix for building with GHC 8.8.x
+        * Move custom Setup preprocessing steps into a separate
+          executable, like Alex
+
+-----------------------------------------------------------------------------
 1.19.11
 
         * Fix for building with GHC 8.6.x
