@@ -11,14 +11,37 @@ homepage: https://www.haskell.org/happy/
 synopsis: Happy is a parser generator for Haskell
 category: Development
 cabal-version: >= 1.8
-build-type: Custom
+build-type: Simple
 
 Description:
   Happy is a parser generator for Haskell.  Given a grammar
   specification in BNF, Happy generates Haskell code to parse the
   grammar.  Happy works in a similar way to the @yacc@ tool for C.
 
-tested-with:  GHC==7.10.3, GHC==8.0.2, GHC==8.2.2, GHC==8.4.3
+tested-with:
+  GHC==7.10.3,
+  GHC==8.0.2,
+  GHC==8.2.2,
+  GHC==8.4.4,
+  GHC==8.6.5,
+  GHC==8.8.1
+
+data-dir: data/
+
+data-files: 
+        HappyTemplate
+        HappyTemplate-arrays
+        HappyTemplate-arrays-coerce
+        HappyTemplate-arrays-coerce-debug
+        HappyTemplate-arrays-debug
+        HappyTemplate-arrays-ghc
+        HappyTemplate-arrays-ghc-debug
+        HappyTemplate-coerce
+        HappyTemplate-ghc
+        GLR_Base
+        GLR_Lib
+        GLR_Lib-ghc
+        GLR_Lib-ghc-debug
 
 extra-source-files:
         ANNOUNCE
@@ -97,9 +120,6 @@ extra-source-files:
         examples/LexerTest.ly
         happy.spec
         src/ARRAY-NOTES
-        templates/GLR_Base.hs
-        templates/GenericTemplate.hs
-        templates/GLR_Lib.hs
         tests/AttrGrammar001.y
         tests/AttrGrammar002.y
         tests/Makefile
@@ -129,18 +149,13 @@ extra-source-files:
         tests/typeclass_monad_lexer.y
         tests/rank2.y
 
-custom-setup
-  setup-depends: Cabal <3.1,
-                 base >=4.6 && <5,
-                 directory <1.4,
-                 filepath <1.5
-
 source-repository head
   type:     git
   location: https://github.com/simonmar/happy.git
 
 flag small_base
   description: Deprecated. Does nothing.
+  manual: True
 
 executable happy
   hs-source-dirs: src
@@ -177,5 +192,8 @@ executable happy
 test-suite tests
   type: exitcode-stdio-1.0
   main-is: test.hs
+  -- This line is important as it ensures that the local `exe:happy` component declared above is built before the test-suite component is invoked, as well as making sure that `happy` is made available on $PATH and `$happy_datadir` is set accordingly before invoking `test.hs`
+  build-tools: happy
+
   build-depends: base, process
 

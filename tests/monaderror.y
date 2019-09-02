@@ -1,8 +1,9 @@
 {
+{-# LANGUAGE FunctionalDependencies, FlexibleInstances #-}
 module Main where
 
+import Control.Monad (when)
 import Data.Char
-import Control.Monad.Error
 import System.Exit
 }
 
@@ -54,4 +55,14 @@ main = do
     when (parseFoo tokens /= Left (ParseError Nothing)) $ do
         print (parseFoo tokens)
         exitWith (ExitFailure 1)
+
+---
+class Error a where
+    noMsg :: a
+    noMsg = strMsg ""
+    strMsg :: String -> a
+class Monad m => MonadError e m | m -> e where
+    throwError :: e -> m a
+instance MonadError e (Either e) where
+    throwError = Left
 }
