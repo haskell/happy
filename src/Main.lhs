@@ -401,6 +401,7 @@ The command line arguments.
 >               | OptGLR
 >               | OptGLR_Decode
 >               | OptGLR_Filter
+>               | OptNoPrelude
 >  deriving Eq
 
 > argInfo :: [OptDescr CLIFlags]
@@ -434,7 +435,9 @@ The command line arguments.
 >    Option ['?'] ["help"] (NoArg DumpHelp)
 >       "display this help and exit",
 >    Option ['V','v'] ["version"] (NoArg DumpVersion)   -- ToDo: -v is deprecated
->       "output version information and exit"
+>       "output version information and exit",
+>    Option [] ["noprelude"] (NoArg OptNoPrelude)
+>       "generate parser without an implicit Prelude import"
 
 #ifdef DEBUG
 
@@ -491,7 +494,7 @@ GHC version-dependent stuff in it.
 > importsToInject cli =
 >     concat ["\n", import_array, import_bits,
 >             glaexts_import, debug_imports, applicative_imports,
->             import_happyprelude]
+>             import_happyprelude, explicit_prelude]
 >   where
 >       glaexts_import | is_ghc         = import_glaexts
 >                      | otherwise      = ""
@@ -499,10 +502,14 @@ GHC version-dependent stuff in it.
 >       debug_imports  | is_debug       = import_debug
 >                      | otherwise      = ""
 >
+>       explicit_prelude | no_prelude    = ""
+>                        | otherwise     = "import Prelude\n"
+>
 >       applicative_imports = import_applicative
 >
 >       is_ghc   = OptGhcTarget `elem` cli
 >       is_debug = OptDebugParser `elem` cli
+>       no_prelude = OptNoPrelude `elem` cli
 
 CPP is turned on for -fglasgow-exts, so we can use conditional compilation:
 
