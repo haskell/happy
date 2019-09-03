@@ -3,8 +3,13 @@ This is a simple test for happy using operator precedence.
 First thing to declare is the name of your parser,
 and the type of the tokens the parser reads.
 
+#ifndef QUALIFIEDPRELUDE
+#define QUALIFIEDPRELUDE Prelude
+#endif
+
 > {
 > import Data.Char
+>
 > }
 
 > %name calc
@@ -13,7 +18,7 @@ and the type of the tokens the parser reads.
 The parser will be of type [Token] -> ?, where ? is determined by the
 production rules.  Now we declare all the possible tokens:
 
-> %token 
+> %token
 >	let		{ TokenLet }
 >	in		{ TokenIn }
 >	int		{ TokenInt $$ }
@@ -55,16 +60,16 @@ and make in complete:
 
 > {
 
-All parsers must declair this function, 
+All parsers must declair this function,
 which is called when an error is detected.
 Note that currently we do no error recovery.
 
-> happyError tks = error "Parse error"
+> happyError tks = QUALIFIEDPRELUDE.error "Parse error"
 
 Now we declare the datastructure that we are parsing.
 
 > data Exp
->	= Let String Exp Exp
+>	= Let QUALIFIEDPRELUDE.String Exp Exp
 >	| Greater Exp Exp
 >	| Less Exp Exp
 >	| Plus Exp Exp
@@ -72,18 +77,18 @@ Now we declare the datastructure that we are parsing.
 > 	| Times Exp Exp
 >	| Div Exp Exp
 >	| Uminus Exp
->	| Brack Exp 
->	| Int Int
->	| Var String
->	deriving Show
+>	| Brack Exp
+>	| Int QUALIFIEDPRELUDE.Int
+>	| Var QUALIFIEDPRELUDE.String
+>	deriving QUALIFIEDPRELUDE.Show
 
 The datastructure for the tokens...
 
 > data Token
 >	= TokenLet
 >	| TokenIn
->	| TokenInt Int
->	| TokenVar String
+>	| TokenInt QUALIFIEDPRELUDE.Int
+>	| TokenVar QUALIFIEDPRELUDE.String
 >	| TokenEq
 >	| TokenGreater
 >	| TokenLess
@@ -97,9 +102,9 @@ The datastructure for the tokens...
 
 .. and a simple lexer that returns this datastructure.
 
-> lexer :: String -> [Token]
+> lexer :: QUALIFIEDPRELUDE.String -> [Token]
 > lexer [] = []
-> lexer (c:cs) 
+> lexer (c:cs)
 >	| isSpace c = lexer cs
 > 	| isAlpha c = lexVar (c:cs)
 >	| isDigit c = lexNum (c:cs)
@@ -113,11 +118,11 @@ The datastructure for the tokens...
 > lexer ('(':cs) = TokenOB : lexer cs
 > lexer (')':cs) = TokenCB : lexer cs
 
-> lexNum cs = TokenInt (read num) : lexer rest
->	where (num,rest) = span isDigit cs
+> lexNum cs = TokenInt (QUALIFIEDPRELUDE.read num) : lexer rest
+>	where (num,rest) = QUALIFIEDPRELUDE.span isDigit cs
 
 > lexVar cs =
->    case span isAlpha cs of
+>    case QUALIFIEDPRELUDE.span isAlpha cs of
 >	("let",rest) -> TokenLet : lexer rest
 >	("in",rest)  -> TokenIn : lexer rest
 >	(var,rest)   -> TokenVar var : lexer rest
@@ -125,20 +130,20 @@ The datastructure for the tokens...
 To run the program, call this in gofer, or use some code
 to print it.
 
-> runCalc :: String -> Exp
-> runCalc = calc . lexer
+> runCalc :: QUALIFIEDPRELUDE.String -> Exp
+> runCalc = calc QUALIFIEDPRELUDE.. lexer
 
 Here we test our parser.
 
 > main = case runCalc "let x = 1 in let y = 2 in x * y + x / y" of {
->       (Let "x" (Int 1) (Let "y" (Int 2) (Plus (Times (Var "x") (Var "y")) (Div (Var "x") (Var "y"))))) -> 
+>       (Let "x" (Int 1) (Let "y" (Int 2) (Plus (Times (Var "x") (Var "y")) (Div (Var "x") (Var "y"))))) ->
 >       case runCalc "- 1 * - 2 + 3" of {
 >       (Plus (Times (Uminus (Int 1)) (Uminus (Int 2))) (Int 3)) ->
 >       case runCalc "- - - 1 + 2 * 3 - 4" of {
 >       (Minus (Plus (Uminus (Uminus (Uminus (Int 1)))) (Times (Int 2) (Int 3))) (Int 4)) ->
->       print "Test works\n";
+>       QUALIFIEDPRELUDE.print "Test works\n";
 >       _ -> quit } ; _ -> quit } ; _ -> quit }
-> 
-> quit = print "Test failed\n";
-> 
+>
+> quit = QUALIFIEDPRELUDE.print "Test failed\n";
+>
 > }

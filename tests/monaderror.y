@@ -1,9 +1,14 @@
+#ifndef QUALIFIEDPRELUDE
+#define QUALIFIEDPRELUDE Prelude
+#endif
+
 {
 module Main where
 
 import Data.Char
 import Control.Monad.Error
 import System.Exit
+
 }
 
 %name parseFoo
@@ -19,39 +24,39 @@ import System.Exit
 %%
 
 Exp         :       'Z'         { 0 }
-            |       'S' Exp     { $2 + 1 }
+            |       'S' Exp     { $2 QUALIFIEDPRELUDE.+ 1 }
 
 {
 
-type ParseM a = Either ParseError a
+type ParseM a = QUALIFIEDPRELUDE.Either ParseError a
 data ParseError
-        = ParseError (Maybe Token)
-        | StringError String
-    deriving (Eq,Show)
+        = ParseError (QUALIFIEDPRELUDE.Maybe Token)
+        | StringError QUALIFIEDPRELUDE.String
+    deriving (QUALIFIEDPRELUDE.Eq,QUALIFIEDPRELUDE.Show)
 instance Error ParseError where
     strMsg = StringError
 
 data Token
         = TokenSucc
         | TokenZero
-    deriving (Eq,Show)
+    deriving (QUALIFIEDPRELUDE.Eq,QUALIFIEDPRELUDE.Show)
 
 handleError :: [Token] -> ParseM a
-handleError [] = throwError $ ParseError Nothing
-handleError ts = throwError $ ParseError $ Just $ head ts
+handleError [] = throwError QUALIFIEDPRELUDE.$ ParseError QUALIFIEDPRELUDE.Nothing
+handleError ts = throwError QUALIFIEDPRELUDE.$ ParseError QUALIFIEDPRELUDE.$ QUALIFIEDPRELUDE.Just QUALIFIEDPRELUDE.$ QUALIFIEDPRELUDE.head ts
 
-lexer :: String -> [Token]
+lexer :: QUALIFIEDPRELUDE.String -> [Token]
 lexer [] = []
 lexer (c:cs)
     | isSpace c = lexer cs
-    | c == 'S'  = TokenSucc:(lexer cs)
-    | c == 'Z'  = TokenZero:(lexer cs)
-    | otherwise = error "lexer error"
+    | c QUALIFIEDPRELUDE.== 'S'  = TokenSucc:(lexer cs)
+    | c QUALIFIEDPRELUDE.== 'Z'  = TokenZero:(lexer cs)
+    | QUALIFIEDPRELUDE.otherwise = QUALIFIEDPRELUDE.error "lexer error"
 
-main :: IO ()
+main :: QUALIFIEDPRELUDE.IO ()
 main = do
     let tokens = lexer "S S"
-    when (parseFoo tokens /= Left (ParseError Nothing)) $ do
-        print (parseFoo tokens)
+    when (parseFoo tokens QUALIFIEDPRELUDE./= QUALIFIEDPRELUDE.Left (ParseError QUALIFIEDPRELUDE.Nothing)) QUALIFIEDPRELUDE.$ do
+        QUALIFIEDPRELUDE.print (parseFoo tokens)
         exitWith (ExitFailure 1)
 }

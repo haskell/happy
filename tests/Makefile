@@ -29,45 +29,95 @@ ERROR_TESTS = error001.y
 
 TEST_HAPPY_OPTS = --strict --template=..
 
-%.n.hs : %.ly
+%.p.ly : %.ly
+	gcc -x c -P -E $< -o $@
+
+%.p.y : %.y
+  gcc -x c -P -E $< -o $@
+
+%.hp.ly : %.ly
+	gcc -x c -P -E $< -o $@ -DQUALIFIEDPRELUDE=HappyPrelude
+
+%.hp.y : %.y
+	gcc -x c -P -E $< -o $@ -DQUALIFIEDPRELUDE=HappyPrelude
+
+%.n.hs : %.p.ly
 	$(HAPPY) $(TEST_HAPPY_OPTS) $< -o $@
 
-%.a.hs : %.ly
+%.hp.n.hs : %.hp.ly
+	$(HAPPY) $(TEST_HAPPY_OPTS) --noprelude $< -o $@
+
+%.a.hs : %.p.ly
 	$(HAPPY) $(TEST_HAPPY_OPTS) -a $< -o $@
 
-%.g.hs : %.ly
+%.hp.a.hs : %.hp.ly
+	$(HAPPY) $(TEST_HAPPY_OPTS) --noprelude -a $< -o $@
+
+%.g.hs : %.p.ly
 	$(HAPPY) $(TEST_HAPPY_OPTS) -g $< -o $@
 
-%.gc.hs : %.ly
+%.hp.g.hs : %.hp.ly
+	$(HAPPY) $(TEST_HAPPY_OPTS) --noprelude -g $< -o $@
+
+%.gc.hs : %.p.ly
 	$(HAPPY) $(TEST_HAPPY_OPTS) -gc $< -o $@
 
-%.ag.hs : %.ly
+%.hp.gc.hs : %.hp.ly
+	$(HAPPY) $(TEST_HAPPY_OPTS) --noprelude -gc $< -o $@
+
+%.ag.hs : %.p.ly
 	$(HAPPY) $(TEST_HAPPY_OPTS) -ag $< -o $@
 
-%.agc.hs : %.ly
+%.hp.ag.hs : %.hp.ly
+	$(HAPPY) $(TEST_HAPPY_OPTS) --noprelude -ag $< -o $@
+
+%.agc.hs : %.p.ly
 	$(HAPPY) $(TEST_HAPPY_OPTS) -agc $< -o $@
 
-%.n.hs : %.y
+%.hp.agc.hs : %.hp.ly
+	$(HAPPY) $(TEST_HAPPY_OPTS) --noprelude -agc $< -o $@
+
+%.n.hs : %.p.y
 	$(HAPPY) $(TEST_HAPPY_OPTS) $< -o $@
 
-%.a.hs : %.y
+%.hp.n.hs : %.hp.y
+	$(HAPPY) $(TEST_HAPPY_OPTS) --noprelude $< -o $@
+
+%.a.hs : %.p.y
 	$(HAPPY) $(TEST_HAPPY_OPTS) -a $< -o $@
 
-%.g.hs : %.y
+%.hp.a.hs : %.hp.y
+	$(HAPPY) $(TEST_HAPPY_OPTS) --noprelude -a $< -o $@
+
+%.g.hs : %.p.y
 	$(HAPPY) $(TEST_HAPPY_OPTS) -g $< -o $@
 
-%.gc.hs : %.y
+%.hp.g.hs : %.hp.y
+	$(HAPPY) $(TEST_HAPPY_OPTS) --noprelude -g $< -o $@
+
+%.gc.hs : %.p.y
 	$(HAPPY) $(TEST_HAPPY_OPTS) -gc $< -o $@
 
-%.ag.hs : %.y
+%.hp.gc.hs : %.hp.y
+	$(HAPPY) $(TEST_HAPPY_OPTS) --noprelude -gc $< -o $@
+
+%.ag.hs : %.p.y
 	$(HAPPY) $(TEST_HAPPY_OPTS) -ag $< -o $@
 
-%.agc.hs : %.y
+%.hp.ag.hs : %.hp.y
+	$(HAPPY) $(TEST_HAPPY_OPTS) --noprelude -ag $< -o $@
+
+%.agc.hs : %.p.y
 	$(HAPPY) $(TEST_HAPPY_OPTS) -agc $< -o $@
 
-CLEAN_FILES += *.n.hs *.a.hs *.g.hs *.gc.hs *.ag.hs *.agc.hs *.info *.hi *.bin *.exe *.o *.run.stdout *.run.stderr $(SANDBOX_CONFIG)
+%.hp.agc.hs : %.hp.y
+	$(HAPPY) $(TEST_HAPPY_OPTS) --noprelude -agc $< -o $@
 
-ALL_TEST_HS = $(shell echo $(TESTS) | sed -e 's/\([^\. ]*\)\.\(l\)\{0,1\}y/\1.n.hs \1.a.hs \1.g.hs \1.gc.hs \1.ag.hs \1.agc.hs/g')
+CLEAN_FILES += *.p.ly *.p.y *.hp.ly *.hp.y *.n.hs *.a.hs *.g.hs *.gc.hs *.ag.hs *.agc.hs *.info *.hi *.bin *.exe *.o *.run.stdout *.run.stderr $(SANDBOX_CONFIG)
+
+PREPROCESS_TESTS = $(shell echo $(TESTS) | sed -e 's/\([^\. ]*\)\.\(l\)\{0,1\}y/\1.p.\2y \1.hp.\2y/g')
+
+ALL_TEST_HS = $(shell echo $(TESTS) | sed -e 's/\([^\. ]*\)\.\(l\)\{0,1\}y/\1.n.hs \1.hp.n.hs \1.a.hs \1.hp.a.hs \1.g.hs \1.hp.g.hs \1.gc.hs \1.hp.gc.hs \1.ag.hs \1.hp.ag.hs \1.agc.hs \1.hp.agc.hs/g')
 
 ALL_TESTS = $(patsubst %.hs, %.run, $(ALL_TEST_HS))
 
@@ -90,7 +140,7 @@ check.%.y : %.y
 %$(HS_PROG_EXT) : %.hs
 	$(HC) $(HC_OPTS) $($*_LD_OPTS) $< -o $@
 
-all :: $(SANDBOX_CONFIG) $(CHECK_ERROR_TESTS) $(ALL_TESTS)
+all :: $(SANDBOX_CONFIG) $(PREPROCESS_TESTS) $(CHECK_ERROR_TESTS) $(ALL_TESTS)
 
 check-todo::
 	$(HAPPY) $(TEST_HAPPY_OPTS) -ad Test.ly
@@ -112,4 +162,4 @@ clean:
 	$(RM) $(CLEAN_FILES)
 
 cabal.sandbox.config:
-	cabal sandbox init --sandbox=../.cabal-sandbox
+	cabal sandbox init --sandbox=../../.cabal-sandbox

@@ -1,3 +1,7 @@
+#ifndef QUALIFIEDPRELUDE
+#define QUALIFIEDPRELUDE Prelude
+#endif
+
 {
 import Control.Monad.Except
 import Control.Monad.State
@@ -54,18 +58,18 @@ data Token =
   | Times
   | LParen
   | RParen
-  | Id String
-  | Num Int
+  | Id QUALIFIEDPRELUDE.String
+  | Num QUALIFIEDPRELUDE.Int
   | EOF
-    deriving (Eq, Ord, Show)
+    deriving (QUALIFIEDPRELUDE.Eq, QUALIFIEDPRELUDE.Ord, QUALIFIEDPRELUDE.Show)
 
 data AST =
     Sum AST AST
   | Prod AST AST
   | Neg AST
-  | Var String
-  | Lit Int
-    deriving (Eq, Ord)
+  | Var QUALIFIEDPRELUDE.String
+  | Lit QUALIFIEDPRELUDE.Int
+    deriving (QUALIFIEDPRELUDE.Eq, QUALIFIEDPRELUDE.Ord)
 
 type Parser m = ExceptT () (Lexer m)
 
@@ -74,7 +78,7 @@ type Lexer m = StateT [Token] m
 parseError :: MonadIO m => Token -> Parser m a
 parseError tok =
   do
-    liftIO (putStrLn ("Parse error at " ++ show tok))
+    liftIO (QUALIFIEDPRELUDE.putStrLn ("Parse error at " QUALIFIEDPRELUDE.++ QUALIFIEDPRELUDE.show tok))
     throwError ()
 
 lexer :: MonadIO m => (Token -> Parser m a) -> Parser m a
@@ -92,22 +96,22 @@ parse :: (MonadIO m) => Parser m AST
 
 parser :: (MonadIO m) =>
           [Token]
-       -> m (Maybe AST)
+       -> m (QUALIFIEDPRELUDE.Maybe AST)
 parser input =
   let
     run :: (MonadIO m) =>
-           Lexer m (Maybe AST)
+           Lexer m (QUALIFIEDPRELUDE.Maybe AST)
     run =
       do
         res <- runExceptT parse
         case res of
-          Left () -> return Nothing
-          Right ast -> return (Just ast)
+          QUALIFIEDPRELUDE.Left () -> QUALIFIEDPRELUDE.return QUALIFIEDPRELUDE.Nothing
+          QUALIFIEDPRELUDE.Right ast -> QUALIFIEDPRELUDE.return (QUALIFIEDPRELUDE.Just ast)
   in do
     (out, _) <- runStateT run input
-    return out
+    QUALIFIEDPRELUDE.return out
 
-main :: IO ()
+main :: QUALIFIEDPRELUDE.IO ()
 main =
   let
     input = [Id "x", Plus,
@@ -117,9 +121,9 @@ main =
   in do
     res <- parser input
     case res of
-      Nothing -> print "Test failed\n"
-      Just actual
-        | expected == actual -> print "Test works\n"
-        | otherwise -> print "Test failed\n"
+      QUALIFIEDPRELUDE.Nothing -> QUALIFIEDPRELUDE.print "Test failed\n"
+      QUALIFIEDPRELUDE.Just actual
+        | expected QUALIFIEDPRELUDE.== actual -> QUALIFIEDPRELUDE.print "Test works\n"
+        | QUALIFIEDPRELUDE.otherwise -> QUALIFIEDPRELUDE.print "Test failed\n"
 
 }

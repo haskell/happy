@@ -3,8 +3,13 @@ This is a simple test for happy.
 First thing to declare is the name of your parser,
 and the type of the tokens the parser reads.
 
+#ifndef QUALIFIEDPRELUDE
+#define QUALIFIEDPRELUDE Prelude
+#endif
+
 > {
 > import Data.Char
+>
 > }
 
 > %name calc
@@ -13,7 +18,7 @@ and the type of the tokens the parser reads.
 The parser will be of type [Token] -> ?, where ? is determined by the
 production rules.  Now we declare all the possible tokens:
 
-> %token 
+> %token
 >	let		{ TokenLet }
 >	in		{ TokenIn }
 >	int		{ TokenInt $$ }
@@ -28,7 +33,7 @@ production rules.  Now we declare all the possible tokens:
 
 The *new* system.
 
- %token 
+ %token
 	let		( let )
 	in		( in )
 	int		( digit+ )
@@ -55,17 +60,17 @@ Now we have the production rules.
 > Exp :: { Exp }
 > Exp : let var '=' Exp in Exp	{ Let $2 $4 $6 }
 >     | Exp1			{ Exp1 $1 }
-> 
+>
 > Exp1 :: { Exp1 }
 > Exp1 : Exp1 '+' Term		{ Plus $1 $3 }
 >      | Exp1 '-' Term		{ Minus $1 $3 }
 >      | Term			{ Term $1 }
-> 
+>
 > Term :: { Term }
 > Term : Term '*' Factor	{ Times $1 $3 }
 >      | Term '/' Factor	{ Div $1 $3 }
 >      | Factor			{ Factor $1 }
-> 
+>
 > Factor :: { Factor }
 > Factor : int			{ Int $1 }
 > 	 | var			{ Var $1 }
@@ -77,26 +82,26 @@ and make in complete:
 
 > {
 
-All parsers must declair this function, 
+All parsers must declair this function,
 which is called when an error is detected.
 Note that currently we do no error recovery.
 
-> happyError tks = error "Parse error"
+> happyError tks = QUALIFIEDPRELUDE.error "Parse error"
 
 Now we declare the datastructure that we are parsing.
 
-> data Exp  = Let String Exp Exp | Exp1 Exp1 
-> data Exp1 = Plus Exp1 Term | Minus Exp1 Term | Term Term 
-> data Term = Times Term Factor | Div Term Factor | Factor Factor 
-> data Factor = Int Int | Var String | Brack Exp 
+> data Exp  = Let QUALIFIEDPRELUDE.String Exp Exp | Exp1 Exp1
+> data Exp1 = Plus Exp1 Term | Minus Exp1 Term | Term Term
+> data Term = Times Term Factor | Div Term Factor | Factor Factor
+> data Factor = Int QUALIFIEDPRELUDE.Int | Var QUALIFIEDPRELUDE.String | Brack Exp
 
 The datastructure for the tokens...
 
 > data Token
 >	= TokenLet
 >	| TokenIn
->	| TokenInt Int
->	| TokenVar String
+>	| TokenInt QUALIFIEDPRELUDE.Int
+>	| TokenVar QUALIFIEDPRELUDE.String
 >	| TokenEq
 >	| TokenPlus
 >	| TokenMinus
@@ -107,9 +112,9 @@ The datastructure for the tokens...
 
 .. and a simple lexer that returns this datastructure.
 
-> lexer :: String -> [Token]
+> lexer :: QUALIFIEDPRELUDE.String -> [Token]
 > lexer [] = []
-> lexer (c:cs) 
+> lexer (c:cs)
 >	| isSpace c = lexer cs
 > 	| isAlpha c = lexVar (c:cs)
 >	| isDigit c = lexNum (c:cs)
@@ -121,11 +126,11 @@ The datastructure for the tokens...
 > lexer ('(':cs) = TokenOB : lexer cs
 > lexer (')':cs) = TokenCB : lexer cs
 
-> lexNum cs = TokenInt (read num) : lexer rest
->	where (num,rest) = span isDigit cs
+> lexNum cs = TokenInt (QUALIFIEDPRELUDE.read num) : lexer rest
+>	where (num,rest) = QUALIFIEDPRELUDE.span isDigit cs
 
 > lexVar cs =
->    case span isAlpha cs of
+>    case QUALIFIEDPRELUDE.span isAlpha cs of
 >	("let",rest) -> TokenLet : lexer rest
 >	("in",rest)  -> TokenIn : lexer rest
 >	(var,rest)   -> TokenVar var : lexer rest
@@ -133,8 +138,8 @@ The datastructure for the tokens...
 To run the program, call this in gofer, or use some code
 to print it.
 
-> runCalc :: String -> Exp
-> runCalc = calc . lexer
+> runCalc :: QUALIFIEDPRELUDE.String -> Exp
+> runCalc = calc QUALIFIEDPRELUDE.. lexer
 
 Here we test our parser.
 
@@ -145,8 +150,8 @@ Here we test our parser.
 >	case runCalc "1 + 2 * 3" of {
 >	(Exp1 (Plus (Term (Factor (Int 1))) (Times (Factor (Int 2)) (Int 3)))) ->
 >	case runCalc "let x = 2 in x * (x - 2)" of {
->	(Let "x" (Exp1 (Term (Factor (Int 2)))) (Exp1 (Term (Times (Factor (Var "x")) (Brack (Exp1 (Minus (Term (Factor (Var "x"))) (Factor (Int 2))))))))) -> print "Test works\n"; 
+>	(Let "x" (Exp1 (Term (Factor (Int 2)))) (Exp1 (Term (Times (Factor (Var "x")) (Brack (Exp1 (Minus (Term (Factor (Var "x"))) (Factor (Int 2))))))))) -> QUALIFIEDPRELUDE.print "Test works\n";
 >	_ -> quit } ; _ -> quit } ; _ -> quit } ; _ -> quit }
-> quit = print "Test failed\n"
+> quit = QUALIFIEDPRELUDE.print "Test failed\n"
 
 > }

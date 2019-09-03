@@ -1,6 +1,11 @@
+#ifndef QUALIFIEDPRELUDE
+#define QUALIFIEDPRELUDE Prelude
+#endif
+
 {
 module Main where
 import Control.Exception as Exception
+
 }
 
 %tokentype { Token }
@@ -16,8 +21,8 @@ parse : A { () }
 data Token = A | B
 
 test1 = parse [B]
-main =  do Exception.try (print test1 >> fail "Test failed.") :: IO (Either ErrorCall ())
-           putStrLn "Test worked"
+main =  do Exception.try (QUALIFIEDPRELUDE.print test1 QUALIFIEDPRELUDE.>> QUALIFIEDPRELUDE.fail "Test failed.") :: QUALIFIEDPRELUDE.IO (QUALIFIEDPRELUDE.Either ErrorCall ())
+           QUALIFIEDPRELUDE.putStrLn "Test worked"
 
-happyError = error "parse error"
+happyError = QUALIFIEDPRELUDE.error "parse error"
 }

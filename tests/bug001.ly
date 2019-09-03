@@ -1,9 +1,17 @@
+#ifndef QUALIFIEDPRELUDE
+#define QUALIFIEDPRELUDE Prelude
+#endif
+
+> {
+>
+> }
+
 > %name parse
 > %tokentype { Token }
 > %token Int { TokenInt }
 > %%
 
-> Expr :: { Int }
+> Expr :: { QUALIFIEDPRELUDE.Int }
 > Expr : Term { $1 }
 
 The constant in the next rule would be defaulted to Integer, but it is
@@ -13,9 +21,9 @@ a bug in the unsafeCoerce method.
 > Term : Int { 42 }
 
 > {
-> main = print (parse [TokenInt])
-> 
+> main = QUALIFIEDPRELUDE.print (parse [TokenInt])
+>
 > data Token = TokenInt
-> 
-> happyError = error ""
+>
+> happyError = QUALIFIEDPRELUDE.error ""
 > }

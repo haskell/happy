@@ -1,11 +1,16 @@
 -- Testing %monad without %lexer, using the IO monad.
 
+#ifndef QUALIFIEDPRELUDE
+#define QUALIFIEDPRELUDE Prelude
+#endif
+
 {
 module Main where
 
 import Control.Monad.Trans
 import System.IO
 import Data.Char
+
 }
 
 %name calc
@@ -27,21 +32,21 @@ import Data.Char
 %left NEG     -- negation--unary minus
 %right '^'    -- exponentiation
 
-%monad { (MonadIO m) } { m } { (>>=) } { return }
+%monad { (MonadIO m) } { m } { (QUALIFIEDPRELUDE.>>=) } { QUALIFIEDPRELUDE.return }
 
 %%
 input	: {- empty string -}   { () }
         | input line	      { $1 }
 
 line	: '\n'		     { () }
-        | exp '\n'  	     {% hPutStr stdout (show $1) }
+        | exp '\n'  	     {% hPutStr stdout (QUALIFIEDPRELUDE.show $1) }
 
 exp	: num                { $1         }
-        | exp '+' exp        { $1 + $3    }
-        | exp '-' exp        { $1 - $3    }
-        | exp '*' exp        { $1 * $3    }
-        | exp '/' exp        { $1 / $3    }
-        | '-' exp  %prec NEG { -$2        }
+        | exp '+' exp        { $1 QUALIFIEDPRELUDE.+ $3    }
+        | exp '-' exp        { $1 QUALIFIEDPRELUDE.- $3    }
+        | exp '*' exp        { $1 QUALIFIEDPRELUDE.* $3    }
+        | exp '/' exp        { $1 QUALIFIEDPRELUDE./ $3    }
+        | '-' exp  %prec NEG { - $2        }
 --        | exp '^' exp        { $1 ^ $3    }
         | '(' exp ')'        { $2         }
 
@@ -60,7 +65,7 @@ main = do
 data Token
 	= TokenExp
 	| TokenEOL
-	| TokenNum Double
+	| TokenNum QUALIFIEDPRELUDE.Double
 	| TokenPlus
 	| TokenMinus
 	| TokenTimes
@@ -70,7 +75,7 @@ data Token
 
 -- and a simple lexer that returns this datastructure.
 
-lexer :: String -> [Token]
+lexer :: QUALIFIEDPRELUDE.String -> [Token]
 lexer [] = []
 lexer ('\n':cs) = TokenEOL : lexer cs
 lexer (c:cs)
@@ -84,10 +89,10 @@ lexer ('^':cs) = TokenExp : lexer cs
 lexer ('(':cs) = TokenOB : lexer cs
 lexer (')':cs) = TokenCB : lexer cs
 
-lexNum cs = TokenNum (read num) : lexer rest
-	where (num,rest) = span isNum cs
-	      isNum c = isDigit c || c == '.'
+lexNum cs = TokenNum (QUALIFIEDPRELUDE.read num) : lexer rest
+	where (num,rest) = QUALIFIEDPRELUDE.span isNum cs
+	      isNum c = isDigit c QUALIFIEDPRELUDE.|| c QUALIFIEDPRELUDE.== '.'
 
 
-happyError tokens = liftIO (ioError (userError "parse error"))
+happyError tokens = liftIO (QUALIFIEDPRELUDE.ioError (QUALIFIEDPRELUDE.userError "parse error"))
 }

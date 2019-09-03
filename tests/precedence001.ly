@@ -1,21 +1,26 @@
 This module demonstrates a Happy bug (in version <= 1.10).
 
+#ifndef QUALIFIEDPRELUDE
+#define QUALIFIEDPRELUDE Prelude
+#endif
+
 > {
 > module Main where
 > import System.IO
 > import Control.Exception as Exception
+>
 > }
-> 
+>
 > %name parse
-> 
+>
 > %tokentype { Tok }
 > %token
 >       '+'  { Plus }
 >       '-'  { Minus }
 >       int  { Num $$ }
-> 
+>
 > %nonassoc '+' '-'
-> 
+>
 > %%
 
 Ambiguos grammar.
@@ -26,11 +31,11 @@ Ambiguos grammar.
 
 > {
 > happyError :: [Tok] -> a
-> happyError s = error (concatMap show s)
-> 
-> data Tok = Plus | Minus | Num Int deriving Show
-> 
-> data Syn = Plus' Syn Syn | Minus' Syn Syn | Num' Int deriving Show
+> happyError s = QUALIFIEDPRELUDE.error (QUALIFIEDPRELUDE.concatMap QUALIFIEDPRELUDE.show s)
+>
+> data Tok = Plus | Minus | Num QUALIFIEDPRELUDE.Int deriving QUALIFIEDPRELUDE.Show
+>
+> data Syn = Plus' Syn Syn | Minus' Syn Syn | Num' QUALIFIEDPRELUDE.Int deriving QUALIFIEDPRELUDE.Show
 
 All the examples below should fail. None of them does so
 under Happy v1.8, and only the first one under Happy v1.9
@@ -39,7 +44,7 @@ and v1.10.
 > test1 = parse tokens1
 > test2 = parse tokens2
 > test3 = parse tokens3
-> 
+>
 > tokens1 = [Num 6, Plus, Num 7, Plus, Num 8]
 > tokens2 = [Num 6, Plus, Num 7, Minus, Num 8]
 > tokens3 = [Num 6, Minus, Num 7, Minus, Num 8]
@@ -54,8 +59,8 @@ trying the code out with Hugs. (Hugs didn't like the code
 generated with GHC extensions, -gac.)
 
 > main = do
->   Exception.try (print test1 >> fail "Test failed.") :: IO (Either ErrorCall ())
->   Exception.try (print test2 >> fail "Test failed.") :: IO (Either ErrorCall ())
->   Exception.try (print test3 >> fail "Test failed.") :: IO (Either ErrorCall ())
+>   Exception.try (QUALIFIEDPRELUDE.print test1 QUALIFIEDPRELUDE.>> QUALIFIEDPRELUDE.fail "Test failed.") :: QUALIFIEDPRELUDE.IO (QUALIFIEDPRELUDE.Either ErrorCall ())
+>   Exception.try (QUALIFIEDPRELUDE.print test2 QUALIFIEDPRELUDE.>> QUALIFIEDPRELUDE.fail "Test failed.") :: QUALIFIEDPRELUDE.IO (QUALIFIEDPRELUDE.Either ErrorCall ())
+>   Exception.try (QUALIFIEDPRELUDE.print test3 QUALIFIEDPRELUDE.>> QUALIFIEDPRELUDE.fail "Test failed.") :: QUALIFIEDPRELUDE.IO (QUALIFIEDPRELUDE.Either ErrorCall ())
 
 > }
