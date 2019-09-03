@@ -33,7 +33,7 @@ TEST_HAPPY_OPTS = --strict --template=..
 	gcc -x c -P -E $< -o $@
 
 %.p.y : %.y
-  gcc -x c -P -E $< -o $@
+	gcc -x c -P -E $< -o $@
 
 %.hp.ly : %.ly
 	gcc -x c -P -E $< -o $@ -DQUALIFIEDPRELUDE=HappyPrelude
@@ -162,4 +162,4 @@ clean:
 	$(RM) $(CLEAN_FILES)
 
 cabal.sandbox.config:
-	cabal sandbox init --sandbox=../../.cabal-sandbox
+	cabal sandbox init --sandbox=../.cabal-sandbox
