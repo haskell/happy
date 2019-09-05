@@ -30,16 +30,16 @@ ERROR_TESTS = error001.y
 TEST_HAPPY_OPTS = --strict --template=..
 
 %.p.ly : %.ly
-	gcc -x c -P -E $< -o $@
+	gcc -x c -traditional -P -E $< -o $@
 
 %.p.y : %.y
-	gcc -x c -P -E $< -o $@
+	gcc -x c -traditional -P -E $< -o $@
 
 %.hp.ly : %.ly
-	gcc -x c -P -E $< -o $@ -DQUALIFIEDPRELUDE=HappyPrelude
+	gcc -x c -traditional -P -E $< -o $@ -DQUALIFIEDPRELUDE=HappyPrelude
 
 %.hp.y : %.y
-	gcc -x c -P -E $< -o $@ -DQUALIFIEDPRELUDE=HappyPrelude
+	gcc -x c -traditional -P -E $< -o $@ -DQUALIFIEDPRELUDE=HappyPrelude
 
 %.n.hs : %.p.ly
 	$(HAPPY) $(TEST_HAPPY_OPTS) $< -o $@

@@ -43,7 +43,7 @@ blist
         ; $>.len = $$.len QUALIFIEDPRELUDE.- 1
         }
    |    { $$ = []
-        ; where failUnless ($$.len `equals'` 0) "blist wrong length"
+        ; where failUnless ($$.len `equals''` 0) "blist wrong length"
         }
 
 clist
@@ -52,14 +52,14 @@ clist
         ; $>.len = $$.len QUALIFIEDPRELUDE.- 1
         }
    |    { $$ = []
-        ; where failUnless ($$.len `equals'` 0) "clist wrong length"
+        ; where failUnless ($$.len `equals''` 0) "clist wrong length"
         }
 
 {
 happyError = QUALIFIEDPRELUDE.error "parse error"
 failUnless b msg = unless b (QUALIFIEDPRELUDE.fail msg)
 
-equals' a b = a QUALIFIEDPRELUDE.== b
+equals'' a b = a QUALIFIEDPRELUDE.== b
 
 main = case parse "" of { QUALIFIEDPRELUDE.Just _ ->
        case parse "abc" of { QUALIFIEDPRELUDE.Just _ ->

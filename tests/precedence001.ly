@@ -25,9 +25,9 @@ This module demonstrates a Happy bug (in version <= 1.10).
 
 Ambiguos grammar.
 
-> E    : E '+' E  { Plus' $1 $3 }
->      | E '-' E  { Minus' $1 $3 }
->      | int      { Num' $1 }
+> E    : E '+' E  { Plus'' $1 $3 }
+>      | E '-' E  { Minus'' $1 $3 }
+>      | int      { Num'' $1 }
 
 > {
 > happyError :: [Tok] -> a
@@ -35,7 +35,7 @@ Ambiguos grammar.
 >
 > data Tok = Plus | Minus | Num QUALIFIEDPRELUDE.Int deriving QUALIFIEDPRELUDE.Show
 >
-> data Syn = Plus' Syn Syn | Minus' Syn Syn | Num' QUALIFIEDPRELUDE.Int deriving QUALIFIEDPRELUDE.Show
+> data Syn = Plus'' Syn Syn | Minus'' Syn Syn | Num'' QUALIFIEDPRELUDE.Int deriving QUALIFIEDPRELUDE.Show
 
 All the examples below should fail. None of them does so
 under Happy v1.8, and only the first one under Happy v1.9

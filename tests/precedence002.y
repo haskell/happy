@@ -24,9 +24,9 @@ import Control.Exception as Exception
 %nonassoc '/'
 
 %%
-E    : E '+' E  { Plus' $1 $3 }
-     | E '/' E  { Divide' $1 $3 }
-     | int      { Num' $1 }
+E    : E '+' E  { Plus'' $1 $3 }
+     | E '/' E  { Divide'' $1 $3 }
+     | int      { Num'' $1 }
 
 {
 happyError :: [Tok] -> a
@@ -34,7 +34,7 @@ happyError s = QUALIFIEDPRELUDE.error (QUALIFIEDPRELUDE.concatMap QUALIFIEDPRELU
 
 data Tok = Plus | Divide | Num QUALIFIEDPRELUDE.Int deriving QUALIFIEDPRELUDE.Show
 
-data Syn = Plus' Syn Syn | Divide' Syn Syn | Num' QUALIFIEDPRELUDE.Int deriving QUALIFIEDPRELUDE.Show
+data Syn = Plus'' Syn Syn | Divide'' Syn Syn | Num'' QUALIFIEDPRELUDE.Int deriving QUALIFIEDPRELUDE.Show
 
 -- due to a bug in conflict resolution, this caused a parse error:
 tokens1 = [Num 6, Divide, Num 7, Plus, Num 8]

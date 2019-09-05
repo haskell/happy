@@ -1241,8 +1241,8 @@ lexNonSpace ('(':cs) = QUALIFIEDPRELUDE.Right (OpenParen, cs)
 lexNonSpace (')':cs) = QUALIFIEDPRELUDE.Right (CloseParen, cs)
 lexNonSpace (c:cs)
   | isSpace c = lexNonSpace cs
-  | isNumber c = let (tok,cs') = QUALIFIEDPRELUDE.span isNumber (c:cs) in QUALIFIEDPRELUDE.Right (IntegerTok tok, cs')
-  | isAlpha c = let (tok,cs') = QUALIFIEDPRELUDE.span isAlphaNum (c:cs) in QUALIFIEDPRELUDE.Right (IdentTok tok, cs')
+  | isNumber c = let (tok,cs'') = QUALIFIEDPRELUDE.span isNumber (c:cs) in QUALIFIEDPRELUDE.Right (IntegerTok tok, cs'')
+  | isAlpha c = let (tok,cs'') = QUALIFIEDPRELUDE.span isAlphaNum (c:cs) in QUALIFIEDPRELUDE.Right (IdentTok tok, cs'')
   | QUALIFIEDPRELUDE.otherwise = QUALIFIEDPRELUDE.Left ("Unexpected character: `" QUALIFIEDPRELUDE.++ [c] QUALIFIEDPRELUDE.++ "'")
 
 
