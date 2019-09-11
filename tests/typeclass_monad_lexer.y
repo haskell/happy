@@ -127,8 +127,8 @@ main =
 
 -- vendored in parts of mtl
 
-class QUALIFIEDPRELUDE.Monad m => MonadIO m where liftIO :: IO a -> m a
-instance MonadIO IO where liftIO = id
+class QUALIFIEDPRELUDE.Monad m => MonadIO m where liftIO :: QUALIFIEDPRELUDE.IO a -> m a
+instance MonadIO QUALIFIEDPRELUDE.IO where liftIO = QUALIFIEDPRELUDE.id
 
 class QUALIFIEDPRELUDE.Monad m => MonadState s m | m -> s where
     put :: s -> m ()
@@ -136,54 +136,54 @@ class QUALIFIEDPRELUDE.Monad m => MonadState s m | m -> s where
 
 newtype StateT  s m a = StateT  { runStateT  :: s -> m (a, s) }
 
-instance QUALIFIEDPRELUDE.Monad m => Functor (StateT s m) where
+instance QUALIFIEDPRELUDE.Monad m => QUALIFIEDPRELUDE.Functor (StateT s m) where
     fmap = liftM
 
 instance QUALIFIEDPRELUDE.Monad m => A.Applicative (StateT s m) where
-    pure = return
+    pure = QUALIFIEDPRELUDE.return
     (<*>) = ap
 
-instance QUALIFIEDPRELUDE.Monad m => Monad (StateT s m) where
-    return x = StateT $ \s -> return (x, s)
-    m >>= k = StateT $ \s0 -> do
+instance QUALIFIEDPRELUDE.Monad m => QUALIFIEDPRELUDE.Monad (StateT s m) where
+    return x = StateT QUALIFIEDPRELUDE.$ \s -> QUALIFIEDPRELUDE.return (x, s)
+    m >>= k = StateT QUALIFIEDPRELUDE.$ \s0 -> do
         (x, s1) <- runStateT m s0
         runStateT (k x) s1
 
 instance QUALIFIEDPRELUDE.Monad m => MonadState s (StateT s m) where
-    put s = StateT $ \_ -> return ((), s)
-    get   = StateT $ \s -> return (s, s)
+    put s = StateT QUALIFIEDPRELUDE.$ \_ -> QUALIFIEDPRELUDE.return ((), s)
+    get   = StateT QUALIFIEDPRELUDE.$ \s -> QUALIFIEDPRELUDE.return (s, s)
 
 instance MonadIO m => MonadIO (StateT e m) where
-    liftIO m = StateT $ \s -> liftM (\x -> (x, s)) (liftIO m)
+    liftIO m = StateT QUALIFIEDPRELUDE.$ \s -> liftM (\x -> (x, s)) (liftIO m)
 
 class QUALIFIEDPRELUDE.Monad m => MonadError e m | m -> e where
     throwError :: e -> m a
 
-newtype ExceptT e m a = ExceptT { runExceptT :: m (Either e a) }
+newtype ExceptT e m a = ExceptT { runExceptT :: m (QUALIFIEDPRELUDE.Either e a) }
 
-instance QUALIFIEDPRELUDE.Monad m => Functor (ExceptT e m) where
+instance QUALIFIEDPRELUDE.Monad m => QUALIFIEDPRELUDE.Functor (ExceptT e m) where
     fmap = liftM
 
-instance Monad m => A.Applicative (ExceptT e m) where
-    pure = return
+instance QUALIFIEDPRELUDE.Monad m => A.Applicative (ExceptT e m) where
+    pure = QUALIFIEDPRELUDE.return
     (<*>) = ap
 
-instance Monad m => Monad (ExceptT e m) where
-    return = ExceptT . return . Right
-    m >>= k = ExceptT $ do
+instance QUALIFIEDPRELUDE.Monad m => QUALIFIEDPRELUDE.Monad (ExceptT e m) where
+    return = ExceptT QUALIFIEDPRELUDE.. QUALIFIEDPRELUDE.return QUALIFIEDPRELUDE.. QUALIFIEDPRELUDE.Right
+    m >>= k = ExceptT QUALIFIEDPRELUDE.$ do
         x <- runExceptT m
         case x of
-            Left e  -> return (Left e)
-            Right y -> runExceptT (k y)
+            QUALIFIEDPRELUDE.Left e  -> QUALIFIEDPRELUDE.return (QUALIFIEDPRELUDE.Left e)
+            QUALIFIEDPRELUDE.Right y -> runExceptT (k y)
 
 instance MonadState s m => MonadState s (ExceptT e m) where
-    put s = ExceptT (liftM Right (put s))
-    get   = ExceptT (liftM Right get)
+    put s = ExceptT (liftM QUALIFIEDPRELUDE.Right (put s))
+    get   = ExceptT (liftM QUALIFIEDPRELUDE.Right get)
 
 instance MonadIO m => MonadIO (ExceptT e m) where
-    liftIO = ExceptT . liftM Right . liftIO
+    liftIO = ExceptT QUALIFIEDPRELUDE.. liftM QUALIFIEDPRELUDE.Right QUALIFIEDPRELUDE.. liftIO
 
-instance Monad m => MonadError e (ExceptT e m) where
-    throwError = ExceptT . return . Left
+instance QUALIFIEDPRELUDE.Monad m => MonadError e (ExceptT e m) where
+    throwError = ExceptT QUALIFIEDPRELUDE.. QUALIFIEDPRELUDE.return QUALIFIEDPRELUDE.. QUALIFIEDPRELUDE.Left
 
 }

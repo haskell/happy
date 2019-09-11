@@ -1,3 +1,7 @@
+#ifndef QUALIFIEDPRELUDE
+#define QUALIFIEDPRELUDE Prelude
+#endif
+
 {
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GADTs #-}
@@ -12,26 +16,26 @@ import Data.Char
 
 %token tok { Token }
 
-%monad { IO } { (>>=) } { return }
+%monad { QUALIFIEDPRELUDE.IO } { (QUALIFIEDPRELUDE.>>=) } { QUALIFIEDPRELUDE.return }
 
 %%
 
-ib :: { (Int, Double, Bool) }
-   : f n { ($1 $2, $1 $2, $1 True) }
+ib :: { (QUALIFIEDPRELUDE.Int, QUALIFIEDPRELUDE.Double, QUALIFIEDPRELUDE.Bool) }
+   : f n { ($1 $2, $1 $2, $1 QUALIFIEDPRELUDE.True) }
 
 f :: { forall a. a -> a }
-  : { id }
+  : { QUALIFIEDPRELUDE.id }
 
-n :: { forall a. Num a => a }
+n :: { forall a. QUALIFIEDPRELUDE.Num a => a }
   : { 5 }
 
 {
-main = calc [] >>= print
+main = calc [] QUALIFIEDPRELUDE.>>= print
 
 data Token = Token
 
-lexer :: String -> [Token]
+lexer :: QUALIFIEDPRELUDE.String -> [Token]
 lexer _ = []
 
-happyError tokens = ioError (userError "parse error")
+happyError tokens = QUALIFIEDPRELUDE.ioError (QUALIFIEDPRELUDE.userError "parse error")
 }

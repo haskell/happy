@@ -19,7 +19,7 @@ import Data.List (isPrefixOf)
 %errorhandlertype explist
 %error { handleErrorExpList }
 
-%monad { ParseM } { (>>=) } { return }
+%monad { ParseM } { (QUALIFIEDPRELUDE.>>=) } { QUALIFIEDPRELUDE.return }
 
 %token
         'S'             { TokenSucc }
@@ -78,9 +78,9 @@ main = do
 class Error a where
     noMsg :: a
     noMsg = strMsg ""
-    strMsg :: String -> a
-class Monad m => MonadError e m | m -> e where
+    strMsg :: QUALIFIEDPRELUDE.String -> a
+class QUALIFIEDPRELUDE.Monad m => MonadError e m | m -> e where
     throwError :: e -> m a
-instance MonadError e (Either e) where
-    throwError = Left
+instance MonadError e (QUALIFIEDPRELUDE.Either e) where
+    throwError = QUALIFIEDPRELUDE.Left
 }
