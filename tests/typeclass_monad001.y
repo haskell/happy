@@ -7,7 +7,6 @@
 {
 module Main where
 
-import Control.Monad.Trans
 import System.IO
 import Data.Char
 
@@ -95,4 +94,9 @@ lexNum cs = TokenNum (QUALIFIEDPRELUDE.read num) : lexer rest
 
 
 happyError tokens = liftIO (QUALIFIEDPRELUDE.ioError (QUALIFIEDPRELUDE.userError "parse error"))
+
+-- vendored in parts of mtl
+
+class QUALIFIEDPRELUDE.Monad m => MonadIO m where liftIO :: IO a -> m a
+instance MonadIO IO where liftIO = QUALIFIEDPRELUDE.id
 }

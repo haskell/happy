@@ -144,5 +144,5 @@ The parser.
 
 > {
 > happyError :: P a
-> happyError = lineP >>= \l -> fail (show l ++ ": Parse error\n")
+> happyError = lineP >>= \l -> failP (show l ++ ": Parse error\n")
 > }

@@ -3,10 +3,11 @@
 #endif
 
 {
+{-# LANGUAGE FunctionalDependencies, FlexibleInstances #-}
 module Main where
 
 import Data.Char
-import Control.Monad.Error
+import Control.Monad (when)
 import System.Exit
 import System.Environment (getProgName)
 import Data.List (isPrefixOf)
@@ -72,4 +73,14 @@ main = do
       when (parseFoo tokens QUALIFIEDPRELUDE./= exp) QUALIFIEDPRELUDE.$ do
         QUALIFIEDPRELUDE.print (parseFoo tokens)
         exitWith (ExitFailure 1)
+
+---
+class Error a where
+    noMsg :: a
+    noMsg = strMsg ""
+    strMsg :: String -> a
+class Monad m => MonadError e m | m -> e where
+    throwError :: e -> m a
+instance MonadError e (Either e) where
+    throwError = Left
 }

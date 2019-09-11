@@ -240,7 +240,7 @@ Utilities that read the rest of a token.
 > lexReadString []           fn = fn "" []
 
 > lexError :: String -> String -> Int -> ParseResult a
-> lexError err = runP (lineP >>= \l -> fail (show l ++ ": " ++ err ++ "\n"))
+> lexError err = runP (lineP >>= \l -> failP (show l ++ ": " ++ err ++ "\n"))
 
 > lexNestedComment :: Int -> ([Char] -> Int -> ParseResult a) -> [Char] -> Int
 >                  -> ParseResult a

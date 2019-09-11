@@ -1,6 +1,9 @@
+{-# LANGUAGE CPP #-}
 module PrettyGrammar where
 
+#if MIN_VERSION_base(4,11,0)
 import Prelude hiding ((<>))
+#endif
 import AbsSyn
 
 render :: Doc -> String
