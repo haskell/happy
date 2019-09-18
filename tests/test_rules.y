@@ -1,5 +1,7 @@
 #ifndef QUALIFIEDPRELUDE
-#define QUALIFIEDPRELUDE Prelude
+#define QUALIFY(X) X
+#else
+#define QUALIFY(X) QUALIFIEDPRELUDE.X
 #endif
 
 {
@@ -8,8 +10,8 @@ import System.Exit
 
 }
 
-%monad { QUALIFIEDPRELUDE.Maybe } { (QUALIFIEDPRELUDE.>>=) } { QUALIFIEDPRELUDE.return }
-%tokentype { QUALIFIEDPRELUDE.Char }
+%monad { QUALIFY(Maybe) } { (QUALIFY(>>=)) } { QUALIFY(return) }
+%tokentype { QUALIFY(Char) }
 %token
   'a' { 'a' }
   'b' { 'b' }
@@ -30,15 +32,15 @@ many_rev1(p)
   | many_rev1(p) p  { $2 : $1 }
 
 many1(p)
-  : many_rev1(p)    { QUALIFIEDPRELUDE.reverse $1 }
+  : many_rev1(p)    { QUALIFY(reverse) $1 }
 
 many(p)
   : many1(p)        { $1 }
   |                 { [] }
 
 optional(p)
-  : p               { QUALIFIEDPRELUDE.Just $1 }
-  |                 { QUALIFIEDPRELUDE.Nothing }
+  : p               { QUALIFY(Just) $1 }
+  |                 { QUALIFY(Nothing) }
 
 sepR(p,q)
   : p q             { $2 }
@@ -60,25 +62,25 @@ endBy1(p,q)
   : many1 (sepL(p,q)) { $1 }
 
 {
-happyError _  = QUALIFIEDPRELUDE.Nothing
+happyError _  = QUALIFY(Nothing)
 
-tests         = [ test1 ""      QUALIFIEDPRELUDE.== QUALIFIEDPRELUDE.Just ""
-                , test1 "a"     QUALIFIEDPRELUDE.== QUALIFIEDPRELUDE.Just "a"
-                , test1 "ab"    QUALIFIEDPRELUDE.== QUALIFIEDPRELUDE.Nothing
-                , test1 "aba"   QUALIFIEDPRELUDE.== QUALIFIEDPRELUDE.Just "aa"
-                , test1 "abab"  QUALIFIEDPRELUDE.== QUALIFIEDPRELUDE.Nothing
+tests         = [ test1 ""      QUALIFY(==) QUALIFY(Just) ""
+                , test1 "a"     QUALIFY(==) QUALIFY(Just) "a"
+                , test1 "ab"    QUALIFY(==) QUALIFY(Nothing)
+                , test1 "aba"   QUALIFY(==) QUALIFY(Just) "aa"
+                , test1 "abab"  QUALIFY(==) QUALIFY(Nothing)
 
-                , test2 ""      QUALIFIEDPRELUDE.== QUALIFIEDPRELUDE.Just ""
-                , test2 "a"     QUALIFIEDPRELUDE.== QUALIFIEDPRELUDE.Nothing
-                , test2 "ab"    QUALIFIEDPRELUDE.== QUALIFIEDPRELUDE.Just "a"
-                , test2 "aba"   QUALIFIEDPRELUDE.== QUALIFIEDPRELUDE.Nothing
-                , test2 "abab"  QUALIFIEDPRELUDE.== QUALIFIEDPRELUDE.Just "aa"
+                , test2 ""      QUALIFY(==) QUALIFY(Just) ""
+                , test2 "a"     QUALIFY(==) QUALIFY(Nothing)
+                , test2 "ab"    QUALIFY(==) QUALIFY(Just) "a"
+                , test2 "aba"   QUALIFY(==) QUALIFY(Nothing)
+                , test2 "abab"  QUALIFY(==) QUALIFY(Just) "aa"
                 ]
 
-main        = do let failed = QUALIFIEDPRELUDE.filter (QUALIFIEDPRELUDE.not QUALIFIEDPRELUDE.. QUALIFIEDPRELUDE.snd) (QUALIFIEDPRELUDE.zip [0..] tests)
-                 when (QUALIFIEDPRELUDE.not (QUALIFIEDPRELUDE.null failed)) QUALIFIEDPRELUDE.$
-                   do QUALIFIEDPRELUDE.putStrLn ("Failed tests: " QUALIFIEDPRELUDE.++ QUALIFIEDPRELUDE.show (QUALIFIEDPRELUDE.map QUALIFIEDPRELUDE.fst failed))
+main        = do let failed = QUALIFY(filter) (QUALIFY(not) QUALIFY(.) QUALIFY(snd)) (QUALIFY(zip) [0..] tests)
+                 when (QUALIFY(not) (QUALIFY(null) failed)) QUALIFY($)
+                   do QUALIFY(putStrLn) ("Failed tests: " QUALIFY(++) QUALIFY(show) (QUALIFY(map) QUALIFY(fst) failed))
                       exitFailure
-                 QUALIFIEDPRELUDE.putStrLn "Tests passed."
+                 QUALIFY(putStrLn) "Tests passed."
 
 }

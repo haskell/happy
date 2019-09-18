@@ -1,5 +1,7 @@
 #ifndef QUALIFIEDPRELUDE
-#define QUALIFIEDPRELUDE Prelude
+#define QUALIFY(X) X
+#else
+#define QUALIFY(X) QUALIFIEDPRELUDE.X
 #endif
 
 {
@@ -19,7 +21,7 @@ import Data.List (isPrefixOf)
 %errorhandlertype explist
 %error { handleErrorExpList }
 
-%monad { ParseM } { (QUALIFIEDPRELUDE.>>=) } { QUALIFIEDPRELUDE.return }
+%monad { ParseM } { (QUALIFY(>>=)) } { QUALIFY(return) }
 
 %token
         'S'             { TokenSucc }
@@ -29,16 +31,16 @@ import Data.List (isPrefixOf)
 %%
 
 Exp         :       'Z'           { 0 }
-            |       'T' 'Z' Exp   { $3 QUALIFIEDPRELUDE.+ 1 }
-            |       'S' Exp       { $2 QUALIFIEDPRELUDE.+ 1 }
+            |       'T' 'Z' Exp   { $3 QUALIFY(+) 1 }
+            |       'S' Exp       { $2 QUALIFY(+) 1 }
 
 {
 
-type ParseM a = QUALIFIEDPRELUDE.Either ParseError a
+type ParseM a = QUALIFY(Either) ParseError a
 data ParseError
-        = ParseError (QUALIFIEDPRELUDE.Maybe (Token, [QUALIFIEDPRELUDE.String]))
-        | StringError QUALIFIEDPRELUDE.String
-    deriving (QUALIFIEDPRELUDE.Eq,QUALIFIEDPRELUDE.Show)
+        = ParseError (QUALIFY(Maybe) (Token, [QUALIFY(String])))
+        | StringError QUALIFY(String)
+    deriving (QUALIFY(Eq), QUALIFY(Show))
 instance Error ParseError where
     strMsg = StringError
 
@@ -46,41 +48,41 @@ data Token
         = TokenSucc
         | TokenZero
 	| TokenTest
-    deriving (QUALIFIEDPRELUDE.Eq,QUALIFIEDPRELUDE.Show)
+    deriving (QUALIFY(Eq), QUALIFY(Show))
 
-handleErrorExpList :: ([Token], [QUALIFIEDPRELUDE.String]) -> ParseM a
-handleErrorExpList ([], _) = throwError QUALIFIEDPRELUDE.$ ParseError QUALIFIEDPRELUDE.Nothing
-handleErrorExpList (ts, explist) = throwError QUALIFIEDPRELUDE.$ ParseError QUALIFIEDPRELUDE.$ QUALIFIEDPRELUDE.Just QUALIFIEDPRELUDE.$ (QUALIFIEDPRELUDE.head ts, explist)
+handleErrorExpList :: ([Token], [QUALIFY(String])) -> ParseM a
+handleErrorExpList ([], _) = throwError QUALIFY($) ParseError QUALIFY(Nothing)
+handleErrorExpList (ts, explist) = throwError QUALIFY($) ParseError QUALIFY($) QUALIFY(Just) QUALIFY($) (QUALIFY(head) ts, explist)
 
-lexer :: QUALIFIEDPRELUDE.String -> [Token]
+lexer :: QUALIFY(String) -> [Token]
 lexer [] = []
 lexer (c:cs)
     | isSpace c = lexer cs
-    | c QUALIFIEDPRELUDE.== 'S'  = TokenSucc:(lexer cs)
-    | c QUALIFIEDPRELUDE.== 'Z'  = TokenZero:(lexer cs)
-    | c QUALIFIEDPRELUDE.== 'T'  = TokenTest:(lexer cs)
-    | QUALIFIEDPRELUDE.otherwise = QUALIFIEDPRELUDE.error "lexer error"
+    | c QUALIFY(==) 'S'  = TokenSucc:(lexer cs)
+    | c QUALIFY(==) 'Z'  = TokenZero:(lexer cs)
+    | c QUALIFY(==) 'T'  = TokenTest:(lexer cs)
+    | QUALIFY(otherwise) = QUALIFY(error) "lexer error"
 
-main :: QUALIFIEDPRELUDE.IO ()
+main :: QUALIFY(IO) ()
 main = do
-  test "Z Z" QUALIFIEDPRELUDE.$ QUALIFIEDPRELUDE.Left (ParseError (QUALIFIEDPRELUDE.Just (TokenZero,[])))
-  test "T S" QUALIFIEDPRELUDE.$ QUALIFIEDPRELUDE.Left (ParseError (QUALIFIEDPRELUDE.Just (TokenSucc,["'Z'"])))
+  test "Z Z" QUALIFY($) QUALIFY(Left) (ParseError (QUALIFY(Just) (TokenZero,[])))
+  test "T S" QUALIFY($) QUALIFY(Left) (ParseError (QUALIFY(Just) (TokenSucc,["'Z'"])))
 
   where
     test inp exp = do
-      QUALIFIEDPRELUDE.putStrLn QUALIFIEDPRELUDE.$ "testing " QUALIFIEDPRELUDE.++ inp
+      QUALIFY(putStrLn) QUALIFY($) "testing " QUALIFY(++) inp
       let tokens = lexer inp
-      when (parseFoo tokens QUALIFIEDPRELUDE./= exp) QUALIFIEDPRELUDE.$ do
-        QUALIFIEDPRELUDE.print (parseFoo tokens)
+      when (parseFoo tokens QUALIFY(/=) exp) QUALIFY($) do
+        QUALIFY(print) (parseFoo tokens)
         exitWith (ExitFailure 1)
 
 ---
 class Error a where
     noMsg :: a
     noMsg = strMsg ""
-    strMsg :: QUALIFIEDPRELUDE.String -> a
-class QUALIFIEDPRELUDE.Monad m => MonadError e m | m -> e where
+    strMsg :: QUALIFY(String) -> a
+class QUALIFY(Monad) m => MonadError e m | m -> e where
     throwError :: e -> m a
-instance MonadError e (QUALIFIEDPRELUDE.Either e) where
-    throwError = QUALIFIEDPRELUDE.Left
+instance MonadError e (QUALIFY(Either) e) where
+    throwError = QUALIFY(Left)
 }

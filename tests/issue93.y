@@ -2,7 +2,9 @@
 -- This is an example of a grammar that has more than 2^15 entries in `happyTable` (39817).
 
 #ifndef QUALIFIEDPRELUDE
-#define QUALIFIEDPRELUDE Prelude
+#define QUALIFY(X) X
+#else
+#define QUALIFY(X) QUALIFIEDPRELUDE.X
 #endif
 
 {
@@ -226,58 +228,58 @@ import Data.Char
 
 %%
 
-ident :: { QUALIFIEDPRELUDE.Int }
+ident :: { QUALIFY(Int) }
   : ntIdent                                                                   { 0 }
   | union                                                                     { 1 }
   | default                                                                   { 2 }
   | catch                                                                     { 3 }
   | IDENT                                                                     { 4 }
 
-gt :: { QUALIFIEDPRELUDE.Int }
+gt :: { QUALIFY(Int) }
   : {- empty -}                                                               { 5 }
 
-some(p) :: { QUALIFIEDPRELUDE.Int }
+some(p) :: { QUALIFY(Int) }
   : some(p) p                                                                 { 6 }
   | p                                                                         { 7 }
 
-many(p) :: { QUALIFIEDPRELUDE.Int }
+many(p) :: { QUALIFY(Int) }
   : some(p)                                                                   { 8 }
   | {- empty -}                                                               { 9 }
 
-sep_by1(p,sep) :: { QUALIFIEDPRELUDE.Int }
+sep_by1(p,sep) :: { QUALIFY(Int) }
   : sep_by1(p,sep) sep p                                                      { 10 }
   | p                                                                         { 11 }
 
-sep_by(p,sep) :: { QUALIFIEDPRELUDE.Int }
+sep_by(p,sep) :: { QUALIFY(Int) }
   : sep_by1(p,sep)                                                            { 12 }
   | {- empty -}                                                               { 13 }
 
-sep_by1T(p,sep) :: { QUALIFIEDPRELUDE.Int }
+sep_by1T(p,sep) :: { QUALIFY(Int) }
   : sep_by1(p,sep) sep                                                        { 14 }
   | sep_by1(p,sep)                                                            { 15 }
 
-sep_byT(p,sep) :: { QUALIFIEDPRELUDE.Int }
+sep_byT(p,sep) :: { QUALIFY(Int) }
   : sep_by1T(p,sep)                                                           { 16 }
   | {- empty -}                                                               { 17 }
 
-source_file :: { QUALIFIEDPRELUDE.Int }
+source_file :: { QUALIFY(Int) }
   : inner_attrs many(mod_item)                                                { 18 }
   |             many(mod_item)                                                { 19 }
 
-outer_attribute :: { QUALIFIEDPRELUDE.Int }
+outer_attribute :: { QUALIFY(Int) }
   : '#' '[' mod_path token_stream ']'                                         { 20 }
   | outerDoc                                                                  { 21 }
 
-inner_attribute :: { QUALIFIEDPRELUDE.Int }
+inner_attribute :: { QUALIFY(Int) }
   : '#' '!' '[' mod_path token_stream ']'                                     { 22 }
   | '#!'    '[' mod_path token_stream ']'                                     { 23 }
   | innerDoc                                                                  { 24 }
 
-inner_attrs :: { QUALIFIEDPRELUDE.Int }
+inner_attrs :: { QUALIFY(Int) }
   : inner_attrs inner_attribute                                               { 25 }
   | inner_attribute                                                           { 26 }
 
-lit :: { QUALIFIEDPRELUDE.Int }
+lit :: { QUALIFY(Int) }
   : ntLit                                                                     { 27 }
   | byte                                                                      { 28 }
   | char                                                                      { 29 }
@@ -287,24 +289,24 @@ lit :: { QUALIFIEDPRELUDE.Int }
   | false                                                                     { 33 }
   | string                                                                    { 34 }
 
-string :: { QUALIFIEDPRELUDE.Int }
+string :: { QUALIFY(Int) }
   : str                                                                       { 35 }
   | rawStr                                                                    { 36 }
   | byteStr                                                                   { 37 }
   | rawByteStr                                                                { 38 }
 
-qual_path(segs) :: { QUALIFIEDPRELUDE.Int }
+qual_path(segs) :: { QUALIFY(Int) }
   : '<' qual_path_suf(segs)                                                   { 39 }
   | lt_ty_qual_path as ty_path '>' '::' segs                                  { 40 }
 
-qual_path_suf(segs) :: { QUALIFIEDPRELUDE.Int }
+qual_path_suf(segs) :: { QUALIFY(Int) }
   : ty '>' '::' segs                                                          { 41 }
   | ty as ty_path '>' '::' segs                                               { 42 }
 
-lt_ty_qual_path :: { QUALIFIEDPRELUDE.Int }
+lt_ty_qual_path :: { QUALIFY(Int) }
   : '<<' qual_path_suf(path_segments_without_colons)                          { 43 }
 
-generic_values :: { QUALIFIEDPRELUDE.Int }
+generic_values :: { QUALIFY(Int) }
   : '<' sep_by1(lifetime,',')  ',' sep_by1T(ty,',')            gt '>'         { 45 }
   | '<' sep_by1(lifetime,',')  ','       sep_by1T(binding,',') gt '>'         { 46 }
   | '<' sep_by1T(lifetime,',')                                 gt '>'         { 47 }
@@ -316,69 +318,69 @@ generic_values :: { QUALIFIEDPRELUDE.Int }
   | lt_ty_qual_path                  ',' sep_by1T(binding,',') gt '>'         { 54 }
   | lt_ty_qual_path                                            gt '>'         { 55 }
 
-binding :: { QUALIFIEDPRELUDE.Int }
+binding :: { QUALIFY(Int) }
   : ident '=' ty                                                              { 56 }
 
-ty_path :: { QUALIFIEDPRELUDE.Int }
+ty_path :: { QUALIFY(Int) }
   : ntPath                                                                    { 57 }
   | path_segments_without_colons                                              { 58 }
   | '::' path_segments_without_colons                                         { 59 }
 
-ty_qual_path :: { QUALIFIEDPRELUDE.Int }
+ty_qual_path :: { QUALIFY(Int) }
   : qual_path(path_segments_without_colons)                                   { 60 }
 
-path_segments_without_colons :: { QUALIFIEDPRELUDE.Int }
+path_segments_without_colons :: { QUALIFY(Int) }
   : sep_by1(path_segment_without_colons, '::') %prec SEG                      { 61 }
 
-path_segment_without_colons :: { QUALIFIEDPRELUDE.Int }
+path_segment_without_colons :: { QUALIFY(Int) }
   : self_or_ident path_parameter1                                             { 62 }
 
-path_parameter1 :: { QUALIFIEDPRELUDE.Int }
+path_parameter1 :: { QUALIFY(Int) }
   : generic_values                                                            { 63 }
   | '(' sep_byT(ty,',') ')'                                                   { 64 }
   | '(' sep_byT(ty,',') ')' '->' ty_no_plus                                   { 65 }
   | {- empty -}                  %prec IDENT                                  { 66 }
 
-expr_path :: { QUALIFIEDPRELUDE.Int }
+expr_path :: { QUALIFY(Int) }
   : ntPath                                                                    { 67 }
   | path_segments_with_colons                                                 { 68 }
   | '::' path_segments_with_colons                                            { 69 }
 
-expr_qual_path :: { QUALIFIEDPRELUDE.Int }
+expr_qual_path :: { QUALIFY(Int) }
   : qual_path(path_segments_with_colons)                                      { 70 }
 
-path_segments_with_colons :: { QUALIFIEDPRELUDE.Int }
+path_segments_with_colons :: { QUALIFY(Int) }
   : self_or_ident                                                             { 71 }
   | path_segments_with_colons '::' self_or_ident                              { 72 }
   | path_segments_with_colons '::' generic_values                             { 73 }
 
-mod_path :: { QUALIFIEDPRELUDE.Int }
+mod_path :: { QUALIFY(Int) }
   : ntPath                                                                    { 74 }
   | self_or_ident                                                             { 75 }
   | '::' self_or_ident                                                        { 76 }
   | mod_path '::' ident                                                       { 77 }
 
-lifetime :: { QUALIFIEDPRELUDE.Int }
+lifetime :: { QUALIFY(Int) }
   : LIFETIME                                                                  { 78 }
 
-trait_ref :: { QUALIFIEDPRELUDE.Int }
+trait_ref :: { QUALIFY(Int) }
   : ty_path                                                                   { 79 }
 
-ty :: { QUALIFIEDPRELUDE.Int }
+ty :: { QUALIFY(Int) }
   : ty_no_plus                                                                { 80 }
   | poly_trait_ref_mod_bound '+' sep_by1T(ty_param_bound_mod,'+')             { 81 }
 
-ty_no_plus :: { QUALIFIEDPRELUDE.Int }
+ty_no_plus :: { QUALIFY(Int) }
   : ntTy                                                                      { 82 }
   | no_for_ty                                                                 { 83 }
   | for_ty_no_plus                                                            { 84 }
 
-ty_prim :: { QUALIFIEDPRELUDE.Int }
+ty_prim :: { QUALIFY(Int) }
   : no_for_ty_prim                                                            { 85 }
   | for_ty_no_plus                                                            { 86 }
   | poly_trait_ref_mod_bound '+' sep_by1T(ty_param_bound_mod,'+')             { 87 }
 
-no_for_ty :: { QUALIFIEDPRELUDE.Int }
+no_for_ty :: { QUALIFY(Int) }
   : no_for_ty_prim                                                            { 88 }
   | '(' ')'                                                                   { 89 }
   | '(' ty ')'                                                                { 90 }
@@ -386,7 +388,7 @@ no_for_ty :: { QUALIFIEDPRELUDE.Int }
   | '(' ty ',' sep_by1T(ty,',') ')'                                           { 92 }
   | ty_qual_path                                                              { 93 }
 
-no_for_ty_prim :: { QUALIFIEDPRELUDE.Int }
+no_for_ty_prim :: { QUALIFY(Int) }
   : '_'                                                                       { 94 }
   | '!'                                                                       { 95 }
   | '[' ty ']'                                                                { 96 }
@@ -412,75 +414,75 @@ no_for_ty_prim :: { QUALIFIEDPRELUDE.Int }
   | '?' trait_ref                                                             { 116 }
   | '?' for_lts trait_ref                                                     { 117 }
 
-for_ty_no_plus :: { QUALIFIEDPRELUDE.Int }
+for_ty_no_plus :: { QUALIFY(Int) }
   : for_lts unsafe extern abi fn fn_decl(arg_general)                         { 118 }
   | for_lts unsafe fn fn_decl(arg_general)                                    { 119 }
   | for_lts extern abi fn fn_decl(arg_general)                                { 120 }
   | for_lts fn fn_decl(arg_general)                                           { 121 }
   | for_lts trait_ref                                                         { 122 }
 
-impl_ty :: { QUALIFIEDPRELUDE.Int }
+impl_ty :: { QUALIFY(Int) }
   : impl sep_by1(ty_param_bound_mod,'+') %prec IMPLTRAIT                      { 123 }
 
-lifetime_mut :: { QUALIFIEDPRELUDE.Int }
+lifetime_mut :: { QUALIFY(Int) }
   : lifetime mut                                                              { 124 }
   | lifetime                                                                  { 125 }
   |          mut                                                              { 126 }
   | {- empty -}                                                               { 127 }
 
-fn_decl(arg) :: { QUALIFIEDPRELUDE.Int }
+fn_decl(arg) :: { QUALIFY(Int) }
   : '(' sep_by1(arg,',') ',' '...' ')' ret_ty                                 { 128 }
   | '(' sep_byT(arg,',')           ')' ret_ty                                 { 129 }
 
-fn_decl_with_self_general :: { QUALIFIEDPRELUDE.Int }
+fn_decl_with_self_general :: { QUALIFY(Int) }
   : '(' arg_self_general ',' sep_byT(arg_general,',') ')' ret_ty              { 130 }
   | '(' arg_self_general                              ')' ret_ty              { 131 }
   | '('                                               ')' ret_ty              { 132 }
 
-fn_decl_with_self_named :: { QUALIFIEDPRELUDE.Int }
+fn_decl_with_self_named :: { QUALIFY(Int) }
   : '(' arg_self_named ',' sep_by1(arg_named,',') ',' ')' ret_ty              { 133 }
   | '(' arg_self_named ',' sep_by1(arg_named,',')     ')' ret_ty              { 134 }
   | '(' arg_self_named ','                            ')' ret_ty              { 135 }
   | '(' arg_self_named                                ')' ret_ty              { 136 }
   | fn_decl(arg_named)                                                        { 137 }
 
-ty_param_bound :: { QUALIFIEDPRELUDE.Int }
+ty_param_bound :: { QUALIFY(Int) }
   : lifetime                                                                  { 138 }
   | poly_trait_ref                                                            { 139 }
 
-poly_trait_ref_mod_bound :: { QUALIFIEDPRELUDE.Int }
+poly_trait_ref_mod_bound :: { QUALIFY(Int) }
   : poly_trait_ref                                                            { 140 }
   | '?' poly_trait_ref                                                        { 141 }
 
-ty_param_bound_mod :: { QUALIFIEDPRELUDE.Int }
+ty_param_bound_mod :: { QUALIFY(Int) }
   : ty_param_bound                                                            { 142 }
   | '?' poly_trait_ref                                                        { 143 }
 
-abi :: { QUALIFIEDPRELUDE.Int }
+abi :: { QUALIFY(Int) }
   : str                                                                       { 144 }
   | {- empty -}                                                               { 145 }
 
-ret_ty :: { QUALIFIEDPRELUDE.Int }
+ret_ty :: { QUALIFY(Int) }
   : '->' ty_no_plus                                                           { 146 }
   | '->' impl_ty                                                              { 147 }
   | {- empty -}                                                               { 148 }
 
-poly_trait_ref :: { QUALIFIEDPRELUDE.Int }
+poly_trait_ref :: { QUALIFY(Int) }
   :         trait_ref                                                         { 149 }
   | for_lts trait_ref                                                         { 150 }
 
-for_lts :: { QUALIFIEDPRELUDE.Int }
+for_lts :: { QUALIFY(Int) }
   : for '<' sep_byT(lifetime_def,',') '>'                                     { 151 }
 
-lifetime_def :: { QUALIFIEDPRELUDE.Int }
+lifetime_def :: { QUALIFY(Int) }
   : many(outer_attribute) lifetime ':' sep_by1T(lifetime,'+')                 { 152 }
   | many(outer_attribute) lifetime                                            { 153 }
 
-arg_named :: { QUALIFIEDPRELUDE.Int }
+arg_named :: { QUALIFY(Int) }
   : ntArg                                                                     { 154 }
   | pat ':' ty                                                                { 155 }
 
-arg_general :: { QUALIFIEDPRELUDE.Int }
+arg_general :: { QUALIFY(Int) }
   : ntArg                                                                     { 156 }
   |                ty                                                         { 157 }
   |      '_'   ':' ty                                                         { 158 }
@@ -491,13 +493,13 @@ arg_general :: { QUALIFIEDPRELUDE.Int }
   | '&&' '_'   ':' ty                                                         { 163 }
   | '&&' ident ':' ty                                                         { 164 }
 
-arg_self_general :: { QUALIFIEDPRELUDE.Int }
+arg_self_general :: { QUALIFY(Int) }
   : mut self                                                                  { 165 }
   |     self ':' ty                                                           { 166 }
   | mut self ':' ty                                                           { 167 }
   | arg_general                                                               { 168 }
 
-arg_self_named :: { QUALIFIEDPRELUDE.Int }
+arg_self_named :: { QUALIFY(Int) }
   :                  self                                                     { 169 }
   |              mut self                                                     { 170 }
   | '&'              self                                                     { 171 }
@@ -507,12 +509,12 @@ arg_self_named :: { QUALIFIEDPRELUDE.Int }
   |     self ':' ty                                                           { 175 }
   | mut self ':' ty                                                           { 176 }
 
-lambda_arg :: { QUALIFIEDPRELUDE.Int }
+lambda_arg :: { QUALIFY(Int) }
   : ntArg                                                                     { 177 }
   | pat ':' ty                                                                { 178 }
   | pat                                                                       { 179 }
 
-pat :: { QUALIFIEDPRELUDE.Int }
+pat :: { QUALIFY(Int) }
   : ntPat                                                                     { 180 }
   | '_'                                                                       { 181 }
   | '&' mut pat                                                               { 182 }
@@ -535,7 +537,7 @@ pat :: { QUALIFIEDPRELUDE.Int }
   | '[' pat_slice ']'                                                         { 199 }
   | '(' pat_tup ')'                                                           { 200 }
 
-pat_tup :: { QUALIFIEDPRELUDE.Int }
+pat_tup :: { QUALIFY(Int) }
   : sep_by1(pat,',') ',' '..' ',' sep_by1(pat,',')                            { 201 }
   | sep_by1(pat,',') ',' '..' ',' sep_by1(pat,',') ','                        { 202 }
   | sep_by1(pat,',') ',' '..'                                                 { 203 }
@@ -546,7 +548,7 @@ pat_tup :: { QUALIFIEDPRELUDE.Int }
   |                      '..'                                                 { 208 }
   | {- empty -}                                                               { 209 }
 
-pat_slice :: { QUALIFIEDPRELUDE.Int }
+pat_slice :: { QUALIFY(Int) }
   : sep_by1(pat,',') ',' '..' ',' sep_by1T(pat,',')                           { 210 }
   | sep_by1(pat,',') ',' '..'                                                 { 211 }
   | sep_by1(pat,',')     '..' ',' sep_by1T(pat,',')                           { 212 }
@@ -556,31 +558,31 @@ pat_slice :: { QUALIFIEDPRELUDE.Int }
   |                      '..'                                                 { 216 }
   | {- empty -}                                                               { 217 }
 
-lit_or_path :: { QUALIFIEDPRELUDE.Int }
+lit_or_path :: { QUALIFY(Int) }
   : expr_path                                                                 { 218 }
   | expr_qual_path                                                            { 219 }
   | '-' lit_expr                                                              { 220 }
   |     lit_expr                                                              { 221 }
 
-pat_fields :: { QUALIFIEDPRELUDE.Int }
+pat_fields :: { QUALIFY(Int) }
   : sep_byT(pat_field,',')                                                    { 222 }
   | sep_by1(pat_field,',') ',' '..'                                           { 223 }
 
-pat_field :: { QUALIFIEDPRELUDE.Int }
+pat_field :: { QUALIFY(Int) }
   :     binding_mode ident                                                    { 224 }
   | box binding_mode ident                                                    { 225 }
   |     binding_mode ident ':' pat                                            { 226 }
 
-binding_mode1 :: { QUALIFIEDPRELUDE.Int }
+binding_mode1 :: { QUALIFY(Int) }
   : ref mut                                                                   { 227 }
   | ref                                                                       { 228 }
   |     mut                                                                   { 229 }
 
-binding_mode :: { QUALIFIEDPRELUDE.Int }
+binding_mode :: { QUALIFY(Int) }
   : binding_mode1                                                             { 230 }
   | {- empty -}                                                               { 231 }
 
-gen_expression(lhs,rhs,rhs2) :: { QUALIFIEDPRELUDE.Int }
+gen_expression(lhs,rhs,rhs2) :: { QUALIFY(Int) }
   : ntExpr                                                                    { 232 }
   | lit_expr                                                                  { 233 }
   | '[' sep_byT(expr,',') ']'                                                 { 234 }
@@ -613,7 +615,7 @@ gen_expression(lhs,rhs,rhs2) :: { QUALIFIEDPRELUDE.Int }
   | move lambda_args rhs   %prec LAMBDA                                       { 261 }
   |      lambda_args rhs   %prec LAMBDA                                       { 262 }
 
-left_gen_expression(lhs,rhs,rhs2) :: { QUALIFIEDPRELUDE.Int }
+left_gen_expression(lhs,rhs,rhs2) :: { QUALIFY(Int) }
   : postfix_blockexpr(lhs)                                                    { 263 }
   | lhs '[' expr ']'                                                          { 264 }
   | lhs '(' sep_byT(expr,',') ')'                                             { 265 }
@@ -654,52 +656,52 @@ left_gen_expression(lhs,rhs,rhs2) :: { QUALIFIEDPRELUDE.Int }
   | lhs '&=' rhs                                                              { 300 }
   | lhs '%=' rhs                                                              { 301 }
 
-postfix_blockexpr(lhs) :: { QUALIFIEDPRELUDE.Int }
+postfix_blockexpr(lhs) :: { QUALIFY(Int) }
   : lhs '?'                                                                   { 302 }
   | lhs '.' ident       %prec FIELD                                           { 303 }
   | lhs '.' ident '(' sep_byT(expr,',') ')'                                   { 304 }
   | lhs '.' ident '::' '<' sep_byT(ty,',') '>' '(' sep_byT(expr,',') ')'      { 305 }
   | lhs '.' int                                                               { 306 }
 
-expr :: { QUALIFIEDPRELUDE.Int }
+expr :: { QUALIFY(Int) }
   : gen_expression(expr,expr,expr)                                            { 307 }
   | paren_expr                                                                { 308 }
   | struct_expr                                                               { 309 }
   | block_expr                                                                { 310 }
   | lambda_expr_block                                                         { 311 }
 
-nostruct_expr :: { QUALIFIEDPRELUDE.Int }
+nostruct_expr :: { QUALIFY(Int) }
   : gen_expression(nostruct_expr,nostruct_expr,nonstructblock_expr)           { 312 }
   | paren_expr                                                                { 313 }
   | block_expr                                                                { 314 }
 
-nonstructblock_expr :: { QUALIFIEDPRELUDE.Int }
+nonstructblock_expr :: { QUALIFY(Int) }
   : gen_expression(nonstructblock_expr,nostruct_expr,nonstructblock_expr)     { 315 }
   | paren_expr                                                                { 316 }
   | block_like_expr                                                           { 317 }
   | unsafe inner_attrs_block                                                  { 318 }
 
-nonblock_expr :: { QUALIFIEDPRELUDE.Int }
+nonblock_expr :: { QUALIFY(Int) }
   : gen_expression(nonblock_expr,expr,expr)                                   { 319 }
   | paren_expr                                                                { 320 }
   | struct_expr                                                               { 321 }
   | lambda_expr_block                                                         { 322 }
 
-blockpostfix_expr :: { QUALIFIEDPRELUDE.Int }
+blockpostfix_expr :: { QUALIFY(Int) }
   : postfix_blockexpr(block_like_expr)                                        { 323 }
   | postfix_blockexpr(vis_safety_block)                                       { 324 }
   | left_gen_expression(blockpostfix_expr,expr,expr)                          { 325 }
 
-lit_expr :: { QUALIFIEDPRELUDE.Int }
+lit_expr :: { QUALIFY(Int) }
   : lit                                                                       { 326 }
 
-block_expr :: { QUALIFIEDPRELUDE.Int }
+block_expr :: { QUALIFY(Int) }
   : block_like_expr                                                           { 327 }
   | inner_attrs_block                                                         { 328 }
   | unsafe inner_attrs_block                                                  { 329 }
 
 
-block_like_expr :: { QUALIFIEDPRELUDE.Int }
+block_like_expr :: { QUALIFY(Int) }
   : if_expr                                                                   { 330 }
   |              loop                            inner_attrs_block            { 331 }
   | lifetime ':' loop                            inner_attrs_block            { 332 }
@@ -716,30 +718,30 @@ block_like_expr :: { QUALIFIEDPRELUDE.Int }
   | expr_path '!' '{' token_stream '}'                                        { 343 }
   | do catch inner_attrs_block                                                { 344 }
 
-if_expr :: { QUALIFIEDPRELUDE.Int }
+if_expr :: { QUALIFY(Int) }
   : if             nostruct_expr block else_expr                              { 345 }
   | if let pat '=' nostruct_expr block else_expr                              { 346 }
 
-else_expr :: { QUALIFIEDPRELUDE.Int }
+else_expr :: { QUALIFY(Int) }
   : else block                                                                { 347 }
   | else if_expr                                                              { 348 }
   | {- empty -}                                                               { 349 }
 
-arms :: { QUALIFIEDPRELUDE.Int }
+arms :: { QUALIFY(Int) }
   : ntArm                                                                     { 350 }
   | ntArm arms                                                                { 351 }
   | many(outer_attribute) sep_by1(pat,'|') arm_guard '=>' expr_arms           { 352 }
 
-arm_guard :: { QUALIFIEDPRELUDE.Int }
+arm_guard :: { QUALIFY(Int) }
   : {- empty -}                                                               { 353 }
   | if expr                                                                   { 354 }
 
-comma_arms :: { QUALIFIEDPRELUDE.Int }
+comma_arms :: { QUALIFY(Int) }
   : {- empty -}                                                               { 355 }
   | ','                                                                       { 356 }
   | ',' arms                                                                  { 357 }
 
-expr_arms :: { QUALIFIEDPRELUDE.Int }
+expr_arms :: { QUALIFY(Int) }
   : nonblock_expr                           comma_arms                        { 358 }
   | blockpostfix_expr                       comma_arms                        { 359 }
   | vis_safety_block                        comma_arms                        { 360 }
@@ -747,7 +749,7 @@ expr_arms :: { QUALIFIEDPRELUDE.Int }
   | block_like_expr                         comma_arms                        { 362 }
   | block_like_expr                               arms                        { 363 }
 
-paren_expr :: { QUALIFIEDPRELUDE.Int }
+paren_expr :: { QUALIFY(Int) }
   : '(' ')'                                                                   { 364 }
   | '(' inner_attrs ')'                                                       { 365 }
   | '('             expr ')'                                                  { 366 }
@@ -757,15 +759,15 @@ paren_expr :: { QUALIFIEDPRELUDE.Int }
   | '('             expr ',' sep_by1T(expr,',') ')'                           { 370 }
   | '(' inner_attrs expr ',' sep_by1T(expr,',') ')'                           { 371 }
 
-lambda_expr_block :: { QUALIFIEDPRELUDE.Int }
+lambda_expr_block :: { QUALIFY(Int) }
   : move lambda_args '->' ty_no_plus block                                    { 372 }
   |      lambda_args '->' ty_no_plus block                                    { 373 }
 
-lambda_args :: { QUALIFIEDPRELUDE.Int }
+lambda_args :: { QUALIFY(Int) }
   : '||'                                                                      { 374 }
   | '|' sep_byT(lambda_arg,',') '|'                                           { 375 }
 
-struct_expr :: { QUALIFIEDPRELUDE.Int }
+struct_expr :: { QUALIFY(Int) }
   : expr_path '{'                                    '..' expr '}'            { 376 }
   | expr_path '{' inner_attrs                        '..' expr '}'            { 377 }
   | expr_path '{'             sep_by1(field,',') ',' '..' expr '}'            { 378 }
@@ -773,21 +775,21 @@ struct_expr :: { QUALIFIEDPRELUDE.Int }
   | expr_path '{'             sep_byT(field,',')               '}'            { 380 }
   | expr_path '{' inner_attrs sep_byT(field,',')               '}'            { 381 }
 
-field :: { QUALIFIEDPRELUDE.Int }
+field :: { QUALIFY(Int) }
   : ident ':' expr                                                            { 382 }
   | ident                                                                     { 383 }
 
-vis_safety_block :: { QUALIFIEDPRELUDE.Int }
+vis_safety_block :: { QUALIFY(Int) }
   : pub_or_inherited safety inner_attrs_block                                 { 384 }
 
-vis_union_nonblock_expr :: { QUALIFIEDPRELUDE.Int }
+vis_union_nonblock_expr :: { QUALIFY(Int) }
   : union_expr                                                                { 385 }
   | left_gen_expression(vis_union_nonblock_expr, expr, expr)                  { 386 }
 
-union_expr :: { QUALIFIEDPRELUDE.Int }
+union_expr :: { QUALIFY(Int) }
   : pub_or_inherited union                                                    { 387 }
 
-stmt :: { QUALIFIEDPRELUDE.Int }
+stmt :: { QUALIFY(Int) }
   : ntStmt                                                                    { 388 }
   | many(outer_attribute) let pat ':' ty initializer ';'                      { 389 }
   | many(outer_attribute) let pat        initializer ';'                      { 390 }
@@ -803,35 +805,35 @@ stmt :: { QUALIFIEDPRELUDE.Int }
   | many(outer_attribute) expr_path '!' ident '(' token_stream ')' ';'        { 400 }
   | many(outer_attribute) expr_path '!' ident '{' token_stream '}'            { 401 }
 
-pub_or_inherited :: { QUALIFIEDPRELUDE.Int }
+pub_or_inherited :: { QUALIFY(Int) }
   : pub                                          %prec VIS                    { 402 }
   | {- empty -}                                  %prec VIS                    { 403 }
 
-stmtOrSemi :: { QUALIFIEDPRELUDE.Int }
+stmtOrSemi :: { QUALIFY(Int) }
   : ';'                                                                       { 404 }
   | stmt                                                                      { 405 }
 
-stmts_possibly_no_semi :: { QUALIFIEDPRELUDE.Int }
+stmts_possibly_no_semi :: { QUALIFY(Int) }
   : stmtOrSemi stmts_possibly_no_semi                                         { 406 }
   | stmtOrSemi                                                                { 407 }
   | many(outer_attribute) nonblock_expr                                       { 408 }
   | many(outer_attribute) blockpostfix_expr                                   { 409 }
 
-initializer :: { QUALIFIEDPRELUDE.Int }
+initializer :: { QUALIFY(Int) }
   : '=' expr                                                                  { 410 }
   | {- empty -}                                                               { 411 }
 
-block :: { QUALIFIEDPRELUDE.Int }
+block :: { QUALIFY(Int) }
   : ntBlock                                                                   { 412 }
   | '{' '}'                                                                   { 413 }
   | '{' stmts_possibly_no_semi '}'                                            { 414 }
 
-inner_attrs_block :: { QUALIFIEDPRELUDE.Int }
+inner_attrs_block :: { QUALIFY(Int) }
   : block                                                                     { 415 }
   | '{' inner_attrs '}'                                                       { 416 }
   | '{' inner_attrs stmts_possibly_no_semi '}'                                { 417 }
 
-gen_item(vis) :: { QUALIFIEDPRELUDE.Int }
+gen_item(vis) :: { QUALIFY(Int) }
   : many(outer_attribute) vis static     ident ':' ty '=' expr ';'                                                    { 418 }
   | many(outer_attribute) vis static mut ident ':' ty '=' expr ';'                                                    { 419 }
   | many(outer_attribute) vis const ident ':' ty '=' expr ';'                                                         { 420 }
@@ -861,7 +863,7 @@ gen_item(vis) :: { QUALIFIEDPRELUDE.Int }
   | many(outer_attribute) vis default safety impl generics     trait_ref for ty where_clause '{' impl_items '}'       { 445 }
   | many(outer_attribute) vis safety impl generics             trait_ref for '..'            '{'            '}'       { 446 }
 
-mod_item :: { QUALIFIEDPRELUDE.Int }
+mod_item :: { QUALIFY(Int) }
   : ntItem                                                                    { 447 }
   | gen_item(vis)                                                             { 448 }
   | many(outer_attribute) expr_path '!' ident '[' token_stream ']' ';'        { 449 }
@@ -871,14 +873,14 @@ mod_item :: { QUALIFIEDPRELUDE.Int }
   | many(outer_attribute) expr_path '!' ident '{' token_stream '}'            { 453 }
   | many(outer_attribute) expr_path '!'       '{' token_stream '}'            { 454 }
 
-foreign_item :: { QUALIFIEDPRELUDE.Int }
+foreign_item :: { QUALIFY(Int) }
   : many(outer_attribute) vis static     ident ':' ty ';'                     { 455 }
   | many(outer_attribute) vis static mut ident ':' ty ';'                     { 456 }
   | many(outer_attribute) vis fn ident generics fn_decl(arg_named) where_clause ';' { 457 }
 
 
 
-generics :: { QUALIFIEDPRELUDE.Int }
+generics :: { QUALIFY(Int) }
   : ntGenerics                                                                { 458 }
   | '<' sep_by1(lifetime_def,',') ',' sep_by1T(ty_param,',') gt '>'           { 459 }
   | '<' sep_by1T(lifetime_def,',')                           gt '>'           { 460 }
@@ -886,35 +888,35 @@ generics :: { QUALIFIEDPRELUDE.Int }
   | '<'                                                      gt '>'           { 462 }
   | {- empty -}                                                               { 463 }
 
-ty_param :: { QUALIFIEDPRELUDE.Int }
+ty_param :: { QUALIFY(Int) }
   : many(outer_attribute) ident                                               { 464 }
   | many(outer_attribute) ident ':' sep_by1T(ty_param_bound_mod,'+')          { 465 }
   | many(outer_attribute) ident                                      '=' ty   { 466 }
   | many(outer_attribute) ident ':' sep_by1T(ty_param_bound_mod,'+') '=' ty   { 467 }
 
-struct_decl_args :: { QUALIFIEDPRELUDE.Int }
+struct_decl_args :: { QUALIFY(Int) }
   : where_clause ';'                                                          { 468 }
   | where_clause '{' sep_byT(struct_decl_field,',') '}'                       { 469 }
   | '(' sep_byT(tuple_decl_field,',') ')' where_clause ';'                    { 470 }
 
-struct_decl_field :: { QUALIFIEDPRELUDE.Int }
+struct_decl_field :: { QUALIFY(Int) }
   : many(outer_attribute) vis ident ':' ty                                    { 471 }
 
-tuple_decl_field :: { QUALIFIEDPRELUDE.Int }
+tuple_decl_field :: { QUALIFY(Int) }
   : many(outer_attribute) vis ty                                              { 472 }
 
-enum_def :: { QUALIFIEDPRELUDE.Int }
+enum_def :: { QUALIFY(Int) }
   : many(outer_attribute) ident '{' sep_byT(struct_decl_field,',') '}'        { 473 }
   | many(outer_attribute) ident '(' sep_byT(tuple_decl_field,',')  ')'        { 474 }
   | many(outer_attribute) ident initializer                                   { 475 }
 
-where_clause :: { QUALIFIEDPRELUDE.Int }
+where_clause :: { QUALIFY(Int) }
   : {- empty -}                                                               { 476 }
   | ntWhereClause                                                             { 477 }
   | where sep_by(where_predicate,',')      %prec WHERE                        { 478 }
   | where sep_by1(where_predicate,',') ',' %prec WHERE                        { 479 }
 
-where_predicate :: { QUALIFIEDPRELUDE.Int }
+where_predicate :: { QUALIFY(Int) }
   : lifetime                                                                  { 480 }
   | lifetime ':' sep_by1T(lifetime,'+')                                       { 481 }
   | no_for_ty                                     %prec EQ                    { 482 }
@@ -923,16 +925,16 @@ where_predicate :: { QUALIFIEDPRELUDE.Int }
   | for_lts no_for_ty                                                         { 485 }
   | for_lts no_for_ty ':' sep_by1T(ty_param_bound_mod,'+')                    { 486 }
 
-impl_items :: { QUALIFIEDPRELUDE.Int }
+impl_items :: { QUALIFY(Int) }
   :             many(impl_item)                                               { 487 }
   | inner_attrs many(impl_item)                                               { 488 }
 
-impl_item :: { QUALIFIEDPRELUDE.Int }
+impl_item :: { QUALIFY(Int) }
   : many(outer_attribute) vis def type ident '=' ty ';'                       { 489 }
   | many(outer_attribute) vis def const ident ':' ty '=' expr ';'             { 490 }
   | many(outer_attribute)     def mod_mac                                     { 491 }
 
-trait_item :: { QUALIFIEDPRELUDE.Int }
+trait_item :: { QUALIFY(Int) }
   : ntTraitItem                                                               { 494 }
   | many(outer_attribute) const ident ':' ty initializer ';'                  { 495 }
   | many(outer_attribute) mod_mac                                             { 496 }
@@ -940,15 +942,15 @@ trait_item :: { QUALIFIEDPRELUDE.Int }
   | many(outer_attribute) type ident '=' ty ';'                               { 498 }
   | many(outer_attribute) type ident ':' sep_by1T(ty_param_bound_mod,'+') ';' { 499 }
 
-safety :: { QUALIFIEDPRELUDE.Int }
+safety :: { QUALIFY(Int) }
   : {- empty -}                                                               { 503 }
   | unsafe                                                                    { 504 }
 
-ext_abi :: { QUALIFIEDPRELUDE.Int }
+ext_abi :: { QUALIFY(Int) }
   : {- empty -}                                                               { 505 }
   | extern abi                                                                { 506 }
 
-vis :: { QUALIFIEDPRELUDE.Int }
+vis :: { QUALIFY(Int) }
   : {- empty -}   %prec VIS                                                   { 507 }
   | pub           %prec VIS                                                   { 508 }
   | pub '(' crate ')'                                                         { 509 }
@@ -956,11 +958,11 @@ vis :: { QUALIFIEDPRELUDE.Int }
   | pub '(' super ')'                                                         { 511 }
   | pub '(' self ')'                                                          { 512 }
 
-def :: { QUALIFIEDPRELUDE.Int }
+def :: { QUALIFY(Int) }
   : {- empty -}  %prec DEF                                                    { 513 }
   | default                                                                   { 514 }
 
-view_path :: { QUALIFIEDPRELUDE.Int }
+view_path :: { QUALIFY(Int) }
   : '::' sep_by1(self_or_ident,'::')                                          { 515 }
   | '::' sep_by1(self_or_ident,'::') as ident                                 { 516 }
   | '::'                                  '*'                                 { 517 }
@@ -974,42 +976,42 @@ view_path :: { QUALIFIEDPRELUDE.Int }
   |      sep_by1(self_or_ident,'::') '::' '{' sep_byT(plist,',') '}'          { 525 }
   |                                       '{' sep_byT(plist,',') '}'          { 526 }
 
-self_or_ident :: { QUALIFIEDPRELUDE.Int }
+self_or_ident :: { QUALIFY(Int) }
   : ident                                                                     { 527 }
   | self                                                                      { 528 }
   | Self                                                                      { 529 }
   | super                                                                     { 530 }
 
-plist :: { QUALIFIEDPRELUDE.Int }
+plist :: { QUALIFY(Int) }
   : self_or_ident                                                             { 531 }
   | self_or_ident as ident                                                    { 532 }
 
-expr_mac :: { QUALIFIEDPRELUDE.Int }
+expr_mac :: { QUALIFY(Int) }
   : expr_path '!' '[' token_stream ']'                                        { 533 }
   | expr_path '!' '(' token_stream ')'                                        { 534 }
 
-ty_mac :: { QUALIFIEDPRELUDE.Int }
+ty_mac :: { QUALIFY(Int) }
   : ty_path '!' '[' token_stream ']'                                          { 535 }
   | ty_path '!' '{' token_stream '}'                                          { 536 }
   | ty_path '!' '(' token_stream ')'                                          { 537 }
 
-mod_mac :: { QUALIFIEDPRELUDE.Int }
+mod_mac :: { QUALIFY(Int) }
   : mod_path '!' '[' token_stream ']' ';'                                     { 538 }
   | mod_path '!' '{' token_stream '}'                                         { 539 }
   | mod_path '!' '(' token_stream ')' ';'                                     { 540 }
 
-token_stream :: { QUALIFIEDPRELUDE.Int }
+token_stream :: { QUALIFY(Int) }
   : {- empty -}                                                               { 541 }
   | some(token_tree)                                                          { 542 }
 
-token_tree :: { QUALIFIEDPRELUDE.Int }
+token_tree :: { QUALIFY(Int) }
   : ntTT                                                                      { 543 }
   | '(' token_stream ')'                                                      { 544 }
   | '{' token_stream '}'                                                      { 545 }
   | '[' token_stream ']'                                                      { 546 }
   | token                                                                     { 547 }
 
-token :: { QUALIFIEDPRELUDE.Int }
+token :: { QUALIFY(Int) }
   : '='                                                                       { 548 }
   | '<'                                                                       { 549 }
   | '>'                                                                       { 550 }
@@ -1125,34 +1127,34 @@ token :: { QUALIFIEDPRELUDE.Int }
   | '_'                                                                       { 661 }
   | LIFETIME                                                                  { 662 }
 
-export_attribute :: { QUALIFIEDPRELUDE.Int }
+export_attribute :: { QUALIFY(Int) }
   : inner_attribute                                                           { 663 }
   | outer_attribute                                                           { 664 }
 
-export_block :: { QUALIFIEDPRELUDE.Int }
+export_block :: { QUALIFY(Int) }
   : ntBlock                                                                   { 665 }
   | safety '{' '}'                                                            { 666 }
   | safety '{' stmts_possibly_no_semi '}'                                     { 667 }
 
-export_ty :: { QUALIFIEDPRELUDE.Int }
+export_ty :: { QUALIFY(Int) }
   : ty                                                                        { 668 }
   | impl_ty                                                                   { 669 }
 
 
 {
 
-type P a = QUALIFIEDPRELUDE.String -> QUALIFIEDPRELUDE.Either QUALIFIEDPRELUDE.String (a, QUALIFIEDPRELUDE.String)
+type P a = QUALIFY(String) -> QUALIFY(Either) QUALIFY(String) (a, QUALIFY(String))
 
 bindP :: P a -> (a -> P b) -> P b
 bindP p f s = case p s of
-                QUALIFIEDPRELUDE.Left m -> QUALIFIEDPRELUDE.Left m
-                QUALIFIEDPRELUDE.Right (x,s') -> f x s'
+                QUALIFY(Left) m -> QUALIFY(Left) m
+                QUALIFY(Right) (x,s') -> f x s'
 
 returnP :: a -> P a
-returnP x s = QUALIFIEDPRELUDE.Right (x,s)
+returnP x s = QUALIFY(Right) (x,s)
 
-parseError :: QUALIFIEDPRELUDE.Show b => b -> P a
-parseError b _ = QUALIFIEDPRELUDE.Left ("Syntax error: the symbol `" QUALIFIEDPRELUDE.++ QUALIFIEDPRELUDE.show b QUALIFIEDPRELUDE.++ "' does not fit here")
+parseError :: QUALIFY(Show) b => b -> P a
+parseError b _ = QUALIFY(Left) ("Syntax error: the symbol `" QUALIFY(++) QUALIFY(show) b QUALIFY(++) "' does not fit here")
 
 
 data Token
@@ -1207,46 +1209,46 @@ data Token
   | CloseParen
   | CloseBracket
   | CloseBrace
-  | IdentTok QUALIFIEDPRELUDE.String
+  | IdentTok QUALIFY(String)
   | Underscore
-  | LifetimeTok QUALIFIEDPRELUDE.String
+  | LifetimeTok QUALIFY(String)
   | Space
   | InnerDoc
   | OuterDoc
   | Shebang
   | Eof
-  | ByteTok QUALIFIEDPRELUDE.String
-  | CharTok QUALIFIEDPRELUDE.String
-  | IntegerTok QUALIFIEDPRELUDE.String
-  | FloatTok QUALIFIEDPRELUDE.String
-  | StrTok QUALIFIEDPRELUDE.String
-  | StrRawTok QUALIFIEDPRELUDE.String
-  | ByteStrTok QUALIFIEDPRELUDE.String
-  | ByteStrRawTok QUALIFIEDPRELUDE.String
-  | Interpolated QUALIFIEDPRELUDE.Int
-  deriving QUALIFIEDPRELUDE.Show
+  | ByteTok QUALIFY(String)
+  | CharTok QUALIFY(String)
+  | IntegerTok QUALIFY(String)
+  | FloatTok QUALIFY(String)
+  | StrTok QUALIFY(String)
+  | StrRawTok QUALIFY(String)
+  | ByteStrTok QUALIFY(String)
+  | ByteStrRawTok QUALIFY(String)
+  | Interpolated QUALIFY(Int)
+  deriving QUALIFY(Show)
 
 
 -- This is an intentionally simplfied tokenizer
 lexNonSpace :: P Token
-lexNonSpace "" = QUALIFIEDPRELUDE.Right (Eof, "")
-lexNonSpace ('.':cs) = QUALIFIEDPRELUDE.Right (Dot, cs)
-lexNonSpace ('+':cs) = QUALIFIEDPRELUDE.Right (Plus, cs)
-lexNonSpace (';':cs) = QUALIFIEDPRELUDE.Right (Semicolon, cs)
-lexNonSpace (',':cs) = QUALIFIEDPRELUDE.Right (Comma, cs)
-lexNonSpace ('=':cs) = QUALIFIEDPRELUDE.Right (Equal, cs)
-lexNonSpace ('{':cs) = QUALIFIEDPRELUDE.Right (OpenBrace, cs)
-lexNonSpace ('}':cs) = QUALIFIEDPRELUDE.Right (CloseBrace, cs)
-lexNonSpace ('(':cs) = QUALIFIEDPRELUDE.Right (OpenParen, cs)
-lexNonSpace (')':cs) = QUALIFIEDPRELUDE.Right (CloseParen, cs)
+lexNonSpace "" = QUALIFY(Right) (Eof, "")
+lexNonSpace ('.':cs) = QUALIFY(Right) (Dot, cs)
+lexNonSpace ('+':cs) = QUALIFY(Right) (Plus, cs)
+lexNonSpace (';':cs) = QUALIFY(Right) (Semicolon, cs)
+lexNonSpace (',':cs) = QUALIFY(Right) (Comma, cs)
+lexNonSpace ('=':cs) = QUALIFY(Right) (Equal, cs)
+lexNonSpace ('{':cs) = QUALIFY(Right) (OpenBrace, cs)
+lexNonSpace ('}':cs) = QUALIFY(Right) (CloseBrace, cs)
+lexNonSpace ('(':cs) = QUALIFY(Right) (OpenParen, cs)
+lexNonSpace (')':cs) = QUALIFY(Right) (CloseParen, cs)
 lexNonSpace (c:cs)
   | isSpace c = lexNonSpace cs
-  | isNumber c = let (tok,cs'') = QUALIFIEDPRELUDE.span isNumber (c:cs) in QUALIFIEDPRELUDE.Right (IntegerTok tok, cs'')
-  | isAlpha c = let (tok,cs'') = QUALIFIEDPRELUDE.span isAlphaNum (c:cs) in QUALIFIEDPRELUDE.Right (IdentTok tok, cs'')
-  | QUALIFIEDPRELUDE.otherwise = QUALIFIEDPRELUDE.Left ("Unexpected character: `" QUALIFIEDPRELUDE.++ [c] QUALIFIEDPRELUDE.++ "'")
+  | isNumber c = let (tok,cs'') = QUALIFY(span) isNumber (c:cs) in QUALIFY(Right) (IntegerTok tok, cs'')
+  | isAlpha c = let (tok,cs'') = QUALIFY(span) isAlphaNum (c:cs) in QUALIFY(Right) (IdentTok tok, cs'')
+  | QUALIFY(otherwise) = QUALIFY(Left) ("Unexpected character: `" QUALIFY(++) [c] QUALIFY(++) "'")
 
 
 main = case parseStmt "union.1 + 2;" of
-         QUALIFIEDPRELUDE.Right (394, "") -> QUALIFIEDPRELUDE.pure ()
+         QUALIFY(Right) (394, "") -> QUALIFY(pure) ()
          _ -> exitWith (ExitFailure 1)
 }

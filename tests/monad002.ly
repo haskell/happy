@@ -2,7 +2,9 @@
 Test for monadic Happy Parsers, Simon Marlow 1996.
 
 #ifndef QUALIFIEDPRELUDE
-#define QUALIFIEDPRELUDE Prelude
+#define QUALIFY(X) X
+#else
+#define QUALIFY(X) QUALIFIEDPRELUDE.X
 #endif
 
 > {
@@ -65,9 +67,9 @@ The monad serves three purposes:
 
 > data ParseResult a
 >	= ParseOk a
->	| ParseFail QUALIFIEDPRELUDE.String
+>	| ParseFail QUALIFY(String)
 
-> type P a = QUALIFIEDPRELUDE.String -> QUALIFIEDPRELUDE.Int -> ParseResult a
+> type P a = QUALIFY(String) -> QUALIFY(Int) -> ParseResult a
 
 > thenP :: P a -> (a -> P b) -> P b
 > m `thenP` k = \s l ->
@@ -82,18 +84,18 @@ The monad serves three purposes:
 
 Now we declare the datastructure that we are parsing.
 
-> data Exp  = Let QUALIFIEDPRELUDE.Int QUALIFIEDPRELUDE.String Exp Exp | Exp1 Exp1
+> data Exp  = Let QUALIFY(Int) QUALIFY(String) Exp Exp | Exp1 Exp1
 > data Exp1 = Plus Exp1 Term | Minus Exp1 Term | Term Term
 > data Term = Times Term Factor | Div Term Factor | Factor Factor
-> data Factor = Int QUALIFIEDPRELUDE.Int | Var QUALIFIEDPRELUDE.String | Brack Exp
+> data Factor = Int QUALIFY(Int) | Var QUALIFY(String) | Brack Exp
 
 The datastructure for the tokens...
 
 > data Token
 >	= TokenLet
 >	| TokenIn
->	| TokenInt QUALIFIEDPRELUDE.Int
->	| TokenVar QUALIFIEDPRELUDE.String
+>	| TokenInt QUALIFY(Int)
+>	| TokenVar QUALIFY(String)
 >	| TokenEq
 >	| TokenPlus
 >	| TokenMinus
@@ -108,7 +110,7 @@ The datastructure for the tokens...
 > -- lexer :: (Token -> Parse) -> Parse
 > lexer cont s = case s of
 > 	[] -> cont TokenEOF []
->  	('\n':cs) -> \line -> lexer cont cs (line QUALIFIEDPRELUDE.+ 1)
+>  	('\n':cs) -> \line -> lexer cont cs (line QUALIFY(+) 1)
 > 	(c:cs)
 >               | isSpace c -> lexer cont cs
 >               | isAlpha c -> lexVar (c:cs)
@@ -121,18 +123,18 @@ The datastructure for the tokens...
 > 	('(':cs) -> cont TokenOB cs
 > 	(')':cs) -> cont TokenCB cs
 >  where
-> 	lexNum cs = cont (TokenInt (QUALIFIEDPRELUDE.read num)) rest
-> 		where (num,rest) = QUALIFIEDPRELUDE.span isDigit cs
+> 	lexNum cs = cont (TokenInt (QUALIFY(read) num)) rest
+> 		where (num,rest) = QUALIFY(span) isDigit cs
 > 	lexVar cs =
->    	    case QUALIFIEDPRELUDE.span isAlpha cs of
+>    	    case QUALIFY(span) isAlpha cs of
 > 		("let",rest) -> cont TokenLet rest
 > 		("in",rest)  -> cont TokenIn rest
 > 		(var,rest)   -> cont (TokenVar var) rest
 
-> runCalc :: QUALIFIEDPRELUDE.String -> Exp
+> runCalc :: QUALIFY(String) -> Exp
 > runCalc s = case calc s 1 of
 >		ParseOk e -> e
->		ParseFail s -> QUALIFIEDPRELUDE.error s
+>		ParseFail s -> QUALIFY(error) s
 
 -----------------------------------------------------------------------------
 The following functions should be defined for all parsers.
@@ -146,8 +148,8 @@ The next function is called when a parse error is detected.  It has
 the same type as the top-level parse function.
 
 > -- happyError :: Parse
-> happyError = \s i -> QUALIFIEDPRELUDE.error (
->	"Parse error in line " QUALIFIEDPRELUDE.++ QUALIFIEDPRELUDE.show (i::QUALIFIEDPRELUDE.Int) QUALIFIEDPRELUDE.++ "\n")
+> happyError = \s i -> QUALIFY(error) (
+>	"Parse error in line " QUALIFY(++) QUALIFY(show) (i::QUALIFY(Int)) QUALIFY(++) "\n")
 
 -----------------------------------------------------------------------------
 
@@ -160,7 +162,7 @@ Here we test our parser.
 >	case runCalc "1 + 2 * 3" of {
 >	(Exp1 (Plus (Term (Factor (Int 1))) (Times (Factor (Int 2)) (Int 3)))) ->
 >	case runCalc "let x = 2 in x * (x - 2)" of {
->	(Let 1 "x" (Exp1 (Term (Factor (Int 2)))) (Exp1 (Term (Times (Factor (Var "x")) (Brack (Exp1 (Minus (Term (Factor (Var "x"))) (Factor (Int 2))))))))) -> QUALIFIEDPRELUDE.print "Test works\n";
+>	(Let 1 "x" (Exp1 (Term (Factor (Int 2)))) (Exp1 (Term (Times (Factor (Var "x")) (Brack (Exp1 (Minus (Term (Factor (Var "x"))) (Factor (Int 2))))))))) -> QUALIFY(print) "Test works\n";
 >	_ -> quit } ; _ -> quit } ; _ -> quit } ; _ -> quit }
-> quit = QUALIFIEDPRELUDE.print "Test failed\n"
+> quit = QUALIFY(print) "Test failed\n"
 > }

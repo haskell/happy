@@ -1,7 +1,9 @@
 -- See <https://github.com/simonmar/happy/issues/91> for more information
 
 #ifndef QUALIFIEDPRELUDE
-#define QUALIFIEDPRELUDE Prelude
+#define QUALIFY(X) X
+#else
+#define QUALIFY(X) QUALIFIEDPRELUDE.X
 #endif
 
 {
@@ -13,7 +15,7 @@
 %tokentype { Tok }
 
 %monad { P } { bindP } { returnP }
-%error { QUALIFIEDPRELUDE.error "parse error" }
+%error { QUALIFY(error) "parse error" }
 %lexer { lexer } { EOF }
 
 %token
@@ -26,9 +28,9 @@ prod :: { () }
 
 {
 
-data Tok = EOF | Identifier QUALIFIEDPRELUDE.String
+data Tok = EOF | Identifier QUALIFY(String)
 
-type P a = QUALIFIEDPRELUDE.String -> (a, QUALIFIEDPRELUDE.String)
+type P a = QUALIFY(String) -> (a, QUALIFY(String))
 
 bindP :: P a -> (a -> P b) -> P b
 bindP p f s = let (x,s') = p s in f x s'
@@ -39,6 +41,6 @@ returnP = (,)
 lexer :: (Tok -> P a) -> P a
 lexer cont s = cont (case s of { "" -> EOF; _ -> Identifier s }) ""
 
-main = QUALIFIEDPRELUDE.pure ()
+main = QUALIFY(pure) ()
 
 }

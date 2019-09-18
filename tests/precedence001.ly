@@ -1,7 +1,9 @@
 This module demonstrates a Happy bug (in version <= 1.10).
 
 #ifndef QUALIFIEDPRELUDE
-#define QUALIFIEDPRELUDE Prelude
+#define QUALIFY(X) X
+#else
+#define QUALIFY(X) QUALIFIEDPRELUDE.X
 #endif
 
 > {
@@ -31,11 +33,11 @@ Ambiguos grammar.
 
 > {
 > happyError :: [Tok] -> a
-> happyError s = QUALIFIEDPRELUDE.error (QUALIFIEDPRELUDE.concatMap QUALIFIEDPRELUDE.show s)
+> happyError s = QUALIFY(error) (QUALIFY(concatMap) QUALIFY(show) s)
 >
-> data Tok = Plus | Minus | Num QUALIFIEDPRELUDE.Int deriving QUALIFIEDPRELUDE.Show
+> data Tok = Plus | Minus | Num QUALIFY(Int) deriving QUALIFY(Show)
 >
-> data Syn = Plus'' Syn Syn | Minus'' Syn Syn | Num'' QUALIFIEDPRELUDE.Int deriving QUALIFIEDPRELUDE.Show
+> data Syn = Plus'' Syn Syn | Minus'' Syn Syn | Num'' QUALIFY(Int) deriving QUALIFY(Show)
 
 All the examples below should fail. None of them does so
 under Happy v1.8, and only the first one under Happy v1.9
@@ -59,8 +61,8 @@ trying the code out with Hugs. (Hugs didn't like the code
 generated with GHC extensions, -gac.)
 
 > main = do
->   Exception.try (QUALIFIEDPRELUDE.print test1 QUALIFIEDPRELUDE.>> QUALIFIEDPRELUDE.fail "Test failed.") :: QUALIFIEDPRELUDE.IO (QUALIFIEDPRELUDE.Either ErrorCall ())
->   Exception.try (QUALIFIEDPRELUDE.print test2 QUALIFIEDPRELUDE.>> QUALIFIEDPRELUDE.fail "Test failed.") :: QUALIFIEDPRELUDE.IO (QUALIFIEDPRELUDE.Either ErrorCall ())
->   Exception.try (QUALIFIEDPRELUDE.print test3 QUALIFIEDPRELUDE.>> QUALIFIEDPRELUDE.fail "Test failed.") :: QUALIFIEDPRELUDE.IO (QUALIFIEDPRELUDE.Either ErrorCall ())
+>   Exception.try (QUALIFY(print) test1 QUALIFY(>>) QUALIFY(fail) "Test failed.") :: QUALIFY(IO) (QUALIFY(Either) ErrorCall ())
+>   Exception.try (QUALIFY(print) test2 QUALIFY(>>) QUALIFY(fail) "Test failed.") :: QUALIFY(IO) (QUALIFY(Either) ErrorCall ())
+>   Exception.try (QUALIFY(print) test3 QUALIFY(>>) QUALIFY(fail) "Test failed.") :: QUALIFY(IO) (QUALIFY(Either) ErrorCall ())
 
 > }

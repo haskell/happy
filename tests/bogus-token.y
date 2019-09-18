@@ -1,5 +1,7 @@
 #ifndef QUALIFIEDPRELUDE
-#define QUALIFIEDPRELUDE Prelude
+#define QUALIFY(X) X
+#else
+#define QUALIFY(X) QUALIFIEDPRELUDE.X
 #endif
 
 {
@@ -21,8 +23,8 @@ parse : A { () }
 data Token = A | B
 
 test1 = parse [B]
-main =  do Exception.try (QUALIFIEDPRELUDE.print test1 QUALIFIEDPRELUDE.>> QUALIFIEDPRELUDE.fail "Test failed.") :: QUALIFIEDPRELUDE.IO (QUALIFIEDPRELUDE.Either ErrorCall ())
-           QUALIFIEDPRELUDE.putStrLn "Test worked"
+main =  do Exception.try (QUALIFY(print) test1 QUALIFY(>>) QUALIFY(fail) "Test failed.") :: QUALIFY(IO) (QUALIFY(Either) ErrorCall ())
+           QUALIFY(putStrLn) "Test worked"
 
-happyError = QUALIFIEDPRELUDE.error "parse error"
+happyError = QUALIFY(error) "parse error"
 }

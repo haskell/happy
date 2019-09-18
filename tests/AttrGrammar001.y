@@ -1,5 +1,7 @@
 #ifndef QUALIFIEDPRELUDE
-#define QUALIFIEDPRELUDE Prelude
+#define QUALIFY(X) X
+#else
+#define QUALIFY(X) QUALIFIEDPRELUDE.X
 #endif
 
 {
@@ -7,7 +9,7 @@ import Control.Monad (unless)
 
 }
 
-%tokentype { QUALIFIEDPRELUDE.Char }
+%tokentype { QUALIFY(Char) }
 
 %token a { 'a' }
 %token b { 'b' }
@@ -15,17 +17,17 @@ import Control.Monad (unless)
 
 %attributetype { Attrs a }
 %attribute value { a }
-%attribute len   { QUALIFIEDPRELUDE.Int }
+%attribute len   { QUALIFY(Int) }
 
 %name parse abcstring
 
-%monad { QUALIFIEDPRELUDE.Maybe }
+%monad { QUALIFY(Maybe) }
 
 %%
 
 abcstring
    : alist blist clist
-        { $$ = $1 QUALIFIEDPRELUDE.++ $2 QUALIFIEDPRELUDE.++ $3
+        { $$ = $1 QUALIFY(++) $2 QUALIFY(++) $3
         ; $2.len = $1.len
         ; $3.len = $1.len
         }
@@ -33,14 +35,14 @@ abcstring
 alist
    : a alist
         { $$ = $1 : $>
-        ; $$.len = $>.len QUALIFIEDPRELUDE.+ 1
+        ; $$.len = $>.len QUALIFY(+) 1
         }
    |    { $$ = []; $$.len = 0 }
 
 blist
    : b blist
         { $$ = $1 : $>
-        ; $>.len = $$.len QUALIFIEDPRELUDE.- 1
+        ; $>.len = $$.len QUALIFY(-) 1
         }
    |    { $$ = []
         ; where failUnless ($$.len `equals''` 0) "blist wrong length"
@@ -49,27 +51,27 @@ blist
 clist
    : c clist
         { $$ = $1 : $>
-        ; $>.len = $$.len QUALIFIEDPRELUDE.- 1
+        ; $>.len = $$.len QUALIFY(-) 1
         }
    |    { $$ = []
         ; where failUnless ($$.len `equals''` 0) "clist wrong length"
         }
 
 {
-happyError = QUALIFIEDPRELUDE.error "parse error"
-failUnless b msg = unless b (QUALIFIEDPRELUDE.fail msg)
+happyError = QUALIFY(error) "parse error"
+failUnless b msg = unless b (QUALIFY(fail) msg)
 
-equals'' a b = a QUALIFIEDPRELUDE.== b
+equals'' a b = a QUALIFY(==) b
 
-main = case parse "" of { QUALIFIEDPRELUDE.Just _ ->
-       case parse "abc" of { QUALIFIEDPRELUDE.Just _ ->
-       case parse "aaaabbbbcccc" of { QUALIFIEDPRELUDE.Just _ ->
-       case parse "abbcc" of { QUALIFIEDPRELUDE.Nothing ->
-       case parse "aabcc" of { QUALIFIEDPRELUDE.Nothing ->
-       case parse "aabbc" of { QUALIFIEDPRELUDE.Nothing ->
-       QUALIFIEDPRELUDE.putStrLn "Test works";
+main = case parse "" of { QUALIFY(Just) _ ->
+       case parse "abc" of { QUALIFY(Just) _ ->
+       case parse "aaaabbbbcccc" of { QUALIFY(Just) _ ->
+       case parse "abbcc" of { QUALIFY(Nothing) ->
+       case parse "aabcc" of { QUALIFY(Nothing) ->
+       case parse "aabbc" of { QUALIFY(Nothing) ->
+       QUALIFY(putStrLn) "Test works";
        _ -> quit } ; _ -> quit }; _ -> quit };
        _ -> quit } ; _ -> quit }; _ -> quit }
 
-quit = QUALIFIEDPRELUDE.putStrLn "Test failed"
+quit = QUALIFY(putStrLn) "Test failed"
 }

@@ -1,5 +1,7 @@
 #ifndef QUALIFIEDPRELUDE
-#define QUALIFIEDPRELUDE Prelude
+#define QUALIFY(X) X
+#else
+#define QUALIFY(X) QUALIFIEDPRELUDE.X
 #endif
 
 {
@@ -16,7 +18,7 @@ import System.Exit
 %tokentype { Token }
 %error { handleError }
 
-%monad { ParseM } { (QUALIFIEDPRELUDE.>>=) } { QUALIFIEDPRELUDE.return }
+%monad { ParseM } { (QUALIFY(>>=)) } { QUALIFY(return) }
 
 %token
         'S'             { TokenSucc }
@@ -25,49 +27,49 @@ import System.Exit
 %%
 
 Exp         :       'Z'         { 0 }
-            |       'S' Exp     { $2 QUALIFIEDPRELUDE.+ 1 }
+            |       'S' Exp     { $2 QUALIFY(+) 1 }
 
 {
 
-type ParseM a = QUALIFIEDPRELUDE.Either ParseError a
+type ParseM a = QUALIFY(Either) ParseError a
 data ParseError
-        = ParseError (QUALIFIEDPRELUDE.Maybe Token)
-        | StringError QUALIFIEDPRELUDE.String
-    deriving (QUALIFIEDPRELUDE.Eq,QUALIFIEDPRELUDE.Show)
+        = ParseError (QUALIFY(Maybe) Token)
+        | StringError QUALIFY(String)
+    deriving (QUALIFY(Eq), QUALIFY(Show))
 instance Error ParseError where
     strMsg = StringError
 
 data Token
         = TokenSucc
         | TokenZero
-    deriving (QUALIFIEDPRELUDE.Eq,QUALIFIEDPRELUDE.Show)
+    deriving (QUALIFY(Eq), QUALIFY(Show))
 
 handleError :: [Token] -> ParseM a
-handleError [] = throwError QUALIFIEDPRELUDE.$ ParseError QUALIFIEDPRELUDE.Nothing
-handleError ts = throwError QUALIFIEDPRELUDE.$ ParseError QUALIFIEDPRELUDE.$ QUALIFIEDPRELUDE.Just QUALIFIEDPRELUDE.$ QUALIFIEDPRELUDE.head ts
+handleError [] = throwError QUALIFY($) ParseError QUALIFY(Nothing)
+handleError ts = throwError QUALIFY($) ParseError QUALIFY($) QUALIFY(Just) QUALIFY($) QUALIFY(head) ts
 
-lexer :: QUALIFIEDPRELUDE.String -> [Token]
+lexer :: QUALIFY(String) -> [Token]
 lexer [] = []
 lexer (c:cs)
     | isSpace c = lexer cs
-    | c QUALIFIEDPRELUDE.== 'S'  = TokenSucc:(lexer cs)
-    | c QUALIFIEDPRELUDE.== 'Z'  = TokenZero:(lexer cs)
-    | QUALIFIEDPRELUDE.otherwise = QUALIFIEDPRELUDE.error "lexer error"
+    | c QUALIFY(==) 'S'  = TokenSucc:(lexer cs)
+    | c QUALIFY(==) 'Z'  = TokenZero:(lexer cs)
+    | QUALIFY(otherwise) = QUALIFY(error) "lexer error"
 
-main :: QUALIFIEDPRELUDE.IO ()
+main :: QUALIFY(IO) ()
 main = do
     let tokens = lexer "S S"
-    when (parseFoo tokens QUALIFIEDPRELUDE./= QUALIFIEDPRELUDE.Left (ParseError QUALIFIEDPRELUDE.Nothing)) QUALIFIEDPRELUDE.$ do
-        QUALIFIEDPRELUDE.print (parseFoo tokens)
+    when (parseFoo tokens QUALIFY(/=) QUALIFY(Left) (ParseError QUALIFY(Nothing))) QUALIFY($) do
+        QUALIFY(print) (parseFoo tokens)
         exitWith (ExitFailure 1)
 
 ---
 class Error a where
     noMsg :: a
     noMsg = strMsg ""
-    strMsg :: QUALIFIEDPRELUDE.String -> a
-class QUALIFIEDPRELUDE.Monad m => MonadError e m | m -> e where
+    strMsg :: QUALIFY(String) -> a
+class QUALIFY(Monad) m => MonadError e m | m -> e where
     throwError :: e -> m a
-instance MonadError e (QUALIFIEDPRELUDE.Either e) where
-    throwError = QUALIFIEDPRELUDE.Left
+instance MonadError e (QUALIFY(Either) e) where
+    throwError = QUALIFY(Left)
 }

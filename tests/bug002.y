@@ -1,5 +1,7 @@
 #ifndef QUALIFIEDPRELUDE
-#define QUALIFIEDPRELUDE Prelude
+#define QUALIFY(X) X
+#else
+#define QUALIFY(X) QUALIFIEDPRELUDE.X
 #endif
 
 {
@@ -9,7 +11,7 @@ module Main where
 
 %name parser
 %token foo { 1 }
-%tokentype { QUALIFIEDPRELUDE.Int }
+%tokentype { QUALIFY(Int) }
 
 %%
 
@@ -18,6 +20,6 @@ Foo : {- empty -} { () }
 Foo : Foo foo     { () }
 
 {
-main = QUALIFIEDPRELUDE.return ()
-happyError = QUALIFIEDPRELUDE.undefined
+main = QUALIFY(return) ()
+happyError = QUALIFY(undefined)
 }

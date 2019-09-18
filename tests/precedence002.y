@@ -1,7 +1,9 @@
 -- This module demonstrates a bug in the original 1.11 release of Happy.
 
 #ifndef QUALIFIEDPRELUDE
-#define QUALIFIEDPRELUDE Prelude
+#define QUALIFY(X) X
+#else
+#define QUALIFY(X) QUALIFIEDPRELUDE.X
 #endif
 
 {
@@ -30,14 +32,14 @@ E    : E '+' E  { Plus'' $1 $3 }
 
 {
 happyError :: [Tok] -> a
-happyError s = QUALIFIEDPRELUDE.error (QUALIFIEDPRELUDE.concatMap QUALIFIEDPRELUDE.show s)
+happyError s = QUALIFY(error) (QUALIFY(concatMap) QUALIFY(show) s)
 
-data Tok = Plus | Divide | Num QUALIFIEDPRELUDE.Int deriving QUALIFIEDPRELUDE.Show
+data Tok = Plus | Divide | Num QUALIFY(Int) deriving QUALIFY(Show)
 
-data Syn = Plus'' Syn Syn | Divide'' Syn Syn | Num'' QUALIFIEDPRELUDE.Int deriving QUALIFIEDPRELUDE.Show
+data Syn = Plus'' Syn Syn | Divide'' Syn Syn | Num'' QUALIFY(Int) deriving QUALIFY(Show)
 
 -- due to a bug in conflict resolution, this caused a parse error:
 tokens1 = [Num 6, Divide, Num 7, Plus, Num 8]
 
-main = QUALIFIEDPRELUDE.print (parse tokens1)
+main = QUALIFY(print) (parse tokens1)
 }

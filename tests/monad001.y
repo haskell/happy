@@ -1,7 +1,9 @@
 -- Testing %monad without %lexer, using the IO monad.
 
 #ifndef QUALIFIEDPRELUDE
-#define QUALIFIEDPRELUDE Prelude
+#define QUALIFY(X) X
+#else
+#define QUALIFY(X) QUALIFIEDPRELUDE.X
 #endif
 
 {
@@ -31,20 +33,20 @@ import Data.Char
 %left NEG     -- negation--unary minus
 %right '^'    -- exponentiation
 
-%monad { IO } { (QUALIFIEDPRELUDE.>>=) } { QUALIFIEDPRELUDE.return }
+%monad { IO } { (QUALIFY(>>=)) } { QUALIFY(return) }
 
 %%
 input	: {- empty string -}   { () }
         | input line	      { $1 }
 
 line	: '\n'		     { () }
-        | exp '\n'  	     {% hPutStr stdout (QUALIFIEDPRELUDE.show $1) }
+        | exp '\n'  	     {% hPutStr stdout (QUALIFY(show) $1) }
 
 exp	: num                { $1         }
-        | exp '+' exp        { $1 QUALIFIEDPRELUDE.+ $3    }
-        | exp '-' exp        { $1 QUALIFIEDPRELUDE.- $3    }
-        | exp '*' exp        { $1 QUALIFIEDPRELUDE.* $3    }
-        | exp '/' exp        { $1 QUALIFIEDPRELUDE./ $3    }
+        | exp '+' exp        { $1 QUALIFY(+) $3    }
+        | exp '-' exp        { $1 QUALIFY(-) $3    }
+        | exp '*' exp        { $1 QUALIFY(*) $3    }
+        | exp '/' exp        { $1 QUALIFY(/) $3    }
         | '-' exp  %prec NEG { - $2        }
 --        | exp '^' exp        { $1 ^ $3    }
         | '(' exp ')'        { $2         }
@@ -64,7 +66,7 @@ main = do
 data Token
 	= TokenExp
 	| TokenEOL
-	| TokenNum QUALIFIEDPRELUDE.Double
+	| TokenNum QUALIFY(Double)
 	| TokenPlus
 	| TokenMinus
 	| TokenTimes
@@ -74,7 +76,7 @@ data Token
 
 -- and a simple lexer that returns this datastructure.
 
-lexer :: QUALIFIEDPRELUDE.String -> [Token]
+lexer :: QUALIFY(String) -> [Token]
 lexer [] = []
 lexer ('\n':cs) = TokenEOL : lexer cs
 lexer (c:cs)
@@ -88,10 +90,10 @@ lexer ('^':cs) = TokenExp : lexer cs
 lexer ('(':cs) = TokenOB : lexer cs
 lexer (')':cs) = TokenCB : lexer cs
 
-lexNum cs = TokenNum (QUALIFIEDPRELUDE.read num) : lexer rest
-	where (num,rest) = QUALIFIEDPRELUDE.span isNum cs
-	      isNum c = isDigit c QUALIFIEDPRELUDE.|| c QUALIFIEDPRELUDE.== '.'
+lexNum cs = TokenNum (QUALIFY(read) num) : lexer rest
+	where (num,rest) = QUALIFY(span) isNum cs
+	      isNum c = isDigit c QUALIFY(||) c QUALIFY(==) '.'
 
 
-happyError tokens = QUALIFIEDPRELUDE.ioError (QUALIFIEDPRELUDE.userError "parse error")
+happyError tokens = QUALIFY(ioError) (QUALIFY(userError) "parse error")
 }
