@@ -44,10 +44,10 @@ TEST_HAPPY_OPTS = --strict
 	gcc -x c -traditional -P -E $< -o $@
 
 %.hp.ly : %.ly
-	gcc -x c -traditional -P -E $< -o $@ -DQUALIFY(HappyPrelude)
+	gcc -x c -traditional -P -E $< -o $@ -DQUALIFIEDPRELUDE=HappyPrelude
 
 %.hp.y : %.y
-	gcc -x c -traditional -P -E $< -o $@ -DQUALIFY(HappyPrelude)
+	gcc -x c -traditional -P -E $< -o $@ -DQUALIFIEDPRELUDE=HappyPrelude
 
 %.n.hs : %.p.ly
 	$(HAPPY) $(TEST_HAPPY_OPTS) $< -o $@

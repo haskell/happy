@@ -22,7 +22,7 @@ import Data.Char
 
 %%
 
-ib :: { (QUALIFY(Int,) QUALIFY(Double,) QUALIFY(Bool)) }
+ib :: { (QUALIFY(Int), QUALIFY(Double), QUALIFY(Bool)) }
    : f n { ($1 $2, $1 $2, $1 QUALIFY(True)) }
 
 f :: { forall a. a -> a }
