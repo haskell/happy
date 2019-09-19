@@ -41,6 +41,6 @@ returnP = (,)
 lexer :: (Tok -> P a) -> P a
 lexer cont s = cont (case s of { "" -> EOF; _ -> Identifier s }) ""
 
-main = QUALIFY(pure) ()
+main = pure ()
 
 }

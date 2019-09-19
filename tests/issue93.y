@@ -1249,6 +1249,6 @@ lexNonSpace (c:cs)
 
 
 main = case parseStmt "union.1 + 2;" of
-         QUALIFY(Right) (394, "") -> QUALIFY(pure) ()
+         QUALIFY(Right) (394, "") -> pure ()
          _ -> exitWith (ExitFailure 1)
 }
