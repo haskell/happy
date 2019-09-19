@@ -808,7 +808,7 @@ outlaw them inside { }
 >          . str "happyRunIdentity (HappyIdentity a) = a\n\n"
 >          . str "instance HappyPrelude.Functor HappyIdentity where\n"
 >          . str "    fmap f (HappyIdentity a) = HappyIdentity (f a)\n\n"
->          . str "instance HappyPrelude.Applicative HappyIdentity where\n"
+>          . str "instance Applicative HappyIdentity where\n"
 >          . str "    pure  = HappyIdentity\n"
 >          . str "    (<*>) = ap\n"
 >          . str "instance HappyPrelude.Monad HappyIdentity where\n"
