@@ -22,4 +22,4 @@ install:
 
 script:
  - make sdist
- - make sdist-test-only
+ - travis_wait make sdist-test-only
