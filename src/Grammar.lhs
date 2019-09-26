@@ -29,6 +29,7 @@ Here is our mid-section datatype
 > import Data.Char
 > import Data.List
 > import Data.Maybe (fromMaybe)
+> import Data.Traversable (traverse)
 
 > import Control.Monad.Writer
 
@@ -292,36 +293,36 @@ Translate the rules from string to name-based.
 >   rules2 <- mapM transRule rules1
 
 >   let
->       type_env = [(nt, t) | (nt, _, Just (t,[])) <- rules] ++
->                  [(nt, getTokenType dirs) | nt <- terminal_strs] -- XXX: Doesn't handle $$ type!
+>       -- tys :: Array Int (M (Maybe (String -> String)))
+>       tys = accumArray (\_ x -> x) (return Nothing) (0, last_t) $
+>               [ (nm, liftM Just $ fixType ty env) | (nm,_,Just (ty, env)) <- rules1 ] ++
+>               [ (nm, return . Just . str . getTokenType  $ dirs) | nm <- terminal_names ] -- XXX: Doesn't handle $$ in token
 >
->       fixType (ty,s) = go "" ty
->         where go acc [] = return (reverse acc)
->               go acc (c:r) | isLower c = -- look for a run of alphanumerics starting with a lower case letter
->                                let (cs,r1) = span isAlphaNum r
->                                    go1 x = go (reverse x ++ acc) r1
->                                in case lookup (c:cs) s of
->                                        Nothing -> go1 (c:cs) -- no binding found
->                                        Just a -> case lookup a type_env of
->                                          Nothing -> do
->                                            addErr ("Parameterized rule argument '" ++ a ++ "' does not have type")
->                                            go1 (c:cs)
->                                          Just t -> go1 $ "(" ++ t ++ ")"
->                            | otherwise = go (c:acc) r
->
->       convType (nm, t)
->         = do t' <- fixType t
->              return (nm, t')
->
+>       -- fixType :: String -> Subst -> M (String -> String)
+>       fixType ty env = go ty id
+>         where
+>               isIdent c = isAlphaNum c || c == '_'
+>               go [] s = return s
+>               go r@(c:_) s | isLower c = -- an identifier starting with a lower case letter
+>                                let (cs,r1) = span isIdent r
+>                                in case lookup cs env of -- try to map formal to actual
+>                                    Nothing -> -- no formal found
+>                                      go r1 $ s . str cs -- do not expand
+>                                    Just a -> do -- found actual
+>                                      nm <- mapToName a
+>                                      t <- tys ! nm
+>                                      go r1 $ s . brack' (fromMaybe (str cs) t)
+>                            | isIdent c = -- an identifier not starting with a lower case letter
+>                                let (cs,r1) = span isIdent r
+>                                in go r1 $ s . str cs -- do not expand
+>                            | otherwise = -- not an identifier
+>                                let (cs,r1) = break isIdent r
+>                                in go r1 $ s . str cs -- do not expand
 >   -- in
->   tys <- mapM convType [ (nm, t) | (nm, _, Just t) <- rules1 ]
->
+
+>   type_array <- traverse ((fmap . fmap) ($ "")) tys
 
 >   let
->       type_array :: Array Int (Maybe String)
->       type_array = accumArray (\_ x -> x) Nothing (first_nt, last_nt)
->                    [ (nm, Just t) | (nm, t) <- tys ]
-
 >       env_array :: Array Int String
 >       env_array = array (errorTok, last_t) name_env
 >   -- in
