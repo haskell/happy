@@ -348,10 +348,11 @@ It also shares identical reduction values as CAFs
 >     mkReds rs = "[" ++ tail (concat [ "," ++ mkRed r | LR'Reduce r _ <- rs ]) ++ "]"
 
 >   mkRed r = "red_" ++ show r
->   mkReductions = [ mkRedDefn p | p@(_,(n,_,_,_)) <- zip [0..] $ productions g
->                                , n `notElem` start_productions g ]
+>   mkReductions = [ mkRedDefn p
+>                  | p@(_, Production n _ _ _) <- zip [0..] $ productions g
+>                  , n `notElem` start_productions g ]
 
->   mkRedDefn (r, (lhs_id, rhs_ids, (_code,_dollar_vars), _))
+>   mkRedDefn (r, Production lhs_id rhs_ids (_code,_dollar_vars) _)
 >    = mkRed r ++ " = ("++ lhs ++ "," ++ show arity ++ " :: Int," ++ sem ++")"
 >      where
 >         lhs = toGSym gsMap $ lhs_id
@@ -475,7 +476,7 @@ Creating a type for storing semantic rules
 >          | i <- user_non_terminals g
 >          , let i_ty = typeOf i
 >          , j <- lookupProdsOfName g i  -- all prod numbers
->          , let (_,ts,(raw_code,dollar_vars),_) = lookupProdNo g j
+>          , let Production _ ts (raw_code,dollar_vars) _ = lookupProdNo g j
 >          , let var_mask = map (\x -> x - 1) vars_used
 >                           where vars_used = sort $ nub dollar_vars
 >          , let args = [ typeOf $ ts !! v | v <- var_mask ]
@@ -520,7 +521,7 @@ Creating a type for storing semantic rules
 >          | i <- user_non_terminals g
 >          , let i_ty = typeOf i
 >          , j <- lookupProdsOfName g i  -- all prod numbers
->          , let (_,ts,(code,dollar_vars),_) = lookupProdNo g j
+>          , let Production _ ts (code,dollar_vars) _ = lookupProdNo g j
 >          , let var_mask = map (\x -> x - 1) vars_used
 >                           where vars_used = sort $ nub dollar_vars
 >          , let ts_pats = [ (k+1,c) | k <- var_mask

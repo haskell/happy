@@ -59,9 +59,9 @@ The parser.
 >       | rule          { [$1] }
 
 > rule :: { Rule }
->       : id params "::" code ":" prods         { ($1,$2,$6,Just $4) }
->       | id params "::" code id ":" prods      { ($1,$2,$7,Just $4) }
->       | id params ":" prods                   { ($1,$2,$4,Nothing) }
+>       : id params "::" code ":" prods         { Rule $1 $2 $6 (Just $4) }
+>       | id params "::" code id ":" prods      { Rule $1 $2 $7 (Just $4) }
+>       | id params ":" prods                   { Rule $1 $2 $4 Nothing }
 
 > params :: { [String] }
 >       : "(" comma_ids ")"             { reverse $2 }
@@ -76,8 +76,8 @@ The parser.
 >       | prod                          { [$1] }
 
 > prod :: { Prod }
->       : terms prec code ";"           {% lineP >>= \l -> return ($1,$3,l,$2) }
->       | terms prec code               {% lineP >>= \l -> return ($1,$3,l,$2) }
+>       : terms prec code ";"           {% lineP >>= \l -> return (Prod $1 $3 l $2) }
+>       | terms prec code               {% lineP >>= \l -> return (Prod $1 $3 l $2) }
 
 > term :: { Term }
 >       : id                             { App $1 [] }

@@ -23,13 +23,13 @@ ppDirective dir =
   prec x xs = text x <+> hsep (map text xs)
 
 ppRule :: Rule -> Doc
-ppRule (name,_,prods,_) = text name
-                       $$ vcat (zipWith (<+>) starts (map ppProd prods))
+ppRule (Rule name _ prods _) = text name
+                            $$ vcat (zipWith (<+>) starts (map ppProd prods))
   where
   starts = text "  :" : repeat (text "  |")
 
 ppProd :: Prod -> Doc
-ppProd (ts,_,_,p) = psDoc <+> precDoc
+ppProd (Prod ts _ _ p) = psDoc <+> precDoc
   where
   psDoc   = if null ts then text "{- empty -}" else hsep (map ppTerm ts)
   precDoc = maybe empty (\x -> text "%prec" <+> text x) p

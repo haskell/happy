@@ -34,7 +34,7 @@ Implementation of FIRST
 >       env = mkClosure (==) (getNext fst_term prodNo prodsOfName)
 >               [ (name,Set.empty) | name <- nts ]
 
-> getNext :: Name -> (a -> (b, [Name], c, d)) -> (Name -> [a])
+> getNext :: Name -> (a -> Production) -> (Name -> [a])
 >         -> [(Name, IntSet)] -> [(Name, NameSet)]
 > getNext fst_term prodNo prodsOfName env =
 >               [ (nm, next nm) | (nm,_) <- env ]
@@ -45,10 +45,7 @@ Implementation of FIRST
 >       next :: Name -> NameSet
 >       next t | t >= fst_term = Set.singleton t
 >       next n = Set.unions
->                       [ joinSymSets fn (snd4 (prodNo rl)) |
->                               rl <- prodsOfName n ]
+>                       [ joinSymSets fn lhs
+>                       | rl <- prodsOfName n
+>                       , let Production _ lhs _ _ = prodNo rl ]
 
-My little hack
-
-> snd4 :: (a, b, c, d) -> b
-> snd4 (_,b,_,_) = b

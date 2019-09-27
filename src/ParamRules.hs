@@ -1,4 +1,4 @@
-module ParamRules(expand_rules) where
+module ParamRules(expand_rules, Prod1(..), Rule1(..)) where
 
 import AbsSyn
 import Control.Monad.Writer
@@ -7,6 +7,11 @@ import Data.List(partition,intersperse)
 import qualified Data.Set as S
 import qualified Data.Map as M    -- XXX: Make it work with old GHC.
 
+-- | Desugar parameterized productions into non-parameterized ones
+--
+-- This transformation is fairly straightforward: we walk through every rule
+-- and collect every possible instantiation of parameterized productions. Then,
+-- we generate a new non-parametrized rule for each of these.
 expand_rules :: [Rule] -> Either String [Rule1]
 expand_rules rs = do let (funs,rs1) = split_rules rs
                      (as,is) <- runM2 (mapM (`inst_rule` []) rs1)
@@ -14,15 +19,20 @@ expand_rules rs = do let (funs,rs1) = split_rules rs
                      return (as++bs)
 
 type RuleName = String
-type Inst     = (RuleName, [RuleName])
-type Funs     = M.Map RuleName Rule
-type Rule1    = (RuleName,[Prod1],Maybe (String, Subst))
-type Prod1    = ([RuleName],String,Int,Maybe String)
+
+data Inst     = Inst RuleName [RuleName] deriving (Eq, Ord)
+newtype Funs  = Funs (M.Map RuleName Rule)
+
+-- | Similar to 'Rule', but `Term`'s have been flattened into `RuleName`'s
+data Rule1    = Rule1 RuleName [Prod1] (Maybe (String, Subst))
+
+-- | Similar to 'Prod', but `Term`'s have been flattened into `RuleName`'s
+data Prod1    = Prod1 [RuleName] String Int (Maybe String)
 
 inst_name :: Inst -> RuleName
-inst_name (f,[])  = f
---inst_name (f,xs)  = f ++ "(" ++ concat (intersperse "," xs) ++ ")"
-inst_name (f,xs)  = f ++ "__" ++ concat (intersperse "__" xs) ++ "__"
+inst_name (Inst f [])  = f
+--inst_name (Inst f xs)  = f ++ "(" ++ concat (intersperse "," xs) ++ ")"
+inst_name (Inst f xs)  = f ++ "__" ++ concat (intersperse "__" xs) ++ "__"
 
 
 -- | A renaming substitution used when we instantiate a parameterized rule.
@@ -37,7 +47,7 @@ from_term s (App f [])  = return $ case lookup f s of
                             Nothing -> f
 
 from_term s (App f ts)  = do xs <- from_terms s ts
-                             let i = (f,xs)
+                             let i = Inst f xs
                              tell (S.singleton i)
                              return $ inst_name i
 
@@ -47,23 +57,23 @@ from_terms s ts = mapM (from_term s) ts
 
 -- XXX: perhaps change the line to the line of the instance
 inst_prod :: Subst -> Prod -> M1 Prod1
-inst_prod s (ts,c,l,p)  = do xs <- from_terms s ts
-                             return (xs,c,l,p)
+inst_prod s (Prod ts c l p)  = do xs <- from_terms s ts
+                                  return (Prod1 xs c l p)
 
 inst_rule :: Rule -> [RuleName] -> M2 Rule1
-inst_rule (x,xs,ps,t) ts  = do s <- build xs ts []
-                               ps1 <- lift $ mapM (inst_prod s) ps
-                               let y = inst_name (x,ts)
-                               return (y,ps1,fmap (\x' -> (x',s)) t)
+inst_rule (Rule x xs ps t) ts  = do s <- build xs ts []
+                                    ps1 <- lift $ mapM (inst_prod s) ps
+                                    let y = inst_name (Inst x ts)
+                                    return (Rule1 y ps1 (fmap (\x' -> (x',s)) t))
   where build (x':xs') (t':ts') m = build xs' ts' ((x',t'):m)
         build [] [] m  = return m
         build xs' [] _  = err ("Need " ++ show (length xs') ++ " more arguments")
         build _ ts' _   = err (show (length ts') ++ " arguments too many.")
 
-        err m = throwError ("In " ++ inst_name (x,ts) ++ ": " ++ m)
+        err m = throwError ("In " ++ inst_name (Inst x ts) ++ ": " ++ m)
 
 make_rule :: Funs -> Inst -> M2 Rule1
-make_rule funs (f,xs) =
+make_rule (Funs funs) (Inst f xs) =
   case M.lookup f funs of
     Just r  -> inst_rule r xs
     Nothing -> throwError ("Undefined rule: " ++ f)
@@ -85,8 +95,8 @@ make_insts funs is done =
 
 split_rules :: [Rule] -> (Funs,[Rule])
 split_rules rs = let (xs,ys) = partition has_args rs
-                 in (M.fromList [ (x,r) | r@(x,_,_,_) <- xs ],ys)
-  where has_args (_,xs,_,_) = not (null xs)
+                 in (Funs (M.fromList [ (x,r) | r@(Rule x _ _ _) <- xs ]),ys)
+  where has_args (Rule _ args _ _) = not (null args)
 
 
 

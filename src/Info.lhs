@@ -96,7 +96,7 @@ Produce a file of parser information, useful for debugging the parser.
 >       . interleave "\n" (zipWith showProduction prods [ 0 :: Int .. ])
 >       . str "\n"
 
->   showProduction (nt, toks, _sem, _prec) i
+>   showProduction (Production nt toks _sem _prec) i
 >       = ljuststr 50 (
 >         str "\t"
 >       . showName nt
@@ -128,7 +128,7 @@ Produce a file of parser information, useful for debugging the parser.
 >               . interleave " " (map showName afterDot))
 >       . str "   (rule " . shows rule . str ")"
 >       where
->               (nt, toks, _sem, _prec) = lookupProd rule
+>               Production nt toks _sem _prec = lookupProd rule
 >               (beforeDot, afterDot) = splitAt dot toks
 
 >   showAction (_, LR'Fail)
