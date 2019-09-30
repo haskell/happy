@@ -126,6 +126,36 @@ Report any unused rules and terminals
 >       optIO (not (null unused_terminals))
 >          (hPutStrLn stderr ("unused terminals: " ++ show (length unused_terminals))) >>
 
+Print out the info file.
+
+>       getInfoFileName name cli                >>= \info_filename ->
+>       let info = genInfoFile
+>                       (map fst sets)
+>                       g
+>                       action
+>                       goto
+>                       (token_specs g)
+>                       conflictArray
+>                       fl_name
+>                       unused_rules
+>                       unused_terminals
+>       in
+>       (case info_filename of
+>               Just s  -> writeFile s info >>
+>                          hPutStrLn stderr ("Grammar info written to: " ++ s)
+>               Nothing -> return ())                   >>
+
+
+Pretty print the grammar.
+
+>       getPrettyFileName name cli                >>= \pretty_filename ->
+>       (let out = render (ppAbsSyn abssyn)
+>        in
+>        case pretty_filename of
+>          Just s   -> writeFile s out >>
+>                      hPutStrLn stderr ("Production rules written to: " ++ s)
+>          Nothing  -> return ()) >>
+
 Report any conflicts in the grammar.
 
 >       (case expect g of
@@ -149,34 +179,6 @@ Report any conflicts in the grammar.
 >               else return ())
 
 >       ) >>
-
-Print out the info file.
-
->       getInfoFileName name cli                >>= \info_filename ->
->       let info = genInfoFile
->                       (map fst sets)
->                       g
->                       action
->                       goto
->                       (token_specs g)
->                       conflictArray
->                       fl_name
->                       unused_rules
->                       unused_terminals
->       in
->       (case info_filename of
->               Just s  -> writeFile s info
->               Nothing -> return ())                   >>
-
-
-Pretty print the grammar.
-
->       getPrettyFileName name cli                >>= \pretty_filename ->
->       (let out = render (ppAbsSyn abssyn)
->        in
->        case pretty_filename of
->          Just s   -> writeFile s out
->          Nothing  -> return ()) >>
 
 
 
