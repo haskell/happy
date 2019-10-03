@@ -29,10 +29,14 @@ ppRule (Rule name _ prods _) = text name
   starts = text "  :" : repeat (text "  |")
 
 ppProd :: Prod -> Doc
-ppProd (Prod ts _ _ p) = psDoc <+> precDoc
+ppProd (Prod ts _ _ p) = psDoc <+> ppPrec p
   where
   psDoc   = if null ts then text "{- empty -}" else hsep (map ppTerm ts)
-  precDoc = maybe empty (\x -> text "%prec" <+> text x) p
+
+ppPrec :: Prec -> Doc
+ppPrec PrecNone   = empty
+ppPrec PrecShift  = text "%shift"
+ppPrec (PrecId x) = text "%prec" <+> text x
 
 ppTerm :: Term -> Doc
 ppTerm (App x ts) = text x <> ppTuple (map ppTerm ts)

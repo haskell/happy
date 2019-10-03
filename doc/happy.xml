@@ -876,6 +876,25 @@ Exp   : let var '=' Exp in Exp  { Let $2 $4 $6 }
 	would normally be the precedence of '-') with the precedence
 	of <literal>NEG</literal>.</para>
       </sect2>
+
+      <sect2 id="shift pragma">
+        <title>The %shift directive for lowest precedence rules</title>
+        <para>
+          Rules annotated with the <literal>%shift</literal> directive
+          have the lowest possible precedence and are non-associative.
+          A shift/reduce conflict that involves such a rule is resolved as a shift.
+
+          One can think of <literal>%shift</literal> as
+          <literal>%prec SHIFT</literal> such that <literal>SHIFT</literal>
+          has lower precedence than any other token.
+        </para>
+        <para>
+          This is useful in conjunction with
+          <literal>%expect 0</literal> to explicitly point out all rules in the grammar that
+          result in conflicts, and thereby resolve such conflicts.
+        </para>
+      </sect2>
+
     </sect1>
 
     <sect1 id="sec-type-signatures">

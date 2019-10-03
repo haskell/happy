@@ -27,7 +27,7 @@ newtype Funs  = Funs (M.Map RuleName Rule)
 data Rule1    = Rule1 RuleName [Prod1] (Maybe (String, Subst))
 
 -- | Similar to 'Prod', but `Term`'s have been flattened into `RuleName`'s
-data Prod1    = Prod1 [RuleName] String Int (Maybe String)
+data Prod1    = Prod1 [RuleName] String Int Prec
 
 inst_name :: Inst -> RuleName
 inst_name (Inst f [])  = f

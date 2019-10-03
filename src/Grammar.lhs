@@ -106,7 +106,7 @@ Here is our mid-section datatype
 
 #endif
 
-> data Priority = No | Prio Assoc Int
+> data Priority = No | Prio Assoc Int | PrioLowest
 
 #ifdef DEBUG
 
@@ -283,17 +283,20 @@ Translate the rules from string to name-based.
 >                             return (Production nt lhs' code' No)
 >               Right p -> return (Production nt lhs' code' p)
 >
->       mkPrec :: [Name] -> Maybe String -> Either String Priority
->       mkPrec lhs prio =
->             case prio of
->               Nothing -> case filter (flip elem terminal_names) lhs of
+>       mkPrec :: [Name] -> Prec -> Either String Priority
+>       mkPrec lhs PrecNone =
+>         case filter (flip elem terminal_names) lhs of
 >                            [] -> Right No
 >                            xs -> case lookup (last xs) prios of
 >                                    Nothing -> Right No
 >                                    Just p  -> Right p
->               Just s -> case lookup s prioByString of
+>       mkPrec _ (PrecId s) =
+>         case lookup s prioByString of
 >                           Nothing -> Left s
 >                           Just p -> Right p
+>
+>       mkPrec _ PrecShift = Right PrioLowest
+>
 >   -- in
 
 >   rules1 <- mapM convNT rules
