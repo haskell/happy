@@ -153,10 +153,6 @@ source-repository head
   type:     git
   location: https://github.com/simonmar/happy.git
 
-flag small_base
-  description: Deprecated. Does nothing.
-  manual: True
-
 executable happy
   hs-source-dirs: src
   main-is: Main.lhs
