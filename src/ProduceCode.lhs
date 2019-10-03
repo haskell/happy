@@ -323,7 +323,7 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >       interleave "\n\n"
 >          (zipWith produceReduction (drop n_starts prods) [ n_starts .. ])
 
->    produceReduction (nt, toks, (code,vars_used), _) i
+>    produceReduction (Production nt toks (code,vars_used) _) i
 
 >     | is_monad_prod && (use_monad || imported_identity')
 >       = mkReductionHdr (showInt lt) monad_reduce
