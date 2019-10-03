@@ -29,7 +29,7 @@ sdist ::
 	$(HAPPY) $(HAPPY_OPTS) src/AttrGrammarParser.ly -o src/AttrGrammarParser.hs
 	mv src/Parser.ly src/Parser.ly.boot
 	mv src/AttrGrammarParser.ly src/AttrGrammarParser.ly.boot
-	$(CABAL) new-run gen-happy-sdist 
+	$(CABAL) v2-run gen-happy-sdist 
 	cabal v2-sdist
 	@if [ ! -f "${SDIST_DIR}/happy-$(HAPPY_VER).tar.gz" ]; then \
 		echo "Error: source tarball not found: dist/happy-$(HAPPY_VER).tar.gz"; \
