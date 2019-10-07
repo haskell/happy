@@ -45,6 +45,7 @@ The lexer.
 >       | TokSpecId_Left        -- %left
 >       | TokSpecId_Right       -- %right
 >       | TokSpecId_Prec        -- %prec
+>       | TokSpecId_Shift       -- %shift
 >       | TokSpecId_Expect      -- %expect
 >       | TokSpecId_Error       -- %error
 >       | TokSpecId_Attributetype -- %attributetype
@@ -132,6 +133,8 @@ followed by a special identifier.
 >               returnToken cont (TokenKW TokSpecId_Right) rest
 >       'p':'r':'e':'c':rest ->
 >               returnToken cont (TokenKW TokSpecId_Prec) rest
+>       's':'h':'i':'f':'t':rest ->
+>               returnToken cont (TokenKW TokSpecId_Shift) rest
 >       'e':'x':'p':'e':'c':'t':rest ->
 >               returnToken cont (TokenKW TokSpecId_Expect) rest
 >       'e':'r':'r':'o':'r':'h':'a':'n':'d':'l':'e':'r':'t':'y':'p':'e':rest ->

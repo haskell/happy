@@ -12,7 +12,7 @@ Here is the abstract syntax of the language we parse.
 >       getImportedIdentity, getMonad, getError,
 >       getPrios, getPrioNames, getExpect, getErrorHandlerType,
 >       getAttributes, getAttributetype,
->       Rule(..), Prod(..), Term(..)
+>       Rule(..), Prod(..), Term(..), Prec(..)
 >  ) where
 
 > data AbsSyn
@@ -34,13 +34,17 @@ Here is the abstract syntax of the language we parse.
 >         [Term]               -- terms that make up the rule
 >         String               -- code body that runs when the rule reduces
 >         Int                  -- line number
->         (Maybe String)       -- inline precedence annotation for the rule
+>         Prec                 -- inline precedence annotation for the rule
 
 > data Term
 >     = App
 >         String               -- name of the term
 >         [Term]               -- parameter arguments (usually this is empty)
 
+> data Prec
+>     = PrecNone               -- no user-specified precedence
+>     | PrecShift              -- %shift
+>     | PrecId String          -- %prec ID
 
 
 #ifdef DEBUG

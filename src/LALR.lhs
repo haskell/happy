@@ -561,6 +561,9 @@ NOTE: on (LR'Multiple as a) handling
 >       res a@(LR'Shift {}) b@(LR'Reduce {}) = res b a
 >       res a@(LR'Reduce _ p) b@(LR'Shift _ p')
 >               = case (p,p') of
+>                      (PrioLowest,PrioLowest) -> LR'MustFail
+>                      (_,PrioLowest) -> a
+>                      (PrioLowest,_) -> b
 >                      (No,_) -> LR'Multiple [a] b      -- shift wins
 >                      (_,No) -> LR'Multiple [a] b      -- shift wins
 >                      (Prio c i, Prio _ j)
@@ -573,6 +576,10 @@ NOTE: on (LR'Multiple as a) handling
 >                                     None       -> LR'MustFail
 >       res a@(LR'Reduce r p) b@(LR'Reduce r' p')
 >               = case (p,p') of
+>                      (PrioLowest,PrioLowest) ->
+>                        LR'Multiple [a] b      -- give to earlier rule?
+>                      (_,PrioLowest) -> a
+>                      (PrioLowest,_) -> b
 >                      (No,_) -> LR'Multiple [a] b      -- give to earlier rule?
 >                      (_,No) -> LR'Multiple [a] b
 >                      (Prio _ i, Prio _ j)

@@ -29,6 +29,7 @@ The parser.
 >       spec_left       { TokenKW      TokSpecId_Left }
 >       spec_right      { TokenKW      TokSpecId_Right }
 >       spec_prec       { TokenKW      TokSpecId_Prec }
+>       spec_shift      { TokenKW      TokSpecId_Shift }
 >       spec_expect     { TokenKW      TokSpecId_Expect }
 >       spec_error      { TokenKW      TokSpecId_Error }
 >       spec_errorhandlertype   { TokenKW      TokSpecId_ErrorHandlerType }
@@ -95,9 +96,10 @@ The parser.
 >       : term                           { [$1] }
 >       | comma_terms "," term           { $3 : $1 }
 
-> prec :: { Maybe String }
->       : spec_prec id                  { Just $2 }
->       |                               { Nothing }
+> prec :: { Prec }
+>       : spec_prec id                  { PrecId $2 }
+>       | spec_shift                    { PrecShift }
+>       |                               { PrecNone }
 
 > tokInfos :: { [Directive String] } 
 >       : tokInfos tokInfo              { $2 : $1 }

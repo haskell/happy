@@ -148,6 +148,7 @@ extra-source-files:
         tests/typeclass_monad002.ly
         tests/typeclass_monad_lexer.y
         tests/rank2.y
+        tests/shift01.y
 
 source-repository head
   type:     git
