@@ -112,11 +112,20 @@ Produce a file of parser information, useful for debugging the parser.
 >   showState state n
 >       = str "State ". shows n
 >       . str "\n\n"
->       . interleave "\n" (map showItem [ (Lr0 r d) | (Lr0 r d) <- state, d /= 0 ])
+>       . interleave "\n" (map showItem selectedItems)
 >       . str "\n"
 >       . foldr (.) id (map showAction (assocs (action ! n)))
 >       . str "\n"
 >       . foldr (.) id (map showGoto (assocs (goto ! n)))
+>     where
+>       nonRuleItems  = [ (Lr0 r d) | (Lr0 r d) <- state, d /= 0 ]
+>       selectedItems = if null nonRuleItems then take 1 state else nonRuleItems
+>         -- andreasabel, 2019-11-12, issue #161:
+>         -- Items that start with a dot (@d == 0@) are usually added by completion
+>         -- and thus redundant and dropped from the printout (@nonRuleItems@).
+>         -- However, if the initial item started with a dot, it should not be dropped,
+>         -- otherwise there will be no items left.  Thus, should there be no items
+>         -- not starting with a dot, we print the initial item.
 
 >   showItem (Lr0 rule dot)
 >       = ljuststr 50 (
@@ -213,4 +222,3 @@ Produce a file of parser information, useful for debugging the parser.
 >       = str "-----------------------------------------------------------------------------\n"
 >       . str s
 >       . str "\n-----------------------------------------------------------------------------\n"
-
