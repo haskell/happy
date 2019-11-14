@@ -9,10 +9,14 @@ Happy is a parser generator for Haskell 98 (and later).
 
 Happy is built using Cabal.  First install GHC, then:
 ```
-  $ cabal configure
-  $ cabal build
   $ cabal install
 ```
+If you obtained the development version from https://github.com/simonmar/happy/,
+install via:
+```
+  $ make sdist && cabal install
+```
+
 Complete documentation can be found in the directory 'doc', in
 DocBook XML format.  To format the documentation, the DocBook-Tools
 suite (see http://wiki.docbook.org/DocBookTools)
