@@ -1125,8 +1125,8 @@ data E a = Ok a | Failed String
 thenE :: E a -> (a -> E b) -> E b
 m `thenE` k =
    case m of
-       Ok a -> k a
-	 Failed e -> Failed e
+       Ok a     -> k a
+       Failed e -> Failed e
 
 returnE :: a -> E a
 returnE a = Ok a
@@ -1137,8 +1137,8 @@ failE err = Failed err
 catchE :: E a -> (String -> E a) -> E a
 catchE m k =
    case m of
-      Ok a -> OK a
-	Failed e -> k e
+      Ok a     -> OK a
+      Failed e -> k e
 </programlisting>
 
 	<para>This monad just uses a string as the error type.  The
@@ -1283,8 +1283,8 @@ type P a = String -> ParseResult a
 thenP :: P a -> (a -> P b) -> P b
 m `thenP` k = \s ->
    case m s of
-       Ok a -> k a s
-	 Failed e -> Failed e
+       Ok a     -> k a s
+       Failed e -> Failed e
 
 returnP :: a -> P a
 returnP a = \s -> Ok a
@@ -1295,8 +1295,8 @@ failP err = \s -> Failed err
 catchP :: P a -> (String -> P a) -> P a
 catchP m k = \s ->
    case m s of
-      Ok a -> OK a
-	Failed e -> k e s
+      Ok a     -> OK a
+      Failed e -> k e s
 </programlisting>
 
 	<para>Notice that this isn't a real state monad - the input
