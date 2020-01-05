@@ -1137,7 +1137,7 @@ failE err = Failed err
 catchE :: E a -> (String -> E a) -> E a
 catchE m k =
    case m of
-      Ok a     -> OK a
+      Ok a     -> Ok a
       Failed e -> k e
 </programlisting>
 
@@ -1295,7 +1295,7 @@ failP err = \s -> Failed err
 catchP :: P a -> (String -> P a) -> P a
 catchP m k = \s ->
    case m s of
-      Ok a     -> OK a
+      Ok a     -> Ok a
       Failed e -> k e s
 </programlisting>
 
