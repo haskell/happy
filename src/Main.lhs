@@ -76,7 +76,7 @@ Open the file.
 
 Parse, using bootstrapping parser.
 
->       case runP ourParser file 1 of {
+>       case runP ourParser (PS file 1 Nothing) of {
 >               Left err -> die (fl_name ++ ':' : err);
 >               Right abssyn@(AbsSyn hd _ _ tl) ->
 

@@ -1,8 +1,8 @@
 > module AttrGrammar
 > ( AgToken (..)
 > , AgRule (..)
+> , HasLexer (..)
 > , agLexAll
-> , agLexer
 > , subRefVal
 > , selfRefVal
 > , rightRefVal
@@ -62,32 +62,30 @@
 -- will wreck column alignment so attribute grammar specifications must
 -- not rely on layout.
 
-> type Pfunc a = String -> Int -> ParseResult a
-
-> agLexAll :: P [AgToken]
-> agLexAll = mkP $ aux []
+> agLexAll :: String -> Int -> ParseResult [AgToken]
+> agLexAll = aux []
 >  where aux toks [] _ = Right (reverse toks)
->        aux toks s l  = agLexer' (\t -> aux (t:toks)) s l
+>        aux toks s l  = agLexer (\t -> aux (t:toks)) s l
 
-> agLexer :: (AgToken -> P a) -> P a
-> agLexer m = mkP $ agLexer' (\x -> runP (m x))
+> instance HasLexer AgToken where
+>   lexToken = agLexer
 
-> agLexer' :: (AgToken -> Pfunc a) -> Pfunc a
-> agLexer' cont []         = cont AgTok_EOF []
-> agLexer' cont ('{':rest) = cont AgTok_LBrace rest
-> agLexer' cont ('}':rest) = cont AgTok_RBrace rest
-> agLexer' cont (';':rest) = cont AgTok_Semicolon rest
-> agLexer' cont ('=':rest) = cont AgTok_Eq rest
-> agLexer' cont ('w':'h':'e':'r':'e':rest) = cont AgTok_Where rest
-> agLexer' cont ('$':'$':rest) = agLexAttribute cont (\a -> AgTok_SelfRef a) rest
-> agLexer' cont ('$':'>':rest) = agLexAttribute cont (\a -> AgTok_RightmostRef a) rest
-> agLexer' cont s@('$':rest) =
+> agLexer :: (AgToken -> Pfunc a) -> Pfunc a
+> agLexer cont []         = cont AgTok_EOF []
+> agLexer cont ('{':rest) = cont AgTok_LBrace rest
+> agLexer cont ('}':rest) = cont AgTok_RBrace rest
+> agLexer cont (';':rest) = cont AgTok_Semicolon rest
+> agLexer cont ('=':rest) = cont AgTok_Eq rest
+> agLexer cont ('w':'h':'e':'r':'e':rest) = cont AgTok_Where rest
+> agLexer cont ('$':'$':rest) = agLexAttribute cont (\a -> AgTok_SelfRef a) rest
+> agLexer cont ('$':'>':rest) = agLexAttribute cont (\a -> AgTok_RightmostRef a) rest
+> agLexer cont s@('$':rest) =
 >     let (n,rest') = span isDigit rest
 >     in if null n
 >           then agLexUnknown cont s
 >           else agLexAttribute cont (\a -> AgTok_SubRef (read n,a)) rest'
-> agLexer' cont s@(c:rest)
->     | isSpace c = agLexer' cont (dropWhile isSpace rest)
+> agLexer cont s@(c:rest)
+>     | isSpace c = agLexer cont (dropWhile isSpace rest)
 >     | otherwise = agLexUnknown cont s
 
 > agLexUnknown :: (AgToken -> Pfunc a) -> Pfunc a
