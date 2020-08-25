@@ -1,7 +1,13 @@
 -----------------------------------------------------------------------------
-1.19.13
+1.20.0
 
-        * Fixed issues: #161
+        * Fix #121: the -i flag produces an .info file even if
+          the %expect pragma is violated
+        * Fix #131: qualify uses of Prelude functions in generated code
+        * Fix #161: drop fewer parse items when generating an .info file
+        * Introduce the %shift directive to resolve shift/reduce
+          conflicts explicitly, useful in conjunction with %expect 0
+        * Remove the deprecated build configuration flag 'small_base'
 
 -----------------------------------------------------------------------------
 1.19.12

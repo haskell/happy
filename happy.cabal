@@ -1,5 +1,5 @@
 name: happy
-version: 1.19.12
+version: 1.20.0
 license: BSD2
 license-file: LICENSE
 copyright: (c) Andy Gill, Simon Marlow
@@ -28,7 +28,7 @@ tested-with:
 
 data-dir: data/
 
-data-files: 
+data-files:
         HappyTemplate
         HappyTemplate-arrays
         HappyTemplate-arrays-coerce
