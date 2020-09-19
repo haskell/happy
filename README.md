@@ -19,7 +19,7 @@ install via:
 
 Complete documentation can be found in the directory 'doc', in
 DocBook XML format.  To format the documentation, the DocBook-Tools
-suite (see http://wiki.docbook.org/DocBookTools)
+suite (see https://github.com/docbook/wiki/wiki/DocBookTools)
 provides all the bits & pieces you need.  Alternatively, pre-formatted
 documentation is available from Happy's homepage (URL above).
 
