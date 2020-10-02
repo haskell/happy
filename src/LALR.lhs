@@ -8,7 +8,7 @@ Generation of LALR parsing tables.
 > module LALR
 >       (genActionTable, genGotoTable, genLR0items, precalcClosure0,
 >        propLookaheads, calcLookaheads, mergeLookaheadInfo, countConflicts,
->        Lr0Item(..), Lr1Item)
+>        Lr0Item(..), Lr1Item(..))
 >       where
 
 > import GenUtils
@@ -35,15 +35,7 @@ Generation of LALR parsing tables.
 This means rule $a$, with dot at $b$ (all starting at 0)
 
 > data Lr0Item = Lr0 {-#UNPACK#-}!Int {-#UNPACK#-}!Int                  -- (rule, dot)
->       deriving (Eq,Ord
-
-#ifdef DEBUG
-
->       ,Show
-
-#endif
-
->       )
+>       deriving (Eq,Ord,Show)
 
 > data Lr1Item = Lr1 {-#UNPACK#-}!Int {-#UNPACK#-}!Int NameSet  -- (rule, dot, lookahead)
 

@@ -161,12 +161,14 @@ executable happy
   build-depends: base < 5,
                  array,
                  containers >= 0.4.2,
+                 dom-lt >= 0.2.2,
+                 text,
                  mtl >= 2.2.1
                      -- mtl-2.2.1 added Control.Monad.Except
 
   default-language: Haskell98
   default-extensions: CPP, MagicHash, FlexibleContexts
-  ghc-options: -Wall
+  ghc-options: -Wall -Wno-name-shadowing -Wno-missing-signatures -Wno-type-defaults -Wno-incomplete-patterns -Wno-unused-local-binds -Wno-unused-local-binds -Wno-unused-matches
   other-modules:
         Paths_happy
         AbsSyn
@@ -186,6 +188,11 @@ executable happy
         AttrGrammarParser
         ParamRules
         PrettyGrammar
+        RADCodeGen
+        RADCodeGen_LALR
+        RADStateGen
+        RADTools
+        Follow
 
 test-suite tests
   type: exitcode-stdio-1.0

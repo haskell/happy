@@ -36,12 +36,15 @@ Here is our mid-section datatype
 
 > data Production
 >       = Production Name [Name] (String,[Int]) Priority
+>    deriving (Eq
 
 #ifdef DEBUG
 
->       deriving Show
+>    , Show
 
 #endif
+
+>    )
 
 > data Grammar
 >       = Grammar {
