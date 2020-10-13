@@ -403,7 +403,7 @@ module RADCodeGen where
       lineLex1 = "parse" ++ show token ++ " k = lexerWrapper $ \\t -> case t of"
         
       lineLex2
-        | token == eof_term g = "  " ++ eof ++ " -> k"
+        | token == eof_term g = "  " ++ paren eof ++ " -> k"
         | otherwise = "  " ++ paren tok ++ " -> k " ++ t
         where
         Just (_, eof) = lexer g        
