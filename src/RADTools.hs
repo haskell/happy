@@ -126,7 +126,7 @@ module RADTools where
   -- The item itself may also be in its own completion.
   directCompletion :: Grammar -> Lr0Item -> [Lr0Item]
   directCompletion g item@(Lr0 rule dot)
-    | rule < 0 && dot == 0 = itemsStartingWith g (-rule) -- special case: completion of artifical item _ -> |- . NT
+    | rule < 0 && dot == 0 = itemsStartingWith g (-rule) -- special case: completion of artifical item _ -> . NT
     | hasNonterminalAfterDot g item = itemsStartingWith g (tokenAfterDot g item)
     | otherwise = []
     
@@ -154,15 +154,18 @@ module RADTools where
   itemStartsWith g item token = startsWith token (prod g item) where
     startsWith token (Production token' _ _ _) = token == token'
   
-  -- Convert an Lr0Item to a string, for example "A -> b . C D"
+  -- Convert an Lr0Item to a string, for example "A -> b · C D"
   showItem :: Grammar -> Lr0Item -> String
-  showItem g (Lr0 rule dot)
+  showItem = showItemWithSeparator "·"
+
+  showItemWithSeparator :: String -> Grammar -> Lr0Item -> String
+  showItemWithSeparator sep g (Lr0 rule dot)
     | rule < 0 = -- artificial NT handling
-      let nt = -rule in if dot == 0 then "|- -> . " ++ showToken nt else "|- -> " ++ showToken nt ++ " ."
+      let nt = -rule in if dot == 0 then "_ -> " ++ sep ++ " " ++ showToken nt else "_ -> " ++ showToken nt ++ " " ++ sep
     
     | otherwise = showProd (lookupProdNo g rule) where
     showProd = unwords . showProdArray
-    showProdArray (Production from to _ _) = insert "." (dot + 1) ([(showToken from) ++ " ->"] ++ (map showToken to))
+    showProdArray (Production from to _ _) = insert sep (dot + 1) ([(showToken from) ++ " ->"] ++ (map showToken to))
     showToken tok = (token_names g) ! tok
     insert elem pos list = let (ys,zs) = splitAt pos list in ys ++ [elem] ++ zs
     
@@ -174,12 +177,10 @@ module RADTools where
     showProdArray (Production from to _ _) = [(showToken from) ++ " ->"] ++ (map showToken to)
     showToken tok = (token_names g) ! tok
 
-  -- Convert a production (represented by its index) and its recognition point to a string, for example "A -> b C . D (has priority)"
+  -- Convert a production (represented by its index) and its recognition point to a string, for example "A -> b C . D"
   showRecognitionPoint :: XGrammar -> Int -> String
-  showRecognitionPoint x rule = showItem (g x) (Lr0 rule point) ++ prioText (lookupProdNo (g x) rule) where
+  showRecognitionPoint x rule = showItemWithSeparator "•" (g x) (Lr0 rule point) where
     point = (recognitionPoints x) !! rule
-    prioText (Production _ _ _ No) = ""
-    prioText _ = " (has priority)"
 
   ----- RAD-SPECIFIC -----
   
@@ -195,7 +196,7 @@ module RADTools where
   radCompletion :: XGrammar -> [Lr0Item] -> [Lr0Item]
   radCompletion x core = completeWithFunction directRadCompletion core where
     directRadCompletion item@(Lr0 rule dot)
-      | rule < 0 = directCompletion (g x) item -- special handling for item _ -> |- . NT
+      | rule < 0 = directCompletion (g x) item -- special handling for item _ -> . NT
       | dot < (recognitionPoints x) !! rule = directCompletion (g x) item
       | otherwise = []
   
