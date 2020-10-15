@@ -25,7 +25,9 @@ module RADCodeGen where
     rank2Types :: Bool, -- when True, all functions (including goto functions) which use or enclose a higher-rank-function are annotated with an explicit type.
     forallMatch :: String, -- the text which determines which types count as rank-2-types.
     
-    rulesTupleBased :: Bool,
+    rulesTupleBased :: Bool, -- actually, this doesn't produce good nor fast code. maybe drop this?
+
+    optimize :: Bool, -- inline all rule functions and eta-expand all applications of local "g" functions
 
     header :: String,
     footer :: String
@@ -204,24 +206,24 @@ module RADCodeGen where
       | mlex opts = common ++ " = lexerWrapper $ \\t -> case t of"
       | otherwise = common ++ " ts = case ts of" where
         common = "state" ++ show (raw i state) ++ " " ++ headerKs
-        headerKs = unwords $ map k (artCore state)
+        headerKs = unwords $ map (kNoEta "") (artCore state)
         
     shift (token, (state, i))
       | mlex opts = paren tok ++ " -> state" ++ show state ++ " " ++ kcontent
       | otherwise = "t@" ++ paren tok ++ ":tr -> state" ++ show state ++ " " ++ kcontent ++ " tr" where
         i' = map dotleft i
         tok = replaceDollar rawToken (if wantsProjection then "v" else "_")
-        kcontent = unwords (map (paren . (++ x) . k) i') where
+        kcontent = unwords (map (paren . k x) i') where
           x = if wantsProjection then " v" else " t"
         rawToken = fromJust $ lookup token (token_specs g)
         wantsProjection = "$$" == (rawToken \\ replaceDollar rawToken "") -- i.e. Tokens of form "TokenInt $$"
     
     announce (token, rule)
-      | mlex opts = paren tokMaybeEof ++ " -> repeatTok t $ rule" ++ show rule ++ " " ++ paren (k item)
+      | mlex opts = paren tokMaybeEof ++ " -> repeatTok t $ rule" ++ show rule ++ " " ++ paren (k "" item)
       | otherwise = if token == eof_term g then eofCase else normalCase
       where
-        normalCase = paren tok ++ ":tr -> rule" ++ show rule ++ " " ++ paren (k item) ++ " ts"
-        eofCase = "[] -> rule" ++ show rule ++ " " ++ paren (k item) ++ " ts"
+        normalCase = paren tok ++ ":tr -> rule" ++ show rule ++ " " ++ paren (k "" item) ++ " ts"
+        eofCase = "[] -> rule" ++ show rule ++ " " ++ paren (k "" item) ++ " ts"
 
         tokMaybeEof = if token == eof_term g then eof else tok
         Just (_, eof) = lexer g
@@ -243,7 +245,7 @@ module RADCodeGen where
         Just (_, eof) = lexer g
         
         removeDollar a = maybe a ($ "_") (mapDollarDollar a)
-        k' = k (head (artCore state))
+        k' = k "" (head (artCore state))
 
     goto (nt, (state, i))
       | hasRank2Type opts g nt = catMaybes [gototype, goto]
@@ -253,8 +255,11 @@ module RADCodeGen where
         gototype = case symboltype opts g nt of
           Just t -> Just $ "g" ++ show nt ++ " :: " ++ t ++ " -> " ++ paren outtype
           Nothing -> Nothing
-        goto = Just $ "g" ++ show nt ++ " x = state" ++ show state ++ " " ++ unwords (map (paren . (++ " x") . k) i')
+        goto
+          | optimize opts = Just $ "g" ++ show nt ++ " x " ++ ts ++ " = state" ++ show state ++ " " ++ unwords (map (paren . k "x") i') ++ " " ++ ts
+          | otherwise = Just $ "g" ++ show nt ++ " x = state" ++ show state ++ " " ++ unwords (map (paren . k "x") i')
         outtype = wrapperType opts ++ " r"
+        ts = if mlex opts then "la" else "ts"
       
     defaultAction'' = "  " ++ case defaultAction' state of
       ErrorShift' state -> defaultErrorShift state
@@ -263,31 +268,45 @@ module RADCodeGen where
       Error' -> defaultError
       
     defaultErrorShift toState
-      | mlex opts = "_ -> repeatTok t $ state" ++ show toState ++ " " ++ paren (k item ++ " ErrorToken")
-      | otherwise = "_ -> state" ++ show toState ++ " " ++ paren (k item ++ " ErrorToken") ++ " ts" where
+      | mlex opts = "_ -> repeatTok t $ state" ++ show toState ++ " " ++ paren (kNoEta "" item ++ " ErrorToken")
+      | otherwise = "_ -> state" ++ show toState ++ " " ++ paren (kNoEta "" item ++ " ErrorToken") ++ " ts" where
         item = head $ hdiv (raw completion' state) errorTok g
     
     defaultAnnounce rule
-      | mlex opts = "_ -> repeatTok t $ rule" ++ show rule ++ " " ++ paren (k item)
-      | otherwise = "_ -> rule" ++ show rule ++ " " ++ paren (k item) ++ " ts" where
+      | mlex opts = "_ -> repeatTok t $ rule" ++ show rule ++ " " ++ paren (k "" item)
+      | otherwise = "_ -> rule" ++ show rule ++ " " ++ paren (k "" item) ++ " ts" where
         item = fromJust $ find matches (raw completion' state) where -- the item in the completion corresponding to (i.e. of the) rule which is announced. The dot must be at the recognition point.
           matches (Lr0 rule' dot) = rule == rule' && (recognitionPoints x) !! rule == dot
         
     defaultAccept
       | mlex opts = "_ -> repeatTok t $ " ++ k'
       | otherwise = "_ -> " ++ k' ++ " ts" where
-        k' = k (head (artCore state))
+        k' = k "" (head (artCore state))
       
     defaultError
       | mlex opts = "_ -> happyErrorWrapper t"
       | otherwise = "_ -> " ++ happyError ++ " ts" where
       happyError = fromMaybe "happyError" (error_handler g)
     
-    k item@(Lr0 rule dot) = maybe noCore core $ elemIndex item (artCore state) where
+    k = if optimize opts then kEta else kNoEta
+
+    -- Produce "k1 x" or "action5 g4 x", or without x:
+    -- "k1" or "action5 g4"
+    kNoEta x item@(Lr0 rule dot) = maybe noCore core $ elemIndex item (artCore state) where
       core idx
-        | (length (artCore state) == 1) = "k"
+        | (length (artCore state) == 1) = "k " ++ x
         | otherwise = "k" ++ (show (idx + 1))
-      noCore = "action" ++ show rule ++ " g" ++ show (lhs g item)
+      noCore = "action" ++ show rule ++ " g" ++ show (lhs g item) ++ " " ++ x
+
+    -- Produce "\z -> k1 x z" or "action5 (\y z -> g4 y z) x", or without x:
+    -- "\z -> k1 z" or "action5 (\y z -> g4 y z)"
+    kEta x item@(Lr0 rule dot) = maybe noCore core $ elemIndex item (artCore state) where
+      core idx
+        | (length (artCore state) == 1) = if kArity idx == 0 then "k " ++ x else "\\z -> k " ++ x ++ " z"
+        | otherwise = if kArity idx == 0 then "k" ++ (show (idx + 1)) ++ " " ++ x else "\\z -> k" ++ (show (idx + 1)) ++ " " ++ x ++ " z"
+      noCore = "action" ++ show rule ++ " (\\y z -> g" ++ show (lhs g item) ++ " y z) " ++ x
+      kArity idx = kArity' idx - (if null x then 0 else 1)
+      kArity' idx = length $ rhsAfterDot g ((artCore state) !! idx)
 
    -- Create the type signature for a state.
   stateTypeSignature :: GenOptions -> Grammar -> Bool -> RADState -> Maybe String
@@ -415,14 +434,18 @@ module RADCodeGen where
   -- Generate the code for a rule.
   genRule :: GenOptions -> XGrammar -> Int -> String
   genRule opts x rule
-    | isTrivial = newline [comment, typedecl, trivialCode]
-    | otherwise = newline [comment, typedecl, code]
+    | isTrivial = newline [inline, comment, typedecl, trivialCode]
+    | otherwise = newline [inline, comment, typedecl, code]
     where
       
     recog = (recognitionPoints x) !! rule
     rhsAfterDot' = rhsAfterDot (RADTools.g x) (Lr0 rule recog)
     isTrivial = length rhsAfterDot' <= 1
     
+    inline
+      | optimize opts = "{-# INLINE rule" ++ show rule ++ " #-}"
+      | otherwise = ""
+
     comment
       | comments opts = "-- " ++ showRecognitionPoint x rule
       | otherwise = ""

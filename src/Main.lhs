@@ -252,6 +252,8 @@ Branch off to continuation-based RAD parser production:
 >       then
 >         
 >       let (isMonad, _, parserType, _, _) = monad g
+>
+>           optimize = OptCB_RAD_Optimizations `elem` cli
 >       
 >           ptype = case (Grammar.lexer g, isMonad) of
 >             (Nothing, False) -> RAD.Normal
@@ -269,7 +271,8 @@ Branch off to continuation-based RAD parser production:
 >             RAD.comments = showComments,
 >             RAD.rank2Types = rank2Types,
 >             RAD.rulesTupleBased = rulesTupleBased,
->             RAD.forallMatch = match
+>             RAD.forallMatch = match,
+>             RAD.optimize = optimize
 >           }
 >           
 >           lalrStates = generateLALRStates g action goto items2
@@ -485,6 +488,7 @@ The command line arguments.
 >
 >               | OptCB_RAD
 >               | OptCB_RAD_TupleBased
+>		| OptCB_RAD_Optimizations
 >               | OptCB_LALR
 >               | OptCB_ShowTypes
 >               | OptCB_ShowComments
@@ -527,6 +531,8 @@ The command line arguments.
 >       "create a continuation-based Recursive Ascent-Descent parser. Not compatible with most other options",
 >    Option [] ["cb-rad-tuple"] (NoArg OptCB_RAD_TupleBased)
 >       "same as cb-rad, but uses tuples instead of continuations inside rule functions",
+>    Option [] ["optims"] (NoArg OptCB_RAD_Optimizations)
+>       "add optimizations such as eta-expansions and explicit rule-inlining to a RAD parser",
 >    Option [] ["cb-lalr"] (NoArg OptCB_LALR)
 >       "create a continuation-based LALR parser. Not compatible with most other options",
 >    Option [] ["types"] (NoArg OptCB_ShowTypes)
