@@ -81,7 +81,7 @@ module RADCodeGen where
     definition = case ptype opts of
       Normal -> common ++ paren (checkEof ++ "const")
       Monad -> common ++ paren (checkEof ++ "const . " ++ returnP)
-      MonadLexer -> common ++ paren (checkEof ++ "const . " ++ returnP) ++ " []"
+      MonadLexer -> common ++ paren (checkEof ++ "const . " ++ returnP) ++ " Nothing"
       
     checkEof
       | isPartial = ""
@@ -109,9 +109,10 @@ module RADCodeGen where
     where
       
       -- type Parser r = [Token] -> P r
-      parserDecl
-        | ptype opts == Normal = "type " ++ parser "r" ++ " = [" ++ tokenT ++ "] -> r"
-        | otherwise = "type " ++ parser "r" ++ " = [" ++ tokenT ++ "] -> " ++ p "r"
+      parserDecl = case ptype opts of
+        Normal -> "type " ++ parser "r" ++ " = [" ++ tokenT ++ "] -> r"
+        Monad -> "type " ++ parser "r" ++ " = [" ++ tokenT ++ "] -> " ++ p "r"
+        MonadLexer -> "type " ++ parser "r" ++ " = Maybe " ++ paren tokenT ++ " -> " ++ p "r"
       
       -- data ErrorToken = ErrorToken
       errorToken = "data " ++ errorTokenT ++ " = " ++ errorTokenT
@@ -124,20 +125,20 @@ module RADCodeGen where
         definition = name ++ " a f ts = " ++ paren thenP ++ " a (flip f ts)"
 
       -- repeatTok :: Token -> Parser a -> Parser a
-      -- repeatTok tok p = \cur -> p (tok:cur)
+      -- repeatTok tok p _ = p (Just tok)
       repeatTok = newline [typedecl, definition] where
         name = "repeatTok"
         typedecl = name ++ " :: " ++ tokenT ++ " -> " ++ parser "a" ++ " -> " ++ parser "a"
-        definition = name ++ " tok p = \\cur -> p (tok:cur)"
+        definition = name ++ " tok p _ = p (Just tok)"
       
       -- lexerWrapper :: (Token -> Parser a) -> Parser a
-      -- lexerWrapper cont [] = lexer (\tok -> cont tok [])
-      -- lexerWrapper cont (tok:toks) = cont tok toks
+      -- lexerWrapper cont Nothing = lexer (\tok -> cont tok Nothing)
+      -- lexerWrapper cont (Just tok) = cont tok Nothing
       wrapLexer = newline [typedecl, line1, line2] where
         name = "lexerWrapper"
         typedecl = name ++ " :: " ++ paren (tokenT ++ " -> " ++ parser "a") ++ " -> " ++ parser "a"
-        line1 = name ++ " cont [] = " ++ lexer' ++ " (\\t -> cont t [])"
-        line2 = name ++ " cont (t:ts) = cont t ts"
+        line1 = name ++ " cont Nothing = " ++ lexer' ++ " (\\t -> cont t Nothing)"
+        line2 = name ++ " cont (Just tok) = cont tok Nothing"
 
       -- happyErrorWrapper :: Token -> Parser a
       -- happyErrorWrapper t _ = happyError t
