@@ -269,8 +269,8 @@ module RADCodeGen where
       Error' -> defaultError
       
     defaultErrorShift toState
-      | mlex opts = "_ -> repeatTok t $ state" ++ show toState ++ " " ++ paren (kNoEta "" item ++ " ErrorToken")
-      | otherwise = "_ -> state" ++ show toState ++ " " ++ paren (kNoEta "" item ++ " ErrorToken") ++ " ts" where
+      | mlex opts = "_ -> repeatTok t $ state" ++ show toState ++ " " ++ paren (k "ErrorToken" item)
+      | otherwise = "_ -> state" ++ show toState ++ " " ++ paren (k "ErrorToken" item) ++ " ts" where
         item = head $ hdiv (raw completion' state) errorTok g
     
     defaultAnnounce rule
@@ -296,7 +296,7 @@ module RADCodeGen where
     kNoEta x item@(Lr0 rule dot) = maybe noCore core $ elemIndex item (artCore state) where
       core idx
         | (length (artCore state) == 1) = "k " ++ x
-        | otherwise = "k" ++ (show (idx + 1))
+        | otherwise = "k" ++ (show (idx + 1)) ++ " " ++ x
       noCore = "action" ++ show rule ++ " g" ++ show (lhs g item) ++ " " ++ x
 
     -- Produce "\z -> k1 x z" or "action5 (\y z -> g4 y z) x", or without x:
