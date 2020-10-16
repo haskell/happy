@@ -8,7 +8,7 @@ module RADStateGen (generateLALRStates, generateRADStates, createXGrammar, artCo
   import Data.Set (Set, toList, fromList, elemAt)
   import qualified Data.IntSet
   import LALR
-  import RADTools (CompletedLr0State, Lr1State, XGrammar(..), complete, showItem, showProd, lhs, core, completion, prod, hasTokenAfterDot, tokenAfterDot, rhsLength', isInDirectCompletion, dotIsAtRightEnd, plus, hdiv, radCompletion, itemsStartingWith, plusRad, completeWithFunction, directCompletion, rhsAfterDot)
+  import RADTools (CompletedLr0State, Lr1State, XGrammar(..), complete, showItem, showProd, lhs, core, completion, prod, hasTokenAfterDot, tokenAfterDot, rhsLength', isInDirectCompletion, dotIsAtRightEnd, plus, hdiv, radCompletion, itemsStartingWith, plusRad, completeWithFunction, directCompletion, rhsAfterDot, showRecognitionPoint)
   import Control.Monad
   import Data.List
   import Data.Maybe
@@ -110,6 +110,10 @@ module RADStateGen (generateLALRStates, generateRADStates, createXGrammar, artCo
     debugPrint "State Graphs:" (showGraph g) allGraphs
     --debugPrint "Non-Free Items:" (showItem g) nonfree
     debugPrint "All Rules With Their Recognition Points:" (showRecognitionPoint x) [0 .. (length (productions g)) - 1]
+
+    -- LL-ness
+    let totalLength = sum $ map (\(Production _ rhs _ _) -> length rhs) (productions g)
+    putStrLn $ "Sum of rec-points: " ++ show (sum recognitionPoints) ++ "; total rule lengths: " ++ show totalLength ++ "\nLL-ness: " ++ show (100 * (1 - (fromIntegral (sum recognitionPoints)) / (fromIntegral totalLength))) ++ "%"
 #endif
     
     return x
