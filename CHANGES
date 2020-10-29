@@ -1,4 +1,14 @@
 -----------------------------------------------------------------------------
+1.21.0
+
+        * Add two new backends:
+         * Continuation-based LALR(1) (recursive ascent)
+         * Continuation-based RAD(1) (recursive ascent-descent)
+        * RAD generally produces smaller compiled code using less states
+        * Continuation-based form introduces a speed advantage over
+          table-based form
+
+-----------------------------------------------------------------------------
 1.20.0
 
         * Fix #121: the -i flag produces an .info file even if
