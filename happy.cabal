@@ -1,5 +1,5 @@
 name: happy
-version: 1.19.12
+version: 1.20.0
 license: BSD2
 license-file: LICENSE
 copyright: (c) Andy Gill, Simon Marlow
@@ -10,7 +10,7 @@ stability: stable
 homepage: https://www.haskell.org/happy/
 synopsis: Happy is a parser generator for Haskell
 category: Development
-cabal-version: >= 1.8
+cabal-version: >= 1.10
 build-type: Simple
 
 Description:
@@ -28,7 +28,7 @@ tested-with:
 
 data-dir: data/
 
-data-files: 
+data-files:
         HappyTemplate
         HappyTemplate-arrays
         HappyTemplate-arrays-coerce
@@ -164,7 +164,8 @@ executable happy
                  mtl >= 2.2.1
                      -- mtl-2.2.1 added Control.Monad.Except
 
-  extensions: CPP, MagicHash, FlexibleContexts
+  default-language: Haskell98
+  default-extensions: CPP, MagicHash, FlexibleContexts
   ghc-options: -Wall
   other-modules:
         Paths_happy
@@ -193,4 +194,5 @@ test-suite tests
   build-tools: happy
 
   build-depends: base, process
+  default-language: Haskell98
 
