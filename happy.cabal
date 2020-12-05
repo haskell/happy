@@ -161,6 +161,7 @@ executable happy
   build-depends: base < 5,
                  array,
                  containers >= 0.4.2,
+                 template-haskell,
                  mtl >= 2.2.1
                      -- mtl-2.2.1 added Control.Monad.Except
 

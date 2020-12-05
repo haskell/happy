@@ -4,6 +4,10 @@ The code generator.
 (c) 1993-2001 Andy Gill, Simon Marlow
 -----------------------------------------------------------------------------
 
+should be {-# LANGUAGE TemplateHaskellQuotes #-}
+
+> {-# LANGUAGE TemplateHaskell #-}
+
 > module ProduceCode (produceParser) where
 
 > import Paths_happy            ( version )
@@ -25,6 +29,9 @@ The code generator.
 > import Data.Array.Unboxed     ( UArray )
 > import Data.Array.MArray
 > import Data.Array.IArray
+>
+> import Language.Haskell.TH hiding (Name)
+> import qualified Language.Haskell.TH as TH
 
 %-----------------------------------------------------------------------------
 Produce the complete output file.
@@ -92,8 +99,8 @@ Produce the complete output file.
 >
 >    partTySigs_opts = ifGeGhc710 (str "{-# LANGUAGE PartialTypeSignatures #-}" . nl)
 >
->    intMaybeHash | ghc       = str "Happy_GHC_Exts.Int#"
->                 | otherwise = str "Prelude.Int"
+>    intMaybeHash | ghc       = mkName "Happy_GHC_Exts.Int#"
+>                 | otherwise = mkName "Happy_GHC_Exts.Int#"
 >
 >    -- Parsing monad and its constraints
 >    pty = str monad_tycon
@@ -172,23 +179,28 @@ If we're using coercions, we need to generate the injections etc.
 >               . mkHappyOut n . str " x = Happy_GHC_Exts.unsafeCoerce# x\n"
 >               . str "{-# INLINE " . mkHappyOut n . str " #-}"
 >         in
->           str "newtype " . happy_item . str " = HappyAbsSyn HappyAny\n" -- see NOTE below
->         . interleave "\n" (map str
->           [ "#if __GLASGOW_HASKELL__ >= 607",
->             "type HappyAny = Happy_GHC_Exts.Any",
->             "#else",
->             "type HappyAny = forall a . a",
->             "#endif" ])
+>           [d|
+>             --newtype $(happy_item) = HappyAbsSyn HappyAny
+>             -- #if __GLASGOW_HASKELL__ >= 607,
+>             type HappyAny = $(mkName "Happy_GHC_Exts.Any")
+>             -- #else,
+>             -- type HappyAny = forall a . a,
+>             -- #endif
+>           |]
 >         . interleave "\n"
 >           [ inject n ty . nl . extract n ty | (n,ty) <- assocs nt_types ]
 >         -- token injector
->         . str "happyInTok :: " . token . str " -> " . bhappy_item
->         . str "\nhappyInTok x = Happy_GHC_Exts.unsafeCoerce# x\n{-# INLINE happyInTok #-}\n"
+>         . [d|
+>             happyInTok :: $(token) -> $(bhappy_item)
+>             happyInTok x = $(mkName "Happy_GHC_Exts.unsafeCoerce#") x
+>             {-# INLINE happyInTok #-}
+>           |]
 >         -- token extractor
->         . str "happyOutTok :: " . bhappy_item . str " -> " . token
->         . str "\nhappyOutTok x = Happy_GHC_Exts.unsafeCoerce# x\n{-# INLINE happyOutTok #-}\n"
-
->         . str "\n"
+>         . [d|
+>             happyOutTok :: $(bhappy_item) -> $(token)
+>             happyOutTok x = $(mkName "Happy_GHC_Exts.unsafeCoerce#") x
+>             {-# INLINE happyOutTok #-}
+>           |]
 
 NOTE: in the coerce case we always coerce all the semantic values to
 HappyAbsSyn which is declared to be a synonym for Any.  This is the
@@ -210,13 +222,14 @@ example where this matters.
 ... Otherwise, output the declaration in full...
 
 >     | otherwise
->       = str "data HappyAbsSyn " . str_tyvars
->       . str "\n\t= HappyTerminal " . token
->       . str "\n\t| HappyErrorToken Prelude.Int\n"
->       . interleave "\n"
->         [ str "\t| " . makeAbsSynCon n . strspace . typeParam n ty
->         | (n, ty) <- assocs nt_types,
->           (nt_types_index ! n) == n]
+>       = [d|
+>         data HappyAbsSyn {- $(str_tyvars) -} where
+>           HappyTerminal :: $(token) -> HappyAbsSyn
+>           HappyErrorToken :: Prelude.Int -> HappyAbsSyn
+>           -- $([ makeAbsSynCon n . strspace . typeParam n ty 
+>           --   | (n, ty) <- assocs nt_types,
+>           --     (nt_types_index ! n) == n])
+>        |]
 
 >     where all_tyvars = [ 't':show n | (n, Nothing) <- assocs nt_types ]
 >           str_tyvars = str (unwords all_tyvars)

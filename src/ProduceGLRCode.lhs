@@ -7,6 +7,8 @@ This module is designed as an extension to the Haskell parser generator Happy.
         -- extension to semantic rules, and various optimisations
 %-----------------------------------------------------------------------------
 
+> {-# LANGUAGE TemplateHaskellQuotes #-}
+
 > module ProduceGLRCode ( produceGLRParser
 >                       , DecodeOption(..)
 >                       , FilterOption(..)
