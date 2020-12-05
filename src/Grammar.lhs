@@ -22,7 +22,19 @@ Here is our mid-section datatype
 > import AbsSyn
 > import ParseMonad
 > import AttrGrammar
+
+We use the bootstrapped version if it is available
+
+#ifdef HAPPY_BOOTSTRAP
+
+> import AttrGrammarParser.Bootstrapped
+
+#else
+
 > import AttrGrammarParser.Oracle
+
+#endif
+
 > import ParamRules
 
 > import Data.Array

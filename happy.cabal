@@ -150,6 +150,11 @@ extra-source-files:
         tests/rank2.y
         tests/shift01.y
 
+flag bootstrap
+  description: Optimize the implementation of happy using a pre-built happy
+  manual: True
+  default: False
+
 source-repository head
   type:     git
   location: https://github.com/simonmar/happy.git
@@ -177,19 +182,29 @@ executable happy
         LALR
         Lexer
         ParseMonad
-        ParseMonad.Bootstrapped
-        ParseMonad.Oracle
-        Parser.Oracle
-        Parser.Bootstrapped
         ProduceCode
         ProduceGLRCode
         NameSet
         Target
         AttrGrammar
-        AttrGrammarParser.Oracle
-        AttrGrammarParser.Bootstrapped
         ParamRules
         PrettyGrammar
+
+  if flag(bootstrap)
+    -- TODO put this back when Cabal can use it's qualified goals to better
+    -- understand bootstrapping
+    --build-tools: happy
+    cpp-options: -DHAPPY_BOOTSTRAP
+    other-modules:
+      ParseMonad.Bootstrapped
+      Parser.Bootstrapped
+      AttrGrammarParser.Bootstrapped
+  else
+    other-modules:
+      ParseMonad.Oracle
+      Parser.Oracle
+      AttrGrammarParser.Oracle
+
 
 test-suite tests
   type: exitcode-stdio-1.0
@@ -199,4 +214,3 @@ test-suite tests
 
   build-depends: base, process
   default-language: Haskell98
-
