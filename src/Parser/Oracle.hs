@@ -1,6 +1,6 @@
 {-# LANGUAGE RankNTypes #-}
 
-module Parser (ourParser, AbsSyn) where
+module Parser.Oracle (ourParser, AbsSyn) where
 
 #if !MIN_VERSION_base(4,8,0)
 import Control.Applicative

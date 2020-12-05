@@ -177,13 +177,15 @@ executable happy
         LALR
         Lexer
         ParseMonad
-        Parser
+        Parser.Oracle
+        Parser.Bootstrapped
         ProduceCode
         ProduceGLRCode
         NameSet
         Target
         AttrGrammar
-        AttrGrammarParser
+        AttrGrammarParser.Oracle
+        AttrGrammarParser.Bootstrapped
         ParamRules
         PrettyGrammar
 

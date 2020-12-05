@@ -22,7 +22,7 @@ Here is our mid-section datatype
 > import AbsSyn
 > import ParseMonad
 > import AttrGrammar
-> import AttrGrammarParser
+> import AttrGrammarParser.Oracle
 > import ParamRules
 
 > import Data.Array
