@@ -10,6 +10,7 @@ The parser.
 > {-# OPTIONS_GHC -w #-}
 > module Parser.Bootstrapped (ourParser,AbsSyn) where
 > import ParseMonad
+> import ParseMonad.Bootstrapped
 > import AbsSyn
 > import Lexer
 > }
@@ -46,8 +47,8 @@ The parser.
 >       ")"             { TokenKW      TokParenR }
 >       ","             { TokenKW      TokComma }
 
-> %monad { P AgToken }
-> %lexer { lexer } { TokenEOF }
+> %monad { P }
+> %lexer { lexTokenP } { TokenEOF }
 
 > %%
 

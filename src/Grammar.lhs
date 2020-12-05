@@ -424,7 +424,7 @@ So is this.
 
    first we need to parse the body of the code block
 
->     case runP agParser (PS code 0 Nothing) of
+>     case runFromStartP agParser code 0 of
 >        Left msg  -> do addErr ("error in attribute grammar rules: "++msg)
 >                        return ("",[])
 >        Right rules  ->

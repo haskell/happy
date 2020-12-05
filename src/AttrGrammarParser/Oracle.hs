@@ -11,6 +11,7 @@ import Control.Applicative
 #endif
 
 import ParseMonad
+import ParseMonad.Oracle
 import AttrGrammar
 
 type Parser = P AgToken

@@ -8,6 +8,7 @@ or a conditional statement.
 > {-# OPTIONS_GHC -w #-}
 > module AttrGrammarParser.Bootstrapped (agParser) where
 > import ParseMonad
+> import ParseMonad.Bootstrapped
 > import AttrGrammar
 > }
 
@@ -24,8 +25,8 @@ or a conditional statement.
 >   rightRef  { AgTok_RightmostRef _ }
 >   unknown   { AgTok_Unknown _ }
 >
-> %monad { P AgToken }
-> %lexer { (fmap (maybe AgTok_EOF) . lexToken') } { AgTok_EOF }
+> %monad { P }
+> %lexer { lexTokenP } { AgTok_EOF }
 
 > %%
 
@@ -63,6 +64,6 @@ or a conditional statement.
 >   |                                            { [] }
 
 > {
-> happyError :: P AgToken a
+> happyError :: P a
 > happyError = failP (\l -> show l ++ ": Parse error\n")
 > }

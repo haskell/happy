@@ -177,6 +177,8 @@ executable happy
         LALR
         Lexer
         ParseMonad
+        ParseMonad.Bootstrapped
+        ParseMonad.Oracle
         Parser.Oracle
         Parser.Bootstrapped
         ProduceCode
