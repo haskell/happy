@@ -214,52 +214,52 @@ Branch off to GLR parser production
 >           (debug, (glr_decode,filtering,ghc_exts))
 >                         -- controls decoding code-gen
 >           g             -- grammar object
->         else return ()
+>         else do
 
 
 %---------------------------------------
 Resume normal (ie, non-GLR) processing
 
->       let
->           template = template_file template' target cli opt_coerce
+>           let
+>             template = template_file template' target cli opt_coerce
 
 Read in the template file for this target:
 
->       templ <- readFile template
+>           templ <- readFile template
 
 and generate the code.
 
->       magic_name <- getMagicName cli
->       let
->           outfile = produceParser
->                       g
->                       action
->                       goto
->                       (optsToInject target cli)
->                       header
->                       tl
->                       target
->                       opt_coerce
->                       opt_ghc
->                       opt_strict
->           magic_filter =
->             case magic_name of
->               Nothing -> id
->               Just name' ->
->                 let
->                     small_name = name'
->                     big_name = toUpper (head name') : tail name'
->                     filter_output ('h':'a':'p':'p':'y':rest) =
->                       small_name ++ filter_output rest
->                     filter_output ('H':'a':'p':'p':'y':rest) =
->                       big_name ++ filter_output rest
->                     filter_output (c:cs) = c : filter_output cs
->                     filter_output [] = []
->                 in
->                    filter_output
+>           magic_name <- getMagicName cli
+>           let
+>               outfile = produceParser
+>                           g
+>                           action
+>                           goto
+>                           (optsToInject target cli)
+>                           header
+>                           tl
+>                           target
+>                           opt_coerce
+>                           opt_ghc
+>                           opt_strict
+>               magic_filter =
+>                 case magic_name of
+>                   Nothing -> id
+>                   Just name' ->
+>                     let
+>                         small_name = name'
+>                         big_name = toUpper (head name') : tail name'
+>                         filter_output ('h':'a':'p':'p':'y':rest) =
+>                           small_name ++ filter_output rest
+>                         filter_output ('H':'a':'p':'p':'y':rest) =
+>                           big_name ++ filter_output rest
+>                         filter_output (c:cs) = c : filter_output cs
+>                         filter_output [] = []
+>                     in
+>                        filter_output
 
->       (if outfilename == "-" then putStr else writeFile outfilename)
->               (magic_filter (outfile ++ templ))
+>           (if outfilename == "-" then putStr else writeFile outfilename)
+>                   (magic_filter (outfile ++ templ))
 
 Successfully Finished.
 
