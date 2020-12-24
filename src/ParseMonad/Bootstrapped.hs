@@ -1,7 +1,12 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
+#if __GLASGOW_HASKELL__ >= 800
 {-# OPTIONS_GHC -Wno-orphans #-}
+#else
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+#endif
 
 module ParseMonad.Bootstrapped where
 
