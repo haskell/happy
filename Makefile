@@ -40,10 +40,10 @@ sdist-test-only ::
 	cd "${SDIST_DIR}/happy-$(HAPPY_VER)/" \
 		&& cabal v2-build all --flag -bootstrap \
 		&& cabal v2-install --flag -bootstrap --installdir="./bootstrap-root" \
-		&& cabal v2-test all --flag -bootstrap \
+		&& cabal v2-test all -j --flag -bootstrap \
 		&& export PATH=./bootstrap-root:$$PATH \
 		&& cabal v2-build all --flag +bootstrap \
-		&& cabal v2-test all --flag +bootstrap
+		&& cabal v2-test all -j --flag +bootstrap
 	@echo ""
 	@echo "Success! ${SDIST_DIR}/happy-$(HAPPY_VER).tar.gz is ready for distribution!"
 	@echo ""
