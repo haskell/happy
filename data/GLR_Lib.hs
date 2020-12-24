@@ -1,5 +1,3 @@
-{-# LINE 1 "GLR_Lib.hs" #-}
-
 {-
    GLR_Lib.lhs
    $Id: GLR_Lib.lhs,v 1.5 2005/08/03 13:42:23 paulcc Exp $
@@ -38,6 +36,10 @@
            , GSem(..)
            )
   where
+
+#if defined(HAPPY_GHC) && !defined(__GLASGOW_HASKELL__)
+#  error `HAPPY_GHC` is defined but this code isn't being built with GHC.
+#endif
 
 import Data.Char
 import qualified Data.Map as Map

@@ -1,85 +1,83 @@
 -- $Id: GenericTemplate.hs,v 1.26 2005/01/14 14:47:22 simonmar Exp $
 
 #ifdef HAPPY_GHC
-#undef __GLASGOW_HASKELL__
-#define HAPPY_IF_GHC_GT_706 #if __GLASGOW_HASKELL__ > 706
-#define HAPPY_ELSE #else
-#define HAPPY_ENDIF #endif
-#define HAPPY_DEFINE #define
-#endif
-
-#ifdef HAPPY_GHC
-#define ILIT(n) n#
-#define IBOX(n) (Happy_GHC_Exts.I# (n))
-#define FAST_INT Happy_GHC_Exts.Int#
+#  if !defined(__GLASGOW_HASKELL__)
+#    error `HAPPY_GHC` is defined but this code isn't being built with GHC.
+#  endif
+#  define ILIT(n) n#
+#  define IBOX(n) (Happy_GHC_Exts.I# (n))
+#  define FAST_INT Happy_GHC_Exts.Int#
 -- Do not remove this comment. Required to fix CPP parsing when using GCC and a clang-compiled alex.
-HAPPY_IF_GHC_GT_706
-HAPPY_DEFINE LT(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.<# m)) :: Prelude.Bool)
-HAPPY_DEFINE GTE(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.>=# m)) :: Prelude.Bool)
-HAPPY_DEFINE EQ(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.==# m)) :: Prelude.Bool)
-HAPPY_ELSE
-HAPPY_DEFINE LT(n,m) (n Happy_GHC_Exts.<# m)
-HAPPY_DEFINE GTE(n,m) (n Happy_GHC_Exts.>=# m)
-HAPPY_DEFINE EQ(n,m) (n Happy_GHC_Exts.==# m)
-HAPPY_ENDIF
-#define PLUS(n,m) (n Happy_GHC_Exts.+# m)
-#define MINUS(n,m) (n Happy_GHC_Exts.-# m)
-#define TIMES(n,m) (n Happy_GHC_Exts.*# m)
-#define NEGATE(n) (Happy_GHC_Exts.negateInt# (n))
-#define IF_GHC(x) (x)
+#  if __GLASGOW_HASKELL__ > 706
+#    define LT(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.<# m)) :: Prelude.Bool)
+#    define GTE(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.>=# m)) :: Prelude.Bool)
+#    define EQ(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.==# m)) :: Prelude.Bool)
+#  else
+#    define LT(n,m) (n Happy_GHC_Exts.<# m)
+#    define GTE(n,m) (n Happy_GHC_Exts.>=# m)
+#    define EQ(n,m) (n Happy_GHC_Exts.==# m)
+#  endif
+#  define PLUS(n,m) (n Happy_GHC_Exts.+# m)
+#  define MINUS(n,m) (n Happy_GHC_Exts.-# m)
+#  define TIMES(n,m) (n Happy_GHC_Exts.*# m)
+#  define NEGATE(n) (Happy_GHC_Exts.negateInt# (n))
+#  define IF_GHC(x) (x)
 #else
-#define ILIT(n) (n)
-#define IBOX(n) (n)
-#define FAST_INT Prelude.Int
-#define LT(n,m) (n Prelude.< m)
-#define GTE(n,m) (n Prelude.>= m)
-#define EQ(n,m) (n Prelude.== m)
-#define PLUS(n,m) (n Prelude.+ m)
-#define MINUS(n,m) (n Prelude.- m)
-#define TIMES(n,m) (n Prelude.* m)
-#define NEGATE(n) (Prelude.negate (n))
-#define IF_GHC(x)
+#  define ILIT(n) (n)
+#  define IBOX(n) (n)
+#  define FAST_INT Prelude.Int
+#  define LT(n,m) (n Prelude.< m)
+#  define GTE(n,m) (n Prelude.>= m)
+#  define EQ(n,m) (n Prelude.== m)
+#  define PLUS(n,m) (n Prelude.+ m)
+#  define MINUS(n,m) (n Prelude.- m)
+#  define TIMES(n,m) (n Prelude.* m)
+#  define NEGATE(n) (Prelude.negate (n))
+#  define IF_GHC(x)
 #endif
 
 data Happy_IntList = HappyCons FAST_INT Happy_IntList
 
 #if defined(HAPPY_ARRAY)
-#define CONS(h,t) (HappyCons (h) (t))
+#  define CONS(h,t) (HappyCons (h) (t))
 #else
-#define CONS(h,t) ((h):(t))
+#  define CONS(h,t) ((h):(t))
 #endif
 
 #if defined(HAPPY_ARRAY)
-#define ERROR_TOK ILIT(0)
-#define DO_ACTION(state,i,tk,sts,stk) happyDoAction i tk state sts (stk)
-#define HAPPYSTATE(i) (i)
-#define GOTO(action) happyGoto
-#define IF_ARRAYS(x) (x)
+#  define ERROR_TOK ILIT(0)
+#  define DO_ACTION(state,i,tk,sts,stk) happyDoAction i tk state sts (stk)
+#  define HAPPYSTATE(i) (i)
+#  define GOTO(action) happyGoto
+#  define IF_ARRAYS(x) (x)
 #else
-#define ERROR_TOK ILIT(1)
-#define DO_ACTION(state,i,tk,sts,stk) state i i tk HAPPYSTATE(state) sts (stk)
-#define HAPPYSTATE(i) (HappyState (i))
-#define GOTO(action) action
-#define IF_ARRAYS(x) 
+#  define ERROR_TOK ILIT(1)
+#  define DO_ACTION(state,i,tk,sts,stk) state i i tk HAPPYSTATE(state) sts (stk)
+#  define HAPPYSTATE(i) (HappyState (i))
+#  define GOTO(action) action
+#  define IF_ARRAYS(x)
 #endif
 
 #if defined(HAPPY_COERCE)
-#define GET_ERROR_TOKEN(x)  (case Happy_GHC_Exts.unsafeCoerce# x of { IBOX(i) -> i })
-#define MK_ERROR_TOKEN(i)   (Happy_GHC_Exts.unsafeCoerce# IBOX(i))
-#define MK_TOKEN(x)         (happyInTok (x))
+#  if !defined(HAPPY_GHC)
+#    error `HAPPY_COERCE` requires `HAPPY_GHC`
+#  endif
+#  define GET_ERROR_TOKEN(x)  (case Happy_GHC_Exts.unsafeCoerce# x of { IBOX(i) -> i })
+#  define MK_ERROR_TOKEN(i)   (Happy_GHC_Exts.unsafeCoerce# IBOX(i))
+#  define MK_TOKEN(x)         (happyInTok (x))
 #else
-#define GET_ERROR_TOKEN(x)  (case x of { HappyErrorToken IBOX(i) -> i })
-#define MK_ERROR_TOKEN(i)   (HappyErrorToken IBOX(i))
-#define MK_TOKEN(x)         (HappyTerminal (x))
+#  define GET_ERROR_TOKEN(x)  (case x of { HappyErrorToken IBOX(i) -> i })
+#  define MK_ERROR_TOKEN(i)   (HappyErrorToken IBOX(i))
+#  define MK_TOKEN(x)         (HappyTerminal (x))
 #endif
 
 #if defined(HAPPY_DEBUG)
-#define DEBUG_TRACE(s)    (happyTrace (s)) $
+#  define DEBUG_TRACE(s)    (happyTrace (s)) $
 happyTrace string expr = Happy_System_IO_Unsafe.unsafePerformIO $ do
     Happy_System_IO.hPutStr Happy_System_IO.stderr string
     return expr
 #else
-#define DEBUG_TRACE(s)    {- nothing -}
+#  define DEBUG_TRACE(s)    {- nothing -}
 #endif
 
 infixr 9 `HappyStk`
@@ -98,7 +96,7 @@ happyParse start_state = happyNewToken start_state notHappyAtAll notHappyAtAll
 -- the stack in this case.
 happyAccept ERROR_TOK tk st sts (_ `HappyStk` ans `HappyStk` _) =
         happyReturn1 ans
-happyAccept j tk st sts (HappyStk ans _) = 
+happyAccept j tk st sts (HappyStk ans _) =
         IF_GHC(happyTcHack j IF_ARRAYS(happyTcHack st)) (happyReturn1 ans)
 
 -----------------------------------------------------------------------------
@@ -107,7 +105,7 @@ happyAccept j tk st sts (HappyStk ans _) =
 #if defined(HAPPY_ARRAY)
 
 happyDoAction i tk st
-        = DEBUG_TRACE("state: " ++ show IBOX(st) ++ 
+        = DEBUG_TRACE("state: " ++ show IBOX(st) ++
                       ",\ttoken: " ++ show IBOX(i) ++
                       ",\taction: ")
           case action of
@@ -257,7 +255,7 @@ happyDropStk n (x `HappyStk` xs) = happyDropStk MINUS(n,(ILIT(1)::FAST_INT)) xs
 -- Moving to a new state after a reduction
 
 #if defined(HAPPY_ARRAY)
-happyGoto nt j tk st = 
+happyGoto nt j tk st =
    DEBUG_TRACE(", goto state " ++ show IBOX(new_state) ++ "\n")
    happyDoAction j tk new_state
    where off = happyAdjustOffset (indexShortOffAddr happyGotoOffsets st)
@@ -273,7 +271,7 @@ happyGoto action j tk st = action j j tk (HappyState action)
 -- parse error if we are in recovery and we fail again
 happyFail explist ERROR_TOK tk old_st _ stk@(x `HappyStk` _) =
      let i = GET_ERROR_TOKEN(x) in
---      trace "failing" $ 
+--      trace "failing" $
         happyError_ explist i tk
 
 {-  We don't need state discarding for our restricted implementation of
@@ -281,7 +279,7 @@ happyFail explist ERROR_TOK tk old_st _ stk@(x `HappyStk` _) =
     for now --SDM
 
 -- discard a state
-happyFail  ERROR_TOK tk old_st CONS(HAPPYSTATE(action),sts) 
+happyFail  ERROR_TOK tk old_st CONS(HAPPYSTATE(action),sts)
                                                 (saved_tok `HappyStk` _ `HappyStk` stk) =
 --      trace ("discarding state, depth " ++ show (length stk))  $
         DO_ACTION(action,ERROR_TOK,tk,sts,(saved_tok`HappyStk`stk))
@@ -308,7 +306,7 @@ happyTcHack x y = y
 #endif
 
 -----------------------------------------------------------------------------
--- Seq-ing.  If the --strict flag is given, then Happy emits 
+-- Seq-ing.  If the --strict flag is given, then Happy emits
 --      happySeq = happyDoSeq
 -- otherwise it emits
 --      happySeq = happyDontSeq

@@ -16,7 +16,6 @@ sdist ::
 		echo "Error: Tree is not clean"; \
 		exit 1; \
 	fi
-	$(CABAL) v2-run gen-happy-sdist
 	$(CABAL) v2-sdist
 	@if [ ! -f "${SDIST_DIR}/happy-$(HAPPY_VER).tar.gz" ]; then \
 		echo "Error: source tarball not found: dist/happy-$(HAPPY_VER).tar.gz"; \

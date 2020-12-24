@@ -182,6 +182,7 @@ of code we should generate, and where it should go:
 >       template'   <- getTemplate getDataDir cli
 >       opt_coerce  <- getCoerce target cli
 >       opt_strict  <- getStrict cli
+>       opt_array   <- getArray cli
 >       opt_ghc     <- getGhc cli
 
 Add any special options or imports required by the parsing machinery.
@@ -201,7 +202,10 @@ Branch off to GLR parser production
 >                      | otherwise                = NoFiltering
 >           ghc_exts   | OptGhcTarget `elem` cli  = UseGhcExts
 >                                                   (importsToInject cli)
->                                                   (optsToInject target cli)
+
+Unlike below, don't always passs CPP, because only one of the files needs it.
+
+>                                                   (langExtsToInject cli)
 >                      | otherwise                = NoGhcExts
 >           debug      = OptDebugParser `elem` cli
 >       if OptGLR `elem` cli
@@ -222,7 +226,7 @@ Branch off to GLR parser production
 Resume normal (ie, non-GLR) processing
 
 >           let
->             template = template_file template' target cli opt_coerce
+>               template = template' ++ "/HappyTemplate.hs"
 
 Read in the template file for this target:
 
@@ -236,7 +240,10 @@ and generate the code.
 >                           g
 >                           action
 >                           goto
->                           (optsToInject target cli)
+
+CPP is needed in all cases with unified template
+
+>                           ("CPP" : langExtsToInject cli)
 >                           header
 >                           tl
 >                           target
@@ -259,8 +266,17 @@ and generate the code.
 >                     in
 >                        filter_output
 
+>               vars_to_define = concat
+>                 [ [ "HAPPY_DEBUG"  | debug ]
+>                 , [ "HAPPY_ARRAY"  | opt_array ]
+>                 , [ "HAPPY_GHC"    | opt_ghc ]
+>                 , [ "HAPPY_COERCE" | opt_coerce ]
+>                 ]
+>               defines = unlines
+>                 [ "#define " ++ d ++ " 1" | d <- vars_to_define ]
+
 >           (if outfilename == "-" then putStr else writeFile outfilename)
->                   (magic_filter (outfile ++ templ))
+>                   (magic_filter (outfile ++ defines ++ templ))
 
 Successfully Finished.
 
@@ -451,29 +467,13 @@ How would we like our code to be generated?
 > optToTarget OptArrayTarget    = Just TargetArrayBased
 > optToTarget _                 = Nothing
 
-> template_file :: String -> Target -> [CLIFlags] -> Bool -> String
-> template_file temp_dir target cli _coerce
->   = temp_dir ++ "/HappyTemplate" ++ array_extn ++ ghc_extn ++ debug_extn
->  where
->        ghc_extn   | OptUseCoercions `elem` cli = "-coerce"
->                   | OptGhcTarget    `elem` cli = "-ghc"
->                   | otherwise                  = ""
->
->        array_extn | target == TargetArrayBased = "-arrays"
->                   | otherwise                  = ""
->
->        debug_extn | OptDebugParser `elem` cli  = "-debug"
->                   | otherwise                  = ""
-
 Note: we need -cpp at the moment because the template has some
 GHC version-dependent stuff in it.
 
-> optsToInject :: Target -> [CLIFlags] -> String
-> optsToInject tgt cli
->       | OptGhcTarget `elem` cli   = "-XMagicHash -XBangPatterns -XTypeSynonymInstances -XFlexibleInstances -cpp"
->       | tgt == TargetArrayBased   = "-cpp"
->       | OptDebugParser `elem` cli = "-cpp"
->       | otherwise                 = ""
+> langExtsToInject :: [CLIFlags] -> [String]
+> langExtsToInject cli
+>       | OptGhcTarget `elem` cli   = ["MagicHash", "BangPatterns", "TypeSynonymInstances", "FlexibleInstances"]
+>       | otherwise                 = []
 
 > importsToInject :: [CLIFlags] -> String
 > importsToInject cli =
@@ -566,6 +566,9 @@ Extract various command-line options.
 >                       else dieHappy ("-c/--coerce may only be used " ++
 >                                      "in conjunction with -g/--ghc\n")
 >            else return False
+
+> getArray :: [CLIFlags] -> IO Bool
+> getArray cli = return (OptArrayTarget `elem` cli)
 
 > getGhc :: [CLIFlags] -> IO Bool
 > getGhc cli = return (OptGhcTarget `elem` cli)

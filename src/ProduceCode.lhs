@@ -32,7 +32,7 @@ Produce the complete output file.
 > produceParser :: Grammar                      -- grammar info
 >               -> ActionTable                  -- action table
 >               -> GotoTable                    -- goto table
->               -> String                       -- stuff to go at the top
+>               -> [String]                     -- language extensions
 >               -> Maybe String                 -- module header
 >               -> Maybe String                 -- module trailer
 >               -> Target                       -- type of code required
@@ -61,7 +61,7 @@ Produce the complete output file.
 >               , attributetype = attributetype'
 >               , attributes = attributes'
 >               })
->               action goto top_options module_header module_trailer
+>               action goto lang_exts module_header module_trailer
 >               target coerce ghc strict
 >     = ( top_opts
 >       . maybestr module_header . nl
@@ -90,7 +90,7 @@ Produce the complete output file.
 >       -- fix, others not so easy, and others would require GHC version
 >       -- #ifdefs.  For now I'm just disabling all of them.
 >
->    partTySigs_opts = ifGeGhc710 (str "{-# OPTIONS_GHC -XPartialTypeSignatures #-}" . nl)
+>    partTySigs_opts = ifGeGhc710 (str "{-# LANGUAGE PartialTypeSignatures #-}" . nl)
 >
 >    intMaybeHash | ghc       = str "Happy_GHC_Exts.Int#"
 >                 | otherwise = str "Prelude.Int"
@@ -119,12 +119,8 @@ Produce the complete output file.
 >
 >    top_opts =
 >        nowarn_opts
->      . (case top_options of
->           "" -> str ""
->           _  -> str (unwords [ "{-# OPTIONS"
->                              , top_options
->                              , "#-}"
->                              ]) . nl)
+>      . (str $ unlines
+>           [ unwords [ "{-# LANGUAGE", l, "#-}" ] | l <- lang_exts ])
 >      . partTySigs_opts
 
 %-----------------------------------------------------------------------------

@@ -27,8 +27,8 @@ This module is designed as an extension to the Haskell parser generator Happy.
 File and Function Names
 
 > base_template, lib_template :: String -> String
-> base_template td = td ++ "/GLR_Base"          -- NB Happy uses / too
-> lib_template  td = td ++ "/GLR_Lib"           -- Windows accepts this?
+> base_template td = td ++ "/GLR_Base.hs"          -- NB Happy uses / too
+> lib_template  td = td ++ "/GLR_Lib.hs"           -- Windows accepts this?
 
 ---
 prefix for production names, to avoid name clashes
@@ -56,7 +56,8 @@ This type represents whether GHC extensions are used or not
 
 > data GhcExts
 >  = NoGhcExts
->  | UseGhcExts String String           -- imports and options
+>  | UseGhcExts String   -- imports
+>               [String] -- language extensions
 
 ---
 this is where the exts matter
@@ -117,16 +118,19 @@ the driver and data strs (large template).
 >
 > mkFiles basename tables start templdir header trailer (debug,options) g
 >  = do
->       let debug_ext = if debug then "-debug" else ""
->       let (ext,imps,opts) = case ghcExts_opt of
->                               UseGhcExts is os -> ("-ghc", is, os)
->                               _                -> ("", "", "")
+>       let (imps, lang_exts) = case ghcExts_opt of
+>             UseGhcExts is os -> (is, os)
+>             _                -> ("", [])
 >       base <- readFile (base_template templdir)
 >       --writeFile (basename ++ ".si") (unlines $ map show sem_info)
->       writeFile (basename ++ "Data.hs") (content base opts $ "")
+>       writeFile (basename ++ "Data.hs") (content base lang_exts $ "")
 
->       lib <- readFile (lib_template templdir ++ ext ++ debug_ext)
->       writeFile (basename ++ ".hs") (lib_content imps opts lib)
+>       lib <- readFile (lib_template templdir)
+>       let defines = concat
+>              [ [ "HAPPY_DEBUG" | debug ]
+>              , [ "HAPPY_GHC"   | UseGhcExts _ _ <- return ghcExts_opt ]
+>              ]
+>       writeFile (basename ++ ".hs") (lib_content defines imps lang_exts lib)
 >  where
 >   (_,_,ghcExts_opt) = options
 
@@ -174,8 +178,9 @@ Extract the string that comes before the module declaration...
 >       -- Assume these options ONLY related to code which is in
 >       --   parser tail or in sem. rules
 
->   content base_defs opts
->    = str ("{-# OPTIONS " ++ opts ++ " #-}")    .nl
+>   content base_defs lang_exts
+>    = str (unlines
+>            [ "{-# LANGUAGE " ++ l ++ " #-}\n" | l <- lang_exts ])
 >    . str (unlines $ maybe [] fst header_parts) .nl
 >    . nl
 >    . str (comment "data")                      .nl .nl
@@ -220,10 +225,14 @@ Extract the string that comes before the module declaration...
 >     . nl
 >     . table_text
 
->   lib_content imps opts lib_text
+>   lib_content defines imps lang_exts lib_text
 >    = let (pre,_drop_me : post) = break (== "fakeimport DATA") $ lines lib_text
 >      in
->      unlines [ "{-# OPTIONS " ++ opts ++ " #-}\n"
+>      unlines [ "{-# LANGUAGE CPP #-}"
+>              , unlines
+>                  [ "#define " ++ d ++ " 1" | d <- defines ]
+>              , unlines
+>                  [ "{-# LANGUAGE " ++ l ++ " #-}\n" | l <- lang_exts ]
 >              , comment "driver" ++ "\n"
 >              , "module " ++ mod_name ++ "("
 >              , case lexer g of
