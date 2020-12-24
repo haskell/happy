@@ -36,7 +36,14 @@ sdist-test-only ::
 	rm -rf "${SDIST_DIR}/happy-$(HAPPY_VER)/"
 	tar -xf "${SDIST_DIR}/happy-$(HAPPY_VER).tar.gz" -C ${SDIST_DIR}/
 	echo "packages: ." > "${SDIST_DIR}/happy-$(HAPPY_VER)/cabal.project"
-	cd "${SDIST_DIR}/happy-$(HAPPY_VER)/" && cabal v2-test --enable-tests all
+	echo "tests: True" >> "${SDIST_DIR}/happy-$(HAPPY_VER)/cabal.project"
+	cd "${SDIST_DIR}/happy-$(HAPPY_VER)/" \
+		&& cabal v2-build all --flag -bootstrap \
+		&& cabal v2-install --flag -bootstrap --installdir="./bootstrap-root" \
+		&& cabal v2-test all --flag -bootstrap \
+		&& export PATH=./bootstrap-root:$$PATH \
+		&& cabal v2-build all --flag +bootstrap \
+		&& cabal v2-test all --flag +bootstrap
 	@echo ""
 	@echo "Success! ${SDIST_DIR}/happy-$(HAPPY_VER).tar.gz is ready for distribution!"
 	@echo ""
