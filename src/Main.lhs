@@ -73,13 +73,13 @@ Parse, using bootstrapping parser.
 
 >       (abssyn, hd, tl) <- case runP ourParser file 1 of
 >               Left err -> die (fl_name ++ ':' : err)
->               Right abssyn@(AbsSyn hd _ _ tl) -> pure (abssyn, hd, tl)
+>               Right abssyn@(AbsSyn hd _ _ tl) -> return (abssyn, hd, tl)
 
 Mangle the syntax into something useful.
 
 >       g <- case {-# SCC "Mangler" #-} (mangler fl_name abssyn) of
 >               Left  s -> die (unlines s ++ "\n");
->               Right g -> pure g
+>               Right g -> return g
 
 #ifdef DEBUG
 
@@ -214,7 +214,7 @@ Branch off to GLR parser production
 >           (debug, (glr_decode,filtering,ghc_exts))
 >                         -- controls decoding code-gen
 >           g             -- grammar object
->         else pure ()
+>         else return ()
 
 
 %---------------------------------------
