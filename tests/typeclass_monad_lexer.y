@@ -1,5 +1,9 @@
 {
-{-# LANGUAGE FunctionalDependencies, FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE FlexibleInstances #-}
+-- For ancient GHC 7.0.4
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE UndecidableInstances #-}
 import Control.Monad (liftM, ap)
 import Control.Applicative as A
 }
