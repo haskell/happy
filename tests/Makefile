@@ -1,6 +1,6 @@
 # NOTE: `cabal test` will take care to build the local `happy`
-# executable and place it into $PATH for us to pick up.  
-# 
+# executable and place it into $PATH for us to pick up.
+#
 # If it doesn't look like the alex binary in $PATH comes from the
 # build tree, then we'll fall back to pointing to
 # ../dist/build/alex/alex to support running tests via "runghc
@@ -11,6 +11,7 @@ ifeq "$(filter $(dir $(shell pwd))%,$(HAPPY))" ""
 HAPPY=../dist/build/happy/happy
 endif
 
+# NOTE: This assumes that a working `ghc` is on $PATH; this may not necessarily be the same GHC used by `cabal` for building `alex`.
 HC = ghc
 HC_OPTS=-Wall -Werror
 

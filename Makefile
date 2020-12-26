@@ -22,15 +22,15 @@ sdist ::
 		* ) echo "Error: needs cabal 2.2.0.0 or later (but got : `$(CABAL) --numeric-version`)" ; exit 1 ;; \
 	esac
 	@if [ "`git status -s`" != '' ]; then \
-		echo Tree is not clean; \
+		echo "Error: Tree is not clean"; \
 		exit 1; \
 	fi
 	$(HAPPY) $(HAPPY_OPTS) src/Parser.ly -o src/Parser.hs
 	$(HAPPY) $(HAPPY_OPTS) src/AttrGrammarParser.ly -o src/AttrGrammarParser.hs
 	mv src/Parser.ly src/Parser.ly.boot
 	mv src/AttrGrammarParser.ly src/AttrGrammarParser.ly.boot
-	$(CABAL) v2-run gen-happy-sdist 
-	cabal v2-sdist
+	$(CABAL) v2-run gen-happy-sdist
+	$(CABAL) v2-sdist
 	@if [ ! -f "${SDIST_DIR}/happy-$(HAPPY_VER).tar.gz" ]; then \
 		echo "Error: source tarball not found: dist/happy-$(HAPPY_VER).tar.gz"; \
 		exit 1; \
