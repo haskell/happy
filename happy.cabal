@@ -191,7 +191,7 @@ executable happy
         PrettyGrammar
 
   if flag(bootstrap)
-    -- TODO put this back when Cabal can use it's qualified goals to better --
+    -- TODO put this back when Cabal can use it's qualified goals to better
     -- understand bootstrapping, see
     -- https://github.com/haskell/cabal/issues/7189
     --build-tools: happy
