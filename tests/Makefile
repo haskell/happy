@@ -1,6 +1,6 @@
 # NOTE: `cabal test` will take care to build the local `happy`
-# executable and place it into $PATH for us to pick up.  
-# 
+# executable and place it into $PATH for us to pick up.
+#
 # If it doesn't look like the alex binary in $PATH comes from the
 # build tree, then we'll fall back to pointing to
 # ../dist/build/alex/alex to support running tests via "runghc
@@ -11,6 +11,7 @@ ifeq "$(filter $(dir $(shell pwd))%,$(HAPPY))" ""
 HAPPY=../dist/build/happy/happy
 endif
 
+# NOTE: This assumes that a working `ghc` is on $PATH; this may not necessarily be the same GHC used by `cabal` for building `alex`.
 HC = ghc
 HC_OPTS=-Wall -Werror
 
@@ -73,7 +74,7 @@ TEST_HAPPY_OPTS = --strict
 %.agc.hs : %.y
 	$(HAPPY) $(TEST_HAPPY_OPTS) -agc $< -o $@
 
-CLEAN_FILES += *.n.hs *.a.hs *.g.hs *.gc.hs *.ag.hs *.agc.hs *.info *.hi *.bin *.exe *.o *.run.stdout *.run.stderr $(SANDBOX_CONFIG)
+CLEAN_FILES += *.n.hs *.a.hs *.g.hs *.gc.hs *.ag.hs *.agc.hs *.info *.hi *.bin *.exe *.o *.run.stdout *.run.stderr
 
 ALL_TEST_HS = $(shell echo $(TESTS) | sed -e 's/\([^\. ]*\)\.\(l\)\{0,1\}y/\1.n.hs \1.a.hs \1.g.hs \1.gc.hs \1.ag.hs \1.agc.hs/g')
 
@@ -92,13 +93,14 @@ HC_OPTS += -fforce-recomp
 check.%.y : %.y
 	@echo "--> Checking $<..."
 	$(HAPPY) $(TEST_HAPPY_OPTS) $< 1>$*.run.stdout 2>$*.run.stderr || true
+	sed -i '/^Up to date$$/d' $*.run.stdout $*.run.stderr
 	@diff -u --ignore-all-space $*.stdout $*.run.stdout
 	@diff -u --ignore-all-space $*.stderr $*.run.stderr
 
 %$(HS_PROG_EXT) : %.hs
 	$(HC) $(HC_OPTS) $($*_LD_OPTS) $< -o $@
 
-all :: $(SANDBOX_CONFIG) $(CHECK_ERROR_TESTS) $(ALL_TESTS)
+all :: $(CHECK_ERROR_TESTS) $(ALL_TESTS)
 
 check-todo::
 	$(HAPPY) $(TEST_HAPPY_OPTS) -ad Test.ly
@@ -118,6 +120,3 @@ check-todo::
 
 clean:
 	$(RM) $(CLEAN_FILES)
-
-cabal.sandbox.config:
-	cabal sandbox init --sandbox=../.cabal-sandbox

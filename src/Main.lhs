@@ -43,11 +43,6 @@ We use the bootstrapped version if it is available
 > import Data.Array( assocs, elems, (!) )
 > import Data.List( nub, isSuffixOf )
 > import Data.Version ( showVersion )
-#if defined(mingw32_HOST_OS)
-> import Foreign.Marshal.Array
-> import Foreign
-> import Foreign.C
-#endif
 
 > main :: IO ()
 > main =
