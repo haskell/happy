@@ -29,8 +29,6 @@ install:
  - "cabal %CABOPTS% v2-update -vverbose+nowrap"
  - "cabal %CABOPTS% v2-install alex --bindir=/hsbin"
  - "alex --version"
- - "cabal %CABOPTS% v2-install happy --bindir=/hsbin"
- - "happy --version"
 
 build: off
 
