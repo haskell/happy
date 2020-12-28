@@ -11,7 +11,7 @@
 module ParseMonad.Bootstrapped where
 
 import Control.Monad.Reader
-import ParseMonad
+import ParseMonad.Class
 
 type P = ReaderT (String, Int) ParseResult
 

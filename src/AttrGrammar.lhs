@@ -9,7 +9,7 @@
 > ) where
 
 > import Data.Char
-> import ParseMonad
+> import ParseMonad.Class
 
 > data AgToken
 >   = AgTok_LBrace

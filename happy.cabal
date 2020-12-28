@@ -187,11 +187,14 @@ executable happy
         LALR
         Lexer
         ParseMonad
+        ParseMonad.Class
+        Parser
         ProduceCode
         ProduceGLRCode
         NameSet
         Target
         AttrGrammar
+        AttrGrammarParser
         ParamRules
         PrettyGrammar
 

@@ -13,7 +13,7 @@ Author    : Simon Marlow <simonm@dcs.gla.ac.uk>
 > import Lexer
 > import AbsSyn
 > import Types
-> import ParseMonad
+> import ParseMonad.Class
 > }
 
 > %token

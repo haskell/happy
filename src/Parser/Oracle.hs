@@ -8,7 +8,7 @@ import Control.Applicative
 
 import Control.Monad (when)
 import Data.Maybe (isJust)
-import ParseMonad
+import ParseMonad.Class
 import ParseMonad.Oracle
 import AbsSyn
 import Lexer

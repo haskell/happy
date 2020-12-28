@@ -9,7 +9,7 @@ The lexer.
 >       TokenId(..),
 >       HasLexer(..) ) where
 
-> import ParseMonad
+> import ParseMonad.Class
 
 > import Data.Char ( isSpace, isAlphaNum, isDigit, digitToInt )
 

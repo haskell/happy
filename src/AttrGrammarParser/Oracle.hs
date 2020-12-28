@@ -10,7 +10,7 @@ module AttrGrammarParser.Oracle (agParser) where
 import Control.Applicative
 #endif
 
-import ParseMonad
+import ParseMonad.Class
 import ParseMonad.Oracle
 import AttrGrammar
 

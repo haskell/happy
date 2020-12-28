@@ -7,7 +7,7 @@ import Control.Applicative
 #endif
 import Control.Monad
 
-import ParseMonad
+import ParseMonad.Class
 
 data PState token =
   PS !String
