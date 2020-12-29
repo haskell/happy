@@ -6,7 +6,7 @@ or a conditional statement.
 
 > {
 > {-# OPTIONS_GHC -w #-}
-> module AttrGrammarParser.Bootstrapped (agParser) where
+> module AttrGrammarParser (agParser) where
 > import ParseMonad.Class
 > import ParseMonad.Bootstrapped
 > import AttrGrammar

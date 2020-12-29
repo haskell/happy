@@ -158,7 +158,7 @@ extra-source-files:
 flag bootstrap
   description: Optimize the implementation of happy using a pre-built happy
   manual: True
-  default: False
+  default: True
 
 source-repository head
   type:     git
@@ -194,7 +194,6 @@ executable happy
         NameSet
         Target
         AttrGrammar
-        AttrGrammarParser
         ParamRules
         PrettyGrammar
 
@@ -207,12 +206,11 @@ executable happy
     other-modules:
       ParseMonad.Bootstrapped
       Parser.Bootstrapped
-      AttrGrammarParser.Bootstrapped
+      AttrGrammarParser
   else
     other-modules:
       ParseMonad.Oracle
       Parser.Oracle
-      AttrGrammarParser.Oracle
 
 
 test-suite tests
