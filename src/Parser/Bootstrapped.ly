@@ -8,8 +8,9 @@ The parser.
 
 > {
 > {-# OPTIONS_GHC -w #-}
-> module Parser (ourParser,AbsSyn) where
-> import ParseMonad
+> module Parser.Bootstrapped (ourParser,AbsSyn) where
+> import ParseMonad.Class
+> import ParseMonad.Bootstrapped
 > import AbsSyn
 > import Lexer
 > }
@@ -47,7 +48,7 @@ The parser.
 >       ","             { TokenKW      TokComma }
 
 > %monad { P }
-> %lexer { lexer } { TokenEOF }
+> %lexer { lexTokenP } { TokenEOF }
 
 > %%
 
@@ -146,5 +147,5 @@ The parser.
 
 > {
 > happyError :: P a
-> happyError = lineP >>= \l -> failP (show l ++ ": Parse error\n")
+> happyError = failP (\l -> show l ++ ": Parse error\n")
 > }

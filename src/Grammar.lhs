@@ -1,4 +1,4 @@
------------------------------------------------------------------------------
+/-----------------------------------------------------------------------------
 The Grammar data type.
 
 (c) 1993-2001 Andy Gill, Simon Marlow
@@ -20,9 +20,16 @@ Here is our mid-section datatype
 
 > import GenUtils
 > import AbsSyn
-> import ParseMonad
+#ifdef HAPPY_BOOTSTRAP
+> import ParseMonad.Class
 > import AttrGrammar
+#endif
+
+This is only supported in the bootstrapped version
+#ifdef HAPPY_BOOTSTRAP
 > import AttrGrammarParser
+#endif
+
 > import ParamRules
 
 > import Data.Array
@@ -412,19 +419,28 @@ So is this.
 
 > checkCode :: Int -> [Name] -> [Name] -> String -> [(String,String)] -> M (String,[Int])
 > checkCode arity _   _             code []    = doCheckCode arity code
+
+#ifdef HAPPY_BOOTSTRAP
 > checkCode arity lhs nonterm_names code attrs = rewriteAttributeGrammar arity lhs nonterm_names code attrs
+#else
+> checkCode arity _   _             code (_:_) = do
+>   addErr "Attribute grammars are not supported in non-bootstrapped build"
+>   doCheckCode arity code
+#endif
 
 ------------------------------------------------------------------------------
 -- Special processing for attribute grammars.  We re-parse the body of the code
 -- block and output the nasty-looking record manipulation and let binding goop
 --
 
+#ifdef HAPPY_BOOTSTRAP
+
 > rewriteAttributeGrammar :: Int -> [Name] -> [Name] -> String -> [(String,String)] -> M (String,[Int])
 > rewriteAttributeGrammar arity lhs nonterm_names code attrs =
 
    first we need to parse the body of the code block
 
->     case runP agParser code 0 of
+>     case runFromStartP agParser code 0 of
 >        Left msg  -> do addErr ("error in attribute grammar rules: "++msg)
 >                        return ("",[])
 >        Right rules  ->
@@ -468,7 +484,6 @@ So is this.
 >          getTokens (RightmostAssign _ toks) = toks
 >
 >          checkArity x = when (x > arity) $ addErr (show x++" out of range")
-
 
 
 ------------------------------------------------------------------------------------
@@ -538,6 +553,8 @@ So is this.
 >            | otherwise      = error ("lhs "++(show i)++" is not a non-terminal")
 >        formatToken (AgTok_Unknown x)     = x++" "
 >        formatToken AgTok_EOF = error "formatToken AgTok_EOF"
+
+#endif
 
 
 -----------------------------------------------------------------------------

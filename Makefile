@@ -1,20 +1,11 @@
 CABAL = cabal
 
-HAPPY = happy 
-HAPPY_OPTS = -agc
 HAPPY_VER = `awk '/^version:/ { print $$2 }' happy.cabal`
 
 ALEX = alex
 ALEX_OPTS = -g
 
 SDIST_DIR=dist-newstyle/sdist
-
-GEN = src/gen/Parser.hs src/gen/AttrGrammarParser.hs
-
-all : $(GEN)
-
-src/gen/%.hs : src/boot/%.ly
-	$(HAPPY) $(HAPPYFLAGS) $< -o $@
 
 sdist ::
 	@case "`$(CABAL) --numeric-version`" in \
@@ -25,10 +16,6 @@ sdist ::
 		echo "Error: Tree is not clean"; \
 		exit 1; \
 	fi
-	$(HAPPY) $(HAPPY_OPTS) src/Parser.ly -o src/Parser.hs
-	$(HAPPY) $(HAPPY_OPTS) src/AttrGrammarParser.ly -o src/AttrGrammarParser.hs
-	mv src/Parser.ly src/Parser.ly.boot
-	mv src/AttrGrammarParser.ly src/AttrGrammarParser.ly.boot
 	$(CABAL) v2-run gen-happy-sdist
 	$(CABAL) v2-sdist
 	@if [ ! -f "${SDIST_DIR}/happy-$(HAPPY_VER).tar.gz" ]; then \
@@ -49,7 +36,14 @@ sdist-test-only ::
 	rm -rf "${SDIST_DIR}/happy-$(HAPPY_VER)/"
 	tar -xf "${SDIST_DIR}/happy-$(HAPPY_VER).tar.gz" -C ${SDIST_DIR}/
 	echo "packages: ." > "${SDIST_DIR}/happy-$(HAPPY_VER)/cabal.project"
-	cd "${SDIST_DIR}/happy-$(HAPPY_VER)/" && cabal v2-test --enable-tests all
+	echo "tests: True" >> "${SDIST_DIR}/happy-$(HAPPY_VER)/cabal.project"
+	cd "${SDIST_DIR}/happy-$(HAPPY_VER)/" \
+		&& cabal v2-build all --flag -bootstrap \
+		&& cabal v2-install --flag -bootstrap --installdir="./bootstrap-root" \
+		&& cabal v2-test all -j --flag -bootstrap \
+		&& export PATH=./bootstrap-root:$$PATH \
+		&& cabal v2-build all --flag +bootstrap \
+		&& cabal v2-test all -j --flag +bootstrap
 	@echo ""
 	@echo "Success! ${SDIST_DIR}/happy-$(HAPPY_VER).tar.gz is ready for distribution!"
 	@echo ""

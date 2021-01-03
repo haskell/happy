@@ -7,7 +7,8 @@ or a conditional statement.
 > {
 > {-# OPTIONS_GHC -w #-}
 > module AttrGrammarParser (agParser) where
-> import ParseMonad
+> import ParseMonad.Class
+> import ParseMonad.Bootstrapped
 > import AttrGrammar
 > }
 
@@ -25,7 +26,7 @@ or a conditional statement.
 >   unknown   { AgTok_Unknown _ }
 >
 > %monad { P }
-> %lexer { agLexer } { AgTok_EOF }
+> %lexer { lexTokenP } { AgTok_EOF }
 
 > %%
 
@@ -64,5 +65,5 @@ or a conditional statement.
 
 > {
 > happyError :: P a
-> happyError = failP ("Parse error\n")
+> happyError = failP (\l -> show l ++ ": Parse error\n")
 > }
