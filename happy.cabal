@@ -168,7 +168,7 @@ executable happy
 
   default-language: Haskell98
   default-extensions: CPP, MagicHash, FlexibleContexts
-  ghc-options: -Wall -Wno-name-shadowing -Wno-missing-signatures -Wno-type-defaults -Wno-incomplete-patterns -Wno-unused-local-binds -Wno-unused-local-binds -Wno-unused-matches
+  ghc-options: -Wall
   other-modules:
         Paths_happy
         AbsSyn
