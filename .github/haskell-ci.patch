@@ -1,0 +1,43 @@
+--- workflows/haskell-ci.yml	2021-07-14 19:49:44.000000000 +0200
++++ workflows/haskell-ci.yml-patched	2021-07-14 19:49:28.000000000 +0200
+@@ -196,7 +196,7 @@
+           cat cabal.project.local
+       - name: dump install plan
+         run: |
+-          $CABAL v2-build $ARG_COMPILER $ARG_TESTS $ARG_BENCH --dry-run all
++          $CABAL v2-build --flags=-bootstrap $ARG_COMPILER $ARG_TESTS $ARG_BENCH --dry-run all
+           cabal-plan
+       - name: cache
+         uses: actions/cache@v2
+@@ -206,17 +206,19 @@
+           restore-keys: ${{ runner.os }}-${{ matrix.compiler }}-
+       - name: install dependencies
+         run: |
+-          $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks --dependencies-only -j2 all
+-          $CABAL v2-build $ARG_COMPILER $ARG_TESTS $ARG_BENCH --dependencies-only -j2 all
+-      - name: build w/o tests
++          $CABAL v2-build --flags=-bootstrap $ARG_COMPILER --disable-tests --disable-benchmarks --dependencies-only -j2 all
++          $CABAL v2-build --flags=-bootstrap $ARG_COMPILER $ARG_TESTS $ARG_BENCH --dependencies-only -j2 all
++      - name: build w/o tests and install
+         run: |
+-          $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks all
++          $CABAL v2-install --reinstall --overwrite-policy=always --flags=-bootstrap $ARG_COMPILER --disable-tests --disable-benchmarks all
+       - name: build
+         run: |
+-          $CABAL v2-build $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --write-ghc-environment-files=always
++          $CABAL v2-build --flags=-bootstrap $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --write-ghc-environment-files=always
+       - name: tests
+         run: |
+-          $CABAL v2-test $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --test-show-details=direct
++          export HAPPY=$HOME/.cabal/bin/happy
++          export HC=$HC
++          $CABAL v2-test --flags=-bootstrap $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --test-show-details=direct
+       - name: cabal check
+         run: |
+           cd ${PKGDIR_happy} || false
+@@ -224,4 +226,4 @@
+       - name: unconstrained build
+         run: |
+           rm -f cabal.project.local
+-          $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks all
++          $CABAL v2-build --flags=-bootstrap $ARG_COMPILER --disable-tests --disable-benchmarks all

@@ -6,13 +6,25 @@
 # ../dist/build/alex/alex to support running tests via "runghc
 # Setup.hs test".
 #
+# If HAPPY has been set outside, e.g. in the environment, we trust this setting.
+# This way, we can pass in the correct Happy executable from a CI environment
+# without danger of it being "fixed" by the logic below.
+# [2021-07-14, PR #196](https://github.com/simonmar/happy/pull/196)
+#
+ifndef HAPPY
 HAPPY=$(shell which happy)
 ifeq "$(filter $(dir $(shell pwd))%,$(HAPPY))" ""
 HAPPY=../dist/build/happy/happy
 endif
+endif
 
-# NOTE: This assumes that a working `ghc` is on $PATH; this may not necessarily be the same GHC used by `cabal` for building `alex`.
-HC = ghc
+# NOTE: This assumes that a working `ghc` is on $PATH; this may not
+# necessarily be the same GHC used by `cabal` for building `happy`.
+#
+# Again, if HC has been set in the environment (e.g. by the CI), we keep this setting.
+# [2021-07-14, PR #196](https://github.com/simonmar/happy/pull/196)
+#
+HC ?= ghc
 HC_OPTS=-Wall -Werror
 
 .PRECIOUS: %.n.hs %.g.hs %.o %.exe %.bin
