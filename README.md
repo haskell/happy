@@ -30,6 +30,8 @@ The directory 'examples' contains some example parsers that use Happy.
 For information on copying and distributing this program, see the file
 LICENSE in this directory.
 
+## Contributing & Reporting Issues
+
 Bugs should be reported at: https://github.com/simonmar/happy/issues
 
 Happy Parsing!
