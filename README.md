@@ -1,11 +1,13 @@
 # Happy
 
-Happy is a parser generator for Haskell 98 (and later).
-
 [![Build Status](https://secure.travis-ci.org/simonmar/happy.svg?branch=master)](http://travis-ci.org/simonmar/happy)
+
+Happy is a parser generator for Haskell 98 (and later).
 
 * https://www.haskell.org/happy/
 * http://hackage.haskell.org/package/happy
+
+## Build Instructions
 
 Happy is built using Cabal.  First install GHC, then:
 ```
@@ -33,3 +35,11 @@ Bugs should be reported at: https://github.com/simonmar/happy/issues
 Happy Parsing!
 
 Simon.
+
+## Current Maintainers
+
+- Vladislav Zavialov (@int-index)
+
+- John Ericson (@Ericson2314)
+
+- Simon Marlow (@simonmar)
