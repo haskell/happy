@@ -112,7 +112,6 @@ extra-source-files:
         examples/ErlParser.ly
         examples/SimonsExample.ly
         examples/LexerTest.ly
-        happy.spec
         src/ARRAY-NOTES
         tests/AttrGrammar001.y
         tests/AttrGrammar002.y
