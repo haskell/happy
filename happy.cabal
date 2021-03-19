@@ -39,7 +39,6 @@ data-files:
         GLR_Lib.hs
 
 extra-source-files:
-        ANNOUNCE
         ChangeLog.md
         Makefile
         README.md
