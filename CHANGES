@@ -1,5 +1,4 @@
------------------------------------------------------------------------------
-1.20.0
+## 1.20.0
 
         * Fix #121: the -i flag produces an .info file even if
           the %expect pragma is violated
@@ -9,45 +8,39 @@
           conflicts explicitly, useful in conjunction with %expect 0
         * Remove the deprecated build configuration flag 'small_base'
 
------------------------------------------------------------------------------
-1.19.12
+## 1.19.12
 
         * Fix for building with GHC 8.8.x
         * Move custom Setup preprocessing steps into a separate
           executable, like Alex
 
------------------------------------------------------------------------------
-1.19.11
+## 1.19.11
 
         * Fix for building with GHC 8.6.x
 
------------------------------------------------------------------------------
-1.19.10
+## 1.19.10
 
         * Fix polymorphic (rank-n) non-terminals
         * Fix for GHC 8.8.1
 
------------------------------------------------------------------------------
 
-1.19.9
+## 1.19.9
 
         * Fix cabal warnings
         * Bump upper bounds
         * Fix build with GHC 8.4.1-alpha
 
------------------------------------------------------------------------------
-1.19.8
+## 1.19.8
 
         * Fix issue #94 (some grammars don't compile due to new type
           signatures introduced to allow overloading to be used)
 
------------------------------------------------------------------------------
-1.19.7
+## 1.19.7
 
         * Fix missing test suite files in the sdist
 
------------------------------------------------------------------------------
-1.19.6
+## 1.19.6
+
         * Manually generate Parser.hs using Makefile before sdist,
           to fix bootstrapping problems with cabal sandboxes & new-build
         * Documentation fixes
@@ -56,63 +49,59 @@
         * Added generation of additional type signatures to enable use
           of typeclasses in monadic parsers.
 
------------------------------------------------------------------------------
-1.19.5
+## 1.19.5
+
         * fixes for GHC 7.10
         * Code cleanups (thanks Index Int <vlad.z.4096@gmail.com>)
 
------------------------------------------------------------------------------
-1.19.4
+## 1.19.4
+
         * fix for GHC 7.10 (Applicative/Monad, #19, #21)
 
------------------------------------------------------------------------------
-1.19.3
+## 1.19.3
+
         * fix for GHC 7.2 (#16)
 
------------------------------------------------------------------------------
-1.19.2
+## 1.19.2
+
         * fixes for clang (XCode 5)
 
------------------------------------------------------------------------------
-1.19.1
+## 1.19.1
+
         * repackaged to build with GHC 7.7+
 
------------------------------------------------------------------------------
-1.19
+## 1.19
+
         * necessary changes to work with GHC 7.8
 
------------------------------------------------------------------------------
-1.18.10
+## 1.18.10
+
         * Fix build with GHC 7.6
 
------------------------------------------------------------------------------
-1.18.8
+## 1.18.8
+
         * Fix a packaging bug (cabal-install-0.10.2 didn't put the
           Happy-generated files in the sdist)
 
------------------------------------------------------------------------------
-1.18.7
+## 1.18.7
 
         * Fix a bug in error handling when using %monad without %lexer
 
------------------------------------------------------------------------------
-Changes from version 1.17 to 1.18
+## 1.18
 
         * New feature: EBNF-style paramterized macros, thanks to
           Iavor Diatchki.
         * Works with Cabal 1.2, 1.4 and 1.6
         * A few minor bugfixes
 
------------------------------------------------------------------------------
-Changes from version 1.16 to 1.17
+## 1.17
 
         * Cabal 1.2 is required
         * Works with upcoming GHC 6.8.1
         * Fix the 'parE' bug (poor error message for errors in the grammar)
         * Some performance improvements to Happy itself
 
------------------------------------------------------------------------------
-Changes from version 1.15 to 1.16
+## 1.16
 
 	* Switch to a Cabal build system: you need a recent version of Cabal
 	  (1.1.6 or later).  If you have GHC 6.4.2, then you need to upgrade
@@ -124,8 +113,7 @@ Changes from version 1.15 to 1.16
 
 	* Added Attribute Grammar support, by Robert Dockins
 
------------------------------------------------------------------------------
-Changes from version 1.14 to 1.15
+## 1.15
 
 	* New %expect directive
 	* the list of tokens passed to happyError now includes the current
@@ -134,46 +122,40 @@ Changes from version 1.14 to 1.15
 	* added %partial to indicate a parser that can return a result
 	  before EOF is reached.
 
------------------------------------------------------------------------------
-Changes from version 1.13 to 1.14
+## 1.14
 
 	* New meta-variable $> represents the rightmost token.
 
 	* Happy's OPTIONS pragma is merged with an existing one in
 	  the grammar file, if any.
 
------------------------------------------------------------------------------
-Changes from version 1.11 to 1.13
+## 1.13
 
 	* Support for newer versions of GHC (>= 5.04).
 
 	* Addition of an experimental flag: --strict.
 
------------------------------------------------------------------------------
-Changes from version 1.10 to 1.11
+## 1.11
 
 	* tokens no longer have a default precedence - if you 
 	  want a token to have a precedence, you have to declare it.
 
 	* bugfix to templates for GHC on 64-bit platforms.
 
------------------------------------------------------------------------------
-Changes from version 1.9 to 1.10
+## 1.10
 
 	* bugfixes, and minor performance improvements,
 
 	* most of the examples work again.
 
------------------------------------------------------------------------------
-Changes from version 1.8 to 1.9
+## 1.9
 
 	* A grammar may now contain several entry points, allowing
 	  several parsers to share parts of the grammar.
 
 	* Some bugfixes.
 
------------------------------------------------------------------------------
-Changes from version 1.6 to 1.8
+## 1.8
 
       * Parser table compression, and more efficient
         table encoding when used with GHC.  Large grammars
@@ -187,8 +169,7 @@ Changes from version 1.6 to 1.8
       * A debug option which causes the generated parser to
         print tracing information at each step during parsing.
 
------------------------------------------------------------------------------
-Changes from version 1.5 to 1.6
+## 1.6
 
 * Now written in, and generates, Haskell 98.
 
@@ -205,8 +186,7 @@ Changes from version 1.5 to 1.6
 
 * A sample Haskell parser using Happy is included.
 
------------------------------------------------------------------------------
-Changes from version 1.2 to version 1.5
+## 1.5
 
 * Many bug fixes to the error recovery support, found by experimenting
   with the Haskell grammar and layout.
@@ -214,8 +194,7 @@ Changes from version 1.2 to version 1.5
 * Happy is about 5 times faster on large examples, due to some
   changes in the LALR(1) algorithms.
 
------------------------------------------------------------------------------
-Changes from version 0.9a to version 1.2
+## 1.2
 
 * Supports Haskell 1.4
 
@@ -236,8 +215,7 @@ Changes from version 0.9a to version 1.2
 * The %newline feature is removed, the same effect can be achieved
   using the new monad support.
 
------------------------------------------------------------------------------
-Changes from version 0.8 to 0.9:
+## 0.9:
 
 * Happy should be much faster than before.
 
