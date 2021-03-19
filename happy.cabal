@@ -39,8 +39,7 @@ data-files:
         GLR_Lib.hs
 
 extra-source-files:
-        ANNOUNCE
-        CHANGES
+        ChangeLog.md
         Makefile
         README.md
         TODO
@@ -113,7 +112,6 @@ extra-source-files:
         examples/ErlParser.ly
         examples/SimonsExample.ly
         examples/LexerTest.ly
-        happy.spec
         src/ARRAY-NOTES
         tests/AttrGrammar001.y
         tests/AttrGrammar002.y
