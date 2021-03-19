@@ -53,7 +53,7 @@ rm -rf ${RPM_BUILD_ROOT}
 %files
 %defattr(-,root,root)
 %doc ANNOUNCE
-%doc CHANGES
+%doc ChangeLog.md
 %doc LICENSE
 %doc README
 %doc TODO

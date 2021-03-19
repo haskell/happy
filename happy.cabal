@@ -40,7 +40,7 @@ data-files:
 
 extra-source-files:
         ANNOUNCE
-        CHANGES
+        ChangeLog.md
         Makefile
         README.md
         TODO
