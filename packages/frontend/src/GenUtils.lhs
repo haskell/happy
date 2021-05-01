@@ -5,14 +5,14 @@ All the code below is understood to be in the public domain.
 -----------------------------------------------------------------------------
 
 > module GenUtils (
-
 >       mkClosure,
 >       combinePairs,
 >       mapDollarDollar,
 >       str, char, nl, brack, brack',
 >       interleave, interleave',
 >       strspace, maybestr,
->       die, dieHappy
+>       die, dieHappy,
+>       optPrint
 >        ) where
 
 > import Data.Char  (isAlphaNum)
@@ -106,3 +106,8 @@ Fast string-building functions.
 >   where str' `withoutSuffix` suff
 >            | suff `isSuffixOf` str' = take (length str' - length suff) str'
 >            | otherwise              = str'
+
+> optPrint :: a -> (a -> Bool) -> IO () -> IO ()
+> optPrint o f io =
+>       when (f o) (putStr "\n---------------------\n" >> io)
+>       when (f o) (putStr "\n---------------------\n" >> io)

@@ -41,7 +41,7 @@ parseOptions ext args =
 
 extractOptions :: Eq ext => [CliFlag ext] -> String -> IO (CliOpts ext)
 extractOptions cli fileName = do
-  baseName <- getBaseName (reverse fileName)
+  baseName <- getBaseName fileName
   frontend <- getFrontendOpts cli fileName baseName
   middleend <- getMiddleendOpts cli fileName baseName
   backend <- getBackendOpts cli baseName
@@ -50,12 +50,23 @@ extractOptions cli fileName = do
 getFrontendOpts :: Eq ext => [CliFlag ext] -> String -> String -> IO FrontendOpts
 getFrontendOpts cli fileName baseName = do
   pretty_file <- getPrettyFileName baseName cli
-  return FrontendOpts { file = fileName, prettyFile = pretty_file }
+  return FrontendOpts {
+     file = fileName,
+     prettyFile = pretty_file,
+     dumpGrammar = getDumpMangle cli
+   }
   
 getMiddleendOpts :: Eq ext => [CliFlag ext] -> String -> String -> IO MiddleendOpts
 getMiddleendOpts cli fileName baseName = do
-  info_file <- getInfoFileName baseName cli
-  return MiddleendOpts { inFile = fileName, infoFile = info_file }
+   info_file <- getInfoFileName baseName cli
+   return MiddleendOpts {
+     inFile = fileName,
+     infoFile = info_file,
+     dumpLR0 = getDumpLR0 cli,
+     dumpLA = getDumpLA cli,
+     dumpAction = getDumpAction cli,
+     dumpGoto = getDumpGoto cli
+   }
 
 getBackendOpts :: Eq ext => [CliFlag ext] -> String -> IO BackendOpts
 getBackendOpts cli baseName = do
@@ -104,6 +115,13 @@ data CliFlag ext =
                | OptGLR_Filter
 
                | Ext ext
+
+               -- The following debugging flags do *always* exist, but getOpt will only yield them when DEBUG is set.
+               | DumpMangle
+               | DumpLR0
+               | DumpAction
+               | DumpGoto
+               | DumpLA
   deriving Eq
 
 -- Base arguments, i.e. baseline frontend, middleend and backend.
@@ -139,6 +157,21 @@ argInfoBase  = [
        "display this help and exit",
     Option ['V','v'] ["version"] (NoArg DumpVersion)   -- ToDo: -v is deprecated
        "output version information and exit"
+
+#ifdef DEBUG
+    ,
+    Option [] ["mangle"] (NoArg DumpMangle)
+       "Dump mangled input",
+    Option [] ["lr0"] (NoArg DumpLR0)
+       "Dump LR0 item sets",
+    Option [] ["action"] (NoArg DumpAction)
+       "Dump action table",
+    Option [] ["goto"] (NoArg DumpGoto)
+       "Dump goto table",
+    Option [] ["lookaheads"] (NoArg DumpLA)
+       "Dump lookahead info"
+#endif
+
   ]
 
 ------------------------------------------------------------------------------
@@ -213,13 +246,27 @@ getGLRFilter = elem OptGLR_Filter
 getGLRDecode :: Eq a => [CliFlag a] -> Bool
 getGLRDecode = elem OptGLR_Decode
 
+getDumpMangle :: Eq a => [CliFlag a] -> Bool
+getDumpMangle = elem DumpMangle
+
+getDumpLR0 :: Eq a => [CliFlag a] -> Bool
+getDumpLR0 = elem DumpLR0
+
+getDumpLA :: Eq a => [CliFlag a] -> Bool
+getDumpLA = elem DumpLA
+
+getDumpAction :: Eq a => [CliFlag a] -> Bool
+getDumpAction = elem DumpAction
+
+getDumpGoto :: Eq a => [CliFlag a] -> Bool
+getDumpGoto = elem DumpGoto
+
 ------------------------------------------------------------------------------
 -- Helpers
 
 optToTarget :: CliFlag a -> Maybe Target
 optToTarget OptArrayTarget    = Just TargetArrayBased
 optToTarget _                 = Nothing
-
 
 getProgramName :: IO String
 getProgramName = liftM (`withoutSuffix` ".bin") getProgName
@@ -239,10 +286,10 @@ dieHappy s = getProgramName >>= \prog -> die (prog ++ ": " ++ s)
 ------------------------------------------------------------------------------
 
 getBaseName :: String -> IO String
-getBaseName ('y':'l':'.':nm) = return (reverse nm)
-getBaseName ('y':'.':nm)     = return (reverse nm)
-getBaseName f                =
-      dieHappy ("`" ++ reverse f ++ "' does not end in `.y' or `.ly'\n")
+getBaseName = getBaseName' . reverse where
+  getBaseName' ('y':'l':'.':nm) = return (reverse nm)
+  getBaseName' ('y':'.':nm)     = return (reverse nm)
+  getBaseName' f                = dieHappy ("`" ++ reverse f ++ "' does not end in `.y' or `.ly'\n")
 
 ------------------------------------------------------------------------------
 

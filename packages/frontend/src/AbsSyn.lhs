@@ -45,13 +45,7 @@ Here is the abstract syntax of the language we parse.
 >     = PrecNone               -- no user-specified precedence
 >     | PrecShift              -- %shift
 >     | PrecId String          -- %prec ID
-
-
-#ifdef DEBUG
-
 >   deriving Show
-
-#endif
 
 %-----------------------------------------------------------------------------
 Parser Generator Directives.

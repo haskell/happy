@@ -7,12 +7,19 @@ import Info
 import System.IO
 import Grammar
 import LALR
+import Control.Monad
 import Data.Array (Array)
 import Data.Set (Set)
 
 data MiddleendOpts = MiddleendOpts {
   inFile :: String, -- only used as information inside the info file
-  infoFile :: Maybe String -- place where the info file should be written to
+  infoFile :: Maybe String, -- place where the info file should be written to
+
+  -- debugging options
+  dumpLR0 :: Bool,
+  dumpLA :: Bool,
+  dumpAction :: Bool,
+  dumpGoto :: Bool
 }
 
 runMiddleend :: MiddleendOpts -> Grammar -> IO (ActionTable, GotoTable, [Lr1State], [Int])
@@ -25,6 +32,10 @@ runMiddleend opts g =
        action      = genActionTable g first items2
        (conflictArray, (sr,rr)) = (countConflicts action)
     in do
+        optPrint opts dumpLR0 (print sets)
+        optPrint opts dumpLA (print la)
+        optPrint opts dumpAction (print action)
+        optPrint opts dumpGoto (print goto)
         (unused_rules, unused_terminals) <- reportUnusedRules g action
         writeInfoFile sets g action goto conflictArray (inFile opts) (infoFile opts) unused_rules unused_terminals
         reportConflicts g sr rr
@@ -33,8 +44,8 @@ runMiddleend opts g =
 reportUnusedRules :: Grammar -> ActionTable -> IO ([Int], [String])
 reportUnusedRules g action = 
     let result@(unused_rules, unused_terminals) = find_redundancies first_reduction g action in do
-        optIO (not (null unused_rules)) $ hPutStrLn stderr ("unused rules: " ++ show (length unused_rules))
-        optIO (not (null unused_terminals))  $hPutStrLn stderr ("unused terminals: " ++ show (length unused_terminals))
+        when (not (null unused_rules)) $ hPutStrLn stderr ("unused rules: " ++ show (length unused_rules))
+        when (not (null unused_terminals)) $ hPutStrLn stderr ("unused terminals: " ++ show (length unused_terminals))
         return result
 
 reportConflicts :: Grammar -> Int -> Int -> IO ()
@@ -62,6 +73,3 @@ writeInfoFile sets g action goto conflictArray file info_file unused_rules unuse
         case info_file of
             Just s -> writeFile s info >> hPutStrLn stderr ("Grammar info written to: " ++ s)
             Nothing -> return ()
-
-optIO :: Bool -> IO a -> IO a
-optIO fg io = if fg then io  else return (error "optIO")

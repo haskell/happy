@@ -11,7 +11,10 @@ import Control.Monad.Trans.Except
 
 data FrontendOpts = FrontendOpts {
   file :: String,
-  prettyFile :: Maybe String
+  prettyFile :: Maybe String,
+
+  -- debugging options
+  dumpGrammar :: Bool
 }
 
 runFrontend :: FrontendOpts -> IO (Either String Grammar)
@@ -21,7 +24,9 @@ runFrontend opts = runExceptT $ do
         (contents, name) <- liftIO $ possDelit (reverse file') _contents
         abssyn <- except (parseYFileContents contents)
         liftIO $ writePrettyFile prettyFile' abssyn
-        except (mangleAbsSyn abssyn name)
+        grammar <- except (mangleAbsSyn abssyn name)
+        liftIO $ optPrint opts dumpGrammar (print grammar)
+        return grammar
 
 writePrettyFile :: Maybe String -> AbsSyn -> IO ()
 writePrettyFile location abssyn = do
