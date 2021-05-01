@@ -32,19 +32,19 @@ runBackend opts g action goto = do
     produce opts g action goto header templateDir'
 
 produceCode :: BackendOpts -> Grammar -> ActionTable -> GotoTable -> String -> String -> IO ()
-produceCode opts g action goto header templateDir = do
-    template <- readFile (templateDir ++ "/HappyTemplate.hs")
+produceCode opts g action goto header template_dir = do
+    template <- readFile (template_dir ++ "/HappyTemplate.hs")
     let outfile = produceParser g action goto ("CPP" : langExtsToInject opts) -- CPP is needed in all cases with unified template
                                 (Just header) (tl g) (target opts) (coerce opts) (ghc opts) (strict opts)
         write = (if outFile opts == "-" then putStr else writeFile $ outFile opts)
     write $ magicFilter opts (outfile ++ defines opts ++ template)
 
 produceGLRCode :: BackendOpts -> Grammar -> ActionTable -> GotoTable -> String -> String -> IO ()
-produceGLRCode opts g action goto header templateDir =
+produceGLRCode opts g action goto header template_dir =
     let glr_decode = if glrDecode opts then TreeDecode else LabelDecode
         filtering = if glrFilter opts then UseFiltering else NoFiltering
         ghc_exts = if ghc opts then UseGhcExts (importsToInject opts) (langExtsToInject opts) else NoGhcExts -- For GLR, don't always pass CPP, because only one of the files needs it.
-    in produceGLRParser (outFile opts) templateDir action goto (Just header) (tl g) (debug opts, (glr_decode, filtering, ghc_exts)) g
+    in produceGLRParser (outFile opts) template_dir action goto (Just header) (tl g) (debug opts, (glr_decode, filtering, ghc_exts)) g
 
 magicFilter :: BackendOpts -> String -> String
 magicFilter opts = case magicName opts of

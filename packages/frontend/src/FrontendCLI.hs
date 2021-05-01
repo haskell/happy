@@ -16,11 +16,11 @@ data FrontendOpts = FrontendOpts {
 
 runFrontend :: FrontendOpts -> IO (Either String Grammar)
 runFrontend opts = runExceptT $ do
-    let FrontendOpts { file = file, prettyFile = prettyFile } = opts in do
-        _contents <- liftIO $ readFile file
-        (contents, name) <- liftIO $ possDelit (reverse file) _contents
+    let FrontendOpts { file = file', prettyFile = prettyFile' } = opts in do
+        _contents <- liftIO $ readFile file'
+        (contents, name) <- liftIO $ possDelit (reverse file') _contents
         abssyn <- except (parseYFileContents contents)
-        liftIO $ writePrettyFile prettyFile abssyn
+        liftIO $ writePrettyFile prettyFile' abssyn
         except (mangleAbsSyn abssyn name)
 
 writePrettyFile :: Maybe String -> AbsSyn -> IO ()

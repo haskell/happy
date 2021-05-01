@@ -57,9 +57,9 @@ reportConflicts g sr rr = case expect g of
 
 type ItemSetWithGotos = (Set Lr0Item, [(Name,Int)])
 writeInfoFile :: [ItemSetWithGotos] -> Grammar -> ActionTable -> GotoTable -> Array Int (Int,Int) -> String -> Maybe String -> [Int] -> [String] -> IO ()
-writeInfoFile sets g action goto conflictArray file infoFile unused_rules unused_terminals = 
+writeInfoFile sets g action goto conflictArray file info_file unused_rules unused_terminals = 
     let info = genInfoFile (map fst sets) g action goto (token_specs g) conflictArray file unused_rules unused_terminals in
-        case infoFile of
+        case info_file of
             Just s -> writeFile s info >> hPutStrLn stderr ("Grammar info written to: " ++ s)
             Nothing -> return ()
 
