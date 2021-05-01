@@ -74,7 +74,9 @@ This is only supported in the bootstrapped version
 >               attributetype     :: String,
 >               lexer             :: Maybe (String,String),
 >               error_handler     :: Maybe String,
->               error_sig         :: ErrorHandlerType
+>               error_sig         :: ErrorHandlerType,
+>               hd                :: Maybe String,
+>               tl                :: Maybe String
 >       }
 
 #ifdef DEBUG
@@ -389,7 +391,9 @@ Get the token specs in terms of Names.
 >               token_type        = getTokenType dirs,
 >               expect            = getExpect dirs,
 >               attributes        = attrs,
->               attributetype     = attrType
+>               attributetype     = attrType,
+>               hd                = _hd,
+>               tl                = _tl
 >       })
 
 For combining actions with possible error messages.

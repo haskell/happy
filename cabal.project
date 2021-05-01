@@ -1,2 +1,4 @@
 packages:
- packages/frontend, packages/middleend
+ packages/frontend,
+ packages/middleend,
+ packages/backend

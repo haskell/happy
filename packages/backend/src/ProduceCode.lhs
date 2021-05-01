@@ -6,7 +6,7 @@ The code generator.
 
 > module ProduceCode (produceParser) where
 
-> import Paths_happy            ( version )
+> import Paths_backend          ( version )
 > import Data.Version           ( showVersion )
 > import Grammar
 > import Target                 ( Target(..) )

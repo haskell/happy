@@ -13,8 +13,6 @@ library
                        containers >= 0.4.2,
                        frontend
 
-  extra-source-files:  ARRAY-NOTES
-
   default-language:    Haskell98
   default-extensions:  CPP, MagicHash, FlexibleContexts
   ghc-options: -Wall
@@ -23,3 +21,5 @@ library
                        FindRedundancies,
                        Info,
                        Paths_middleend
+
+extra-source-files:  ARRAY-NOTES
