@@ -1,0 +1,25 @@
+name:                middleend
+version:             1.21.0
+synopsis:            The baseline implementation of happy's middleend package (action and goto table generation).
+cabal-version:       >= 1.10
+build-type:          Simple
+
+library
+  hs-source-dirs:      src
+
+  exposed-modules:     Middleend, MiddleendCLI, LALR, First
+  build-depends:       base < 5,
+                       array,
+                       containers >= 0.4.2,
+                       frontend
+
+  extra-source-files:  ARRAY-NOTES
+
+  default-language:    Haskell98
+  default-extensions:  CPP, MagicHash, FlexibleContexts
+  ghc-options: -Wall
+  other-modules:
+                       NameSet,
+                       FindRedundancies,
+                       Info,
+                       Paths_middleend
