@@ -4,7 +4,7 @@ synopsis:            The baseline implementation of happy's middleend package (a
 cabal-version:       >= 1.10
 build-type:          Simple
 
-extra-source-files:  ARRAY-NOTES
+extra-source-files:  src/ARRAY-NOTES
 
 library
   hs-source-dirs:      src

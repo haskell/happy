@@ -1,3 +1,7 @@
+## 1.21.0
+
+- Split up `happy` into four packages: the libraries `frontend`, `middleend`, `backend` and the main executable, `happy`
+
 ## 1.20.0
 
 * Fix #121: the -i flag produces an .info file even if the `%expect`
