@@ -108,14 +108,14 @@ HC_OPTS += -fforce-recomp
 check.%.y : %.y
 	@echo "--> Checking $<..."
 	$(HAPPY) $(TEST_HAPPY_OPTS) $< 1>$*.run.stdout 2>$*.run.stderr || true
-	sed -i '/^Up to date$$/d' $*.run.stdout $*.run.stderr
+	sed -i '' '/^Up to date$$/d' $*.run.stdout $*.run.stderr
 	@diff -u --ignore-all-space $*.stdout $*.run.stdout
 	@diff -u --ignore-all-space $*.stderr $*.run.stderr
 
 %$(HS_PROG_EXT) : %.hs
 	$(HC) $(HC_OPTS) $($*_LD_OPTS) $< -o $@
 
-all :: $(CHECK_ERROR_TESTS) $(ALL_TESTS)
+all :: $(ALL_TESTS)
 
 check-todo::
 	$(HAPPY) $(TEST_HAPPY_OPTS) -ad Test.ly
