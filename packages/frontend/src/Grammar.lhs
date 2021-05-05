@@ -44,7 +44,7 @@ This is only supported in the bootstrapped version
 
 > data Production
 >       = Production Name [Name] (String,[Int]) Priority
->       deriving Show
+>       deriving (Eq,Show)
 
 > data Grammar
 >       = Grammar {
