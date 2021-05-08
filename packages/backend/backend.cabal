@@ -14,7 +14,7 @@ data-files:
 library
   hs-source-dirs:      src
 
-  exposed-modules:     BackendCLI, Target
+  exposed-modules:     Backend, BackendCLI, Target
   build-depends:       base < 5,
                        array,
                        frontend,

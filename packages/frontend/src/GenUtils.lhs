@@ -17,7 +17,7 @@ All the code below is understood to be in the public domain.
 
 > import Data.Char  (isAlphaNum)
 > import Data.Ord   (comparing)
-> import Data.List  (sortBy)
+> import Data.List  (sortBy, isSuffixOf)
 > import Control.Monad
 > import System.IO  (stderr, hPutStr)
 > import System.Environment
@@ -107,7 +107,6 @@ Fast string-building functions.
 >            | suff `isSuffixOf` str' = take (length str' - length suff) str'
 >            | otherwise              = str'
 
-> optPrint :: a -> (a -> Bool) -> IO () -> IO ()
-> optPrint o f io =
->       when (f o) (putStr "\n---------------------\n" >> io)
->       when (f o) (putStr "\n---------------------\n" >> io)
+> optPrint :: Bool -> IO () -> IO ()
+> optPrint b io =
+>       when b (putStr "\n---------------------\n" >> io)

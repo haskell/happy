@@ -1,92 +1,122 @@
-module BackendCLI(runBackend, Target(..), BackendOpts(..)) where
+module BackendCLI(Flag(..), options, runBackend, parseAndRun) where
 
-import Frontend
-import Middleend
+import System.Console.GetOpt
+import Grammar
+import Backend
+import GenUtils
 import Target
-import ProduceCode
-import ProduceGLRCode
-import Paths_backend
 import Data.Char
-import Data.Maybe
 
-data BackendOpts = BackendOpts {
-  outFile :: String,
-  templateDir :: Maybe String,
-  magicName :: Maybe String,
-  strict :: Bool,
-  ghc :: Bool,
-  coerce :: Bool, -- requires ghc
-  target :: Target,
-  debug :: Bool, -- requires target = TargetArrayBased
-  glr :: Bool,
-  glrDecode :: Bool, -- requires glr
-  glrFilter :: Bool -- requires glr
-}
+-------- CLI flags and options --------
 
-runBackend :: BackendOpts -> Grammar -> ActionTable -> GotoTable -> IO ()
-runBackend opts g action goto = do
-    defaultDir <- getDataDir
-    let header = (case hd g of Just s -> s; Nothing -> "") ++ importsToInject opts
-        templateDir' = fromMaybe defaultDir (templateDir opts)
-        produce = if glr opts then produceGLRCode else produceCode
-    produce opts g action goto header templateDir'
+data Flag =
+    OptOutputFile String |
+    OptTemplate String |
+    OptMagicName String |
+    OptStrict |
+    OptGhcTarget |
+    OptUseCoercions |
+    OptArrayTarget |
+    OptDebugParser |
+    OptGLR |
+    OptGLR_Decode |
+    OptGLR_Filter
+  deriving Eq
 
-produceCode :: BackendOpts -> Grammar -> ActionTable -> GotoTable -> String -> String -> IO ()
-produceCode opts g action goto header template_dir = do
-    template <- readFile (template_dir ++ "/HappyTemplate.hs")
-    let outfile = produceParser g action goto ("CPP" : langExtsToInject opts) -- CPP is needed in all cases with unified template
-                                (Just header) (tl g) (target opts) (coerce opts) (ghc opts) (strict opts)
-        write = (if outFile opts == "-" then putStr else writeFile $ outFile opts)
-    write $ magicFilter opts (outfile ++ defines opts ++ template)
+options :: [OptDescr Flag]
+options = [
+    Option "o" ["outfile"] (ReqArg OptOutputFile "FILE") "write the output to FILE (default: file.hs)",
+    Option "t" ["template"] (ReqArg OptTemplate "DIR") "look in DIR for template files",
+    Option "m" ["magic-name"] (ReqArg OptMagicName "NAME") "use NAME as the symbol prefix instead of \"happy\"",
+    Option "s" ["strict"] (NoArg OptStrict) "evaluate semantic values strictly (experimental)",
+    Option "g" ["ghc"] (NoArg OptGhcTarget) "use GHC extensions",
+    Option "c" ["coerce"] (NoArg OptUseCoercions) "use type coercions (only available with -g)",
+    Option "a" ["array"] (NoArg OptArrayTarget) "generate an array-based parser",
+    Option "d" ["debug"] (NoArg OptDebugParser) "produce a debugging parser (only with -a)",
+    Option "l" ["glr"] (NoArg OptGLR) "Generate a GLR parser for ambiguous grammars",
+    Option "k" ["decode"] (NoArg OptGLR_Decode) "Generate simple decoding code for GLR result",
+    Option "f" ["filter"] (NoArg OptGLR_Filter) "Filter the GLR parse forest with respect to semantic usage"
+  ]
 
-produceGLRCode :: BackendOpts -> Grammar -> ActionTable -> GotoTable -> String -> String -> IO ()
-produceGLRCode opts g action goto header template_dir =
-    let glr_decode = if glrDecode opts then TreeDecode else LabelDecode
-        filtering = if glrFilter opts then UseFiltering else NoFiltering
-        ghc_exts = if ghc opts then UseGhcExts (importsToInject opts) (langExtsToInject opts) else NoGhcExts -- For GLR, don't always pass CPP, because only one of the files needs it.
-    in produceGLRParser (outFile opts) template_dir action goto (Just header) (tl g) (debug opts, (glr_decode, filtering, ghc_exts)) g
+-------- [Flag] to BackendArgs conversion --------
 
-magicFilter :: BackendOpts -> String -> String
-magicFilter opts = case magicName opts of
-    Nothing -> id
-    Just name' -> let
-        small_name = name'
-        big_name = toUpper (head name') : tail name'
-        filter_output ('h':'a':'p':'p':'y':rest) = small_name ++ filter_output rest
-        filter_output ('H':'a':'p':'p':'y':rest) = big_name ++ filter_output rest
-        filter_output (c:cs) = c : filter_output cs
-        filter_output [] = []
-      in filter_output
+parseAndRun :: [Flag] -> String -> Grammar -> ActionTable -> GotoTable -> IO ()
+parseAndRun flags basename grammar action goto = (parseFlags flags basename) >>= (\args -> runBackend args grammar action goto)
 
-importsToInject :: BackendOpts -> String
-importsToInject opts = concat ["\n", import_array, import_bits, glaexts_import, debug_imports, applicative_imports]
-    where
-      glaexts_import | ghc opts       = import_glaexts
-                     | otherwise      = ""
-      debug_imports  | debug opts     = import_debug
-                     | otherwise      = ""
-      applicative_imports = import_applicative
+parseFlags :: [Flag] -> String -> IO BackendArgs
+parseFlags cli baseName = do
+  out_file <- getOutputFileName baseName cli
+  template <- getTemplate cli
+  magic_name <- getMagicName cli
+  target' <- getTarget cli
+  coerce' <- getCoerce cli
+  debug' <- getDebug cli
+  return BackendArgs {
+    outFile = out_file,
+    templateDir = template,
+    magicName = magic_name,
+    strict = getStrict cli,
+    ghc = getGhc cli,
+    coerce = coerce',
+    target = target',
+    debug = debug',
+    glr = getGLR cli,
+    glrDecode = getGLRDecode cli,
+    glrFilter = getGLRFilter cli
+  }
 
-      import_glaexts     = "import qualified GHC.Exts as Happy_GHC_Exts\n"
-      import_array       = "import qualified Data.Array as Happy_Data_Array\n"
-      import_bits        = "import qualified Data.Bits as Bits\n"
-      import_debug       = "import qualified System.IO as Happy_System_IO\n" ++
-                           "import qualified System.IO.Unsafe as Happy_System_IO_Unsafe\n" ++
-                           "import qualified Debug.Trace as Happy_Debug_Trace\n"
-      import_applicative = "import Control.Applicative(Applicative(..))\n" ++
-                           "import Control.Monad (ap)\n"
+getTarget :: [Flag] -> IO Target
+getTarget cli = case [ t | (Just t) <- map optToTarget cli ] of
+  (t:ts) | all (==t) ts -> return t
+  []                    -> return TargetHaskell
+  _                     -> dieHappy "multiple target options\n"
 
-langExtsToInject :: BackendOpts -> [String]
-langExtsToInject opts
-  | ghc opts = ["MagicHash", "BangPatterns", "TypeSynonymInstances", "FlexibleInstances"]
-  | otherwise                = []
+optToTarget :: Flag -> Maybe Target
+optToTarget OptArrayTarget    = Just TargetArrayBased
+optToTarget _                 = Nothing
 
-defines :: BackendOpts -> String
-defines opts = unlines [ "#define " ++ d ++ " 1" | d <- vars_to_define ]
-  where
-  vars_to_define = concat
-    [ [ "HAPPY_DEBUG"  | debug opts ]
-    , [ "HAPPY_ARRAY"  | target opts == TargetArrayBased ]
-    , [ "HAPPY_GHC"    | ghc opts ]
-    , [ "HAPPY_COERCE" | coerce opts ]
-    ]
+getOutputFileName :: String -> [Flag] -> IO String
+getOutputFileName base cli = case [ s | (OptOutputFile s) <- cli ] of
+  []    -> return (base ++ ".hs")
+  list  -> return (last list)
+
+getTemplate :: [Flag] -> IO (Maybe String)
+getTemplate cli = case [ s | (OptTemplate s) <- cli ] of
+  []    -> return Nothing
+  list  -> return $ Just (last list)
+
+getMagicName :: [Flag] -> IO (Maybe String)
+getMagicName cli = case [ s | (OptMagicName s) <- cli ] of
+  []    -> return Nothing
+  list  -> return (Just (map toLower (last list)))
+
+getCoerce :: [Flag] -> IO Bool
+getCoerce cli
+  | elem OptUseCoercions cli =
+      if elem OptGhcTarget cli
+        then return True
+        else dieHappy "-c/--coerce may only be used in conjunction with -g/--ghc\n"
+  | otherwise = return False
+
+getDebug :: [Flag] -> IO Bool
+getDebug cli
+  | elem OptDebugParser cli =
+      if elem OptArrayTarget cli
+        then return True
+        else dieHappy "-d/--debug may only be used in conjunction with -a/--array\n"
+  | otherwise = return False
+
+getGhc :: [Flag] -> Bool
+getGhc = elem OptGhcTarget
+
+getStrict :: [Flag] -> Bool
+getStrict = elem OptStrict
+
+getGLR :: [Flag] -> Bool
+getGLR = elem OptGLR
+
+getGLRFilter :: [Flag] -> Bool
+getGLRFilter = elem OptGLR_Filter
+
+getGLRDecode :: [Flag] -> Bool
+getGLRDecode = elem OptGLR_Decode

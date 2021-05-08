@@ -1,59 +1,48 @@
-module FrontendCLI(FrontendOpts(..), runFrontend) where
+module FrontendCLI(Flag(..), options, parseFlags, parseAndRun) where
 
-import AbsSyn
-import Grammar
 import Frontend
-import PrettyGrammar
-import System.IO
+import Grammar
 import GenUtils
-import Control.Monad.Except
-import Control.Monad.Trans.Except
+import System.Console.GetOpt
 
-data FrontendOpts = FrontendOpts {
-  file :: String,
-  prettyFile :: Maybe String,
+-------- CLI flags and options --------
 
-  -- debugging options
-  dumpGrammar :: Bool
-}
+data Flag =
+    OptPrettyFile (Maybe String) |
+    DumpMangle
+  deriving Eq
 
-runFrontend :: FrontendOpts -> IO (Either String Grammar)
-runFrontend opts = runExceptT $ do
-    let FrontendOpts { file = file', prettyFile = prettyFile' } = opts in do
-        _contents <- liftIO $ readFile file'
-        (contents, name) <- liftIO $ possDelit (reverse file') _contents
-        abssyn <- except (parseYFileContents contents)
-        liftIO $ writePrettyFile prettyFile' abssyn
-        grammar <- except (mangleAbsSyn abssyn name)
-        liftIO $ optPrint opts dumpGrammar (print grammar)
-        return grammar
+options :: [OptDescr Flag]
+options = [
+    Option "p" ["pretty"] (OptArg OptPrettyFile "FILE") "pretty print the production rules to FILE"
 
-writePrettyFile :: Maybe String -> AbsSyn -> IO ()
-writePrettyFile location abssyn = do
-  let out = render (ppAbsSyn abssyn) in
-    case location of
-      Just s   -> writeFile s out >>
-        hPutStrLn stderr ("Production rules written to: " ++ s)
-      Nothing  -> return ()
+#ifdef DEBUG
+  , Option "" ["mangle"] (NoArg DumpMangle) "Dump mangled input"
+#endif
+  
+  ]
 
-possDelit :: String -> String -> IO (String,String)
-possDelit ('y':'l':'.':nm) fl = return (deLitify fl,reverse nm)
-possDelit ('y':'.':nm) fl     = return (fl,reverse nm)
-possDelit f            _      =
-      dieHappy ("`" ++ reverse f ++ "' does not end in `.y' or `.ly'\n")
+-------- [Flag] to FrontendArgs conversion --------
 
-deLitify :: String -> String
-deLitify = deLit
- where
-      deLit ('>':' ':r)  = deLit1 r
-      deLit ('>':'\t':r)  = '\t' : deLit1 r
-      deLit ('>':'\n':r)  = deLit r
-      deLit ('>':_)  = error "Error when de-litify-ing"
-      deLit ('\n':r) = '\n' : deLit r
-      deLit r        = deLit2 r
-      deLit1 ('\n':r) = '\n' : deLit r
-      deLit1 (c:r)    = c : deLit1 r
-      deLit1 []       = []
-      deLit2 ('\n':r) = '\n' : deLit r
-      deLit2 (_:r)    = deLit2 r
-      deLit2 []       = []
+parseAndRun :: [Flag] -> String -> String -> IO (Either String Grammar)
+parseAndRun flags filename basename = (parseFlags flags filename basename) >>= runFrontend
+
+parseFlags :: [Flag] -> String -> String -> IO FrontendArgs
+parseFlags flags filename baseName = do
+  prettyName <- getPrettyFileName baseName flags
+  return FrontendArgs {
+    file = filename,
+    prettyFile = prettyName,
+    dumpMangle = getDumpMangle flags
+  }
+
+getPrettyFileName :: String -> [Flag] -> IO (Maybe String)
+getPrettyFileName baseName cli = case [ s | (OptPrettyFile s) <- cli ] of
+  []        -> return Nothing
+  [f] -> case f of
+    Nothing -> return (Just (baseName ++ ".grammar"))
+    Just j  -> return (Just j)
+  _many     -> dieHappy "multiple --pretty/-p options\n"
+
+getDumpMangle :: [Flag] -> Bool
+getDumpMangle = elem DumpMangle
