@@ -1,4 +1,4 @@
-module OptionParsing(parseOptions, Flag(..), getBaseName) where
+module OptionParsing(parseOptions, Flag(..), requireUnnamedArgument, OnNone(..), OnMultiple(..)) where
 
 import System.Console.GetOpt
 import System.Environment
@@ -21,32 +21,50 @@ data FixedFlag =
    DumpHelp
   deriving Eq
 
-fixedOptions :: [OptDescr (Flag cli)]
-fixedOptions = [
+fixedOpts :: [OptDescr (Flag cli)]
+fixedOpts = [
    Option "?" ["help"] (NoArg (Fixed DumpHelp)) "display this help and exit",
    Option "Vv" ["version"] (NoArg (Fixed DumpVersion)) "output version information and exit"
   ]
 
+addFixed :: [OptDescr cli] -> [OptDescr (Flag cli)]
+addFixed customOpts = map (fmap Custom) customOpts ++ fixedOpts
+
 -------- Parsing --------
 
-parseOptions :: Eq cli => [OptDescr cli] -> [String] -> IO ([cli], String)
-parseOptions customOptions args =
-  let allOptions = map (fmap Custom) customOptions ++ fixedOptions in
-  case getOpt Permute allOptions args of
-    (cli,_,[]) | elem (Fixed DumpVersion) cli ->
+-- Returns all matched flags and the list of unnamed arguments
+parseOptions :: Eq cli => [OptDescr cli] -> [String] -> IO ([cli], [String])
+parseOptions customOpts args =
+  let options = addFixed customOpts in
+  case getOpt Permute options args of
+    (cli, _, []) | elem (Fixed DumpVersion) cli ->
         bye copyright
 
-    (cli,_,[]) | elem (Fixed DumpHelp) cli -> do
-        prog <- getProgramName
-        bye (usageInfo (usageHeader prog) allOptions)
+    (cli, _, []) | elem (Fixed DumpHelp) cli -> do
+        byeUsage options ""
     
-    (cli,[fileName],[]) -> do
+    (cli, freeOpts, []) -> do
         let customFlags = [a | Custom a <- cli]
-        return (customFlags, fileName) 
+        return (customFlags, freeOpts)
    
-    (_,_,errors) -> do
-        prog <- getProgramName
-        die (concat errors ++ usageInfo (usageHeader prog) allOptions)
+    (_, _, errors) -> do
+        dieUsage options (concat errors)
+
+-- Requires the list of unnamed arguments to consist of at least one element, else show usage info and optionally an error.
+requireUnnamedArgument :: [String] -> [OptDescr a] -> OnNone -> OnMultiple -> IO String
+requireUnnamedArgument args customOpts onNone onMultiple =
+   let options = addFixed customOpts in
+   case (length args, onNone, onMultiple) of
+      (0, DieUsage0, _)          -> dieUsage options ""
+      (0, DieError0, IsOkayMult) -> dieUsage options "Provide at least one unnamed argument.\n"
+      (0, DieError0, _)          -> dieUsage options "Provide one unnamed argument.\n"
+      (1, _, _)                  -> return (head args)
+      (_, _, IsOkayMult)         -> return (head args)
+      (_, _, DieUsageMult)       -> dieUsage options ""
+      (_, _, DieErrorMult)       -> dieUsage options "Provide exactly one unnamed argument.\n"
+
+data OnNone = DieUsage0 | DieError0
+data OnMultiple = IsOkayMult | DieUsageMult | DieErrorMult
 
 -------- Helpers --------
 
@@ -62,8 +80,11 @@ bye s = putStr s >> exitWith ExitSuccess
 die :: String -> IO a
 die s = hPutStr stderr s >> exitWith (ExitFailure 1)
 
-dieHappy :: String -> IO a
-dieHappy s = getProgramName >>= \prog -> die (prog ++ ": " ++ s)
+dieUsage :: [OptDescr a] -> String -> IO b
+dieUsage opts s = getProgramName >>= die . (s ++) . usageHeader opts
+
+byeUsage :: [OptDescr a] -> String -> IO b
+byeUsage opts s = getProgramName >>= bye . (s ++) . usageHeader opts
 
 copyright :: String
 copyright = unlines [
@@ -73,13 +94,6 @@ copyright = unlines [
  "it under the terms given in the file 'LICENSE' distributed with",
  "the Happy sources."]
 
-usageHeader :: String -> String
-usageHeader prog = "Usage: " ++ prog ++ " [OPTION...] file\n"
-
--- Get file name without extension – exit if file doesn't end in .y or .ly
--- Todo: this (and filename as required unnamed argument) is frontend-specific and doesn't belong here
-getBaseName :: String -> IO String
-getBaseName = getBaseName' . reverse where
-  getBaseName' ('y':'l':'.':nm) = return (reverse nm)
-  getBaseName' ('y':'.':nm)     = return (reverse nm)
-  getBaseName' f                = dieHappy ("`" ++ reverse f ++ "' does not end in `.y' or `.ly'\n")
+usageHeader :: [OptDescr a] -> String -> String
+usageHeader opts prog = usageInfo header opts where
+  header = "Usage: " ++ prog ++ " [OPTION...] file\n"

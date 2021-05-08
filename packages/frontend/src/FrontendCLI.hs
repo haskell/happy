@@ -1,4 +1,4 @@
-module FrontendCLI(Flag(..), options, parseFlags, parseAndRun) where
+module FrontendCLI(Flag(..), options, parseFlags, parseAndRun, getBaseName) where
 
 import Frontend
 import Grammar
@@ -46,3 +46,12 @@ getPrettyFileName baseName cli = case [ s | (OptPrettyFile s) <- cli ] of
 
 getDumpMangle :: [Flag] -> Bool
 getDumpMangle = elem DumpMangle
+
+-------- Exported helpers --------
+
+-- Get filename without extension – exit if extension is neither .y nor .ly
+getBaseName :: String -> IO String
+getBaseName = getBaseName' . reverse where
+  getBaseName' ('y':'l':'.':nm) = return (reverse nm)
+  getBaseName' ('y':'.':nm)     = return (reverse nm)
+  getBaseName' f                = dieHappy ("`" ++ reverse f ++ "' does not end in `.y' or `.ly'\n")
