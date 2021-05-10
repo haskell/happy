@@ -1,6 +1,6 @@
-name:                frontend
+name:                happy-frontend
 version:             1.21.0
-synopsis:            The baseline implementation of happy's frontend package (.y file parsing, grammar IR gen).
+synopsis:            The baseline implementation of happy's frontend package (.(l)y file parsing, grammar IR gen).
 cabal-version:       >= 1.10
 build-type:          Simple
 

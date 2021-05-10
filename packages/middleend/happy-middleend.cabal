@@ -1,4 +1,4 @@
-name:                middleend
+name:                happy-middleend
 version:             1.21.0
 synopsis:            The baseline implementation of happy's middleend package (action and goto table generation).
 cabal-version:       >= 1.10
@@ -13,7 +13,7 @@ library
   build-depends:       base < 5,
                        array,
                        containers >= 0.4.2,
-                       frontend
+                       happy-frontend
 
   default-language:    Haskell98
   default-extensions:  CPP, MagicHash, FlexibleContexts
@@ -22,4 +22,4 @@ library
                        NameSet,
                        FindRedundancies,
                        Info,
-                       Paths_middleend
+                       Paths_happy_middleend

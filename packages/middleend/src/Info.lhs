@@ -6,7 +6,7 @@ Generating info files.
 
 > module Info (genInfoFile) where
 
-> import Paths_middleend        ( version )
+> import Paths_happy_middleend  ( version )
 > import LALR                   ( Lr0Item(..) )
 > import GenUtils               ( str, interleave, interleave' )
 > import Data.Set ( Set )

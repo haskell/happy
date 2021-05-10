@@ -5,7 +5,7 @@ import Grammar
 import Target
 import ProduceCode
 import ProduceGLRCode
-import Paths_backend
+import Paths_happy_backend
 import Data.Char
 import Data.Maybe
 

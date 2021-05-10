@@ -14,7 +14,7 @@ This module is designed as an extension to the Haskell parser generator Happy.
 >                       , Options
 >                       ) where
 
-> import Paths_backend ( version )
+> import Paths_happy_backend ( version )
 > import GenUtils ( mapDollarDollar )
 > import GenUtils ( str, char, nl, brack, brack', interleave, maybestr )
 > import Grammar

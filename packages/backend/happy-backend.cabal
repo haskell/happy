@@ -1,4 +1,4 @@
-name:                backend
+name:                happy-backend
 version:             1.21.0
 synopsis:            The baseline implementation of happy's backend package (code-gen).
 cabal-version:       >= 1.10
@@ -17,12 +17,12 @@ library
   exposed-modules:     Backend, BackendCLI, Target
   build-depends:       base < 5,
                        array,
-                       frontend,
-                       middleend
+                       happy-frontend,
+                       happy-middleend
 
   default-language:    Haskell98
   default-extensions:  CPP, MagicHash, FlexibleContexts
   ghc-options: -Wall
   other-modules:       ProduceCode,
                        ProduceGLRCode,
-                       Paths_backend
+                       Paths_happy_backend
