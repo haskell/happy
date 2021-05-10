@@ -8,6 +8,7 @@ import OptionParsing
 import GenUtils
 import Control.Monad.Except
 import System.Console.GetOpt
+import Paths_happy (version)
 
 -- Flag conglomerate
 data HappyFlag = Frontend FrontendCLI.Flag | Middleend MiddleendCLI.Flag | Backend BackendCLI.Flag deriving Eq
@@ -29,7 +30,7 @@ getBackend flags = [a | Backend a <- flags]
 main :: IO ()
 main = do
   let sortedOpts = beginOptionsWith "oip" allOptions -- outfile, info, pretty
-  (flags, freeOpts) <- parseOptions sortedOpts =<< getArgs
+  (flags, freeOpts) <- parseOptions sortedOpts version =<< getArgs
   filename <- requireUnnamedArgument freeOpts sortedOpts DieUsage0 DieUsageMult
   basename <- FrontendCLI.getBaseName filename
   grammar <- try $ FrontendCLI.parseAndRun (getFrontend flags) filename basename

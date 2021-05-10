@@ -8,8 +8,7 @@ import Control.Monad (liftM)
 import Data.List (isSuffixOf, sort, sortBy, group, intersect, elemIndex)
 import Data.Ord
 import Data.Maybe
-import Data.Version (showVersion)
-import Paths_happy
+import Data.Version (showVersion, Version)
 
 -------- Flag definitions and standard options --------
 
@@ -35,13 +34,13 @@ addFixed customOpts = map (fmap Custom) customOpts ++ fixedOpts
 -------- Parsing --------
 
 -- Returns all matched flags and the list of unnamed arguments
-parseOptions :: Eq cli => [OptDescr cli] -> [String] -> IO ([cli], [String])
-parseOptions customOpts args =
+parseOptions :: Eq cli => [OptDescr cli] -> Version -> [String] -> IO ([cli], [String])
+parseOptions customOpts version args =
   let options = addFixed customOpts in do
   checkDuplicateOptions options
   case getOpt Permute options args of
     (cli, _, []) | elem (Fixed DumpVersion) cli ->
-        bye copyright
+        bye (copyright version)
 
     (cli, _, []) | elem (Fixed DumpHelp) cli ->
         byeUsage options ""
@@ -111,8 +110,8 @@ dieUsage opts s = getProgramName >>= die . (s ++) . usageHeader opts
 byeUsage :: [OptDescr a] -> String -> IO b
 byeUsage opts s = getProgramName >>= bye . (s ++) . usageHeader opts
 
-copyright :: String
-copyright = unlines [
+copyright :: Version -> String
+copyright version = unlines [
  "Happy Version " ++ showVersion version ++ " Copyright (c) 1993-1996 Andy Gill, Simon Marlow (c) 1997-2005 Simon Marlow","",
  "Happy is a Yacc for Haskell, and comes with ABSOLUTELY NO WARRANTY.",
  "This program is free software; you can redistribute it and/or modify",
