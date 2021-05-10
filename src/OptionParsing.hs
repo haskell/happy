@@ -1,11 +1,13 @@
-module OptionParsing(parseOptions, Flag(..), requireUnnamedArgument, OnNone(..), OnMultiple(..)) where
+module OptionParsing(parseOptions, Flag(..), beginOptionsWith, requireUnnamedArgument, OnNone(..), OnMultiple(..)) where
 
 import System.Console.GetOpt
 import System.Environment
 import System.Exit (exitWith, ExitCode(..))
 import System.IO
 import Control.Monad (liftM)
-import Data.List (isSuffixOf)
+import Data.List (isSuffixOf, sort, sortBy, group, intersect, elemIndex)
+import Data.Ord
+import Data.Maybe
 import Data.Version (showVersion)
 import Paths_happy
 
@@ -35,19 +37,20 @@ addFixed customOpts = map (fmap Custom) customOpts ++ fixedOpts
 -- Returns all matched flags and the list of unnamed arguments
 parseOptions :: Eq cli => [OptDescr cli] -> [String] -> IO ([cli], [String])
 parseOptions customOpts args =
-  let options = addFixed customOpts in
+  let options = addFixed customOpts in do
+  checkDuplicateOptions options
   case getOpt Permute options args of
     (cli, _, []) | elem (Fixed DumpVersion) cli ->
         bye copyright
 
-    (cli, _, []) | elem (Fixed DumpHelp) cli -> do
+    (cli, _, []) | elem (Fixed DumpHelp) cli ->
         byeUsage options ""
     
     (cli, freeOpts, []) -> do
         let customFlags = [a | Custom a <- cli]
         return (customFlags, freeOpts)
    
-    (_, _, errors) -> do
+    (_, _, errors) ->
         dieUsage options (concat errors)
 
 -- Requires the list of unnamed arguments to consist of at least one element, else show usage info and optionally an error.
@@ -66,7 +69,29 @@ requireUnnamedArgument args customOpts onNone onMultiple =
 data OnNone = DieUsage0 | DieError0
 data OnMultiple = IsOkayMult | DieUsageMult | DieErrorMult
 
--------- Helpers --------
+-- Sort the options by the list of given short option characters.
+-- Options which do not have any of these short option characters come after the sorted options which have been matched.
+beginOptionsWith :: [Char] -> [OptDescr a] -> [OptDescr a]
+beginOptionsWith chars opts = sortBy (comparing $ smallestIndex . shorts) matched ++ nonMatched
+   where
+      smallestIndex :: [Char] -> Int
+      smallestIndex a = minimum (map (fromMaybe 1000 . flip elemIndex chars) a)
+      matched = filter (not . null . intersect chars . shorts) opts
+      nonMatched = filter (null . intersect chars . shorts) opts
+      shorts (Option s _ _ _) = s
+
+-------- Internal helpers --------
+
+checkDuplicateOptions :: [OptDescr a] -> IO ()
+checkDuplicateOptions opts = case (multiples (concatMap shorts opts), multiples (concatMap longs opts)) of
+   (x:_, _) -> die $ "Attention: option -" ++ x : " corresponds to multiple different arguments; please fix this.\n"
+   (_, x:_) -> die $ "Attention: option --" ++ x ++ " corresponds to multiple different arguments; please fix this.\n"
+   _        -> return ()
+   where
+      shorts (Option s _ _ _) = s
+      longs (Option _ l _ _) = l
+      multiples :: Ord a => [a] -> [a]
+      multiples = map head . filter ((> 1) . length) . group . sort
 
 getProgramName :: IO String
 getProgramName = liftM (`withoutSuffix` ".bin") getProgName

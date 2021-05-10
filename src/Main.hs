@@ -12,8 +12,11 @@ import System.Console.GetOpt
 -- Flag conglomerate
 data HappyFlag = Frontend FrontendCLI.Flag | Middleend MiddleendCLI.Flag | Backend BackendCLI.Flag deriving Eq
 
+as :: Functor f => [f a] -> (a -> b) -> [f b]
+a `as` b = map (fmap b) a
+
 allOptions :: [OptDescr HappyFlag]
-allOptions = map (fmap Frontend) FrontendCLI.options ++ map (fmap Middleend) MiddleendCLI.options ++ map (fmap Backend) BackendCLI.options
+allOptions = FrontendCLI.options `as` Frontend  ++ MiddleendCLI.options `as` Middleend ++ BackendCLI.options `as` Backend
 
 getFrontend :: [HappyFlag] -> [FrontendCLI.Flag]
 getMiddleend :: [HappyFlag] -> [MiddleendCLI.Flag]
@@ -25,8 +28,9 @@ getBackend flags = [a | Backend a <- flags]
 -- Main
 main :: IO ()
 main = do
-  (flags, freeOpts) <- parseOptions allOptions =<< getArgs
-  filename <- requireUnnamedArgument freeOpts allOptions DieUsage0 DieUsageMult
+  let sortedOpts = beginOptionsWith "oip" allOptions -- outfile, info, pretty
+  (flags, freeOpts) <- parseOptions sortedOpts =<< getArgs
+  filename <- requireUnnamedArgument freeOpts sortedOpts DieUsage0 DieUsageMult
   basename <- FrontendCLI.getBaseName filename
   grammar <- try $ FrontendCLI.parseAndRun (getFrontend flags) filename basename
   (action, goto, _, _) <- MiddleendCLI.parseAndRun (getMiddleend flags) filename basename grammar
