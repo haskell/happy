@@ -17,6 +17,7 @@ Generation of LALR parsing tables.
 > import qualified NameSet
 > import NameSet ( NameSet )
 > import Grammar
+> import Tables
 
 > import Control.Monad (guard)
 > import Control.Monad.ST

@@ -7,7 +7,7 @@ Abstract syntax for grammar files.
 Here is the abstract syntax of the language we parse.
 
 > module AbsSyn (
->       AbsSyn(..), Directive(..), ErrorHandlerType(..),
+>       AbsSyn(..), Directive(..), ErrorHandlerType'(..),
 >       getTokenType, getTokenSpec, getParserNames, getLexer,
 >       getImportedIdentity, getMonad, getError,
 >       getPrios, getPrioNames, getExpect, getErrorHandlerType,
@@ -53,9 +53,9 @@ Parser Generator Directives.
 ToDo: find a consistent way to analyse all the directives together and
 generate some error messages.
 
-> data ErrorHandlerType
->   = ErrorHandlerTypeDefault
->   | ErrorHandlerTypeExpList
+> data ErrorHandlerType'
+>   = ErrorHandlerTypeDefault'
+>   | ErrorHandlerTypeExpList'
 >
 > data Directive a
 >       = TokenType     String                  -- %tokentype
@@ -143,14 +143,14 @@ generate some error messages.
 >               []  -> Nothing
 >               _   -> error "multiple error directives"
 
-> getErrorHandlerType :: [Directive t] -> ErrorHandlerType
+> getErrorHandlerType :: [Directive t] -> ErrorHandlerType'
 > getErrorHandlerType ds
 >       = case [ a | (TokenErrorHandlerType a) <- ds ] of
 >               [t] -> case t of
->                        "explist" -> ErrorHandlerTypeExpList
->                        "default" -> ErrorHandlerTypeDefault
+>                        "explist" -> ErrorHandlerTypeExpList'
+>                        "default" -> ErrorHandlerTypeDefault'
 >                        _ -> error "unsupported %errorhandlertype value"
->               []  -> ErrorHandlerTypeDefault
+>               []  -> ErrorHandlerTypeDefault'
 >               _   -> error "multiple errorhandlertype directives"
 
 > getAttributes :: [Directive t] -> [(String, String)]

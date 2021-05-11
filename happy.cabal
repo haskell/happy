@@ -149,6 +149,7 @@ executable happy
                  containers >= 0.4.2,
                  mtl >= 2.2.1,
                  transformers >= 0.5,
+                 happy-core,
                  happy-frontend,
                  happy-middleend,
                  happy-backend
@@ -157,7 +158,6 @@ executable happy
   default-extensions: CPP, MagicHash, FlexibleContexts
   ghc-options: -Wall
   other-modules:
-        OptionParsing,
         Paths_happy
 
 test-suite tests

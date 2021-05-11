@@ -32,9 +32,12 @@ main = do
   let sortedOpts = beginOptionsWith "oip" allOptions -- outfile, info, pretty
   (flags, freeOpts) <- parseOptions sortedOpts version =<< getArgs
   filename <- requireUnnamedArgument freeOpts sortedOpts DieUsage0 DieUsageMult
+
   basename <- FrontendCLI.getBaseName filename
   grammar <- try $ FrontendCLI.parseAndRun (getFrontend flags) filename basename
+
   (action, goto, _, _) <- MiddleendCLI.parseAndRun (getMiddleend flags) filename basename grammar
+
   BackendCLI.parseAndRun (getBackend flags) basename grammar action goto
 
 try :: IO (Either String a) -> IO a

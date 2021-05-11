@@ -12,6 +12,7 @@ Generating info files.
 > import Data.Set ( Set )
 > import qualified Data.Set as Set hiding ( Set )
 > import Grammar
+> import Tables
 
 > import Data.Array
 > import Data.List (nub)

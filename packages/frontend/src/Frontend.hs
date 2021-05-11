@@ -1,7 +1,8 @@
-module Frontend (parseYFileContents, mangleAbsSyn, runFrontend, FrontendArgs(..)) where
+module Frontend (parseYFileContents, mangleAbsSyn, runFrontend, ParseResult, FrontendArgs(..)) where
   
 import AbsSyn
 import Grammar
+import Mangler
 import PrettyGrammar
 import Data.Bifunctor
 import Parser

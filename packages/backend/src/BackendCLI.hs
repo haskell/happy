@@ -1,10 +1,10 @@
-module BackendCLI(Flag(..), options, runBackend, parseAndRun) where
+module BackendCLI(Flag(..), options, parseFlags, parseAndRun) where
 
 import System.Console.GetOpt
 import Grammar
+import Tables
 import Backend
 import GenUtils
-import Target
 import Data.Char
 
 -------- CLI flags and options --------

@@ -11,18 +11,20 @@ flag bootstrap
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Frontend, FrontendCLI, AbsSyn, Grammar, GenUtils
+  exposed-modules:     Frontend, FrontendCLI, AbsSyn
 
   build-depends:       base < 5,
                        array,
                        containers >= 0.4.2,
                        transformers >= 0.5,
-                       mtl >= 2.2.1
+                       mtl >= 2.2.1,
+                       happy-core
 
   default-language:    Haskell98
   default-extensions:  CPP, MagicHash, FlexibleContexts
   ghc-options: -Wall
   other-modules:
+        Mangler
         Lexer
         ParseMonad
         ParseMonad.Class

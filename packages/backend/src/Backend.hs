@@ -1,7 +1,7 @@
-module Backend(BackendArgs(..), runBackend) where
+module Backend(BackendArgs(..), Target(..), runBackend) where
 
-import Middleend
 import Grammar
+import Tables
 import Target
 import ProduceCode
 import ProduceGLRCode

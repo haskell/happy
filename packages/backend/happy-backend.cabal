@@ -14,15 +14,17 @@ data-files:
 library
   hs-source-dirs:      src
 
-  exposed-modules:     Backend, BackendCLI, Target
+  exposed-modules:     Backend, BackendCLI
   build-depends:       base < 5,
                        array,
+                       happy-core,
                        happy-frontend,
                        happy-middleend
 
   default-language:    Haskell98
   default-extensions:  CPP, MagicHash, FlexibleContexts
   ghc-options: -Wall
-  other-modules:       ProduceCode,
+  other-modules:       Target,
+                       ProduceCode,
                        ProduceGLRCode,
                        Paths_happy_backend

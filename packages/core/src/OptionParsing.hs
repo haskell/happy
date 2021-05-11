@@ -1,4 +1,4 @@
-module OptionParsing(parseOptions, Flag(..), beginOptionsWith, requireUnnamedArgument, OnNone(..), OnMultiple(..)) where
+module OptionParsing(parseOptions, beginOptionsWith, requireUnnamedArgument, OnNone(..), OnMultiple(..)) where
 
 import System.Console.GetOpt
 import System.Environment

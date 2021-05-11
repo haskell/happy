@@ -1,6 +1,7 @@
 > module FindRedundancies where
 
 > import Grammar
+> import Tables
 > import Data.Array( assocs, elems, (!) )
 > import Data.List
 

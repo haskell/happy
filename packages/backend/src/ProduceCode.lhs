@@ -9,6 +9,7 @@ The code generator.
 > import Paths_happy_backend    ( version )
 > import Data.Version           ( showVersion )
 > import Grammar
+> import Tables
 > import Target                 ( Target(..) )
 > import GenUtils               ( mapDollarDollar, str, char, nl, strspace,
 >                                 interleave, interleave', maybestr,

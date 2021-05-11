@@ -1,6 +1,6 @@
 module Middleend(
     mkFirst, genLR0Items, genLookaheads, genLR1States, genActionTable, genGotoTable, countConflicts,
-    Lr0State, Lr1State, LookaheadInfo, ActionTable, GotoTable,
+    Lr0Item(..), Lr1Item(..), Lr0State, Lr1State, LookaheadInfo,
     MiddleendArgs(..), MiddleendResult, runMiddleend
   ) where
 
@@ -9,6 +9,7 @@ import qualified LALR
 import LALR (Lr0Item, Lr1Item, precalcClosure0, propLookaheads, calcLookaheads, mergeLookaheadInfo)
 import NameSet (NameSet)
 import Grammar
+import Tables
 import GenUtils
 import FindRedundancies
 import Info

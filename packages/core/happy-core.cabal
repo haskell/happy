@@ -1,0 +1,20 @@
+name:                happy-core
+version:             1.21.0
+synopsis:            Contains cross-package IRs and core functionality of happy.
+cabal-version:       >= 1.10
+build-type:          Simple
+
+library
+  hs-source-dirs:      src
+
+  exposed-modules:     Grammar, Tables, GenUtils, NameSet, OptionParsing
+  build-depends:       base < 5,
+                       array,
+                       containers >= 0.4.2,
+                       transformers >= 0.5,
+                       mtl >= 2.2.1
+
+  default-language:    Haskell98
+  default-extensions:  CPP, MagicHash, FlexibleContexts
+  ghc-options: -Wall
+  other-modules:

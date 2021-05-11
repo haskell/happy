@@ -9,17 +9,18 @@ extra-source-files:  src/ARRAY-NOTES
 library
   hs-source-dirs:      src
 
-  exposed-modules:     Middleend, MiddleendCLI, LALR, First
+  exposed-modules:     Middleend, MiddleendCLI, First
   build-depends:       base < 5,
                        array,
                        containers >= 0.4.2,
+                       happy-core,
                        happy-frontend
 
   default-language:    Haskell98
   default-extensions:  CPP, MagicHash, FlexibleContexts
   ghc-options: -Wall
   other-modules:
-                       NameSet,
+                       LALR,
                        FindRedundancies,
                        Info,
                        Paths_happy_middleend
