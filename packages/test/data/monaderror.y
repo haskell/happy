@@ -1,8 +1,5 @@
 {
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-}
--- For ancient GHC 7.0.4
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies, FlexibleInstances #-}
 module Main where
 
 import Control.Monad (when)

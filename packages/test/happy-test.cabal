@@ -1,0 +1,49 @@
+name:                happy-test
+version:             1.21.0
+synopsis:            Import this package from your happy test suite to test your happy version
+cabal-version:       >= 1.10
+build-type:          Simple
+
+data-dir: data
+
+data-files:
+        AttrGrammar001.y
+        AttrGrammar002.y
+        Makefile
+        Partial.ly
+        Test.ly
+        TestMulti.ly
+        TestPrecedence.ly
+        bogus-token.y
+        bug001.ly
+        bug002.y
+        error001.stderr
+        error001.stdout
+        error001.y
+        monad001.y
+        monad002.ly
+        monaderror.y
+        precedence001.ly
+        precedence002.y
+        test_rules.y
+        issue91.y
+        issue93.y
+        issue94.y
+        issue95.y
+        monaderror-explist.y
+        typeclass_monad001.y
+        typeclass_monad002.ly
+        typeclass_monad_lexer.y
+        rank2.y
+        shift01.y
+
+library
+  hs-source-dirs:      src
+
+  exposed-modules:     Test
+  build-depends:       base < 5,
+                       process
+
+  default-language:    Haskell98
+  ghc-options: -Wall
+  other-modules:       Paths_happy_test

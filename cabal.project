@@ -3,4 +3,5 @@ packages:
  packages/middleend,
  packages/backend,
  packages/core,
+ packages/test,
  ./
