@@ -6,6 +6,7 @@ Test for monadic Happy Parsers, Simon Marlow 1996.
 > -- -fglasgow-exts required because P is a type synonym, and Happy uses it
 > -- unsaturated.
 > import Data.Char
+> import System.Exit (exitFailure)
 > }
 
 > %name calc
@@ -181,5 +182,5 @@ Here we test our parser.
 >                   _ -> quit
 >             _ -> quit
 >       _ -> quit
-> quit = print "Test failed\n"
+> quit = print "Test failed\n" >> exitFailure
 > }

@@ -5,6 +5,7 @@ and the type of the tokens the parser reads.
 
 > {
 > import Data.Char
+> import System.Exit (exitFailure)
 > }
 
 > %name calc
@@ -147,6 +148,6 @@ Here we test our parser.
 >	case runCalc "let x = 2 in x * (x - 2)" of {
 >	(Let "x" (Exp1 (Term (Factor (Int 2)))) (Exp1 (Term (Times (Factor (Var "x")) (Brack (Exp1 (Minus (Term (Factor (Var "x"))) (Factor (Int 2))))))))) -> print "Test works\n"; 
 >	_ -> quit } ; _ -> quit } ; _ -> quit } ; _ -> quit }
-> quit = print "Test failed\n"
+> quit = print "Test failed\n" >> exitFailure
 
 > }

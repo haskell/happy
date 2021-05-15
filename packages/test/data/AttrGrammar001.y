@@ -1,5 +1,6 @@
 {
 import Control.Monad (unless)
+import System.Exit (exitFailure)
 }
 
 %tokentype { Char }
@@ -57,12 +58,12 @@ failUnless b msg = unless b (fail msg)
 main = case parse "" of { Just _ -> 
        case parse "abc" of { Just _ ->
        case parse "aaaabbbbcccc" of { Just _ ->
-       case parse "abbcc" of { Nothing ->
+       case parse "abbcc" of { Just _ ->
        case parse "aabcc" of { Nothing ->
        case parse "aabbc" of { Nothing ->
        putStrLn "Test works";
        _ -> quit } ; _ -> quit }; _ -> quit };
        _ -> quit } ; _ -> quit }; _ -> quit }
 
-quit = putStrLn "Test failed"
+quit = putStrLn "Test failed" >> exitFailure
 }

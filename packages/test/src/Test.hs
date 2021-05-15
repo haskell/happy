@@ -5,7 +5,7 @@ import System.Exit
 import Paths_happy_test
 
 data TestSetup = TestSetup {
-  happyPath :: String,      -- path to the happy exeuctable which shall be tested
+  happyExec :: String,          -- (path to the) happy exeuctable which shall be tested. "happy" should suffice here for cabal test
   defaultTests :: [String], -- standard tests from happy-test package that should be performed. these are in this package's data-dir
   customTests :: [String],  -- custom tests from the calling package that should be performed. these are in the calling package's data-dir
   customDataDir :: String,  -- data-dir of the calling package. all tests are compiled and executed in their respective directory.
@@ -19,7 +19,7 @@ test setup = do
                 zip (repeat (customDataDir setup)) (customTests setup)                      -- (dir, file.ly)
   let inandout = map (\(dir, file) -> (dir, file, hs file)) infiles                         -- (dir, file.ly, file.hs)
   let tests = [(d, i, o, arg) | (d, i, o) <- inandout, arg <- allArguments setup]
-  result <- testCons tests (happyPath setup)
+  result <- testCons tests (happyExec setup)
   if result then exitSuccess else exitFailure
   where
     hs = hs' . reverse
@@ -59,7 +59,7 @@ runSingleTest happy arguments dir inputFile outputFile = do
   return True
   where
     rm = (system $ "cd '" ++ dir ++ "'; rm " ++ outputFile) >> return ()
-    fail' = print "Test failed!" >> rm
+    fail' = putStrLn "Test failed!" >> rm
 
     cabalPutStrLn :: String -> IO () -- cabal hack
     cabalPutStrLn a = (system $ "echo '" ++ a ++ "'") >> return ()

@@ -5,6 +5,7 @@ and the type of the tokens the parser reads.
 
 > {
 > import Data.Char
+> import System.Exit (exitFailure)
 > }
 
 > %name calc
@@ -139,6 +140,6 @@ Here we test our parser.
 >       print "Test works\n";
 >       _ -> quit } ; _ -> quit } ; _ -> quit }
 > 
-> quit = print "Test failed\n";
+> quit = print "Test failed\n" >> exitFailure
 > 
 > }

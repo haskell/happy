@@ -1,3 +1,6 @@
+{
+import System.Exit (exitFailure)
+}
 
 %tokentype { Char }
 
@@ -54,5 +57,5 @@ main = case parse ""      of { Nothing ->
        _ -> quit }; _ -> quit }; _ -> quit };
        _ -> quit }
 
-quit = putStrLn "Test Failed"
+quit = putStrLn "Test Failed" >> exitFailure
 }

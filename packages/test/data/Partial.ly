@@ -5,6 +5,7 @@ and the type of the tokens the parser reads.
 
 > {
 > import Data.Char
+> import System.Exit (exitFailure)
 > }
 
 > %name calc Exp
@@ -158,6 +159,6 @@ Here we test our parser.
 >	Times (Times (Factor (Int 1)) (Int 2)) (Int 3) ->
 >       print "Test works\n"; 
 >	_ -> quit } ; _ -> quit } ; _ -> quit } ; _ -> quit } ; _ -> quit } ; _ -> quit } ; _ -> quit }
-> quit = print "Test failed\n"
+> quit = print "Test failed\n" >> exitFailure
 
 > }
