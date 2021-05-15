@@ -1,4 +1,4 @@
-module Frontend (parseYFileContents, mangleAbsSyn, runFrontend, ParseResult, FrontendArgs(..)) where
+module Frontend (parseYFileContents, mangleAbsSyn, runFrontend, ParseResult, FrontendArgs(..), isBootstrapped) where
   
 import AbsSyn
 import Grammar
@@ -69,3 +69,12 @@ deLitify = deLit where
     deLit2 ('\n':r)     = '\n' : deLit r
     deLit2 (_:r)        = deLit2 r
     deLit2 []           = []
+
+-------- Bootstrapped, yes or no? --------
+
+isBootstrapped :: Bool
+#ifdef HAPPY_BOOTSTRAP
+isBootstrapped = True
+#else
+isBootstrapped = False
+#endif
