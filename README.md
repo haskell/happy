@@ -13,10 +13,9 @@ Happy is built using Cabal.  First install GHC, then:
 ```
   $ cabal install
 ```
-If you obtained the development version from https://github.com/simonmar/happy/,
-install via:
+If you don't have a local version of `happy` (yet), you can also install a non-bootstrapped version via:
 ```
-  $ make sdist && cabal install
+  $ cabal install -f -bootstrap
 ```
 
 Complete documentation can be found in the directory 'doc', in

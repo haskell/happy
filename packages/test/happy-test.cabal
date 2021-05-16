@@ -9,7 +9,6 @@ data-dir: data
 data-files:
         AttrGrammar001.y
         AttrGrammar002.y
-        Makefile
         Partial.ly
         Test.ly
         TestMulti.ly
@@ -17,9 +16,6 @@ data-files:
         bogus-token.y
         bug001.ly
         bug002.y
-        error001.stderr
-        error001.stdout
-        error001.y
         monad001.y
         monad002.ly
         monaderror.y
