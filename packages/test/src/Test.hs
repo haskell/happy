@@ -5,11 +5,12 @@ import System.Exit
 import Paths_happy_test
 
 data TestSetup = TestSetup {
-  happyExec :: String,          -- (path to the) happy exeuctable which shall be tested. "happy" should suffice here for cabal test
+  happyExec :: String,      -- (path to the) happy exeuctable which shall be tested. "happy" should suffice here for cabal test
   defaultTests :: [String], -- standard tests from happy-test package that should be performed. these are in this package's data-dir
   customTests :: [String],  -- custom tests from the calling package that should be performed. these are in the calling package's data-dir
   customDataDir :: String,  -- data-dir of the calling package. all tests are compiled and executed in their respective directory.
-  allArguments :: [String]  -- all different testable argument combinations for happy, as strings
+  allArguments :: [String], -- all different testable argument combinations for happy, as strings
+  stopOnFailure :: Bool     -- continue with remaining tests after an error has occurred?
 }
 
 test :: TestSetup -> IO a
@@ -19,7 +20,7 @@ test setup = do
                 zip (repeat (customDataDir setup)) (customTests setup)                      -- (dir, file.ly)
   let inandout = map (\(dir, file) -> (dir, file, hs file)) infiles                         -- (dir, file.ly, file.hs)
   let tests = [(d, i, o, arg) | (d, i, o) <- inandout, arg <- allArguments setup]
-  result <- testCons tests (happyExec setup)
+  result <- testCons tests (happyExec setup) (stopOnFailure setup)
   if result then exitSuccess else exitFailure
   where
     hs = hs' . reverse
@@ -27,11 +28,14 @@ test setup = do
     hs' ('y':'.':file) = reverse file ++ ".hs"
     hs' file = error $ "Error: test file does not end in .y or .ly: " ++ file
 
-testCons :: [(String, String, String, String)] -> String -> IO Bool
-testCons [] _ = return True
-testCons ((dir, infile, outfile, args):rest) happy = do
+testCons :: [(String, String, String, String)] -> String -> Bool -> IO Bool
+testCons [] _ _ = return True
+testCons ((dir, infile, outfile, args):rest) happy stopOnFail = do
   result <- runSingleTest happy args dir infile outfile
-  if result then testCons rest happy else return False
+  if result then testCons rest happy stopOnFail else
+    if stopOnFail
+      then return False
+      else do _ <- testCons rest happy stopOnFail; return False
 
 defaultTestFiles :: [String]
 defaultTestFiles = ["Test.ly", "TestMulti.ly", "TestPrecedence.ly", "bug001.ly", "monad001.y", "monad002.ly", "precedence001.ly",
@@ -59,7 +63,7 @@ runSingleTest happy arguments dir inputFile outputFile = do
   return True
   where
     rm = (system $ "cd '" ++ dir ++ "'; rm " ++ outputFile) >> return ()
-    fail' = putStrLn "Test failed!" >> rm
+    fail' = (cabalPutStrLn $ "Test " ++ inputFile ++ " failed!") >> rm
 
     cabalPutStrLn :: String -> IO () -- cabal hack
     cabalPutStrLn a = (system $ "echo '" ++ a ++ "'") >> return ()
