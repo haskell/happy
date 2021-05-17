@@ -58,7 +58,7 @@ failUnless b msg = unless b (fail msg)
 main = case parse "" of { Just _ -> 
        case parse "abc" of { Just _ ->
        case parse "aaaabbbbcccc" of { Just _ ->
-       case parse "abbcc" of { Just _ ->
+       case parse "abbcc" of { Nothing ->
        case parse "aabcc" of { Nothing ->
        case parse "aabbc" of { Nothing ->
        putStrLn "Test works";
