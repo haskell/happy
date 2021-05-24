@@ -1,5 +1,6 @@
 module Test(test, TestSetup(..), defaultTestFiles, bootstrapTestFiles, defaultArguments) where
 
+import System.IO
 import System.Process
 import System.Exit
 import Paths_happy_test
@@ -15,6 +16,7 @@ data TestSetup = TestSetup {
 
 test :: TestSetup -> IO a
 test setup = do
+  hSetBuffering stdout NoBuffering -- required for cabal test
   defaultDir <- getDataDir
   let infiles = zip (repeat defaultDir) (defaultTests setup) ++
                 zip (repeat (customDataDir setup)) (customTests setup)                      -- (dir, file.ly)
@@ -51,26 +53,22 @@ defaultArguments = map ("--strict " ++) ["", "-a", "-g", "-ag", "-gc", "-agc"]
 
 runSingleTest :: String -> String -> String -> String -> String -> IO Bool
 runSingleTest happy arguments dir inputFile outputFile = do
-  cabalPutStrLn $ "\ncd '" ++ dir ++ "'"
+  putStrLn $ "\ncd '" ++ dir ++ "'"
 
   success1 <- execVerboseIn dir [happy, inputFile, arguments, "-o", outputFile]
   if not success1 then fail' >> return False else do
   
   success2 <- execVerboseIn dir ["runhaskell", outputFile]
-  if not success2 then fail' >> return False else do
-
-  rm
-  return True
+  if not success2
+    then fail' >> return False
+    else do rm; return True
   where
     rm = (system $ "cd '" ++ dir ++ "'; rm " ++ outputFile) >> return ()
-    fail' = (cabalPutStrLn $ "Test " ++ inputFile ++ " failed!") >> rm
-
-    cabalPutStrLn :: String -> IO () -- cabal hack
-    cabalPutStrLn a = (system $ "echo '" ++ a ++ "'") >> return ()
+    fail' = (putStrLn $ "Test " ++ inputFile ++ " failed!") >> rm
 
     execVerboseIn :: String -> [String] -> IO Bool
     execVerboseIn inDir args = do
       let cmd = unwords args
-      cabalPutStrLn cmd
+      putStrLn cmd
       exitCode <- system $ "cd '" ++ inDir ++ "'; " ++ cmd
       return $ exitCode == ExitSuccess
