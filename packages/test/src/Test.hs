@@ -1,6 +1,8 @@
-module Test(test, TestSetup(..), defaultTestFiles, bootstrapTestFiles, defaultArguments) where
+module Test(test, TestSetup(..), defaultTestFiles, attributeGrammarTestFiles, defaultArguments) where
 
 import System.IO
+import Control.Exception
+import System.Directory
 import System.Process
 import System.Exit
 import Paths_happy_test
@@ -18,53 +20,60 @@ test :: TestSetup -> IO a
 test setup = do
   hSetBuffering stdout NoBuffering -- required for cabal test
   defaultDir <- getDataDir
-  let infiles = zip (repeat defaultDir) (defaultTests setup) ++
+  let files = zip (repeat defaultDir) (defaultTests setup) ++
                 zip (repeat (customDataDir setup)) (customTests setup)                      -- (dir, file.ly)
-  let inandout = map (\(dir, file) -> (dir, file, hs file)) infiles                         -- (dir, file.ly, file.hs)
-  let tests = [(d, i, o, arg) | (d, i, o) <- inandout, arg <- allArguments setup]
+  let tests = [(dir, file, arg) | (dir, file) <- files, arg <- allArguments setup]          -- (dir, file.ly, -ag)
   result <- testCons tests (happyExec setup) (stopOnFailure setup)
   if result then exitSuccess else exitFailure
-  where
-    hs = hs' . reverse
-    hs' ('y':'l':'.':file) = reverse file ++ ".hs"
-    hs' ('y':'.':file) = reverse file ++ ".hs"
-    hs' file = error $ "Error: test file does not end in .y or .ly: " ++ file
 
-testCons :: [(String, String, String, String)] -> String -> Bool -> IO Bool
+testCons :: [(String, String, String)] -> String -> Bool -> IO Bool
 testCons [] _ _ = return True
-testCons ((dir, infile, outfile, args):rest) happy stopOnFail = do
-  result <- runSingleTest happy args dir infile outfile
+testCons ((dir, file, args):rest) happy stopOnFail = do
+  result <- runSingleTest happy args dir file
   if result then testCons rest happy stopOnFail else
     if stopOnFail
       then return False
       else do _ <- testCons rest happy stopOnFail; return False
 
+-- These test files do not use attribute grammars.
 defaultTestFiles :: [String]
 defaultTestFiles = ["Test.ly", "TestMulti.ly", "TestPrecedence.ly", "bug001.ly", "monad001.y", "monad002.ly", "precedence001.ly",
                     "precedence002.y", "bogus-token.y", "bug002.y", "Partial.ly", "issue91.y", "issue93.y", "issue94.y", "issue95.y",
                     "test_rules.y", "monaderror.y", "monaderror-explist.y", "typeclass_monad001.y", "typeclass_monad002.ly",
                     "typeclass_monad_lexer.y", "rank2.y", "shift01.y"]
 
-bootstrapTestFiles :: [String]
-bootstrapTestFiles = ["AttrGrammar001.y", "AttrGrammar002.y"]
+attributeGrammarTestFiles :: [String]
+attributeGrammarTestFiles = ["AttrGrammar001.y", "AttrGrammar002.y"]
 
 defaultArguments :: [String]
 defaultArguments = map ("--strict " ++) ["", "-a", "-g", "-ag", "-gc", "-agc"]
 
-runSingleTest :: String -> String -> String -> String -> String -> IO Bool
-runSingleTest happy arguments dir inputFile outputFile = do
+runSingleTest :: String -> String -> String -> String -> IO Bool
+runSingleTest happy arguments dir testFile = do
   putStrLn $ "\ncd '" ++ dir ++ "'"
 
-  success1 <- execVerboseIn dir [happy, inputFile, arguments, "-o", outputFile]
+  success1 <- execVerboseIn dir [happy, testFile, arguments, "-o", hsFile]
   if not success1 then fail' >> return False else do
+
+  success2 <- execVerboseIn dir ["ghc", "-Wall", hsFile, "-o", binFile]
+  if not success2 then fail' >> return False else do
+
+  success3 <- execVerboseIn dir ["./" ++ binFile]
+  if not success3 then fail' >> return False else do
   
-  success2 <- execVerboseIn dir ["runhaskell", outputFile]
-  if not success2
-    then fail' >> return False
-    else do rm; return True
+  removeFiles
+  return True
   where
-    rm = (system $ "cd '" ++ dir ++ "'; rm " ++ outputFile) >> return ()
-    fail' = (putStrLn $ "Test " ++ inputFile ++ " failed!") >> rm
+    hsFile = basename testFile ++ ".hs"
+    binFile = basename testFile ++ ".bin"
+    hiFile = basename testFile ++ ".hi"
+    oFile = basename testFile ++ ".o"
+
+    removeFiles = do
+      let generated = map ((dir ++ "/") ++) [hsFile, binFile, hiFile, oFile]
+      mapM_ tryRemovingFile generated
+
+    fail' = (putStrLn $ "Test " ++ testFile ++ " failed!") >> removeFiles
 
     execVerboseIn :: String -> [String] -> IO Bool
     execVerboseIn inDir args = do
@@ -72,3 +81,17 @@ runSingleTest happy arguments dir inputFile outputFile = do
       putStrLn cmd
       exitCode <- system $ "cd '" ++ inDir ++ "'; " ++ cmd
       return $ exitCode == ExitSuccess
+
+tryRemovingFile :: FilePath -> IO ()
+tryRemovingFile file = do
+  removeFile file `catch` doNothing
+  where
+    doNothing :: IOError -> IO ()
+    doNothing _ = return ()
+
+-- Only works for .y and .ly files.
+basename :: FilePath -> FilePath
+basename = reverse . basename' . reverse where
+  basename' ('y':'l':'.':file) = file
+  basename' ('y':'.':file) = file
+  basename' file = error $ "Error: test file does not end in .y or .ly: " ++ file

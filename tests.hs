@@ -4,7 +4,7 @@ import Frontend
 
 main = do
   dir <- getDataDir
-  let tests = if isBootstrapped then defaultTestFiles ++ bootstrapTestFiles else defaultTestFiles
+  let tests = defaultTestFiles ++ (if isBootstrapped then attributeGrammarTestFiles else [])
   let setup = TestSetup {
     happyExec = "happy",
     defaultTests = tests,
