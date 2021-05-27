@@ -34,6 +34,7 @@ tested-with:
 
 extra-source-files:
         ChangeLog.md
+        Makefile
         README.md
         TODO
         doc/Makefile

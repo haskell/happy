@@ -36,11 +36,13 @@ data-files:
 library
   hs-source-dirs:      src
 
-  exposed-modules:     Test
+  exposed-modules:     Test, SDist
   build-depends:       base < 5,
                        process,
-                       directory
+                       directory,
+                       transformers
 
   default-language:    Haskell98
   ghc-options: -Wall
-  other-modules:       Paths_happy_test
+  other-modules:       Shell,
+                       Paths_happy_test

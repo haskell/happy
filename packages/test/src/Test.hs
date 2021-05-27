@@ -1,9 +1,9 @@
 module Test(test, TestSetup(..), defaultTestFiles, attributeGrammarTestFiles, defaultArguments) where
 
+import Shell
 import System.IO
 import Control.Exception
 import System.Directory
-import System.Process
 import System.Exit
 import Paths_happy_test
 
@@ -21,8 +21,8 @@ test setup = do
   hSetBuffering stdout NoBuffering -- required for cabal test
   defaultDir <- getDataDir
   let files = zip (repeat defaultDir) (defaultTests setup) ++
-                zip (repeat (customDataDir setup)) (customTests setup)                      -- (dir, file.ly)
-  let tests = [(dir, file, arg) | (dir, file) <- files, arg <- allArguments setup]          -- (dir, file.ly, -ag)
+                zip (repeat (customDataDir setup)) (customTests setup)              -- (dir, file.ly)
+  let tests = [(dir, file, arg) | (dir, file) <- files, arg <- allArguments setup]  -- (dir, file.ly, -ag)
   result <- testCons tests (happyExec setup) (stopOnFailure setup)
   if result then exitSuccess else exitFailure
 
@@ -30,8 +30,8 @@ testCons :: [(String, String, String)] -> String -> Bool -> IO Bool
 testCons [] _ _ = return True
 testCons ((dir, file, args):rest) happy stopOnFail = do
   result <- runSingleTest happy args dir file
-  if result then testCons rest happy stopOnFail else
-    if stopOnFail
+  if result then testCons rest happy stopOnFail
+    else if stopOnFail
       then return False
       else do _ <- testCons rest happy stopOnFail; return False
 
@@ -52,17 +52,14 @@ runSingleTest :: String -> String -> String -> String -> IO Bool
 runSingleTest happy arguments dir testFile = do
   putStrLn $ "\ncd '" ++ dir ++ "'"
 
-  success1 <- execVerboseIn dir [happy, testFile, arguments, "-o", hsFile]
-  if not success1 then fail' >> return False else do
-
-  success2 <- execVerboseIn dir ["ghc", "-Wall", hsFile, "-o", binFile]
-  if not success2 then fail' >> return False else do
-
-  success3 <- execVerboseIn dir ["./" ++ binFile]
-  if not success3 then fail' >> return False else do
+  res <- runShell (do
+    runCmdIn dir [happy, testFile, arguments, "-o", hsFile] True ||| failure
+    runCmdIn dir ["ghc", "-Wall", hsFile, "-o", binFile] True ||| failure
+    runCmdIn dir ["./" ++ binFile] True ||| failure
+    )
   
   removeFiles
-  return True
+  return res
   where
     hsFile = basename testFile ++ ".hs"
     binFile = basename testFile ++ ".bin"
@@ -70,17 +67,10 @@ runSingleTest happy arguments dir testFile = do
     oFile = basename testFile ++ ".o"
 
     removeFiles = do
-      let generated = map ((dir ++ "/") ++) [hsFile, binFile, hiFile, oFile]
+      let generated = map (concatPaths dir) [hsFile, binFile, hiFile, oFile]
       mapM_ tryRemovingFile generated
 
-    fail' = (putStrLn $ "Test " ++ testFile ++ " failed!") >> removeFiles
-
-    execVerboseIn :: String -> [String] -> IO Bool
-    execVerboseIn inDir args = do
-      let cmd = unwords args
-      putStrLn cmd
-      exitCode <- system $ "cd '" ++ inDir ++ "'; " ++ cmd
-      return $ exitCode == ExitSuccess
+    failure = putStrLn $ "Test " ++ testFile ++ " failed!"
 
 tryRemovingFile :: FilePath -> IO ()
 tryRemovingFile file = do
@@ -94,4 +84,4 @@ basename :: FilePath -> FilePath
 basename = reverse . basename' . reverse where
   basename' ('y':'l':'.':file) = file
   basename' ('y':'.':file) = file
-  basename' file = error $ "Error: test file does not end in .y or .ly: " ++ file
+  basename' file = error $ "Error: test file does not end in .y or .ly: " ++ reverse file
