@@ -34,5 +34,4 @@ build: off
 
 test_script:
  - "cd %APPVEYOR_BUILD_FOLDER%"
- - "make sdist"
- - "make sdist-test-only"
+ - "make sdist-test"

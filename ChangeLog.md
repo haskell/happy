@@ -1,6 +1,6 @@
 ## 1.21.0
 
-- Split up `happy` into four packages: the libraries `frontend`, `middleend`, `backend` and the main executable, `happy`
+- Split `happy` into several packages (happy, happy-core, happy-frontend, happy-middleend, happy-backend, happy-tests).
 
 ## 1.20.0
 

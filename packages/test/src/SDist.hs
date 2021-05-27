@@ -100,7 +100,7 @@ cabalSdistAll packageNames baseDir = do
       prefixMatches = filter (isPrefixOf packageName) fullNames
       numPrefixMatches fullName = length $ filter (flip isPrefixOf fullName) packageNames
 
-    -- extract "package-name-VERSION.tar.gz" from a string
+    -- extract "package-name-VERSION" from a string containg "package-name-VERSION.tar.gz"
     extractFullName output =
       case (lastSubstring baseDir output, lastSubstring targz output) of
         (Just i', Just j) -> let i = i' + 1 + length baseDir in return . Just $ take (j-i) $ drop i $ output
