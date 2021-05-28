@@ -13,8 +13,7 @@ library
   build-depends:       base < 5,
                        array,
                        containers >= 0.4.2,
-                       happy-core,
-                       happy-frontend
+                       happy-core
 
   default-language:    Haskell98
   default-extensions:  CPP, MagicHash, FlexibleContexts
