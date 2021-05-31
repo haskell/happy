@@ -49,10 +49,10 @@ sdist_test' projectDir executable localPackages bootstrapping = do
   let genCabalProj = runCmdIn umbrellaDir ["echo", "'" ++ packagesText ++ "'", ">", "cabal.project"] False
 
   -- Perform commands in sequence, stop on error
-  sequentially (map rm fullNames)
-  sequentially (map untar fullNames)
+  sequence_ (map rm fullNames)
+  sequence_ (map untar fullNames)
   mkUmbrella
-  sequentially (map mv fullNames)
+  sequence_ (map mv fullNames)
   genCabalProj
 
   liftIO . putStrLn $ "Umbrella dir (" ++ umbrellaDir ++ ") generated successfully."
@@ -79,10 +79,6 @@ testWithBootstrapping dir executable = do
   let bootstrapHappy = concatPaths dir $ concatPaths "bootstrap-root" executable
   runCmdIn dir ["cabal", "build", executable, "-f", "+bootstrap", "--with-happy=" ++ bootstrapHappy] False
   runCmdIn dir ["cabal", "test", executable, "-f", "+bootstrap"] False
-
--- Run until a command fails or until all were executed successfully.
-sequentially :: [Shell] -> Shell
-sequentially = foldl (>>) (return ())
 
 -- Perform `cabal sdist all` and match the output lines to the given package names.
 -- This is required to extract the full package name (i.e. package-name-VERSION) for each package.
