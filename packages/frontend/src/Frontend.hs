@@ -4,7 +4,6 @@ import AbsSyn
 import Grammar
 import Mangler
 import PrettyGrammar
-import Data.Bifunctor
 import Parser
 import ParseMonad.Class
 import System.IO
@@ -18,7 +17,9 @@ parseYFileContents :: String -> ParseResult AbsSyn
 parseYFileContents contents = runFromStartP ourParser contents 1
 
 mangleAbsSyn :: AbsSyn -> String -> ParseResult Grammar
-mangleAbsSyn abssyn filename = first unlines (mangler filename abssyn)
+mangleAbsSyn abssyn filename = first' unlines (mangler filename abssyn)
+  where first' f (Left a) = Left (f a)
+        first' _ (Right b) = Right b
 
 -------- Main entry point (runFrontend) --------
 
