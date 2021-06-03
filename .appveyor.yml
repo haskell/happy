@@ -34,4 +34,4 @@ build: off
 
 test_script:
  - "cd %APPVEYOR_BUILD_FOLDER%"
- - "make sdist-test"
+ - "cabal build -f -bootstrap"
