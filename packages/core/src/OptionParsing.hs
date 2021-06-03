@@ -122,13 +122,12 @@ usageHeader :: [OptDescr a] -> String -> String
 usageHeader opts prog = usageInfo header opts where
   header = "Usage: " ++ prog ++ " [OPTION...] file\n"
 
--- (Functor OptDescr) only exists since base-4.6.0.0, i.e. GHC 7.6.1
-#if !MIN_VERSION_base(4,6,0)
--- | @since 4.6.0.0
+-- (Functor OptDescr) only exists since base-4.7.0.0, i.e. GHC 7.8.1
+-- In the doc, it says (Functor OptDescr) exists since base-4.6.0.0, but that seems to be wrong
+#if !MIN_VERSION_base(4,7,0)
 instance Functor OptDescr where
     fmap f (Option a b argDescr c) = Option a b (fmap f argDescr) c
 
--- | @since 4.6.0.0
 instance Functor ArgDescr where
     fmap f (NoArg a)    = NoArg (f a)
     fmap f (ReqArg g s) = ReqArg (f . g) s
