@@ -45,12 +45,14 @@ runCmdIn' :: String -> [String] -> Bool -> IO Bool
 runCmdIn' = runShell ..* runCmdIn
 
 concatPaths :: FilePath -> FilePath -> FilePath
-concatPaths a b = dropWhileEnd' (== sep) a ++ sep : dropWhile (== sep) b
+concatPaths a b = dropWhileEnd (== sep) a ++ sep : dropWhile (== sep) b
   where sep = '/'
 
 -- dropWhileEnd only exists since base-4.5.0.0, i.e. GHC 7.4.1
-dropWhileEnd' :: (a -> Bool) -> [a] -> [a]
-dropWhileEnd' p = foldr (\x xs -> if p x && null xs then [] else x : xs) []
+#if !MIN_VERSION_base(4,5,0)
+dropWhileEnd :: (a -> Bool) -> [a] -> [a]
+dropWhileEnd p = foldr (\x xs -> if p x && null xs then [] else x : xs) []
+#endif
 
 (.*) :: (c -> d) -> (a -> b -> c) -> (a -> b -> d)
 (.*) = (.) . (.)
