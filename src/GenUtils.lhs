@@ -16,7 +16,7 @@ All the code below is understood to be in the public domain.
 
 > import Data.Char  (isAlphaNum)
 > import Data.Ord   (comparing)
-> import Data.List
+> import Data.List  (sortBy)
 
 %------------------------------------------------------------------------------
 

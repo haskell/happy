@@ -32,12 +32,13 @@ This is only supported in the bootstrapped version
 
 > import ParamRules
 
-> import Data.Array
-> import Data.Char
-> import Data.List
-> import Data.Maybe (fromMaybe)
+> import Control.Monad ( when )
+> import Data.Array ( Array, (!), accumArray, array, listArray )
+> import Data.Char  ( isAlphaNum, isDigit, isLower )
+> import Data.List  ( findIndices, groupBy, intersperse, nub, sortBy, zip4 )
+> import Data.Maybe ( fromMaybe )
 
-> import Control.Monad.Writer
+> import Control.Monad.Writer ( Writer, MonadWriter(..), mapWriter, runWriter )
 
 > type Name = Int
 

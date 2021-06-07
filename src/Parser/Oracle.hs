@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes, ScopedTypeVariables #-}
 
 module Parser.Oracle (ourParser, AbsSyn) where
 
@@ -27,6 +27,7 @@ ourParser = do
 
 optCodeP :: Parser (Maybe String)
 optCodeP = withToken match where
+  match :: Token -> P' Token (Maybe String)
   match (TokenInfo str TokCodeQuote) = Consume `andReturn` Just str
   match tok = PutBack tok `andReturn` Nothing
 
@@ -39,6 +40,7 @@ codeP = do
 
 optTokInfoP :: Parser (Maybe (Directive String))
 optTokInfoP = withToken match where
+  match :: Token -> P' Token (Maybe (Directive String))
   match (TokenKW TokSpecId_TokenType) =
     Consume `andThenJust`
     pure TokenType <*> codeP
@@ -95,6 +97,7 @@ optTokInfoP = withToken match where
 
 optIdtP :: Parser (Maybe String)
 optIdtP = withToken match where
+  match :: Token -> P' Token (Maybe String)
   match (TokenInfo idt TokId) = Consume `andReturn` Just idt
   match tok = PutBack tok `andReturn` Nothing
 
@@ -107,11 +110,13 @@ idtP = do
 
 numP :: Parser Int
 numP = withToken match where
+  match :: Token -> P' Token Int
   match (TokenNum n TokNum) = Consume `andReturn` n
   match tok = PutBack tok `andThen` parseError "Expected a number"
 
 optTokenSpecP :: Parser (Maybe (String, String))
 optTokenSpecP = withToken match where
+  match :: Token -> P' Token (Maybe (String, String))
   match (TokenInfo idt TokId) =
     Consume `andThenJust` do
       code <- codeP
@@ -144,11 +149,13 @@ optRuleP = do
 
 optSigP :: Parser (Maybe String)
 optSigP = withToken match where
+  match :: Token -> P' Token (Maybe String)
   match (TokenKW TokDoubleColon) = Consume `andThenJust` codeP
   match tok = PutBack tok `andReturn` Nothing
 
-paramsP :: Parser a -> Parser [a]
+paramsP :: forall a. Parser a -> Parser [a]
 paramsP p = withToken match where
+  match :: Token -> P' Token [a]
   match (TokenKW TokParenL) =
     Consume `andThen` do
       params <- someSepByP (isKW TokComma) p
@@ -158,6 +165,7 @@ paramsP p = withToken match where
 
 optSemiP :: Parser ()
 optSemiP = withToken match where
+  match :: Token -> P' Token ()
   match (TokenKW TokSemiColon) = Consume `andReturn` ()
   match tok = PutBack tok `andReturn` ()
 
@@ -179,6 +187,7 @@ termP = do
 
 optTermP :: Parser (Maybe Term)
 optTermP = withToken match where
+  match :: Token -> P' Token (Maybe Term)
   match (TokenInfo idt TokId) =
     Consume `andThenJust` do
       termParams <- paramsP termP
@@ -187,12 +196,14 @@ optTermP = withToken match where
 
 precP :: Parser Prec
 precP = withToken match where
+  match :: Token -> P' Token Prec
   match (TokenKW TokSpecId_Shift) = Consume `andReturn` PrecShift
   match (TokenKW TokSpecId_Prec) = Consume `andThen` fmap PrecId idtP
   match tok = PutBack tok `andReturn` PrecNone
 
 eofP :: Parser ()
 eofP = withToken match where
+  match :: Token -> P' Token ()
   match (TokenEOF) = Consume `andReturn` ()
   match tok = PutBack tok `andThen` parseError "Parse error"
 
@@ -205,5 +216,6 @@ isKW _ _ = False
 
 expectKW :: String -> TokenId -> Parser ()
 expectKW err_msg kw = withToken match where
+  match :: Token -> P' Token ()
   match (TokenKW tokId) | tokId == kw = Consume `andReturn` ()
   match tok = PutBack tok `andThen` parseError err_msg

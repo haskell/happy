@@ -15,16 +15,16 @@ The code generator.
 >                                 brack, brack' )
 
 > import Data.Maybe             ( isJust, isNothing, fromMaybe )
-> import Data.Char
-> import Data.List
+> import Data.Char              ( ord, chr )
+> import Data.List              ( sortBy )
 
 > import Control.Monad          ( forM_ )
-> import Control.Monad.ST
+> import Control.Monad.ST       ( ST, runST )
 > import Data.Bits              ( setBit )
 > import Data.Array.ST          ( STUArray )
 > import Data.Array.Unboxed     ( UArray )
-> import Data.Array.MArray
-> import Data.Array.IArray
+> import Data.Array.MArray      ( MArray(..), freeze, readArray, writeArray )
+> import Data.Array.IArray      ( Array, IArray(..), (!), array, assocs, elems )
 
 %-----------------------------------------------------------------------------
 Produce the complete output file.
