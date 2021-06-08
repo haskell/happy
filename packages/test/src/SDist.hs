@@ -2,6 +2,7 @@ module SDist(sdist_test) where
 
 import Shell
 import System.FilePath
+import System.Directory (setCurrentDirectory)
 import System.Process
 import System.IO.Error
 import System.Exit
@@ -86,7 +87,8 @@ testWithBootstrapping dir executable = do
 -- This is less elegant than performing `cabal sdist package` for each package on its own, but is required because `cabal sdist happy` doesn't work on its own - `cabal sdist all` does.
 cabalSdistAll :: [String] -> String -> TypedShell [String]
 cabalSdistAll packageNames baseDir = do
-  output <- liftIO $ readCreateProcess ((shell "cabal sdist all") { cwd = Just baseDir }) "" `catchIOError` const (return "")
+  liftIO $ setCurrentDirectory baseDir
+  output <- liftIO $ readProcess "cabal" ["sdist", "all"] "" `catchIOError` const (return "")
   let fullNames = catMaybes . catMaybes $ map extractFullName $ lines output
   let matched = catMaybes $ map (bestMatch fullNames) packageNames
   if length packageNames == length matched then return matched else empty
