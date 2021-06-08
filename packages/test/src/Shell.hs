@@ -1,6 +1,6 @@
 module Shell where
 
-import Data.List
+import System.Directory
 import System.Process
 import System.Exit
 import Control.Monad
@@ -35,18 +35,18 @@ runCmd args verbose = do
     then return ()
     else empty
 
-runCmdIn :: String -> [String] -> Bool -> Shell
-runCmdIn dir args verbose = runCmd (("cd '" ++ dir ++ "'; "):args) verbose
+-- Run a shell command inside a given directory. Succeed when exit code = 0. Ignore the command's output.
+runCmdIn :: FilePath -> [String] -> Bool -> Shell
+runCmdIn dir args verbose = do
+  when verbose (liftIO . putStr $ "Inside " ++ dir ++ ": ")
+  liftIO $ setCurrentDirectory dir
+  runCmd args verbose
 
 runCmd' :: [String] -> Bool -> IO Bool
 runCmd' = runShell .* runCmd
 
 runCmdIn' :: String -> [String] -> Bool -> IO Bool
 runCmdIn' = runShell ..* runCmdIn
-
-concatPaths :: FilePath -> FilePath -> FilePath
-concatPaths a b = dropWhileEnd (== sep) a ++ sep : dropWhile (== sep) b
-  where sep = '/'
 
 -- dropWhileEnd only exists since base-4.5.0.0, i.e. GHC 7.4.1
 #if !MIN_VERSION_base(4,5,0)

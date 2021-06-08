@@ -1,6 +1,7 @@
 module SDist(sdist_test) where
 
 import Shell
+import System.FilePath
 import System.Process
 import System.IO.Error
 import System.Exit
@@ -25,7 +26,7 @@ sdist_test a b c d = do
 
 sdist_test' :: String -> String -> [String] -> Bool -> Shell
 sdist_test' projectDir executable localPackages bootstrapping = do
-  let sdistDir = concatPaths projectDir "dist-newstyle/sdist"
+  let sdistDir = joinPath [projectDir, "dist-newstyle", "sdist"]
 
   -- `cabal sdist all` -> returns `package-name-VERSION` for each package-name
   fullNames <- cabalSdistAll localPackages sdistDir
@@ -44,7 +45,7 @@ sdist_test' projectDir executable localPackages bootstrapping = do
 
   -- inside umbrella:
   -- `echo "packages: ..." > cabal.project`
-  let umbrellaDir = concatPaths sdistDir "umbrella"
+  let umbrellaDir = sdistDir </> "umbrella"
   let packagesText = intercalate "\n  " (["packages:"] ++ fullNames) ++ "\ntests: True"
   let genCabalProj = runCmdIn umbrellaDir ["echo", "'" ++ packagesText ++ "'", ">", "cabal.project"] False
 
@@ -76,7 +77,7 @@ testWithBootstrapping dir executable = do
 
   -- We now want our just-built happy to be used for bootstrapping happy, i.e. building happy's .ly files.
   -- Using `cabal build --with-happy=` (instead of exporting ./bootstrap-root to PATH) also allows using happy's with a different name like `happy-rad`.
-  let bootstrapHappy = concatPaths dir $ concatPaths "bootstrap-root" executable
+  let bootstrapHappy = joinPath [dir, "bootstrap-root", executable]
   runCmdIn dir ["cabal", "build", executable, "-f", "+bootstrap", "--with-happy=" ++ bootstrapHappy] False
   runCmdIn dir ["cabal", "test", executable, "-f", "+bootstrap"] False
 

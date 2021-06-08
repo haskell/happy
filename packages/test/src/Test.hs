@@ -2,6 +2,7 @@ module Test(test, TestSetup(..), defaultTestFiles, attributeGrammarTestFiles, de
 
 import Shell
 import System.IO
+import System.FilePath
 import Control.Exception
 import System.Directory
 import System.Exit
@@ -50,8 +51,6 @@ defaultArguments = map ("--strict " ++) ["", "-a", "-g", "-ag", "-gc", "-agc"]
 
 runSingleTest :: String -> String -> String -> String -> IO Bool
 runSingleTest happy arguments dir testFile = do
-  putStrLn $ "\ncd '" ++ dir ++ "'"
-
   res <- runShell (do
     runCmdIn dir [happy, testFile, arguments, "-o", hsFile] True ||| failure
     runCmdIn dir ["ghc", "-Wall", hsFile, "-o", binFile] True ||| failure
@@ -62,12 +61,12 @@ runSingleTest happy arguments dir testFile = do
   return res
   where
     hsFile = basename testFile ++ ".hs"
-    binFile = basename testFile ++ ".bin"
+    binFile = basename testFile ++ ".exe"
     hiFile = basename testFile ++ ".hi"
     oFile = basename testFile ++ ".o"
 
     removeFiles = do
-      let generated = map (concatPaths dir) [hsFile, binFile, hiFile, oFile]
+      let generated = map (combine dir) [hsFile, binFile, hiFile, oFile]
       mapM_ tryRemovingFile generated
 
     failure = putStrLn $ "Test " ++ testFile ++ " failed!"
