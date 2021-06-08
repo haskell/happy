@@ -120,10 +120,10 @@ executable happy
                  containers >= 0.4.2,
                  mtl >= 2.2.1,
                  transformers >= 0.5,
-                 happy-core,
-                 happy-frontend,
-                 happy-middleend,
-                 happy-backend
+                 happy-core == 1.21.0,
+                 happy-frontend == 1.21.0,
+                 happy-middleend == 1.21.0,
+                 happy-backend == 1.21.0
 
   default-language: Haskell98
   default-extensions: CPP, MagicHash, FlexibleContexts

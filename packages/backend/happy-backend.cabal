@@ -17,7 +17,7 @@ library
   exposed-modules:     Backend, BackendCLI
   build-depends:       base < 5,
                        array,
-                       happy-core
+                       happy-core == 1.21.0
 
   default-language:    Haskell98
   default-extensions:  CPP, MagicHash, FlexibleContexts
