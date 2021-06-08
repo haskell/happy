@@ -34,4 +34,10 @@ build: off
 
 test_script:
  - "cd %APPVEYOR_BUILD_FOLDER%"
- - "cabal build -f -bootstrap"
+ - | 
+   if [[ $(ghc --numeric-version) < "8" ]]
+   then
+     cabal test -f -bootstrap
+   else
+     make sdist-test
+   fi
