@@ -54,7 +54,7 @@ runSingleTest happy arguments dir testFile = do
   res <- runShell (do
     runCmdIn dir [happy, testFile, arguments, "-o", hsFile] True ||| failure
     runCmdIn dir ["ghc", "-Wall", hsFile, "-o", binFile] True ||| failure
-    runCmdIn dir ["./" ++ binFile] True ||| failure
+    runCmd (dir </> binFile) True ||| failure
     )
   
   removeFiles
