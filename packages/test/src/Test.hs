@@ -9,7 +9,7 @@ import System.Exit
 import Paths_happy_test
 
 data TestSetup = TestSetup {
-  happyExec :: String,      -- (path to the) happy exeuctable which shall be tested. "happy" should suffice here for cabal test
+  happyExec :: String,      -- name of the happy exeuctable which shall be tested.
   defaultTests :: [String], -- standard tests from happy-test package that should be performed. these are in this package's data-dir
   customTests :: [String],  -- custom tests from the calling package that should be performed. these are in the calling package's data-dir
   customDataDir :: String,  -- data-dir of the calling package. all tests are compiled and executed in their respective directory.

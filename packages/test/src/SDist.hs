@@ -51,10 +51,10 @@ sdist_test' projectDir executable localPackages bootstrapping = do
   let genCabalProj = runCmdIn umbrellaDir ["echo", "'" ++ packagesText ++ "'", ">", "cabal.project"] False
 
   -- Perform commands in sequence, stop on error
-  sequence_ (map rm fullNames)
-  sequence_ (map untar fullNames)
+  mapM_ rm fullNames
+  mapM_ untar fullNames
   mkUmbrella
-  sequence_ (map mv fullNames)
+  mapM_ mv fullNames
   genCabalProj
 
   liftIO . putStrLn $ "Umbrella dir (" ++ umbrellaDir ++ ") generated successfully."
