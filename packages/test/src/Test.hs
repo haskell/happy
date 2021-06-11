@@ -73,10 +73,10 @@ runSingleTest happy arguments dir testFile = do
 
 tryRemovingFile :: FilePath -> IO ()
 tryRemovingFile file = do
-  removeFile file `catch` doNothing
+  removeFile file `catchIO` const (return ())
   where
-    doNothing :: IOError -> IO ()
-    doNothing _ = return ()
+    catchIO :: IO a -> (IOError -> IO a) -> IO a
+    catchIO = Control.Exception.catch
 
 -- Only works for .y and .ly files.
 basename :: FilePath -> FilePath

@@ -4,12 +4,12 @@ import Shell
 import System.FilePath
 import System.Directory (setCurrentDirectory)
 import System.Process
-import System.IO.Error
 import System.Exit
 import Data.Ord
 import Data.List
 import Data.Maybe
 import Control.Applicative
+import Control.Exception
 import Control.Monad.IO.Class
 
 -- Test whether the tarballs are distribution-ready by calling `cabal sdist`, merging the tarballs into one umbrella directory and building and testing in this directory.
@@ -88,11 +88,14 @@ testWithBootstrapping dir executable = do
 cabalSdistAll :: [String] -> String -> TypedShell [String]
 cabalSdistAll packageNames baseDir = do
   liftIO $ setCurrentDirectory baseDir
-  output <- liftIO $ readProcess "cabal" ["sdist", "all"] "" `catchIOError` const (return "")
+  output <- liftIO $ readProcess "cabal" ["sdist", "all"] "" `catchIO` const (return "")
   let fullNames = catMaybes . catMaybes $ map extractFullName $ lines output
   let matched = catMaybes $ map (bestMatch fullNames) packageNames
   if length packageNames == length matched then return matched else empty
   where
+    catchIO :: IO a -> (IOError -> IO a) -> IO a
+    catchIO = Control.Exception.catch
+
     -- Find package-name-VERSION matching to package-name.
     -- Note: we cannot just use `isPrefixOf` because then `happy` would match to `happy-frontend-1.21.0`!
     bestMatch fullNames packageName = head' $ sortBy (comparing numPrefixMatches) prefixMatches where
