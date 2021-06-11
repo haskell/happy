@@ -27,17 +27,9 @@ install:
  - "cabal --version"
  - "ghc --version"
  - "cabal %CABOPTS% v2-update -vverbose+nowrap"
- - "cabal %CABOPTS% v2-install alex --bindir=/hsbin"
- - "alex --version"
 
 build: off
 
 test_script:
  - "cd %APPVEYOR_BUILD_FOLDER%"
- - | 
-   if [[ $(ghc --numeric-version) < "8" ]]
-   then
-     cabal test -f -bootstrap
-   else
-     make sdist-test
-   fi
+ - "cabal test -f -bootstrap"
