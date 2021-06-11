@@ -1,5 +1,5 @@
 {
-{-# LANGUAGE FunctionalDependencies, FlexibleInstances #-}
+{-# LANGUAGE FunctionalDependencies, FlexibleInstances, MultiParamTypeClasses #-}
 module Main where
 
 import Data.Char

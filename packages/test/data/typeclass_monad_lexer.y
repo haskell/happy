@@ -1,5 +1,5 @@
 {
-{-# LANGUAGE FunctionalDependencies, FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE FunctionalDependencies, FlexibleInstances, UndecidableInstances, MultiParamTypeClasses #-}
 import Control.Monad (liftM, ap)
 import Control.Applicative as A
 }
