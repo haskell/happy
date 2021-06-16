@@ -1,13 +1,13 @@
 module Main where
 
-import qualified FrontendCLI
-import qualified MiddleendCLI
-import qualified BackendCLI
-import System.Environment
-import OptionParsing
-import GenUtils
+import qualified Happy.Frontend.CLI as FrontendCLI
+import qualified Happy.Middleend.CLI as MiddleendCLI
+import qualified Happy.Backend.CLI as BackendCLI
+import Happy.Core.OptionParsing
+import Happy.Core.GenUtils
 import Control.Monad.Except
 import System.Console.GetOpt
+import System.Environment
 import Paths_happy (version)
 
 -- Flag conglomerate

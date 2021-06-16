@@ -7,7 +7,11 @@ build-type:          Simple
 library
   hs-source-dirs:      src
 
-  exposed-modules:     Grammar, Tables, GenUtils, NameSet, OptionParsing
+  exposed-modules:     Happy.Core.Grammar,
+                       Happy.Core.Tables,
+                       Happy.Core.GenUtils,
+                       Happy.Core.NameSet,
+                       Happy.Core.OptionParsing
   build-depends:       base < 5,
                        array,
                        containers >= 0.4.2,

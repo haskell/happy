@@ -4,12 +4,14 @@ synopsis:            The baseline implementation of happy's middleend package (a
 cabal-version:       >= 1.10
 build-type:          Simple
 
-extra-source-files:  src/ARRAY-NOTES
+extra-source-files:  src/Happy/Middleend/ARRAY-NOTES
 
 library
   hs-source-dirs:      src
 
-  exposed-modules:     Middleend, MiddleendCLI, First
+  exposed-modules:     Happy.Middleend,
+                       Happy.Middleend.CLI,
+                       Happy.Middleend.First
   build-depends:       base < 5,
                        array,
                        containers >= 0.4.2,
@@ -19,7 +21,7 @@ library
   default-extensions:  CPP, MagicHash, FlexibleContexts
   ghc-options: -Wall
   other-modules:
-                       LALR,
-                       FindRedundancies,
-                       Info,
+                       Happy.Middleend.LALR,
+                       Happy.Middleend.FindRedundancies,
+                       Happy.Middleend.Info,
                        Paths_happy_middleend

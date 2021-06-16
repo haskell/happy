@@ -11,7 +11,9 @@ flag bootstrap
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Frontend, FrontendCLI, AbsSyn
+  exposed-modules:     Happy.Frontend,
+                       Happy.Frontend.CLI,
+                       Happy.Frontend.AbsSyn
 
   build-depends:       base < 5,
                        array,
@@ -24,14 +26,14 @@ library
   default-extensions:  CPP, MagicHash, FlexibleContexts
   ghc-options: -Wall
   other-modules:
-        Mangler
-        Lexer
-        ParseMonad
-        ParseMonad.Class
-        Parser
-        AttrGrammar
-        ParamRules
-        PrettyGrammar
+        Happy.Frontend.Mangler
+        Happy.Frontend.Lexer
+        Happy.Frontend.ParseMonad
+        Happy.Frontend.ParseMonad.Class
+        Happy.Frontend.Parser
+        Happy.Frontend.AttrGrammar
+        Happy.Frontend.ParamRules
+        Happy.Frontend.PrettyGrammar
 
   if flag(bootstrap)
     -- TODO put this back when Cabal can use it's qualified goals to better
@@ -40,10 +42,10 @@ library
     --build-tools: happy
     cpp-options: -DHAPPY_BOOTSTRAP
     other-modules:
-      ParseMonad.Bootstrapped
-      Parser.Bootstrapped
-      AttrGrammarParser
+      Happy.Frontend.ParseMonad.Bootstrapped
+      Happy.Frontend.Parser.Bootstrapped
+      Happy.Frontend.AttrGrammarParser
   else
     other-modules:
-      ParseMonad.Oracle
-      Parser.Oracle
+      Happy.Frontend.ParseMonad.Oracle
+      Happy.Frontend.Parser.Oracle

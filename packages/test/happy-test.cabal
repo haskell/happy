@@ -36,7 +36,8 @@ data-files:
 library
   hs-source-dirs:      src
 
-  exposed-modules:     Test, SDist
+  exposed-modules:     Happy.Test,
+                       Happy.Test.SDist
   build-depends:       base < 5,
                        process,
                        directory,
@@ -46,5 +47,5 @@ library
   default-language:    Haskell98
   default-extensions:  CPP
   ghc-options: -Wall
-  other-modules:       Shell,
+  other-modules:       Happy.Test.Shell,
                        Paths_happy_test
