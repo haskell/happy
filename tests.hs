@@ -1,6 +1,6 @@
-import Test
+import Happy.Test
+import Happy.Frontend
 import Paths_happy
-import Frontend
 
 main = do
   dir <- getDataDir

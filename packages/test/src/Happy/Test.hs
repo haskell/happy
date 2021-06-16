@@ -1,6 +1,6 @@
 module Happy.Test(test, TestSetup(..), defaultTestFiles, attributeGrammarTestFiles, defaultArguments) where
 
-import Happy.TestShell
+import Happy.Test.Shell
 import System.IO
 import System.FilePath
 import Control.Exception

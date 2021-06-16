@@ -19,14 +19,15 @@ Mangler converts AbsSyn to Grammar
 This is only supported in the bootstrapped version
 #ifdef HAPPY_BOOTSTRAP
 > import Happy.Frontend.AttrGrammarParser
+> import Data.List     ( findIndices, groupBy, intersperse, nub, sortBy )
+> import Control.Monad ( when )
 #endif
 
 > import Happy.Frontend.ParamRules
 
-> import Control.Monad ( when )
 > import Data.Array ( Array, (!), accumArray, array, listArray )
 > import Data.Char  ( isAlphaNum, isDigit, isLower )
-> import Data.List  ( findIndices, groupBy, intersperse, nub, sortBy, zip4 )
+> import Data.List  ( zip4 )
 > import Data.Maybe ( fromMaybe )
 
 > import Control.Monad.Writer ( Writer, MonadWriter(..), mapWriter, runWriter )
