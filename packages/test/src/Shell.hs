@@ -43,19 +43,13 @@ runCmdIn dir args verbose = do
   runCmd args verbose
 
 runCmd' :: [String] -> Bool -> IO Bool
-runCmd' = runShell .* runCmd
+runCmd' args verbose = runShell (runCmd args verbose)
 
 runCmdIn' :: String -> [String] -> Bool -> IO Bool
-runCmdIn' = runShell ..* runCmdIn
+runCmdIn' dir args verbose = runShell (runCmdIn dir args verbose)
 
 -- dropWhileEnd only exists since base-4.5.0.0, i.e. GHC 7.4.1
 #if !MIN_VERSION_base(4,5,0)
 dropWhileEnd :: (a -> Bool) -> [a] -> [a]
 dropWhileEnd p = foldr (\x xs -> if p x && null xs then [] else x : xs) []
 #endif
-
-(.*) :: (c -> d) -> (a -> b -> c) -> (a -> b -> d)
-(.*) = (.) . (.)
-
-(..*) :: (d -> e) -> (a -> b -> c -> d) -> (a -> b -> c -> e)
-(..*) = (.) . (.) . (.)
