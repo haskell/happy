@@ -44,17 +44,14 @@ parseAndRun :: [Flag] -> String -> Grammar -> ActionTable -> GotoTable -> IO ()
 parseAndRun flags basename grammar action goto = (parseFlags flags basename) >>= (\args -> runBackend args grammar action goto)
 
 parseFlags :: [Flag] -> String -> IO BackendArgs
-parseFlags cli baseName = do
-  out_file <- getOutputFileName baseName cli
-  template <- getTemplate cli
-  magic_name <- getMagicName cli
+parseFlags cli baseName = do 
   target' <- getTarget cli
   coerce' <- getCoerce cli
   debug' <- getDebug cli
   return BackendArgs {
-    outFile = out_file,
-    templateDir = template,
-    magicName = magic_name,
+    outFile = getOutputFileName baseName cli,
+    templateDir = getTemplate cli,
+    magicName = getMagicName cli,
     strict = getStrict cli,
     ghc = getGhc cli,
     coerce = coerce',
@@ -75,20 +72,20 @@ optToTarget :: Flag -> Maybe Target
 optToTarget OptArrayTarget    = Just TargetArrayBased
 optToTarget _                 = Nothing
 
-getOutputFileName :: String -> [Flag] -> IO String
+getOutputFileName :: String -> [Flag] -> String
 getOutputFileName base cli = case [ s | (OptOutputFile s) <- cli ] of
-  []    -> return (base ++ ".hs")
-  list  -> return (last list)
+  []    -> base ++ ".hs"
+  list  -> last list
 
-getTemplate :: [Flag] -> IO (Maybe String)
+getTemplate :: [Flag] -> Maybe String
 getTemplate cli = case [ s | (OptTemplate s) <- cli ] of
-  []    -> return Nothing
-  list  -> return $ Just (last list)
+  []    -> Nothing
+  list  -> Just $ last list
 
-getMagicName :: [Flag] -> IO (Maybe String)
+getMagicName :: [Flag] -> Maybe String
 getMagicName cli = case [ s | (OptMagicName s) <- cli ] of
-  []    -> return Nothing
-  list  -> return (Just (map toLower (last list)))
+  []    -> Nothing
+  list  -> (Just (map toLower (last list)))
 
 getCoerce :: [Flag] -> IO Bool
 getCoerce cli
