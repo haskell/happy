@@ -136,7 +136,7 @@ The following functions should be defined for all parsers.
 This is the overall type of the parser.
 
 > type Parse = P Exp
-> calc :: Parse
+> -- calc :: Parse
 
 The next function is called when a parse error is detected.  It has
 the same type as the top-level parse function.
