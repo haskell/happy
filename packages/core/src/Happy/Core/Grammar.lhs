@@ -27,7 +27,7 @@ Grammar defines the datatype which is produced by happy-frontend and which is co
 
 > data Production
 >       = Production Name [Name] (String,[Int]) Priority
->       deriving (Eq,Show)
+>       deriving (Show)
 
 > data Grammar
 >       = Grammar {
