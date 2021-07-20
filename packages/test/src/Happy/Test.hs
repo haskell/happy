@@ -24,17 +24,18 @@ test setup = do
   let files = zip (repeat defaultDir) (defaultTests setup) ++
                 zip (repeat (customDataDir setup)) (customTests setup)              -- (dir, file.ly)
   let tests = [(dir, file, arg) | (dir, file) <- files, arg <- allArguments setup]  -- (dir, file.ly, -ag)
-  result <- testCons tests (happyExec setup) (stopOnFailure setup)
+  result <- test' tests (happyExec setup) (stopOnFailure setup)
   if result then exitSuccess else exitFailure
 
-testCons :: [(String, String, String)] -> String -> Bool -> IO Bool
-testCons [] _ _ = return True
-testCons ((dir, file, args):rest) happy stopOnFail = do
+-- Perform the tests given in the list, specified via (directory, file, happy-options).
+test' :: [(String, String, String)] -> String -> Bool -> IO Bool
+test' [] _ _ = return True
+test' ((dir, file, args):rest) happy stopOnFail = do
   result <- runSingleTest happy args dir file
-  if result then testCons rest happy stopOnFail
+  if result then test' rest happy stopOnFail
     else if stopOnFail
       then return False
-      else do _ <- testCons rest happy stopOnFail; return False
+      else do _ <- test' rest happy stopOnFail; return False
 
 -- These test files do not use attribute grammars.
 defaultTestFiles :: [String]
