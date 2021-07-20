@@ -254,7 +254,7 @@ Get the token specs in terms of Names.
 >               monad             = getMonad dirs,
 >               lexer             = getLexer dirs,
 >               error_handler     = getError dirs,
->               error_sig         = getErrorHandlerType' dirs,
+>               error_sig         = getErrorHandlerType dirs,
 >               token_type        = getTokenType dirs,
 >               expect            = getExpect dirs,
 >               attributes        = attrs,
@@ -283,11 +283,6 @@ So is this.
 >       | otherwise = checkRules rest name (name : nonterms)
 
 > checkRules [] _ nonterms = return (reverse nonterms)
-
-> getErrorHandlerType' :: [Directive t] -> ErrorHandlerType
-> getErrorHandlerType' = conv . getErrorHandlerType where
->   conv ErrorHandlerTypeExpList' = ErrorHandlerTypeExpList
->   conv ErrorHandlerTypeDefault' = ErrorHandlerTypeDefault
 
 -----------------------------------------------------------------------------
 -- If any attribute directives were used, we are in an attribute grammar, so
