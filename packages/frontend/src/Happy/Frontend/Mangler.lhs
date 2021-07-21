@@ -18,7 +18,7 @@ Mangler converts AbsSyn to Grammar
 
 This is only supported in the bootstrapped version
 #ifdef HAPPY_BOOTSTRAP
-> import Happy.Frontend.AttrGrammarParser
+> import Happy.Frontend.AttrGrammar.Parser
 > import Data.List     ( findIndices, groupBy, intersperse, nub, sortBy )
 > import Control.Monad ( when )
 #endif

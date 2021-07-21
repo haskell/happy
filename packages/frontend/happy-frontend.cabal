@@ -44,7 +44,7 @@ library
     other-modules:
       Happy.Frontend.ParseMonad.Bootstrapped
       Happy.Frontend.Parser.Bootstrapped
-      Happy.Frontend.AttrGrammarParser
+      Happy.Frontend.AttrGrammar.Parser
   else
     other-modules:
       Happy.Frontend.ParseMonad.Oracle

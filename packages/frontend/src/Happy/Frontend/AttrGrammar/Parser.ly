@@ -6,7 +6,7 @@ or a conditional statement.
 
 > {
 > {-# OPTIONS_GHC -w #-}
-> module Happy.Frontend.AttrGrammarParser (agParser) where
+> module Happy.Frontend.AttrGrammar.Parser (agParser) where
 > import Happy.Frontend.ParseMonad.Class
 > import Happy.Frontend.ParseMonad.Bootstrapped
 > import Happy.Frontend.AttrGrammar
