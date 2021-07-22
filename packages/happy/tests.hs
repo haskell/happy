@@ -4,7 +4,7 @@ import Paths_happy
 
 main = do
   dir <- getDataDir
-  let tests = defaultTestFiles ++ (if isBootstrapped then attributeGrammarTestFiles else [])
+  let tests = defaultTestFiles ++ (if supportsParsingAttributeGrammars then attributeGrammarTestFiles else [])
   let setup = TestSetup {
     happyExec = "happy",
     defaultTests = tests,

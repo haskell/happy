@@ -1,4 +1,4 @@
-module Happy.Frontend (parseYFileContents, mangleAbsSyn, runFrontend, ParseResult, FrontendArgs(..), isBootstrapped) where
+module Happy.Frontend (parseYFileContents, mangleAbsSyn, runFrontend, ParseResult, FrontendArgs(..), supportsParsingAttributeGrammars) where
   
 import Happy.Core.Grammar
 import Happy.Core.GenUtils
@@ -71,11 +71,11 @@ deLitify = deLit where
     deLit2 (_:r)        = deLit2 r
     deLit2 []           = []
 
--------- Bootstrapped, yes or no? --------
+-------- Iff happy is built with bootstrapping, attribute grammars are supported --------
 
-isBootstrapped :: Bool
+supportsParsingAttributeGrammars :: Bool
 #ifdef HAPPY_BOOTSTRAP
-isBootstrapped = True
+supportsParsingAttributeGrammars = True
 #else
-isBootstrapped = False
+supportsParsingAttributeGrammars = False
 #endif
