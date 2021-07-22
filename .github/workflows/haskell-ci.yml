@@ -107,8 +107,8 @@ jobs:
           echo "CABAL_CONFIG=$HOME/.cabal/config" >> "$GITHUB_ENV"
           HCDIR=/opt/$HCKIND/$HCVER
           HC=$HCDIR/bin/$HCKIND
-          ghc=$HC
           echo "HC=$HC" >> "$GITHUB_ENV"
+          echo "$HCDIR/bin" >> "$GITHUB_PATH"
           echo "HCPKG=$HCDIR/bin/$HCKIND-pkg" >> "$GITHUB_ENV"
           echo "HADDOCK=$HCDIR/bin/haddock" >> "$GITHUB_ENV"
           echo "CABAL=/opt/cabal/3.4/bin/cabal -vnormal+nowrap" >> "$GITHUB_ENV"
