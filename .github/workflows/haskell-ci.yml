@@ -206,11 +206,11 @@ jobs:
           restore-keys: ${{ runner.os }}-${{ matrix.compiler }}-
       - name: install dependencies
         run: |
-          $CABAL v2-build --flags=-bootstrap $ARG_COMPILER --disable-tests --disable-benchmarks --dependencies-only -j2 all
+          $CABAL v2-build --flags=-bootstrap $ARG_COMPILER --disable-tests --dependencies-only -j2 all
           $CABAL v2-build --flags=-bootstrap $ARG_COMPILER $ARG_TESTS $ARG_BENCH --dependencies-only -j2 all
       - name: build w/o tests and install
         run: |
-          $CABAL v2-install --reinstall --overwrite-policy=always --flags=-bootstrap $ARG_COMPILER --disable-tests --disable-benchmarks all
+          $CABAL v2-install --reinstall --overwrite-policy=always --flags=-bootstrap $ARG_COMPILER --disable-tests all
       - name: build
         run: |
           $CABAL v2-build --flags=-bootstrap $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --write-ghc-environment-files=always
@@ -226,4 +226,4 @@ jobs:
       - name: unconstrained build
         run: |
           rm -f cabal.project.local
-          $CABAL v2-build --flags=-bootstrap $ARG_COMPILER --disable-tests --disable-benchmarks all
+          $CABAL v2-build --flags=-bootstrap $ARG_COMPILER --disable-tests all
