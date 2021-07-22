@@ -4,4 +4,4 @@ packages:
  packages/backend,
  packages/core,
  packages/test,
- ./
+ packages/happy
