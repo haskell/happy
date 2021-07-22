@@ -107,6 +107,7 @@ jobs:
           echo "CABAL_CONFIG=$HOME/.cabal/config" >> "$GITHUB_ENV"
           HCDIR=/opt/$HCKIND/$HCVER
           HC=$HCDIR/bin/$HCKIND
+          ghc=$HC
           echo "HC=$HC" >> "$GITHUB_ENV"
           echo "HCPKG=$HCDIR/bin/$HCKIND-pkg" >> "$GITHUB_ENV"
           echo "HADDOCK=$HCDIR/bin/haddock" >> "$GITHUB_ENV"
@@ -222,8 +223,14 @@ jobs:
       - name: tests
         run: |
           export HAPPY=$HOME/.cabal/bin/happy
-          export HC=$HC
-          $CABAL v2-test --flags=-bootstrap $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --test-show-details=direct
+          export HC
+          export CABAL
+          if [[ $($ghc --numeric-version) == "8.10.1" ]]
+          then
+            make sdist-test
+          else
+            $CABAL v2-test --flags=-bootstrap $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --test-show-details=direct
+          fi
       - name: cabal check
         run: |
           cd ${PKGDIR_happy} || false
