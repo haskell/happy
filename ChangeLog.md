@@ -1,4 +1,4 @@
-## 1.21.0
+## Unreleased - 1.21.0
 
 - Split `happy` into several packages (happy, happy-core, happy-frontend, happy-middleend, happy-backend, happy-tests).
 
