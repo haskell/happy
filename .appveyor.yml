@@ -32,4 +32,4 @@ build: off
 
 test_script:
  - "cd %APPVEYOR_BUILD_FOLDER%"
- - "cabal test -f -bootstrap"
+ - "cabal %CABOPTS% v2-test happy -f -bootstrap"
