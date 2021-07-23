@@ -114,7 +114,7 @@ longs :: OptDescr a -> [String]
 nonempty :: OptDescr a -> Bool
 shorts (Option s _ _ _) = s
 longs (Option _ l _ _) = l
-nonempty (Option s l _ _) = not (null s) && not (null l)
+nonempty (Option s l _ _) = not (null s) || not (null l)
 
 -------- Internal helpers --------
 

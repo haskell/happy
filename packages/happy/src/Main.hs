@@ -1,5 +1,3 @@
-{-# LANGUAGE DoAndIfThenElse #-}
-
 module Main where
 
 import qualified Happy.Frontend.CLI as FrontendCLI
@@ -54,19 +52,21 @@ main = do
   let backendFlags = getBackend flags
   let glrFlags = getGLRBackend flags
   backendOpts <- BackendCLI.parseFlags backendFlags basename
-  if GLRBackendCLI.hasCharacteristicFlag glrFlags
-  then do
-    -- Fill those glr-options that were removed due to overlap with happy-backend's options
-    let glrOpts' = GLRBackendCLI.parseFlags glrFlags basename
-    let glrOpts = glrOpts' {
-      GLRBackend.outFile = Backend.outFile backendOpts,
-      GLRBackend.templateDir = Backend.templateDir backendOpts,
-      GLRBackend.ghc = Backend.ghc backendOpts,
-      GLRBackend.debug = Backend.debug backendOpts
-      }
-    GLRBackend.runGLRBackend glrOpts grammar action goto
-  else do
-    Backend.runBackend backendOpts grammar action goto
+
+  case GLRBackendCLI.hasCharacteristicFlag glrFlags of
+    True -> GLRBackend.runGLRBackend (createGLROpts glrFlags backendOpts basename) grammar action goto
+    False -> Backend.runBackend backendOpts grammar action goto
+
+-- Fill those glr-options that were removed due to overlap with happy-backend's options
+createGLROpts :: [GLRBackendCLI.Flag] -> Backend.BackendArgs -> String -> GLRBackend.GLRBackendArgs
+createGLROpts glrFlags backendOpts basename =
+  let glrOpts' = GLRBackendCLI.parseFlags glrFlags basename
+  in glrOpts' {
+    GLRBackend.outFile = Backend.outFile backendOpts,
+    GLRBackend.templateDir = Backend.templateDir backendOpts,
+    GLRBackend.ghc = Backend.ghc backendOpts,
+    GLRBackend.debug = Backend.debug backendOpts
+    }
 
 try :: IO (Either String a) -> IO a
 try f = do
