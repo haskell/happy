@@ -1,4 +1,4 @@
-module Happy.Test(test, TestSetup(..), defaultTestFiles, attributeGrammarTestFiles, defaultArguments) where
+module Happy.Test(test, TestSetup(..), defaultTestFiles, attributeGrammarTestFiles) where
 
 import Happy.Test.Shell
 import System.IO
@@ -10,6 +10,7 @@ import Paths_happy_test
 
 data TestSetup = TestSetup {
   happyExec :: String,      -- name of the happy exeuctable which shall be tested.
+  haskellCompilerExec :: String, -- name of the haskell compiler which shall be used in tests.
   defaultTests :: [String], -- standard tests from happy-test package that should be performed. these are in this package's data-dir
   customTests :: [String],  -- custom tests from the calling package that should be performed. these are in the calling package's data-dir
   customDataDir :: String,  -- data-dir of the calling package. all tests are compiled and executed in their respective directory.
@@ -24,18 +25,18 @@ test setup = do
   let files = zip (repeat defaultDir) (defaultTests setup) ++
                 zip (repeat (customDataDir setup)) (customTests setup)              -- (dir, file.ly)
   let tests = [(dir, file, arg) | (dir, file) <- files, arg <- allArguments setup]  -- (dir, file.ly, -ag)
-  result <- test' tests (happyExec setup) (stopOnFailure setup)
+  result <- test' tests (happyExec setup) (haskellCompilerExec setup) (stopOnFailure setup)
   if result then exitSuccess else exitFailure
 
 -- Perform the tests given in the list, specified via (directory, file, happy-options).
-test' :: [(String, String, String)] -> String -> Bool -> IO Bool
-test' [] _ _ = return True
-test' ((dir, file, args):rest) happy stopOnFail = do
-  result <- runSingleTest happy args dir file
-  if result then test' rest happy stopOnFail
+test' :: [(String, String, String)] -> String -> String -> Bool -> IO Bool
+test' [] _ _ _ = return True
+test' ((dir, file, args):rest) happy haskellCompiler stopOnFail = do
+  result <- runSingleTest happy haskellCompiler args dir file
+  if result then test' rest happy haskellCompiler stopOnFail
     else if stopOnFail
       then return False
-      else do _ <- test' rest happy stopOnFail; return False
+      else do _ <- test' rest happy haskellCompiler stopOnFail; return False
 
 -- These test files do not use attribute grammars.
 defaultTestFiles :: [String]
@@ -47,14 +48,11 @@ defaultTestFiles = ["Test.ly", "TestMulti.ly", "TestPrecedence.ly", "bug001.ly",
 attributeGrammarTestFiles :: [String]
 attributeGrammarTestFiles = ["AttrGrammar001.y", "AttrGrammar002.y"]
 
-defaultArguments :: [String]
-defaultArguments = map ("--strict " ++) ["", "-a", "-g", "-ag", "-gc", "-agc"]
-
-runSingleTest :: String -> String -> String -> String -> IO Bool
-runSingleTest happy arguments dir testFile = do
+runSingleTest :: String -> String -> String -> String -> String -> IO Bool
+runSingleTest happy haskellCompiler arguments dir testFile = do
   res <- runShell (do
     runCmdIn dir [happy, testFile, arguments, "-o", hsFile] True ||| failure
-    runCmdIn dir ["ghc", "-Wall", hsFile, "-o", binFile] True ||| failure
+    runCmdIn dir [haskellCompiler, "-Wall", hsFile, "-o", binFile] True ||| failure
     runCmd [dir </> binFile] True ||| failure
     )
   
