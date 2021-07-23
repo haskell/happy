@@ -1,6 +1,6 @@
 > {
 > module Calc where
-> import Char
+> import Data.Char
 > }
 
 First thing to declare is the name of your parser,
