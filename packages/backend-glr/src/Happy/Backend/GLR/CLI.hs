@@ -41,10 +41,10 @@ parseFlags :: [Flag] -> String -> GLRBackendArgs
 parseFlags cli baseName = GLRBackendArgs {
     outFile = getOutputFileName baseName cli,
     templateDir = getTemplate cli,
-    decode = getDecode cli,
-    filter = getFilter cli,
-    ghc = getGhc cli,
-    debug = getDebug cli
+    decode = OptDecode `elem` cli,
+    filter = OptFilter `elem` cli,
+    ghc = OptGhcTarget `elem` cli,
+    debug = OptDebugParser `elem` cli
   }
 
 getOutputFileName :: String -> [Flag] -> String
@@ -56,15 +56,3 @@ getTemplate :: [Flag] -> Maybe String
 getTemplate cli = case [ s | (OptTemplate s) <- cli ] of
   []    -> Nothing
   list  -> Just $ last list
-
-getDebug :: [Flag] -> Bool
-getDebug = elem OptDebugParser
-
-getGhc :: [Flag] -> Bool
-getGhc = elem OptGhcTarget
-
-getFilter :: [Flag] -> Bool
-getFilter = elem OptFilter
-
-getDecode :: [Flag] -> Bool
-getDecode = elem OptDecode

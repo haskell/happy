@@ -46,8 +46,8 @@ parseFlags cli baseName = do
     outFile = getOutputFileName baseName cli,
     templateDir = getTemplate cli,
     magicName = getMagicName cli,
-    strict = getStrict cli,
-    ghc = getGhc cli,
+    strict = OptStrict `elem` cli,
+    ghc = OptGhcTarget `elem` cli,
     coerce = coerce',
     target = target',
     debug = debug'
@@ -93,9 +93,3 @@ getDebug cli
         then return True
         else dieHappy "-d/--debug may only be used in conjunction with -a/--array\n"
   | otherwise = return False
-
-getGhc :: [Flag] -> Bool
-getGhc = elem OptGhcTarget
-
-getStrict :: [Flag] -> Bool
-getStrict = elem OptStrict

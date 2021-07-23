@@ -33,7 +33,7 @@ parseFlags flags filename baseName = do
   return FrontendArgs {
     file = filename,
     prettyFile = prettyName,
-    dumpMangle = getDumpMangle flags
+    dumpMangle = DumpMangle `elem` flags
   }
 
 getPrettyFileName :: String -> [Flag] -> IO (Maybe String)
@@ -43,9 +43,6 @@ getPrettyFileName baseName cli = case [ s | (OptPrettyFile s) <- cli ] of
     Nothing -> return (Just (baseName ++ ".grammar"))
     Just j  -> return (Just j)
   _many     -> dieHappy "multiple --pretty/-p options\n"
-
-getDumpMangle :: [Flag] -> Bool
-getDumpMangle = elem DumpMangle
 
 -------- Exported helpers --------
 

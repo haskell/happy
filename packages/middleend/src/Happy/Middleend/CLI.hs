@@ -39,10 +39,10 @@ parseFlags cli fileName baseName = do
   return MiddleendArgs {
     inFile = fileName,
     infoFile = infoFile',
-    dumpLR0 = getDumpLR0 cli,
-    dumpLA = getDumpLA cli,
-    dumpAction = getDumpAction cli,
-    dumpGoto = getDumpGoto cli
+    dumpLR0 = DumpLR0 `elem` cli,
+    dumpLA = DumpLA `elem` cli,
+    dumpAction = DumpAction `elem` cli,
+    dumpGoto = DumpGoto `elem` cli
   }
 
 getInfoFileName :: String -> [Flag] -> IO (Maybe String)
@@ -52,15 +52,3 @@ getInfoFileName base cli = case [ s | (OptInfoFile s) <- cli ] of
     Nothing -> return (Just (base ++ ".info"))
     Just j  -> return (Just j)
   _many     -> dieHappy "multiple --info/-i options\n"
-
-getDumpLR0 :: [Flag] -> Bool
-getDumpLR0 = elem DumpLR0
-
-getDumpLA :: [Flag] -> Bool
-getDumpLA = elem DumpLA
-
-getDumpAction :: [Flag] -> Bool
-getDumpAction = elem DumpAction
-
-getDumpGoto :: [Flag] -> Bool
-getDumpGoto = elem DumpGoto

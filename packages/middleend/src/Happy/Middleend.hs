@@ -47,7 +47,7 @@ countConflicts = LALR.countConflicts
 -------- Main entry point (runMiddleend) --------
 
 data MiddleendArgs = MiddleendArgs {
-  inFile :: String, -- only used as information inside the info file
+  inFile :: String, -- printed to the info file, not used otherwise
   infoFile :: Maybe String,
 
   dumpLR0 :: Bool,
