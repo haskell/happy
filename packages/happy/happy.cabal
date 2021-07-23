@@ -1,17 +1,17 @@
-name: happy
-version: 1.21.0
-license: BSD2
-license-file: LICENSE
-copyright: (c) Andy Gill, Simon Marlow
-author: Andy Gill and Simon Marlow
-maintainer: Simon Marlow <marlowsd@gmail.com>
-bug-reports: https://github.com/simonmar/happy/issues
-stability: stable
-homepage: https://www.haskell.org/happy/
-synopsis: Happy is a parser generator for Haskell
-category: Development
-cabal-version: >= 1.10
-build-type: Simple
+name:            happy
+version:         1.21.0
+license:         BSD2
+license-file:    LICENSE
+copyright:       (c) Andy Gill, Simon Marlow
+author:          Andy Gill and Simon Marlow
+maintainer:      Simon Marlow <marlowsd@gmail.com>
+bug-reports:     https://github.com/simonmar/happy/issues
+stability:       stable
+homepage:        https://www.haskell.org/happy/
+category:        Development
+cabal-version:   >= 1.10
+build-type:      Simple
+synopsis:        Happy is a parser generator for Haskell
 
 Description:
   Happy is a parser generator for Haskell.  Given a grammar

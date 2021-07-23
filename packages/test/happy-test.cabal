@@ -1,8 +1,22 @@
-name:                happy-test
-version:             1.21.0
-synopsis:            Import this package from your happy test suite to test your happy version
-cabal-version:       >= 1.10
-build-type:          Simple
+name:            happy-test
+version:         1.21.0
+license:         BSD2
+license-file:    LICENSE
+copyright:       (c) Andy Gill, Simon Marlow
+author:          Andy Gill and Simon Marlow
+maintainer:      Simon Marlow <marlowsd@gmail.com>
+bug-reports:     https://github.com/simonmar/happy/issues
+stability:       stable
+homepage:        https://www.haskell.org/happy/
+category:        Development
+cabal-version:   >= 1.10
+build-type:      Simple
+synopsis:        Testing for happy
+
+Description:
+  Happy is a parser generator for Haskell.
+  Happy-Test hosts various test grammars and allows
+  to customize and execute the happy test suite.
 
 data-dir: data
 

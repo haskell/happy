@@ -1,8 +1,23 @@
-name:                happy-middleend
-version:             1.21.0
-synopsis:            The baseline implementation of happy's middleend package (action and goto table generation).
-cabal-version:       >= 1.10
-build-type:          Simple
+name:            happy-middleend
+version:         1.21.0
+license:         BSD2
+license-file:    LICENSE
+copyright:       (c) Andy Gill, Simon Marlow
+author:          Andy Gill and Simon Marlow
+maintainer:      Simon Marlow <marlowsd@gmail.com>
+bug-reports:     https://github.com/simonmar/happy/issues
+stability:       stable
+homepage:        https://www.haskell.org/happy/
+category:        Development
+cabal-version:   >= 1.10
+build-type:      Simple
+synopsis:        An LALR middleend for happy
+
+Description:
+  Happy is a parser generator for Haskell.
+  Happy-Middleend converts `Grammar`s, coming from
+  a frontend, into LALR action and goto tables,
+  which are further processed by a backend.
 
 extra-source-files:  src/Happy/Middleend/ARRAY-NOTES
 

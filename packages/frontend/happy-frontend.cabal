@@ -1,8 +1,24 @@
-name:                happy-frontend
-version:             1.21.0
-synopsis:            The baseline implementation of happy's frontend package (.(l)y file parsing, grammar IR gen).
-cabal-version:       >= 1.10
-build-type:          Simple
+name:            happy-frontend
+version:         1.21.0
+license:         BSD2
+license-file:    LICENSE
+copyright:       (c) Andy Gill, Simon Marlow
+author:          Andy Gill and Simon Marlow
+maintainer:      Simon Marlow <marlowsd@gmail.com>
+bug-reports:     https://github.com/simonmar/happy/issues
+stability:       stable
+homepage:        https://www.haskell.org/happy/
+category:        Development
+cabal-version:   >= 1.10
+build-type:      Simple
+synopsis:        A yacc-like frontend for happy
+
+Description:
+  Happy is a parser generator for Haskell.
+  Happy-Frontend is responsible for parsing .y- and .ly-files
+  and mangling them into a Grammar datatype.
+  These .y- and .ly-files work similar to yacc's .y-files, but
+  have some Haskell-specific features.
 
 flag bootstrap
   description: Optimize the implementation of happy using a pre-built happy
