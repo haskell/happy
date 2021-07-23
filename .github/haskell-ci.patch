@@ -1,6 +1,14 @@
---- workflows/haskell-ci.yml	2021-07-14 19:49:44.000000000 +0200
-+++ workflows/haskell-ci.yml-patched	2021-07-14 19:49:28.000000000 +0200
-@@ -196,7 +196,7 @@
+--- workflows/haskell-ci.yml
++++ workflows/haskell-ci.yml
+@@ -102,6 +102,7 @@ jobs:
+       - name: Set PATH and environment variables
+         run: |
+           echo "$HOME/.cabal/bin" >> $GITHUB_PATH
++          echo "$HCDIR/bin" >> "$GITHUB_PATH"
+           echo "LANG=C.UTF-8" >> "$GITHUB_ENV"
+           echo "CABAL_DIR=$HOME/.cabal" >> "$GITHUB_ENV"
+           echo "CABAL_CONFIG=$HOME/.cabal/config" >> "$GITHUB_ENV"
+@@ -226,7 +227,7 @@ jobs:
            cat cabal.project.local
        - name: dump install plan
          run: |
@@ -9,7 +17,7 @@
            cabal-plan
        - name: cache
          uses: actions/cache@v2
-@@ -206,17 +206,19 @@
+@@ -236,17 +237,25 @@ jobs:
            restore-keys: ${{ runner.os }}-${{ matrix.compiler }}-
        - name: install dependencies
          run: |
@@ -32,7 +40,7 @@
 +          export HAPPY=$HOME/.cabal/bin/happy
 +          export HC
 +          export CABAL
-+          if [[ $($ghc --numeric-version) == "8.10.1" ]]
++          if [[ $(ghc --numeric-version) == "8.10.1" ]]
 +          then
 +            make sdist-test
 +          else
@@ -40,8 +48,8 @@
 +          fi
        - name: cabal check
          run: |
-           cd ${PKGDIR_happy} || false
-@@ -224,4 +226,4 @@
+           cd ${PKGDIR_happy_frontend} || false
+@@ -267,4 +276,4 @@ jobs:
        - name: unconstrained build
          run: |
            rm -f cabal.project.local
