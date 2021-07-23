@@ -7,7 +7,7 @@ This module is designed as an extension to the Haskell parser generator Happy.
         -- extension to semantic rules, and various optimisations
 %-----------------------------------------------------------------------------
 
-> module Happy.Backend.ProduceGLRCode
+> module Happy.Backend.GLR.ProduceCode
 >                       ( produceGLRParser
 >                       , DecodeOption(..)
 >                       , FilterOption(..)
@@ -15,7 +15,7 @@ This module is designed as an extension to the Haskell parser generator Happy.
 >                       , Options
 >                       ) where
 
-> import Paths_happy_backend ( version )
+> import Paths_happy_backend_glr ( version )
 > import Happy.Core.GenUtils ( mapDollarDollar, str, char, nl, brack, brack', interleave, maybestr )
 > import Happy.Core.Grammar
 > import Happy.Core.Tables

@@ -17,10 +17,7 @@ data Flag =
     OptGhcTarget |
     OptUseCoercions |
     OptArrayTarget |
-    OptDebugParser |
-    OptGLR |
-    OptGLR_Decode |
-    OptGLR_Filter
+    OptDebugParser
   deriving Eq
 
 options :: [OptDescr Flag]
@@ -32,10 +29,7 @@ options = [
     Option "g" ["ghc"] (NoArg OptGhcTarget) "use GHC extensions",
     Option "c" ["coerce"] (NoArg OptUseCoercions) "use type coercions (only available with -g)",
     Option "a" ["array"] (NoArg OptArrayTarget) "generate an array-based parser",
-    Option "d" ["debug"] (NoArg OptDebugParser) "produce a debugging parser (only with -a)",
-    Option "l" ["glr"] (NoArg OptGLR) "Generate a GLR parser for ambiguous grammars",
-    Option "k" ["decode"] (NoArg OptGLR_Decode) "Generate simple decoding code for GLR result",
-    Option "f" ["filter"] (NoArg OptGLR_Filter) "Filter the GLR parse forest with respect to semantic usage"
+    Option "d" ["debug"] (NoArg OptDebugParser) "produce a debugging parser (only with -a)"
   ]
 
 -------- [Flag] to BackendArgs conversion --------
@@ -56,10 +50,7 @@ parseFlags cli baseName = do
     ghc = getGhc cli,
     coerce = coerce',
     target = target',
-    debug = debug',
-    glr = getGLR cli,
-    glrDecode = getGLRDecode cli,
-    glrFilter = getGLRFilter cli
+    debug = debug'
   }
 
 getTarget :: [Flag] -> IO Target
@@ -108,12 +99,3 @@ getGhc = elem OptGhcTarget
 
 getStrict :: [Flag] -> Bool
 getStrict = elem OptStrict
-
-getGLR :: [Flag] -> Bool
-getGLR = elem OptGLR
-
-getGLRFilter :: [Flag] -> Bool
-getGLRFilter = elem OptGLR_Filter
-
-getGLRDecode :: [Flag] -> Bool
-getGLRDecode = elem OptGLR_Decode

@@ -2,7 +2,6 @@ module Happy.Backend(BackendArgs(..), Target(..), runBackend) where
 
 import Happy.Backend.Target
 import Happy.Backend.ProduceCode
-import Happy.Backend.ProduceGLRCode
 import Happy.Core.Grammar
 import Happy.Core.Tables
 import Paths_happy_backend
@@ -19,19 +18,15 @@ data BackendArgs = BackendArgs {
   ghc :: Bool,
   coerce :: Bool, -- requires ghc
   target :: Target,
-  debug :: Bool, -- requires target = TargetArrayBased
-  glr :: Bool,
-  glrDecode :: Bool, -- requires glr
-  glrFilter :: Bool -- requires glr
+  debug :: Bool -- requires target = TargetArrayBased
 }
 
 runBackend :: BackendArgs -> Grammar -> ActionTable -> GotoTable -> IO ()
 runBackend args g action goto = do
     defaultDir <- getDataDir
-    let header = (case hd g of Just s -> s; Nothing -> "") ++ importsToInject args
+    let header = fromMaybe "" (hd g) ++ importsToInject args
     let templateDir' = fromMaybe defaultDir (templateDir args)
-    let produce = if glr args then produceGLRCode else produceCode
-    produce args g action goto header templateDir'
+    produceCode args g action goto header templateDir'
 
 -------- Helpers --------
 
@@ -42,13 +37,6 @@ produceCode args g action goto header template_dir = do
                                 (Just header) (tl g) (target args) (coerce args) (ghc args) (strict args)
     let write = (if outFile args == "-" then putStr else writeFile $ outFile args)
     write $ magicFilter args (outfile ++ defines args ++ template)
-
-produceGLRCode :: BackendArgs -> Grammar -> ActionTable -> GotoTable -> String -> String -> IO ()
-produceGLRCode args g action goto header template_dir =
-    let glr_decode = if glrDecode args then TreeDecode else LabelDecode
-        filtering = if glrFilter args then UseFiltering else NoFiltering
-        ghc_exts = if ghc args then UseGhcExts (importsToInject args) (langExtsToInject args) else NoGhcExts -- For GLR, don't always pass CPP, because only one of the files needs it.
-    in produceGLRParser (outFile args) template_dir action goto (Just header) (tl g) (debug args, (glr_decode, filtering, ghc_exts)) g
 
 magicFilter :: BackendArgs -> String -> String
 magicFilter args = case magicName args of

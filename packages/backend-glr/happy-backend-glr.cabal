@@ -1,4 +1,4 @@
-name:            happy-backend
+name:            happy-backend-glr
 version:         1.21.0
 license:         BSD2
 license-file:    LICENSE
@@ -11,12 +11,12 @@ homepage:        https://www.haskell.org/happy/
 category:        Development
 cabal-version:   >= 1.10
 build-type:      Simple
-synopsis:        A table-based backend for happy
+synopsis:        A GLR backend for happy
 
 Description:
   Happy is a parser generator for Haskell.
-  Happy-Backend is responsible for code-generation:
-  It converts action and goto tables into Haskell code.
+  Happy-Backend-GLR is a backend which creates
+  GLR-based Haskell code.
 
 
 tested-with:
@@ -36,13 +36,14 @@ tested-with:
 data-dir: data
 
 data-files:
-        HappyTemplate.hs
+        GLR_Base.hs
+        GLR_Lib.hs
 
 library
   hs-source-dirs:      src
 
-  exposed-modules:     Happy.Backend,
-                       Happy.Backend.CLI
+  exposed-modules:     Happy.Backend.GLR,
+                       Happy.Backend.GLR.CLI
   build-depends:       base < 5,
                        array,
                        happy-core == 1.21.0
@@ -50,6 +51,5 @@ library
   default-language:    Haskell98
   default-extensions:  CPP, MagicHash, FlexibleContexts
   ghc-options:         -Wall
-  other-modules:       Happy.Backend.Target,
-                       Happy.Backend.ProduceCode,
-                       Paths_happy_backend
+  other-modules:       Happy.Backend.GLR.ProduceCode,
+                       Paths_happy_backend_glr
