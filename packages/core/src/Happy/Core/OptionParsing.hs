@@ -1,11 +1,16 @@
-module Happy.Core.OptionParsing(parseOptions, beginOptionsWith, requireUnnamedArgument, OnNone(..), OnMultiple(..)) where
+{-# LANGUAGE ExplicitForAll #-}
+
+module Happy.Core.OptionParsing(
+  parseOptions, beginOptionsWith, requireUnnamedArgument, OnNone(..), OnMultiple(..),
+  removeAllOverlaps, removeLongOption, removeLongOverlaps, cleanShortOption, cleanShortOverlaps
+) where
 
 import System.Console.GetOpt
 import System.Environment
 import System.Exit (exitWith, ExitCode(..))
 import System.IO
 import Control.Monad (liftM)
-import Data.List (isSuffixOf, sort, sortBy, group, intersect, elemIndex)
+import Data.List (isSuffixOf, sort, sortBy, group, intersect, elemIndex, intersect, delete)
 import Data.Ord
 import Data.Maybe
 import Data.Version (showVersion, Version)
@@ -77,7 +82,39 @@ beginOptionsWith chars opts = sortBy (comparing $ smallestIndex . shorts) matche
       smallestIndex a = minimum (map (fromMaybe 1000 . flip elemIndex chars) a)
       matched = filter (not . null . intersect chars . shorts) opts
       nonMatched = filter (null . intersect chars . shorts) opts
-      shorts (Option s _ _ _) = s
+
+-------- Option Conflicts --------
+
+-- Combine removeLongOverlaps with cleanShortOverlaps
+removeAllOverlaps :: [OptDescr a] -> [OptDescr b] -> [OptDescr b]
+removeAllOverlaps a = removeLongOverlaps a . cleanShortOverlaps a
+
+-- Remove a long option from the list of options, if existing.
+-- This means: any option which features this long option string is removed (even if it has multiple different long option strings).
+removeLongOption :: String -> [OptDescr a] -> [OptDescr a]
+removeLongOption long opts = filter (not . elem long . longs) opts  
+
+-- Remove all overlaps with the first list's long option strings from the second list (using removeLongOption).
+removeLongOverlaps :: [OptDescr a] -> [OptDescr b] -> [OptDescr b]
+removeLongOverlaps a b = foldr removeLongOption b (concatMap longs a)
+
+-- Remove a short option from the list of options, if existing.
+-- In contrast to `removeLongOption`, a matching short option character will just be removed
+-- from its hosting option – the option itself remains, provided it features at least one other short or long option.
+cleanShortOption :: Char -> [OptDescr a] -> [OptDescr a]
+cleanShortOption short opts = filter nonempty $ map remove opts where
+  remove (Option s a b c) = Option (delete short s) a b c
+
+-- Remove all overlaps with the first list's short option strings from the second list (using cleanShortOption).
+cleanShortOverlaps :: [OptDescr a] -> [OptDescr b] -> [OptDescr b]
+cleanShortOverlaps a b = foldr cleanShortOption b (concatMap shorts a)
+
+shorts :: OptDescr a -> [Char]
+longs :: OptDescr a -> [String]
+nonempty :: OptDescr a -> Bool
+shorts (Option s _ _ _) = s
+longs (Option _ l _ _) = l
+nonempty (Option s l _ _) = not (null s) && not (null l)
 
 -------- Internal helpers --------
 
@@ -87,8 +124,6 @@ checkDuplicateOptions opts = case (multiples (concatMap shorts opts), multiples 
    (_, x:_) -> die $ "Attention: option --" ++ x ++ " corresponds to multiple different arguments; please fix this.\n"
    _        -> return ()
    where
-      shorts (Option s _ _ _) = s
-      longs (Option _ l _ _) = l
       multiples :: Ord a => [a] -> [a]
       multiples = map head . filter ((> 1) . length) . group . sort
 

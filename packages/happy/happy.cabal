@@ -122,7 +122,8 @@ executable happy
                  happy-core == 1.21.0,
                  happy-frontend == 1.21.0,
                  happy-middleend == 1.21.0,
-                 happy-backend == 1.21.0
+                 happy-backend == 1.21.0,
+                 happy-backend-glr == 1.21.0
 
   default-language: Haskell98
   default-extensions: CPP, MagicHash, FlexibleContexts
