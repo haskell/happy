@@ -13,16 +13,23 @@ import System.Console.GetOpt
 import System.Environment
 import Paths_happy (version)
 
--- All flags
-data HappyFlag = Frontend FrontendCLI.Flag | Middleend MiddleendCLI.Flag | Backend BackendCLI.Flag | GLRBackend GLRBackendCLI.Flag deriving Eq
+-- Option for switching between backend and glr-backend
+useGLROption :: OptDescr TopLevelFlag
+useGLROption = Option "l" ["glr"] (NoArg OptGLR) "Generate a GLR parser for ambiguous grammars"
+data TopLevelFlag = OptGLR deriving Eq
+
+-- Combine the flags from all the packages
+data HappyFlag = TopLevel TopLevelFlag | Frontend FrontendCLI.Flag | Middleend MiddleendCLI.Flag | Backend BackendCLI.Flag | GLRBackend GLRBackendCLI.Flag deriving Eq
 
 as :: Functor f => [f a] -> (a -> b) -> [f b]
 a `as` b = map (fmap b) a
 
+getTopLevel :: [HappyFlag] -> [TopLevelFlag]
 getFrontend :: [HappyFlag] -> [FrontendCLI.Flag]
 getMiddleend :: [HappyFlag] -> [MiddleendCLI.Flag]
 getBackend :: [HappyFlag] -> [BackendCLI.Flag]
 getGLRBackend :: [HappyFlag] -> [GLRBackendCLI.Flag]
+getTopLevel flags = [a | TopLevel a <- flags]
 getFrontend flags = [a | Frontend a <- flags]
 getMiddleend flags = [a | Middleend a <- flags]
 getBackend flags = [a | Backend a <- flags]
@@ -35,7 +42,8 @@ allOptions =
   MiddleendCLI.options `as` Middleend ++
   BackendCLI.options `as` Backend ++
   -- Add the "--glr" option. Remove options that are already declared in happy-backend like outfile, template, ghc, debug.
-  removeAllOverlaps BackendCLI.options (GLRBackendCLI.characteristicOption : GLRBackendCLI.options) `as` GLRBackend
+  [useGLROption] `as` TopLevel ++
+  removeAllOverlaps BackendCLI.options GLRBackendCLI.options `as` GLRBackend
 
 -- Main
 main :: IO ()
@@ -49,12 +57,11 @@ main = do
   (action, goto, _, _) <- MiddleendCLI.parseAndRun (getMiddleend flags) filename basename grammar
 
   -- Backend / GLRBackend switching
-  let backendFlags = getBackend flags
-  let glrFlags = getGLRBackend flags
-  backendOpts <- BackendCLI.parseFlags backendFlags basename
+  let useGLR = OptGLR `elem` getTopLevel flags
+  backendOpts <- BackendCLI.parseFlags (getBackend flags) basename
 
-  case GLRBackendCLI.hasCharacteristicFlag glrFlags of
-    True -> GLRBackend.runGLRBackend (createGLROpts glrFlags backendOpts basename) grammar action goto
+  case useGLR of
+    True -> GLRBackend.runGLRBackend (createGLROpts (getGLRBackend flags) backendOpts basename) grammar action goto
     False -> Backend.runBackend backendOpts grammar action goto
 
 -- Fill those glr-options that were removed due to overlap with happy-backend's options

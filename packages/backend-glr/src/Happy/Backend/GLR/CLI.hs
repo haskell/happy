@@ -1,4 +1,4 @@
-module Happy.Backend.GLR.CLI(Flag(..), options, characteristicOption, hasCharacteristicFlag, parseFlags) where
+module Happy.Backend.GLR.CLI(Flag(..), options, parseFlags) where
 
 import Prelude hiding (filter)
 import Happy.Backend.GLR
@@ -7,7 +7,6 @@ import System.Console.GetOpt
 -------- CLI flags and options --------
 
 data Flag =
-    OptGLR |
     OptOutputFile String |
     OptTemplate String |
     OptDecode |
@@ -16,7 +15,6 @@ data Flag =
     OptDebugParser
   deriving Eq
 
--- All options, without the characteristic "glr" option.
 options :: [OptDescr Flag]
 options = [
     Option "o" ["outfile"] (ReqArg OptOutputFile "FILE") "write the output to FILE (default: file.hs)",
@@ -26,16 +24,6 @@ options = [
     Option "g" ["ghc"] (NoArg OptGhcTarget) "use GHC extensions",
     Option "d" ["debug"] (NoArg OptDebugParser) "produce a debugging parser"
   ]
-
--- Use this option when using this backend together with another backend.
-characteristicOption :: OptDescr Flag
-characteristicOption = Option "l" ["glr"] (NoArg OptGLR) "Generate a GLR parser for ambiguous grammars"
-
--------- [Flag] to BackendArgs conversion --------
-
--- Determines whether the characteristic "glr" flag is set.
-hasCharacteristicFlag :: [Flag] -> Bool
-hasCharacteristicFlag = elem OptGLR
 
 parseFlags :: [Flag] -> String -> GLRBackendArgs
 parseFlags cli baseName = GLRBackendArgs {
