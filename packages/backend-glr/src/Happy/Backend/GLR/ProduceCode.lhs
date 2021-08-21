@@ -16,9 +16,9 @@ This module is designed as an extension to the Haskell parser generator Happy.
 >                       ) where
 
 > import Paths_happy_backend_glr ( version )
-> import Happy.Core.GenUtils ( mapDollarDollar, str, char, nl, brack, brack', interleave, maybestr )
-> import Happy.Core.Grammar
-> import Happy.Core.Tables
+> import Happy.Grammar.GenUtils ( mapDollarDollar, str, char, nl, brack, brack', interleave, maybestr )
+> import Happy.Grammar.Grammar
+> import Happy.Tabular.Tables
 > import Data.Array ( Array, (!), array, assocs )
 > import Data.Char ( isSpace, isAlphaNum )
 > import Data.List ( nub, (\\), sort, find, tails )

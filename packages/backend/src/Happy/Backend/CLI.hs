@@ -1,9 +1,9 @@
 module Happy.Backend.CLI(Flag(..), options, parseFlags, parseAndRun) where
 
 import Happy.Backend
-import Happy.Core.Grammar
-import Happy.Core.Tables
-import Happy.Core.GenUtils
+import Happy.Grammar.Grammar
+import Happy.Tabular.Tables
+import Happy.Grammar.GenUtils
 import System.Console.GetOpt
 import Data.Char
 

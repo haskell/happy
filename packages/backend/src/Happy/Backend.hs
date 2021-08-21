@@ -2,8 +2,8 @@ module Happy.Backend(BackendArgs(..), Target(..), runBackend) where
 
 import Happy.Backend.Target
 import Happy.Backend.ProduceCode
-import Happy.Core.Grammar
-import Happy.Core.Tables
+import Happy.Grammar.Grammar
+import Happy.Tabular.Tables
 import Paths_happy_backend
 import Data.Char
 import Data.Maybe

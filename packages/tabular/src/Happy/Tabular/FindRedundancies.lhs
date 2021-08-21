@@ -1,7 +1,7 @@
 > module Happy.Tabular.FindRedundancies where
 
-> import Happy.Core.Grammar
-> import Happy.Core.Tables
+> import Happy.Grammar.Grammar
+> import Happy.Tabular.Tables
 > import Data.Array( assocs, elems, (!) )
 > import Data.List
 

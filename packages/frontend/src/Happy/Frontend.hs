@@ -1,7 +1,7 @@
 module Happy.Frontend (parseYFileContents, mangleAbsSyn, runFrontend, ParseResult, FrontendArgs(..), supportsParsingAttributeGrammars) where
   
-import Happy.Core.Grammar
-import Happy.Core.GenUtils
+import Happy.Grammar.Grammar
+import Happy.Grammar.GenUtils
 import Happy.Frontend.AbsSyn
 import Happy.Frontend.Mangler
 import Happy.Frontend.PrettyGrammar

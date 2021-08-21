@@ -1,4 +1,4 @@
-name:            happy-backend
+name:            happy-cli
 version:         1.21.0
 license:         BSD2
 license-file:    LICENSE
@@ -11,13 +11,12 @@ homepage:        https://www.haskell.org/happy/
 category:        Development
 cabal-version:   >= 1.10
 build-type:      Simple
-synopsis:        A table-based backend for happy
+synopsis:        Option parsing functionality of happy
 
 Description:
   Happy is a parser generator for Haskell.
-  Happy-Backend is responsible for code-generation:
-  It converts action and goto tables into Haskell code.
-
+  Happy-CLI provides functionality related to centralised option parsing,
+  which can be used sensibly from within a happy executable package.
 
 tested-with:
         GHC == 7.0.4
@@ -33,24 +32,13 @@ tested-with:
         GHC == 8.10.4
         GHC == 9.0.1
 
-data-dir: data
-
-data-files:
-        HappyTemplate.hs
-
 library
   hs-source-dirs:      src
 
-  exposed-modules:     Happy.Backend,
-                       Happy.Backend.CLI
-  build-depends:       base < 5,
-                       array,
-                       happy-grammar == 1.21.0,
-                       happy-tabular == 1.21.0
+  exposed-modules:     Happy.CLI.OptionParsing
+  build-depends:       base < 5
 
   default-language:    Haskell98
   default-extensions:  CPP, MagicHash, FlexibleContexts
-  ghc-options:         -Wall
-  other-modules:       Happy.Backend.Target,
-                       Happy.Backend.ProduceCode,
-                       Paths_happy_backend
+  ghc-options: -Wall
+  other-modules:

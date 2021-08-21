@@ -36,7 +36,7 @@ library
                        containers >= 0.4.2,
                        transformers >= 0.5.6.2,
                        mtl >= 2.2.2,
-                       happy-core == 1.21.0
+                       happy-grammar == 1.21.0
 
   default-language:    Haskell98
   default-extensions:  CPP, MagicHash, FlexibleContexts

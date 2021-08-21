@@ -40,11 +40,12 @@ library
 
   exposed-modules:     Happy.Tabular,
                        Happy.Tabular.CLI,
-                       Happy.Tabular.First
+                       Happy.Tabular.First,
+                       Happy.Tabular.Tables
   build-depends:       base < 5,
                        array,
                        containers >= 0.4.2,
-                       happy-core == 1.21.0
+                       happy-grammar == 1.21.0
 
   default-language:    Haskell98
   default-extensions:  CPP, MagicHash, FlexibleContexts
@@ -53,4 +54,5 @@ library
                        Happy.Tabular.LALR,
                        Happy.Tabular.FindRedundancies,
                        Happy.Tabular.Info,
+                       Happy.Tabular.NameSet,
                        Paths_happy_tabular

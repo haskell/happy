@@ -1,6 +1,6 @@
 {-# LANGUAGE ExplicitForAll #-}
 
-module Happy.Core.OptionParsing(
+module Happy.CLI.OptionParsing(
   parseOptions, beginOptionsWith, requireUnnamedArgument, OnNone(..), OnMultiple(..),
   removeAllOverlaps, removeLongOption, removeLongOverlaps, cleanShortOption, cleanShortOverlaps
 ) where

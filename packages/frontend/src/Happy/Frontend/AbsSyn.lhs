@@ -15,7 +15,7 @@ Here is the abstract syntax of the language we parse.
 >       Rule(..), Prod(..), Term(..), Prec(..)
 >  ) where
 
-> import Happy.Core.Grammar (ErrorHandlerType(..))
+> import Happy.Grammar.Grammar (ErrorHandlerType(..))
 
 > data AbsSyn
 >     = AbsSyn

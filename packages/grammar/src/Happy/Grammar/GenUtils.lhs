@@ -4,7 +4,7 @@ This is realy just an extended prelude.
 All the code below is understood to be in the public domain.
 -----------------------------------------------------------------------------
 
-> module Happy.Core.GenUtils (
+> module Happy.Grammar.GenUtils (
 >       mkClosure,
 >       combinePairs,
 >       mapDollarDollar,

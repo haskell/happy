@@ -2,8 +2,8 @@ module Happy.Backend.GLR(GLRBackendArgs(..), runGLRBackend) where
 
 import Prelude hiding (filter)
 import Happy.Backend.GLR.ProduceCode
-import Happy.Core.Grammar
-import Happy.Core.Tables
+import Happy.Grammar.Grammar
+import Happy.Tabular.Tables
 import Paths_happy_backend_glr
 import Data.Maybe
 

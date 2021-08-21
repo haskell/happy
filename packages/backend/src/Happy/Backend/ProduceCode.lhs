@@ -8,11 +8,11 @@ The code generator.
 
 > import Paths_happy_backend    ( version )
 > import Happy.Backend.Target   ( Target(..) )
-> import Happy.Core.Grammar
-> import Happy.Core.Tables
-> import Happy.Core.GenUtils    ( mapDollarDollar, str, char, nl, strspace,
+> import Happy.Grammar.Grammar
+> import Happy.Grammar.GenUtils    ( mapDollarDollar, str, char, nl, strspace,
 >                                 interleave, interleave', maybestr,
 >                                 brack, brack' )
+> import Happy.Tabular.Tables
 
 > import Data.Maybe             ( isJust, isNothing, fromMaybe )
 > import Data.Char              ( ord, chr )

@@ -174,7 +174,8 @@ jobs:
           echo "packages: $GITHUB_WORKSPACE/source/packages/tabular" >> cabal.project
           echo "packages: $GITHUB_WORKSPACE/source/packages/backend" >> cabal.project
           echo "packages: $GITHUB_WORKSPACE/source/packages/backend-glr" >> cabal.project
-          echo "packages: $GITHUB_WORKSPACE/source/packages/core" >> cabal.project
+          echo "packages: $GITHUB_WORKSPACE/source/packages/grammar" >> cabal.project
+          echo "packages: $GITHUB_WORKSPACE/source/packages/cli" >> cabal.project
           echo "packages: $GITHUB_WORKSPACE/source/packages/test" >> cabal.project
           echo "packages: $GITHUB_WORKSPACE/source/packages/happy" >> cabal.project
           cat cabal.project
@@ -196,8 +197,10 @@ jobs:
           echo "PKGDIR_happy_backend=${PKGDIR_happy_backend}" >> "$GITHUB_ENV"
           PKGDIR_happy_backend_glr="$(find "$GITHUB_WORKSPACE/unpacked" -maxdepth 1 -type d -regex '.*/happy-backend-glr-[0-9.]*')"
           echo "PKGDIR_happy_backend_glr=${PKGDIR_happy_backend_glr}" >> "$GITHUB_ENV"
-          PKGDIR_happy_core="$(find "$GITHUB_WORKSPACE/unpacked" -maxdepth 1 -type d -regex '.*/happy-core-[0-9.]*')"
-          echo "PKGDIR_happy_core=${PKGDIR_happy_core}" >> "$GITHUB_ENV"
+          PKGDIR_happy_cli="$(find "$GITHUB_WORKSPACE/unpacked" -maxdepth 1 -type d -regex '.*/happy-cli-[0-9.]*')"
+          echo "PKGDIR_happy_cli=${PKGDIR_happy_cli}" >> "$GITHUB_ENV"
+          PKGDIR_happy_grammar="$(find "$GITHUB_WORKSPACE/unpacked" -maxdepth 1 -type d -regex '.*/happy-grammar-[0-9.]*')"
+          echo "PKGDIR_happy_grammar=${PKGDIR_happy_grammar}" >> "$GITHUB_ENV"
           PKGDIR_happy_test="$(find "$GITHUB_WORKSPACE/unpacked" -maxdepth 1 -type d -regex '.*/happy-test-[0-9.]*')"
           echo "PKGDIR_happy_test=${PKGDIR_happy_test}" >> "$GITHUB_ENV"
           PKGDIR_happy="$(find "$GITHUB_WORKSPACE/unpacked" -maxdepth 1 -type d -regex '.*/happy-[0-9.]*')"
@@ -209,7 +212,8 @@ jobs:
           echo "packages: ${PKGDIR_happy_tabular}" >> cabal.project
           echo "packages: ${PKGDIR_happy_backend}" >> cabal.project
           echo "packages: ${PKGDIR_happy_backend_glr}" >> cabal.project
-          echo "packages: ${PKGDIR_happy_core}" >> cabal.project
+          echo "packages: ${PKGDIR_happy_grammar}" >> cabal.project
+          echo "packages: ${PKGDIR_happy_cli}" >> cabal.project
           echo "packages: ${PKGDIR_happy_test}" >> cabal.project
           echo "packages: ${PKGDIR_happy}" >> cabal.project
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package happy-frontend" >> cabal.project ; fi
@@ -220,7 +224,9 @@ jobs:
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package happy-backend-glr" >> cabal.project ; fi
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package happy-core" >> cabal.project ; fi
+          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package happy-grammar" >> cabal.project ; fi
+          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
+          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package happy-cli" >> cabal.project ; fi
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package happy-test" >> cabal.project ; fi
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
@@ -228,7 +234,7 @@ jobs:
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
           cat >> cabal.project <<EOF
           EOF
-          $HCPKG list --simple-output --names-only | perl -ne 'for (split /\s+/) { print "constraints: $_ installed\n" unless /^(containers|happy|happy-backend|happy-backend-glr|happy-core|happy-frontend|happy-tabular|happy-test|mtl|transformers)$/; }' >> cabal.project.local
+          $HCPKG list --simple-output --names-only | perl -ne 'for (split /\s+/) { print "constraints: $_ installed\n" unless /^(containers|happy|happy-backend|happy-backend-glr|happy-grammar|happy-cli|happy-frontend|happy-tabular|happy-test|mtl|transformers)$/; }' >> cabal.project.local
           cat cabal.project
           cat cabal.project.local
       - name: dump install plan
@@ -272,7 +278,9 @@ jobs:
           ${CABAL} -vnormal check
           cd ${PKGDIR_happy_backend_glr} || false
           ${CABAL} -vnormal check
-          cd ${PKGDIR_happy_core} || false
+          cd ${PKGDIR_happy_grammar} || false
+          ${CABAL} -vnormal check
+          cd ${PKGDIR_happy_cli} || false
           ${CABAL} -vnormal check
           cd ${PKGDIR_happy_test} || false
           ${CABAL} -vnormal check

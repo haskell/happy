@@ -1,10 +1,10 @@
-Contains datatypes for goto and action tables which are consumed by happy-backend.
+Datatypes for goto and action tables which are consumed by happy-backend.
 
-> module Happy.Core.Tables (
+> module Happy.Tabular.Tables (
 >    LRAction(..), ActionTable, Goto(..), GotoTable
 > ) where
 
-> import Happy.Core.Grammar
+> import Happy.Grammar.Grammar
 
 > import Data.Array
 

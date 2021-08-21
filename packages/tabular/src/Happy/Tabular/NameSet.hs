@@ -1,4 +1,4 @@
-module Happy.Core.NameSet (
+module Happy.Tabular.NameSet (
     NameSet,
     module Data.IntSet
 ) where

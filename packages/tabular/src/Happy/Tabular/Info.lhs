@@ -6,9 +6,9 @@ Generating info files.
 
 > module Happy.Tabular.Info (genInfoFile) where
 
-> import Happy.Core.Grammar
-> import Happy.Core.Tables
-> import Happy.Core.GenUtils    ( str, interleave, interleave' )
+> import Happy.Grammar.Grammar
+> import Happy.Grammar.GenUtils    ( str, interleave, interleave' )
+> import Happy.Tabular.Tables
 > import Happy.Tabular.LALR   ( Lr0Item(..) )
 > import Paths_happy_tabular  ( version )
 > import Data.Set ( Set )

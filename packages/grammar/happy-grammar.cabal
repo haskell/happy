@@ -1,4 +1,4 @@
-name:            happy-core
+name:            happy-grammar
 version:         1.21.0
 license:         BSD2
 license-file:    LICENSE
@@ -11,27 +11,20 @@ homepage:        https://www.haskell.org/happy/
 category:        Development
 cabal-version:   >= 1.10
 build-type:      Simple
-synopsis:        IRs and core functionality of happy
+synopsis:        happy's Grammar datatype
 
 Description:
   Happy is a parser generator for Haskell.
-  Happy-Core provides cross-packages IRs, like the Grammar
-  datatype, and other functionality that is fundamental to happy.
-  New happy packages will probably want to depend on happy-core.
+  Happy-Grammar exposes the cross-package Grammar datatype,
+  which represents a grammar as can be parsed and processed by happy.
 
 library
   hs-source-dirs:      src
 
-  exposed-modules:     Happy.Core.Grammar,
-                       Happy.Core.Tables,
-                       Happy.Core.GenUtils,
-                       Happy.Core.NameSet,
-                       Happy.Core.OptionParsing
+  exposed-modules:     Happy.Grammar.Grammar,
+                       Happy.Grammar.GenUtils
   build-depends:       base < 5,
-                       array,
-                       containers >= 0.4.2,
-                       transformers >= 0.5.6.2,
-                       mtl >= 2.2.2
+                       array
 
   default-language:    Haskell98
   default-extensions:  CPP, MagicHash, FlexibleContexts

@@ -1,8 +1,8 @@
 module Happy.Tabular.CLI(Flag(..), options, parseFlags, parseAndRun) where
 
 import Happy.Tabular
-import Happy.Core.Grammar
-import Happy.Core.GenUtils
+import Happy.Grammar.Grammar
+import Happy.Grammar.GenUtils
 import System.Console.GetOpt
 
 -------- CLI flags and options --------

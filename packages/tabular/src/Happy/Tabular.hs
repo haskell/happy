@@ -4,10 +4,10 @@ module Happy.Tabular(
     TabularArgs(..), TabularResult, runTabular
   ) where
 
-import Happy.Core.NameSet (NameSet)
-import Happy.Core.Grammar
-import Happy.Core.Tables
-import Happy.Core.GenUtils
+import Happy.Grammar.Grammar
+import Happy.Grammar.GenUtils
+import Happy.Tabular.NameSet (NameSet)
+import Happy.Tabular.Tables
 import Happy.Tabular.First
 import qualified Happy.Tabular.LALR as LALR
 import Happy.Tabular.LALR (Lr0Item, Lr1Item, precalcClosure0, propLookaheads, calcLookaheads, mergeLookaheadInfo)

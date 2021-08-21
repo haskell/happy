@@ -1,8 +1,8 @@
 module Happy.Frontend.CLI(Flag(..), options, parseFlags, parseAndRun, getBaseName) where
 
 import Happy.Frontend
-import Happy.Core.Grammar
-import Happy.Core.GenUtils
+import Happy.Grammar.Grammar
+import Happy.Grammar.GenUtils
 import System.Console.GetOpt
 
 -------- CLI flags and options --------

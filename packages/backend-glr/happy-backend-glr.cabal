@@ -46,7 +46,8 @@ library
                        Happy.Backend.GLR.CLI
   build-depends:       base < 5,
                        array,
-                       happy-core == 1.21.0
+                       happy-grammar == 1.21.0,
+                       happy-tabular == 1.21.0
 
   default-language:    Haskell98
   default-extensions:  CPP, MagicHash, FlexibleContexts

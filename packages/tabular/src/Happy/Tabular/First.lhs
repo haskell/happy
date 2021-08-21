@@ -6,10 +6,10 @@ Implementation of FIRST
 
 > module Happy.Tabular.First ( mkFirst ) where
 
-> import Happy.Core.GenUtils
-> import Happy.Core.NameSet ( NameSet )
-> import qualified Happy.Core.NameSet as Set
-> import Happy.Core.Grammar
+> import Happy.Tabular.NameSet ( NameSet )
+> import qualified Happy.Tabular.NameSet as Set
+> import Happy.Grammar.GenUtils
+> import Happy.Grammar.Grammar
 > import Data.IntSet (IntSet)
 
 \subsection{Utilities}

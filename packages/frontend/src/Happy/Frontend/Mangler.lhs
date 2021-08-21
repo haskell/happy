@@ -8,8 +8,8 @@ Mangler converts AbsSyn to Grammar
 
 > module Happy.Frontend.Mangler (mangler) where
 
-> import Happy.Core.Grammar
-> import Happy.Core.GenUtils
+> import Happy.Grammar.Grammar
+> import Happy.Grammar.GenUtils
 > import Happy.Frontend.AbsSyn
 #ifdef HAPPY_BOOTSTRAP
 > import Happy.Frontend.ParseMonad.Class
