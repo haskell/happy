@@ -4,13 +4,13 @@ Generating info files.
 (c) 1993-2001 Andy Gill, Simon Marlow
 -----------------------------------------------------------------------------
 
-> module Happy.Middleend.Info (genInfoFile) where
+> module Happy.Tabular.Info (genInfoFile) where
 
 > import Happy.Core.Grammar
 > import Happy.Core.Tables
 > import Happy.Core.GenUtils    ( str, interleave, interleave' )
-> import Happy.Middleend.LALR   ( Lr0Item(..) )
-> import Paths_happy_middleend  ( version )
+> import Happy.Tabular.LALR   ( Lr0Item(..) )
+> import Paths_happy_tabular  ( version )
 > import Data.Set ( Set )
 > import qualified Data.Set as Set hiding ( Set )
 

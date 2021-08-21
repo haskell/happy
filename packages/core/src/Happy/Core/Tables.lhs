@@ -1,4 +1,4 @@
-Contains datatypes for goto and action tables which are produced by happy-middleend and consumed by happy-backend.
+Contains datatypes for goto and action tables which are consumed by happy-backend.
 
 > module Happy.Core.Tables (
 >    LRAction(..), ActionTable, Goto(..), GotoTable

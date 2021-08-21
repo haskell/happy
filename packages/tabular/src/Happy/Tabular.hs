@@ -1,24 +1,24 @@
-module Happy.Middleend(
+module Happy.Tabular(
     mkFirst, genLR0Items, genLookaheads, genLR1States, genActionTable, genGotoTable, countConflicts,
     Lr0Item(..), Lr1Item(..), Lr0State, Lr1State, LookaheadInfo,
-    MiddleendArgs(..), MiddleendResult, runMiddleend
+    TabularArgs(..), TabularResult, runTabular
   ) where
 
 import Happy.Core.NameSet (NameSet)
 import Happy.Core.Grammar
 import Happy.Core.Tables
 import Happy.Core.GenUtils
-import Happy.Middleend.First
-import qualified Happy.Middleend.LALR as LALR
-import Happy.Middleend.LALR (Lr0Item, Lr1Item, precalcClosure0, propLookaheads, calcLookaheads, mergeLookaheadInfo)
-import Happy.Middleend.FindRedundancies
-import Happy.Middleend.Info
+import Happy.Tabular.First
+import qualified Happy.Tabular.LALR as LALR
+import Happy.Tabular.LALR (Lr0Item, Lr1Item, precalcClosure0, propLookaheads, calcLookaheads, mergeLookaheadInfo)
+import Happy.Tabular.FindRedundancies
+import Happy.Tabular.Info
 import Data.Set (Set)
 import Data.Array (Array)
 import System.IO
 import Control.Monad
 
--------- Pure middleend functions, may be called without creating MiddleendArgs --------
+-------- Pure tabular functions, may be called without creating TabularArgs --------
 
 type Lr0State = (Set Lr0Item, [(Name, Int)])
 type Lr1State = ([Lr1Item], [(Name, Int)])
@@ -44,9 +44,9 @@ genGotoTable = LALR.genGotoTable
 countConflicts :: ActionTable -> (Array Int (Int, Int), (Int, Int))
 countConflicts = LALR.countConflicts
 
--------- Main entry point (runMiddleend) --------
+-------- Main entry point (runTabular) --------
 
-data MiddleendArgs = MiddleendArgs {
+data TabularArgs = TabularArgs {
   inFile :: String, -- printed to the info file, not used otherwise
   infoFile :: Maybe String,
 
@@ -56,10 +56,10 @@ data MiddleendArgs = MiddleendArgs {
   dumpGoto :: Bool
 }
 
-type MiddleendResult = (ActionTable, GotoTable, [Lr1State], [Int])
+type TabularResult = (ActionTable, GotoTable, [Lr1State], [Int])
 
-runMiddleend :: MiddleendArgs -> Grammar -> IO MiddleendResult
-runMiddleend args g = 
+runTabular :: TabularArgs -> Grammar -> IO TabularResult
+runTabular args g = 
    let first       = mkFirst g
        sets        = genLR0Items g
        la          = genLookaheads g sets first

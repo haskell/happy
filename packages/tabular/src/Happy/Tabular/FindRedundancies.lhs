@@ -1,4 +1,4 @@
-> module Happy.Middleend.FindRedundancies where
+> module Happy.Tabular.FindRedundancies where
 
 > import Happy.Core.Grammar
 > import Happy.Core.Tables

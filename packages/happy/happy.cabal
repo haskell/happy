@@ -121,7 +121,7 @@ executable happy
                  transformers >= 0.5,
                  happy-core == 1.21.0,
                  happy-frontend == 1.21.0,
-                 happy-middleend == 1.21.0,
+                 happy-tabular == 1.21.0,
                  happy-backend == 1.21.0,
                  happy-backend-glr == 1.21.0
 

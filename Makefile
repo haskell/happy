@@ -1,7 +1,7 @@
 ENV = .local.env
 
 EXECUTABLE = "happy"
-PACKAGES = ["happy", "happy-core", "happy-frontend", "happy-middleend", "happy-backend", "happy-test"]
+PACKAGES = ["happy", "happy-core", "happy-frontend", "happy-tabular", "happy-backend", "happy-test"]
 BOOTSTRAPPING = True
 
 sdist-test ::

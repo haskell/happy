@@ -1,7 +1,7 @@
 module Main where
 
 import qualified Happy.Frontend.CLI as FrontendCLI
-import qualified Happy.Middleend.CLI as MiddleendCLI
+import qualified Happy.Tabular.CLI as TabularCLI
 import qualified Happy.Backend.CLI as BackendCLI
 import qualified Happy.Backend.GLR.CLI as GLRBackendCLI
 import qualified Happy.Backend as Backend
@@ -19,19 +19,19 @@ useGLROption = Option "l" ["glr"] (NoArg OptGLR) "Generate a GLR parser for ambi
 data TopLevelFlag = OptGLR deriving Eq
 
 -- Combine the flags from all the packages
-data HappyFlag = TopLevel TopLevelFlag | Frontend FrontendCLI.Flag | Middleend MiddleendCLI.Flag | Backend BackendCLI.Flag | GLRBackend GLRBackendCLI.Flag deriving Eq
+data HappyFlag = TopLevel TopLevelFlag | Frontend FrontendCLI.Flag | Tabular TabularCLI.Flag | Backend BackendCLI.Flag | GLRBackend GLRBackendCLI.Flag deriving Eq
 
 as :: Functor f => [f a] -> (a -> b) -> [f b]
 a `as` b = map (fmap b) a
 
 getTopLevel :: [HappyFlag] -> [TopLevelFlag]
 getFrontend :: [HappyFlag] -> [FrontendCLI.Flag]
-getMiddleend :: [HappyFlag] -> [MiddleendCLI.Flag]
+getTabular :: [HappyFlag] -> [TabularCLI.Flag]
 getBackend :: [HappyFlag] -> [BackendCLI.Flag]
 getGLRBackend :: [HappyFlag] -> [GLRBackendCLI.Flag]
 getTopLevel flags = [a | TopLevel a <- flags]
 getFrontend flags = [a | Frontend a <- flags]
-getMiddleend flags = [a | Middleend a <- flags]
+getTabular flags = [a | Tabular a <- flags]
 getBackend flags = [a | Backend a <- flags]
 getGLRBackend flags = [a | GLRBackend a <- flags]
 
@@ -39,7 +39,7 @@ getGLRBackend flags = [a | GLRBackend a <- flags]
 allOptions :: [OptDescr HappyFlag]
 allOptions =
   FrontendCLI.options `as` Frontend ++
-  MiddleendCLI.options `as` Middleend ++
+  TabularCLI.options `as` Tabular ++
   BackendCLI.options `as` Backend ++
   -- Add the "--glr" option. Remove options that are already declared in happy-backend like outfile, template, ghc, debug.
   [useGLROption] `as` TopLevel ++
@@ -54,7 +54,7 @@ main = do
   basename <- FrontendCLI.getBaseName filename
 
   grammar <- try $ FrontendCLI.parseAndRun (getFrontend flags) filename basename
-  (action, goto, _, _) <- MiddleendCLI.parseAndRun (getMiddleend flags) filename basename grammar
+  (action, goto, _, _) <- TabularCLI.parseAndRun (getTabular flags) filename basename grammar
 
   -- Backend / GLRBackend switching
   let useGLR = OptGLR `elem` getTopLevel flags

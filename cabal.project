@@ -1,6 +1,6 @@
 packages:
  packages/frontend,
- packages/middleend,
+ packages/tabular,
  packages/backend,
  packages/backend-glr,
  packages/core,

@@ -5,7 +5,7 @@ Generation of LALR parsing tables.
 (c) 1997-2001 Simon Marlow
 -----------------------------------------------------------------------------
 
-> module Happy.Middleend.LALR
+> module Happy.Tabular.LALR
 >       (genActionTable, genGotoTable, genLR0items, precalcClosure0,
 >        propLookaheads, calcLookaheads, mergeLookaheadInfo, countConflicts,
 >        Lr0Item(..), Lr1Item(..))

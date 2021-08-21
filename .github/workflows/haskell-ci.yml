@@ -171,7 +171,7 @@ jobs:
         run: |
           touch cabal.project
           echo "packages: $GITHUB_WORKSPACE/source/packages/frontend" >> cabal.project
-          echo "packages: $GITHUB_WORKSPACE/source/packages/middleend" >> cabal.project
+          echo "packages: $GITHUB_WORKSPACE/source/packages/tabular" >> cabal.project
           echo "packages: $GITHUB_WORKSPACE/source/packages/backend" >> cabal.project
           echo "packages: $GITHUB_WORKSPACE/source/packages/backend-glr" >> cabal.project
           echo "packages: $GITHUB_WORKSPACE/source/packages/core" >> cabal.project
@@ -190,8 +190,8 @@ jobs:
         run: |
           PKGDIR_happy_frontend="$(find "$GITHUB_WORKSPACE/unpacked" -maxdepth 1 -type d -regex '.*/happy-frontend-[0-9.]*')"
           echo "PKGDIR_happy_frontend=${PKGDIR_happy_frontend}" >> "$GITHUB_ENV"
-          PKGDIR_happy_middleend="$(find "$GITHUB_WORKSPACE/unpacked" -maxdepth 1 -type d -regex '.*/happy-middleend-[0-9.]*')"
-          echo "PKGDIR_happy_middleend=${PKGDIR_happy_middleend}" >> "$GITHUB_ENV"
+          PKGDIR_happy_tabular="$(find "$GITHUB_WORKSPACE/unpacked" -maxdepth 1 -type d -regex '.*/happy-tabular-[0-9.]*')"
+          echo "PKGDIR_happy_tabular=${PKGDIR_happy_tabular}" >> "$GITHUB_ENV"
           PKGDIR_happy_backend="$(find "$GITHUB_WORKSPACE/unpacked" -maxdepth 1 -type d -regex '.*/happy-backend-[0-9.]*')"
           echo "PKGDIR_happy_backend=${PKGDIR_happy_backend}" >> "$GITHUB_ENV"
           PKGDIR_happy_backend_glr="$(find "$GITHUB_WORKSPACE/unpacked" -maxdepth 1 -type d -regex '.*/happy-backend-glr-[0-9.]*')"
@@ -206,7 +206,7 @@ jobs:
           touch cabal.project
           touch cabal.project.local
           echo "packages: ${PKGDIR_happy_frontend}" >> cabal.project
-          echo "packages: ${PKGDIR_happy_middleend}" >> cabal.project
+          echo "packages: ${PKGDIR_happy_tabular}" >> cabal.project
           echo "packages: ${PKGDIR_happy_backend}" >> cabal.project
           echo "packages: ${PKGDIR_happy_backend_glr}" >> cabal.project
           echo "packages: ${PKGDIR_happy_core}" >> cabal.project
@@ -214,7 +214,7 @@ jobs:
           echo "packages: ${PKGDIR_happy}" >> cabal.project
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package happy-frontend" >> cabal.project ; fi
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package happy-middleend" >> cabal.project ; fi
+          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package happy-tabular" >> cabal.project ; fi
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package happy-backend" >> cabal.project ; fi
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
@@ -228,7 +228,7 @@ jobs:
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
           cat >> cabal.project <<EOF
           EOF
-          $HCPKG list --simple-output --names-only | perl -ne 'for (split /\s+/) { print "constraints: $_ installed\n" unless /^(containers|happy|happy-backend|happy-backend-glr|happy-core|happy-frontend|happy-middleend|happy-test|mtl|transformers)$/; }' >> cabal.project.local
+          $HCPKG list --simple-output --names-only | perl -ne 'for (split /\s+/) { print "constraints: $_ installed\n" unless /^(containers|happy|happy-backend|happy-backend-glr|happy-core|happy-frontend|happy-tabular|happy-test|mtl|transformers)$/; }' >> cabal.project.local
           cat cabal.project
           cat cabal.project.local
       - name: dump install plan
@@ -266,7 +266,7 @@ jobs:
         run: |
           cd ${PKGDIR_happy_frontend} || false
           ${CABAL} -vnormal check
-          cd ${PKGDIR_happy_middleend} || false
+          cd ${PKGDIR_happy_tabular} || false
           ${CABAL} -vnormal check
           cd ${PKGDIR_happy_backend} || false
           ${CABAL} -vnormal check

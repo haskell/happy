@@ -4,7 +4,7 @@ The Grammar data type.
 (c) 1993-2001 Andy Gill, Simon Marlow
 -----------------------------------------------------------------------------
 
-Grammar defines the datatype which is produced by happy-frontend and which is consumed by subsequent steps (middleend & backend).
+Grammar defines the datatype which is produced by happy-frontend and which is consumed by subsequent steps (tabular & backend).
 
 > module Happy.Core.Grammar (
 >       Name,

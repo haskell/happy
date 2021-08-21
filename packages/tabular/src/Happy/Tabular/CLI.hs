@@ -1,6 +1,6 @@
-module Happy.Middleend.CLI(Flag(..), options, parseFlags, parseAndRun) where
+module Happy.Tabular.CLI(Flag(..), options, parseFlags, parseAndRun) where
 
-import Happy.Middleend
+import Happy.Tabular
 import Happy.Core.Grammar
 import Happy.Core.GenUtils
 import System.Console.GetOpt
@@ -28,15 +28,15 @@ options = [
 
   ]
 
--------- [Flag] to MiddleendArgs conversion --------
+-------- [Flag] to TabularArgs conversion --------
 
-parseAndRun :: [Flag] -> String -> String -> Grammar -> IO MiddleendResult
-parseAndRun flags filename basename grammar = (parseFlags flags filename basename) >>= flip runMiddleend grammar
+parseAndRun :: [Flag] -> String -> String -> Grammar -> IO TabularResult
+parseAndRun flags filename basename grammar = (parseFlags flags filename basename) >>= flip runTabular grammar
 
-parseFlags :: [Flag] -> String -> String -> IO MiddleendArgs
+parseFlags :: [Flag] -> String -> String -> IO TabularArgs
 parseFlags cli fileName baseName = do
   infoFile' <- getInfoFileName baseName cli
-  return MiddleendArgs {
+  return TabularArgs {
     inFile = fileName,
     infoFile = infoFile',
     dumpLR0 = DumpLR0 `elem` cli,

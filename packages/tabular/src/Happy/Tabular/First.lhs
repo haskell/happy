@@ -4,7 +4,7 @@ Implementation of FIRST
 (c) 1993-2001 Andy Gill, Simon Marlow
 -----------------------------------------------------------------------------
 
-> module Happy.Middleend.First ( mkFirst ) where
+> module Happy.Tabular.First ( mkFirst ) where
 
 > import Happy.Core.GenUtils
 > import Happy.Core.NameSet ( NameSet )
