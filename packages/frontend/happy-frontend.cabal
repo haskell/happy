@@ -20,6 +20,20 @@ Description:
   These .y- and .ly-files work similar to yacc's .y-files, but
   have some Haskell-specific features.
 
+tested-with:
+        GHC == 7.0.4
+        GHC == 7.4.2
+        GHC == 7.6.3
+        GHC == 7.8.4
+        GHC == 7.10.3
+        GHC == 8.0.2
+        GHC == 8.2.2
+        GHC == 8.4.4
+        GHC == 8.6.5
+        GHC == 8.8.4
+        GHC == 8.10.4
+        GHC == 9.0.1
+
 flag bootstrap
   description: Optimize the implementation of happy using a pre-built happy
   manual: True

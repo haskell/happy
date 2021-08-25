@@ -1,4 +1,6 @@
 ENV = .local.env
+HC ?= ghc
+CABAL ?= cabal
 
 EXECUTABLE = "happy"
 PACKAGES = ["happy", "happy-cli", "happy-grammar", "happy-frontend", "happy-tabular", "happy-backend", "happy-test"]
@@ -6,6 +8,6 @@ BOOTSTRAPPING = True
 
 sdist-test ::
 	rm -f ${ENV}
-	cabal v2-install --lib happy-test --package-env ${ENV}
-	ghc -package-env ${ENV} -e 'Happy.Test.SDist.sdist_test "$(shell pwd)" ${EXECUTABLE} ${PACKAGES} ${BOOTSTRAPPING}'
+	$(CABAL) v2-install --lib happy-test --package-env ${ENV}
+	$(HC) -package-env ${ENV} -e 'Happy.Test.SDist.sdist_test "${CABAL}" "$(shell pwd)" ${EXECUTABLE} ${PACKAGES} ${BOOTSTRAPPING}'
 	rm -f ${ENV}

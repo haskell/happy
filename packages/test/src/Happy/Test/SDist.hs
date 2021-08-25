@@ -1,3 +1,4 @@
+{-# LANGUAGE NamedFieldPuns #-}
 module Happy.Test.SDist(sdist_test) where
 
 import Happy.Test.Shell
@@ -18,19 +19,19 @@ import Control.Monad.IO.Class
 --  * name of the main executable (which also provides a test suite)
 --  * names of all required local packages (including the main executable)
 --  * perform bootstrapping-testing? if true, first build without bootstrap, and then use the generated binary for bootstrapping.
-sdist_test :: String -> String -> [String] -> Bool -> IO ()
-sdist_test a b c d = do
-  success <- runShell $ sdist_test' a b c d
+sdist_test :: String -> String -> String -> [String] -> Bool -> IO ()
+sdist_test cabal projectDir executable localPackages bootstrapping = do
+  success <- runShell $ sdist_test' cabal projectDir executable localPackages bootstrapping
   if success
     then putStrLn "Success! The tarballs inside dist-newstyle/sdist are now ready for distribution." >> exitSuccess
     else putStrLn "Failure." >> exitFailure
 
-sdist_test' :: String -> String -> [String] -> Bool -> Shell
-sdist_test' projectDir executable localPackages bootstrapping = do
+sdist_test' :: String -> String -> String -> [String] -> Bool -> Shell
+sdist_test' cabal projectDir executable localPackages bootstrapping = do
   let sdistDir = joinPath [projectDir, "dist-newstyle", "sdist"]
 
   -- `cabal sdist all` -> returns `package-name-VERSION` for each package-name
-  fullNames <- cabalSdistAll localPackages sdistDir
+  fullNames <- cabalSdistAll cabal localPackages sdistDir
 
   liftIO . putStrLn $ "packages: " ++ show (zip localPackages fullNames)
 
@@ -60,35 +61,35 @@ sdist_test' projectDir executable localPackages bootstrapping = do
   liftIO . putStrLn $ "Umbrella dir (" ++ umbrellaDir ++ ") generated successfully."
 
   if bootstrapping
-    then testWithBootstrapping umbrellaDir executable
-    else testWithoutBootstrapping umbrellaDir executable
+    then testWithBootstrapping cabal umbrellaDir executable
+    else testWithoutBootstrapping cabal umbrellaDir executable
 
   return ()
 
-testWithoutBootstrapping :: FilePath -> String -> Shell
-testWithoutBootstrapping dir executable = do
-  runCmdIn dir ["cabal", "build", executable] False
-  runCmdIn dir ["cabal", "test", executable] False
+testWithoutBootstrapping :: String -> FilePath -> String -> Shell
+testWithoutBootstrapping cabal dir executable = do
+  runCmdIn dir [cabal, "build", executable] False
+  runCmdIn dir [cabal, "test", executable] False
 
-testWithBootstrapping :: FilePath -> String -> Shell
-testWithBootstrapping dir executable = do
-  runCmdIn dir ["cabal", "build", executable, "-f", "-bootstrap"] False
-  runCmdIn dir ["cabal", "install", executable, "-f", "-bootstrap", "--installdir=./bootstrap-root"] False
-  runCmdIn dir ["cabal", "test", executable, "-f", "-bootstrap"] False
+testWithBootstrapping :: String -> FilePath -> String -> Shell
+testWithBootstrapping cabal dir executable = do
+  runCmdIn dir [cabal, "build", executable, "-f", "-bootstrap"] False
+  runCmdIn dir [cabal, "install", executable, "-f", "-bootstrap", "--installdir=./bootstrap-root"] False
+  runCmdIn dir [cabal, "test", executable, "-f", "-bootstrap"] False
 
   -- We now want our just-built happy to be used for bootstrapping happy, i.e. building happy's .ly files.
   -- Using `cabal build --with-happy=` (instead of exporting ./bootstrap-root to PATH) also allows using happy's with a different name like `happy-rad`.
   let bootstrapHappy = joinPath [dir, "bootstrap-root", executable]
-  runCmdIn dir ["cabal", "build", executable, "-f", "+bootstrap", "--with-happy=" ++ bootstrapHappy] False
-  runCmdIn dir ["cabal", "test", executable, "-f", "+bootstrap"] False
+  runCmdIn dir [cabal, "build", executable, "-f", "+bootstrap", "--with-happy=" ++ bootstrapHappy] False
+  runCmdIn dir [cabal, "test", executable, "-f", "+bootstrap"] False
 
 -- Perform `cabal sdist all` and match the output lines to the given package names.
 -- This is required to extract the full package name (i.e. package-name-VERSION) for each package.
 -- This is less elegant than performing `cabal sdist package` for each package on its own, but is required because `cabal sdist happy` doesn't work on its own - `cabal sdist all` does.
-cabalSdistAll :: [String] -> String -> TypedShell [String]
-cabalSdistAll packageNames baseDir = do
+cabalSdistAll :: String -> [String] -> String -> TypedShell [String]
+cabalSdistAll cabal packageNames baseDir = do
   liftIO $ setCurrentDirectory baseDir
-  output <- liftIO $ readProcess "cabal" ["sdist", "all"] "" `catchIO` const (return "")
+  output <- liftIO $ readProcess cabal ["sdist", "all"] "" `catchIO` const (return "")
   let fullNames = catMaybes . catMaybes $ map extractFullName $ lines output
   let matched = catMaybes $ map (bestMatch fullNames) packageNames
   if length packageNames == length matched then return matched else empty
