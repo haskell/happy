@@ -27,12 +27,11 @@ install:
  - "cabal --version"
  - "ghc --version"
  - "cabal %CABOPTS% v2-update -vverbose+nowrap"
- - "cabal %CABOPTS% v2-install alex --bindir=/hsbin"
- - "alex --version"
 
 build: off
 
 test_script:
  - "cd %APPVEYOR_BUILD_FOLDER%"
- - "make sdist"
- - "make sdist-test-only"
+ - "cabal install happy -f -bootstrap --installdir=./bootstrap-root"
+ - "cabal build happy -f +bootstrap --with-happy=%APPVEYOR_BUILD_FOLDER%/bootstrap-root/happy"
+ - "cabal test -f +bootstrap"
