@@ -55,7 +55,10 @@ writePrettyFile location abssyn = do
 possDelitify :: String -> String -> IO (String, String)
 possDelitify ('y':'l':'.':nm) fl = return (deLitify fl, reverse nm)
 possDelitify ('y':'.':nm) fl     = return (fl, reverse nm)
-possDelitify f            _      = die ("`" ++ reverse f ++ "' does not end in `.y' or `.ly'\n") where
+possDelitify f            _      = die ("`" ++ reverse f ++ "' does not end in `.y' or `.ly'\n")
+#if !MIN_VERSION_base(4,8,0)
+  where die s = hPutStr stderr s >> exitWith (ExitFailure 1) 
+#endif
 
 deLitify :: String -> String
 deLitify = deLit where

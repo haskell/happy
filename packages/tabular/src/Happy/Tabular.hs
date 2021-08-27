@@ -106,6 +106,9 @@ reportConflicts g sr rr = case expect g of
         if rr /= 0
           then hPutStrLn stderr ("reduce/reduce conflicts: " ++ show rr)
           else return ()
+#if !MIN_VERSION_base(4,8,0)
+    where die s = hPutStr stderr s >> exitWith (ExitFailure 1) 
+#endif
 
 type ItemSetWithGotos = (Set Lr0Item, [(Name,Int)])
 writeInfoFile :: [ItemSetWithGotos] -> Grammar -> ActionTable -> GotoTable -> Array Int (Int,Int) -> String -> Maybe String -> [Int] -> [String] -> IO ()

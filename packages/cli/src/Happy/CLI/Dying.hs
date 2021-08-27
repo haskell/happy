@@ -2,9 +2,17 @@ module Happy.CLI.Dying (die, dieUsage, dieHappy, bye, byeUsage, getProgramName, 
 
 import System.Console.GetOpt
 import System.Environment
-import System.Exit (die, exitWith, ExitCode(..))
+import System.Exit (exitWith, ExitCode(..))
 import Control.Monad (liftM)
 import Data.List (isSuffixOf)
+
+#if MIN_VERSION_base(4,8,0)
+import System.Exit (die)
+#else
+import System.IO
+die :: String -> IO a
+die s = hPutStr stderr s >> exitWith (ExitFailure 1) 
+#endif
 
 dieHappy :: String -> IO a
 dieHappy s = getProgramName >>= \prog -> die (prog ++ ": " ++ s)
