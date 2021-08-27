@@ -1,9 +1,11 @@
 module Happy.Frontend.CLI(Flag(..), options, parseFlags, parseAndRun, getBaseName) where
 
+import Happy.CLI.Dying
 import Happy.Frontend
 import Happy.Grammar.Grammar
-import Happy.Grammar.GenUtils
 import System.Console.GetOpt
+import Control.Monad
+import Data.List
 
 -------- CLI flags and options --------
 
@@ -29,12 +31,16 @@ parseAndRun flags filename basename = (parseFlags flags filename basename) >>= r
 
 parseFlags :: [Flag] -> String -> String -> IO FrontendArgs
 parseFlags flags filename baseName = do
+  unless (filenameIsValid filename) $ dieHappy ("`" ++ filename ++ "' does not end in `.y' or `.ly'\n")
   prettyName <- getPrettyFileName baseName flags
   return FrontendArgs {
     file = filename,
     prettyFile = prettyName,
     dumpMangle = DumpMangle `elem` flags
   }
+
+filenameIsValid :: String -> Bool
+filenameIsValid filename = isSuffixOf ".y" filename || isSuffixOf ".ly" filename
 
 getPrettyFileName :: String -> [Flag] -> IO (Maybe String)
 getPrettyFileName baseName cli = case [ s | (OptPrettyFile s) <- cli ] of

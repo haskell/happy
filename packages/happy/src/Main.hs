@@ -6,8 +6,8 @@ import qualified Happy.Backend.CLI as BackendCLI
 import qualified Happy.Backend.GLR.CLI as GLRBackendCLI
 import qualified Happy.Backend as Backend
 import qualified Happy.Backend.GLR as GLRBackend
+import Happy.CLI.Dying
 import Happy.CLI.OptionParsing
-import Happy.Grammar.GenUtils
 import Control.Monad.Except
 import System.Console.GetOpt
 import System.Environment

@@ -2,18 +2,15 @@
 
 module Happy.CLI.OptionParsing(
   parseOptions, beginOptionsWith, requireUnnamedArgument, OnNone(..), OnMultiple(..),
-  removeAllOverlaps, removeLongOption, removeLongOverlaps, cleanShortOption, cleanShortOverlaps
+  removeAllOverlaps, removeLongOption, removeLongOverlaps, cleanShortOption, cleanShortOverlaps,
 ) where
 
 import System.Console.GetOpt
-import System.Environment
-import System.Exit (exitWith, ExitCode(..))
-import System.IO
-import Control.Monad (liftM)
-import Data.List (isSuffixOf, sort, sortBy, group, intersect, elemIndex, intersect, delete)
+import Data.List (sort, sortBy, group, intersect, elemIndex, intersect, delete)
 import Data.Ord
 import Data.Maybe
 import Data.Version (showVersion, Version)
+import Happy.CLI.Dying
 
 -------- Flag definitions and standard options --------
 
@@ -127,24 +124,6 @@ checkDuplicateOptions opts = case (multiples (concatMap shorts opts), multiples 
       multiples :: Ord a => [a] -> [a]
       multiples = map head . filter ((> 1) . length) . group . sort
 
-getProgramName :: IO String
-getProgramName = liftM (`withoutSuffix` ".bin") getProgName
-   where str' `withoutSuffix` suff
-            | suff `isSuffixOf` str' = take (length str' - length suff) str'
-            | otherwise              = str'
-
-bye :: String -> IO a
-bye s = putStr s >> exitWith ExitSuccess
-
-die :: String -> IO a
-die s = hPutStr stderr s >> exitWith (ExitFailure 1)
-
-dieUsage :: [OptDescr a] -> String -> IO b
-dieUsage opts s = getProgramName >>= die . (s ++) . usageHeader opts
-
-byeUsage :: [OptDescr a] -> String -> IO b
-byeUsage opts s = getProgramName >>= bye . (s ++) . usageHeader opts
-
 copyright :: Version -> String
 copyright version = unlines [
  "Happy Version " ++ showVersion version ++ " Copyright (c) 1993-1996 Andy Gill, Simon Marlow (c) 1997-2005 Simon Marlow","",
@@ -152,10 +131,6 @@ copyright version = unlines [
  "This program is free software; you can redistribute it and/or modify",
  "it under the terms given in the file 'LICENSE' distributed with",
  "the Happy sources."]
-
-usageHeader :: [OptDescr a] -> String -> String
-usageHeader opts prog = usageInfo header opts where
-  header = "Usage: " ++ prog ++ " [OPTION...] file\n"
 
 -- (Functor OptDescr) only exists since base-4.7.0.0, i.e. GHC 7.8.1
 -- In the doc, it says (Functor OptDescr) exists since base-4.6.0.0, but that seems to be wrong

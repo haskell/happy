@@ -9,7 +9,6 @@ Mangler converts AbsSyn to Grammar
 > module Happy.Frontend.Mangler (mangler) where
 
 > import Happy.Grammar.Grammar
-> import Happy.Grammar.GenUtils
 > import Happy.Frontend.AbsSyn
 #ifdef HAPPY_BOOTSTRAP
 > import Happy.Frontend.ParseMonad.Class
@@ -19,7 +18,7 @@ Mangler converts AbsSyn to Grammar
 This is only supported in the bootstrapped version
 #ifdef HAPPY_BOOTSTRAP
 > import Happy.Frontend.AttrGrammar.Parser
-> import Data.List     ( findIndices, groupBy, intersperse, nub, sortBy )
+> import Data.List     ( findIndices, groupBy, intersperse, nub )
 > import Control.Monad ( when )
 #endif
 
@@ -27,8 +26,9 @@ This is only supported in the bootstrapped version
 
 > import Data.Array ( Array, (!), accumArray, array, listArray )
 > import Data.Char  ( isAlphaNum, isDigit, isLower )
-> import Data.List  ( zip4 )
+> import Data.List  ( zip4, sortBy )
 > import Data.Maybe ( fromMaybe )
+> import Data.Ord   ( comparing )
 
 > import Control.Monad.Writer ( Writer, MonadWriter(..), mapWriter, runWriter )
 
@@ -262,6 +262,17 @@ Get the token specs in terms of Names.
 >               hd                = _hd,
 >               tl                = _tl
 >       })
+
+Gofer-like stuff.
+
+> combinePairs :: (Ord a) => [(a,b)] -> [(a,[b])]
+> combinePairs xs =
+>       combine [ (a,[b]) | (a,b) <- sortBy (comparing fst) xs]
+>  where
+>       combine [] = []
+>       combine ((a,b):(c,d):r) | a == c = combine ((a,b++d) : r)
+>       combine (a:r) = a : combine r
+>
 
 For combining actions with possible error messages.
 

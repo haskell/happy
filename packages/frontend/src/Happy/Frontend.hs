@@ -1,12 +1,12 @@
 module Happy.Frontend (parseYFileContents, mangleAbsSyn, runFrontend, ParseResult, FrontendArgs(..), supportsParsingAttributeGrammars) where
   
 import Happy.Grammar.Grammar
-import Happy.Grammar.GenUtils
 import Happy.Frontend.AbsSyn
 import Happy.Frontend.Mangler
 import Happy.Frontend.PrettyGrammar
 import Happy.Frontend.Parser
 import Happy.Frontend.ParseMonad.Class
+import System.Exit
 import System.IO
 import Control.Monad.Except
 import Control.Monad.Trans.Except
@@ -40,6 +40,7 @@ runFrontend args = runExceptT $ do
   return grammar
   where
       FrontendArgs { file = file', prettyFile = prettyFile', dumpMangle = dumpMangle' } = args
+      optPrint b io = when b (putStr "\n---------------------\n" >> io)
 
 -------- Helpers --------
 
@@ -54,7 +55,7 @@ writePrettyFile location abssyn = do
 possDelitify :: String -> String -> IO (String, String)
 possDelitify ('y':'l':'.':nm) fl = return (deLitify fl, reverse nm)
 possDelitify ('y':'.':nm) fl     = return (fl, reverse nm)
-possDelitify f            _      = dieHappy ("`" ++ reverse f ++ "' does not end in `.y' or `.ly'\n")
+possDelitify f            _      = die ("`" ++ reverse f ++ "' does not end in `.y' or `.ly'\n") where
 
 deLitify :: String -> String
 deLitify = deLit where

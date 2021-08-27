@@ -5,7 +5,6 @@ module Happy.Tabular(
   ) where
 
 import Happy.Grammar.Grammar
-import Happy.Grammar.GenUtils
 import Happy.Tabular.NameSet (NameSet)
 import Happy.Tabular.Tables
 import Happy.Tabular.First
@@ -16,6 +15,7 @@ import Happy.Tabular.Info
 import Data.Set (Set)
 import Data.Array (Array)
 import System.IO
+import System.Exit
 import Control.Monad
 
 -------- Pure tabular functions, may be called without creating TabularArgs --------
@@ -76,6 +76,9 @@ runTabular args g =
         writeInfoFile sets g action goto conflictArray (inFile args) (infoFile args) unused_rules unused_terminals
         reportConflicts g sr rr
         return (action, goto, items2, unused_rules)
+    where
+      optPrint b io = when b (putStr "\n---------------------\n" >> io)
+
 
 -------- Helpers --------
 

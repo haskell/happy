@@ -16,7 +16,6 @@ This module is designed as an extension to the Haskell parser generator Happy.
 >                       ) where
 
 > import Paths_happy_backend_glr ( version )
-> import Happy.Grammar.GenUtils ( mapDollarDollar, str, char, nl, brack, brack', interleave, maybestr )
 > import Happy.Grammar.Grammar
 > import Happy.Tabular.Tables
 > import Data.Array ( Array, (!), array, assocs )
@@ -740,3 +739,25 @@ remove Happy-generated start symbols.
 
 > mkHappyVar :: Int -> String -> String
 > mkHappyVar n = str "happy_var_" . shows n
+
+%------------------------------------------------------------------------------
+Fast string-building functions
+
+> str :: String -> String -> String
+> str = showString
+> char :: Char -> String -> String
+> char c = (c :)
+> interleave :: String -> [String -> String] -> String -> String
+> interleave s = foldr (\a b -> a . str s . b) id
+
+> nl :: String -> String
+> nl = char '\n'
+
+> maybestr :: Maybe String -> String -> String
+> maybestr (Just s)     = str s
+> maybestr _            = id
+
+> brack :: String -> String -> String
+> brack s = str ('(' : s) . char ')'
+> brack' :: (String -> String) -> String -> String
+> brack' s = char '(' . s . char ')'

@@ -35,8 +35,7 @@ tested-with:
 library
   hs-source-dirs:      src
 
-  exposed-modules:     Happy.Grammar.Grammar,
-                       Happy.Grammar.GenUtils
+  exposed-modules:     Happy.Grammar.Grammar
   build-depends:       base < 5,
                        array
 

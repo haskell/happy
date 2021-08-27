@@ -45,6 +45,7 @@ library
                        Happy.Backend.CLI
   build-depends:       base < 5,
                        array,
+                       happy-cli == 1.21.0,
                        happy-grammar == 1.21.0,
                        happy-tabular == 1.21.0
 

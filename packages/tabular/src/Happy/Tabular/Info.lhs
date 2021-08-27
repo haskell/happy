@@ -7,7 +7,6 @@ Generating info files.
 > module Happy.Tabular.Info (genInfoFile) where
 
 > import Happy.Grammar.Grammar
-> import Happy.Grammar.GenUtils    ( str, interleave, interleave' )
 > import Happy.Tabular.Tables
 > import Happy.Tabular.LALR   ( Lr0Item(..) )
 > import Paths_happy_tabular  ( version )
@@ -224,3 +223,10 @@ Produce a file of parser information, useful for debugging the parser.
 >       = str "-----------------------------------------------------------------------------\n"
 >       . str s
 >       . str "\n-----------------------------------------------------------------------------\n"
+
+> str :: String -> String -> String
+> str = showString
+> interleave :: String -> [String -> String] -> String -> String
+> interleave s = foldr (\a b -> a . str s . b) id
+> interleave' :: String -> [String -> String] -> String -> String
+> interleave' s = foldr1 (\a b -> a . str s . b)

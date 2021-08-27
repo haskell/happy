@@ -9,9 +9,6 @@ The code generator.
 > import Paths_happy_backend    ( version )
 > import Happy.Backend.Target   ( Target(..) )
 > import Happy.Grammar.Grammar
-> import Happy.Grammar.GenUtils    ( mapDollarDollar, str, char, nl, strspace,
->                                 interleave, interleave', maybestr,
->                                 brack, brack' )
 > import Happy.Tabular.Tables
 
 > import Data.Maybe             ( isJust, isNothing, fromMaybe )
@@ -1409,6 +1406,32 @@ slot is free or not.
 
 > specReduceFun :: Int -> Bool
 > specReduceFun = (<= 3)
+
+-------------------------------------------------------------------------------
+-- Fast string-building functions.
+
+> str :: String -> String -> String
+> str = showString
+> char :: Char -> String -> String
+> char c = (c :)
+> interleave :: String -> [String -> String] -> String -> String
+> interleave s = foldr (\a b -> a . str s . b) id
+> interleave' :: String -> [String -> String] -> String -> String
+> interleave' s = foldr1 (\a b -> a . str s . b)
+
+> strspace :: String -> String
+> strspace = char ' '
+> nl :: String -> String
+> nl = char '\n'
+
+> maybestr :: Maybe String -> String -> String
+> maybestr (Just s)     = str s
+> maybestr _            = id
+
+> brack :: String -> String -> String
+> brack s = str ('(' : s) . char ')'
+> brack' :: (String -> String) -> String -> String
+> brack' s = char '(' . s . char ')'
 
 -----------------------------------------------------------------------------
 -- Convert an integer to a 16-bit number encoded in \xNN\xNN format suitable

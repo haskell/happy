@@ -35,7 +35,8 @@ tested-with:
 library
   hs-source-dirs:      src
 
-  exposed-modules:     Happy.CLI.OptionParsing
+  exposed-modules:     Happy.CLI.OptionParsing,
+                       Happy.CLI.Dying
   build-depends:       base < 5
 
   default-language:    Haskell98

@@ -11,9 +11,9 @@ Generation of LALR parsing tables.
 >        Lr0Item(..), Lr1Item(..))
 >       where
 
+> import Happy.Tabular.First ( mkClosure )
 > import Happy.Tabular.NameSet ( NameSet )
 > import qualified Happy.Tabular.NameSet as NameSet
-> import Happy.Grammar.GenUtils
 > import Happy.Grammar.Grammar
 > import Happy.Tabular.Tables
 > import qualified Data.Set as Set hiding ( Set )
