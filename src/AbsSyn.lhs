@@ -45,13 +45,7 @@ Here is the abstract syntax of the language we parse.
 >     = PrecNone               -- no user-specified precedence
 >     | PrecShift              -- %shift
 >     | PrecId String          -- %prec ID
-
-
-#ifdef DEBUG
-
 >   deriving Show
-
-#endif
 
 %-----------------------------------------------------------------------------
 Parser Generator Directives.
@@ -78,13 +72,7 @@ generate some error messages.
 >       | TokenError    String                  -- %error
 >       | TokenAttributetype String             -- %attributetype
 >       | TokenAttribute String String          -- %attribute
-
-
-#ifdef DEBUG
-
 >   deriving Show
-
-#endif
 
 > getTokenType :: [Directive t] -> String
 > getTokenType ds

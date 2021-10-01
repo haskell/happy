@@ -44,12 +44,7 @@ This is only supported in the bootstrapped version
 
 > data Production
 >       = Production Name [Name] (String,[Int]) Priority
-
-#ifdef DEBUG
-
 >       deriving Show
-
-#endif
 
 > data Grammar
 >       = Grammar {
@@ -77,8 +72,6 @@ This is only supported in the bootstrapped version
 >               error_sig         :: ErrorHandlerType
 >       }
 
-#ifdef DEBUG
-
 > instance Show Grammar where
 >       showsPrec _ (Grammar
 >               { productions           = p
@@ -104,23 +97,11 @@ This is only supported in the bootstrapped version
 >        . showString "\neof = "           . shows eof
 >        . showString "\n"
 
-#endif
-
 > data Assoc = LeftAssoc | RightAssoc | None
-
-#ifdef DEBUG
-
 >       deriving Show
-
-#endif
 
 > data Priority = No | Prio Assoc Int | PrioLowest
-
-#ifdef DEBUG
-
 >       deriving Show
-
-#endif
 
 > instance Eq Priority where
 >   No == No = True
@@ -608,15 +589,7 @@ So is this.
 >               | LR'Fail               -- :-(
 >               | LR'MustFail           -- :-(
 >               | LR'Multiple [LRAction] LRAction       -- conflict
->       deriving(Eq
-
-#ifdef DEBUG
-
->       ,Show
-
-#endif
-
->       )
+>       deriving (Eq,Show)
 
 > type ActionTable = Array Int{-state-} (Array Int{-terminal#-} LRAction)
 
@@ -629,14 +602,6 @@ So is this.
  instance Eq LRAction where { (==) = primGenericEq }
 
 > data Goto = Goto Int | NoGoto
->       deriving(Eq
-
-#ifdef DEBUG
-
->       ,Show
-
-#endif
-
->       )
+>       deriving (Eq, Show)
 
 > type GotoTable = Array Int{-state-} (Array Int{-nonterminal #-} Goto)
