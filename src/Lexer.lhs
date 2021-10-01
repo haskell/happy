@@ -60,15 +60,7 @@ The lexer.
 >       | TokParenL             -- (
 >       | TokParenR             -- )
 >       | TokComma              -- ,
->       deriving (Eq,Ord
-
-#ifdef DEBUG
-
->               ,Show
-
-#endif
-
->               )
+>       deriving (Eq,Ord,Show)
 
 ToDo: proper text instance here, for use in parser error messages.
 

@@ -82,11 +82,7 @@ Mangle the syntax into something useful.
 >               Left  s -> die (unlines s ++ "\n");
 >               Right g -> return g
 
-#ifdef DEBUG
-
 >       optPrint cli DumpMangle $ putStr $ show g
-
-#endif
 
 >       let first       = {-# SCC "First" #-} (mkFirst g)
 >           closures    = {-# SCC "Closures" #-} (precalcClosure0 g)
@@ -98,15 +94,13 @@ Mangle the syntax into something useful.
 >           action      = {-# SCC "Action" #-} (genActionTable g first items2)
 >           (conflictArray,(sr,rr))   = {-# SCC "Conflict" #-} (countConflicts action)
 
-#ifdef DEBUG
+Debug output
 
 >       optPrint cli DumpLR0    $ putStr $ show sets
 >       optPrint cli DumpAction $ putStr $ show action
 >       optPrint cli DumpGoto   $ putStr $ show goto
 >       optPrint cli DumpLA     $ putStr $ show _lainfo
 >       optPrint cli DumpLA     $ putStr $ show la
-
-#endif
 
 Report any unused rules and terminals
 
@@ -297,11 +291,9 @@ Successfully Finished.
 > dieHappy :: String -> IO a
 > dieHappy s = getProgramName >>= \prog -> die (prog ++ ": " ++ s)
 
-#ifdef DEBUG
 > optPrint :: [CLIFlags] -> CLIFlags -> IO () -> IO ()
 > optPrint cli pass io =
 >       when (elem pass cli) (putStr "\n---------------------\n" >> io)
-#endif
 
 > constArgs :: [String]
 > constArgs = []
@@ -377,16 +369,12 @@ selects what counts as a reduction when calculating used/unused
 The command line arguments.
 
 > data CLIFlags =
-#ifdef DEBUG
 >                 DumpMangle
 >               | DumpLR0
 >               | DumpAction
 >               | DumpGoto
 >               | DumpLA
->
->               |
-#endif
->                 DumpVersion
+>               | DumpVersion
 >               | DumpHelp
 >               | OptInfoFile (Maybe String)
 >               | OptPrettyFile (Maybe String)
@@ -437,23 +425,19 @@ The command line arguments.
 >    Option ['V','v'] ["version"] (NoArg DumpVersion)   -- ToDo: -v is deprecated
 >       "output version information and exit"
 
-#ifdef DEBUG
-
 Various debugging/dumping options...
 
 >    ,
->    Option [] ["mangle"] (NoArg DumpMangle)
+>    Option [] ["ddump-mangle"] (NoArg DumpMangle)
 >       "Dump mangled input",
->    Option [] ["lr0"] (NoArg DumpLR0)
+>    Option [] ["ddump-lr0"] (NoArg DumpLR0)
 >       "Dump LR0 item sets",
->    Option [] ["action"] (NoArg DumpAction)
+>    Option [] ["ddump-action"] (NoArg DumpAction)
 >       "Dump action table",
->    Option [] ["goto"] (NoArg DumpGoto)
+>    Option [] ["ddump-goto"] (NoArg DumpGoto)
 >       "Dump goto table",
->    Option [] ["lookaheads"] (NoArg DumpLA)
+>    Option [] ["ddump-lookaheads"] (NoArg DumpLA)
 >       "Dump lookahead info"
-
-#endif
 
 >    ]
 
