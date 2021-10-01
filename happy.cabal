@@ -164,7 +164,7 @@ executable happy
                      -- mtl-2.2.1 added Control.Monad.Except
 
   default-language: Haskell98
-  default-extensions: CPP, MagicHash, FlexibleContexts
+  default-extensions: CPP, MagicHash, FlexibleContexts, NamedFieldPuns
   ghc-options: -Wall
   other-modules:
         Paths_happy
@@ -181,6 +181,7 @@ executable happy
         ProduceCode
         ProduceGLRCode
         NameSet
+        Tabular
         Target
         AttrGrammar
         ParamRules

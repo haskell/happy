@@ -8,7 +8,7 @@ Generation of LALR parsing tables.
 > module LALR
 >       (genActionTable, genGotoTable, genLR0items, precalcClosure0,
 >        propLookaheads, calcLookaheads, mergeLookaheadInfo, countConflicts,
->        Lr0Item(..), Lr1Item)
+>        Lr0Item(..), Lr1Item, ItemSetWithGotos)
 >       where
 
 > import GenUtils
