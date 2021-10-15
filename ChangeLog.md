@@ -1,3 +1,26 @@
+## 1.21.0
+
+The main focus of this release was revamping the build system and bootstrapping.
+
+* The release no longer contains generated source code. Instead of simply
+  requiring a pre-built bootstrap version of Happy in that event, we have a
+  parser-combination-based implementation of enough of Happy to bootstrap the
+  rest. (Currently, the bootstrap version is everything but attribute grammars,
+  and thus sufficient for e.g. GHC, but this is subject to change.) The
+  bootstrap version of Happy is then sufficient to build Happy once again with
+  all features enabled.
+
+  Note, this means users of attribute grammars will have to modify the way
+  they build happy if they were previously building from Hackage relying on the
+  pre-generated sources.
+
+* Rather than creating many "templates" at build time, there is a single
+  combined template. Different implementations are chosen using CPP, as was
+  already done  within the templates before.
+
+* Some imports were tightened down, which may help building with newer versions
+  of `base`.
+
 ## 1.20.0
 
 * Fix #121: the -i flag produces an .info file even if the `%expect`
