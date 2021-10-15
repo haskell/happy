@@ -1,6 +1,6 @@
 # Happy
 
-[![Build Status](https://secure.travis-ci.org/simonmar/happy.svg?branch=master)](http://travis-ci.org/simonmar/happy)
+[![Build Status](https://github.com/simonmar/happy/actions/workflows/haskell-ci.yml/badge.svg)](https://github.com/simonmar/happy/actions)
 
 Happy is a parser generator for Haskell 98 (and later).
 
