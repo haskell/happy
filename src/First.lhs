@@ -9,7 +9,7 @@ Implementation of FIRST
 > import GenUtils
 > import NameSet ( NameSet )
 > import qualified NameSet as Set
-> import Grammar
+> import Happy.Grammar
 > import Data.IntSet (IntSet)
 
 \subsection{Utilities}

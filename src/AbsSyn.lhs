@@ -7,13 +7,15 @@ Abstract syntax for grammar files.
 Here is the abstract syntax of the language we parse.
 
 > module AbsSyn (
->       AbsSyn(..), Directive(..), ErrorHandlerType(..),
+>       AbsSyn(..), Directive(..),
 >       getTokenType, getTokenSpec, getParserNames, getLexer,
 >       getImportedIdentity, getMonad, getError,
 >       getPrios, getPrioNames, getExpect, getErrorHandlerType,
 >       getAttributes, getAttributetype,
 >       Rule(..), Prod(..), Term(..), Prec(..)
 >  ) where
+
+> import Happy.Grammar (ErrorHandlerType(..))
 
 > data AbsSyn
 >     = AbsSyn
@@ -53,9 +55,6 @@ Parser Generator Directives.
 ToDo: find a consistent way to analyse all the directives together and
 generate some error messages.
 
-> data ErrorHandlerType
->   = ErrorHandlerTypeDefault
->   | ErrorHandlerTypeExpList
 >
 > data Directive a
 >       = TokenType     String                  -- %tokentype

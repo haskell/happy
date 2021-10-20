@@ -8,7 +8,7 @@
 
 > import NameSet (NameSet)
 > import First
-> import Grammar
+> import Happy.Grammar
 > import LALR
 
 > import Data.Array( Array, assocs, elems, (!) )

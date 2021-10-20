@@ -4,20 +4,11 @@ The Grammar data type.
 (c) 1993-2001 Andy Gill, Simon Marlow
 -----------------------------------------------------------------------------
 
-Here is our mid-section datatype
+Mangler converts AbsSyn to Grammar
 
-> module Grammar (
->       Name,
->
->       Production(..), Grammar(..), mangler, ErrorHandlerType(..),
->
->       LRAction(..), ActionTable, Goto(..), GotoTable, Priority(..),
->       Assoc(..),
->
->       errorName, errorTok, startName, firstStartTok, dummyTok,
->       eofName, epsilonTok
->       ) where
+> module Mangler (mangler) where
 
+> import Happy.Grammar
 > import GenUtils
 > import AbsSyn
 #ifdef HAPPY_BOOTSTRAP
@@ -28,127 +19,18 @@ Here is our mid-section datatype
 This is only supported in the bootstrapped version
 #ifdef HAPPY_BOOTSTRAP
 > import AttrGrammarParser
+> import Data.List     ( findIndices, groupBy, intersperse, nub, sortBy )
+> import Control.Monad ( when )
 #endif
 
 > import ParamRules
 
-> import Control.Monad ( when )
 > import Data.Array ( Array, (!), accumArray, array, listArray )
 > import Data.Char  ( isAlphaNum, isDigit, isLower )
-> import Data.List  ( findIndices, groupBy, intersperse, nub, sortBy, zip4 )
+> import Data.List  ( zip4 )
 > import Data.Maybe ( fromMaybe )
 
 > import Control.Monad.Writer ( Writer, MonadWriter(..), mapWriter, runWriter )
-
-> type Name = Int
-
-> data Production
->       = Production Name [Name] (String,[Int]) Priority
->       deriving Show
-
-> data Grammar
->       = Grammar {
->               productions       :: [Production],
->               lookupProdNo      :: Int -> Production,
->               lookupProdsOfName :: Name -> [Int],
->               token_specs       :: [(Name,String)],
->               terminals         :: [Name],
->               non_terminals     :: [Name],
->               starts            :: [(String,Name,Name,Bool)],
->               types             :: Array Int (Maybe String),
->               token_names       :: Array Int String,
->               first_nonterm     :: Name,
->               first_term        :: Name,
->               eof_term          :: Name,
->               priorities        :: [(Name,Priority)],
->               token_type        :: String,
->               imported_identity :: Bool,
->               monad             :: (Bool,String,String,String,String),
->               expect            :: Maybe Int,
->               attributes        :: [(String,String)],
->               attributetype     :: String,
->               lexer             :: Maybe (String,String),
->               error_handler     :: Maybe String,
->               error_sig         :: ErrorHandlerType
->       }
-
-> instance Show Grammar where
->       showsPrec _ (Grammar
->               { productions           = p
->               , token_specs           = t
->               , terminals             = ts
->               , non_terminals         = nts
->               , starts                = sts
->               , types                 = tys
->               , token_names           = e
->               , first_nonterm         = fnt
->               , first_term            = ft
->               , eof_term              = eof
->               })
->        = showString "productions = "     . shows p
->        . showString "\ntoken_specs = "   . shows t
->        . showString "\nterminals = "     . shows ts
->        . showString "\nnonterminals = "  . shows nts
->        . showString "\nstarts = "        . shows sts
->        . showString "\ntypes = "         . shows tys
->        . showString "\ntoken_names = "   . shows e
->        . showString "\nfirst_nonterm = " . shows fnt
->        . showString "\nfirst_term = "    . shows ft
->        . showString "\neof = "           . shows eof
->        . showString "\n"
-
-> data Assoc = LeftAssoc | RightAssoc | None
->       deriving Show
-
-> data Priority = No | Prio Assoc Int | PrioLowest
->       deriving Show
-
-> instance Eq Priority where
->   No == No = True
->   Prio _ i == Prio _ j = i == j
->   _ == _ = False
-
-> mkPrio :: Int -> Directive a -> Priority
-> mkPrio i (TokenNonassoc _) = Prio None i
-> mkPrio i (TokenRight _) = Prio RightAssoc i
-> mkPrio i (TokenLeft _) = Prio LeftAssoc i
-> mkPrio _ _ = error "Panic: impossible case in mkPrio"
-
------------------------------------------------------------------------------
--- Magic name values
-
-All the tokens in the grammar are mapped onto integers, for speed.
-The namespace is broken up as follows:
-
-epsilon         = 0
-error           = 1
-dummy           = 2
-%start          = 3..s
-non-terminals   = s..n
-terminals       = n..m
-%eof            = m
-
-These numbers are deeply magical, change at your own risk.  Several
-other places rely on these being arranged as they are, including
-ProduceCode.lhs and the various HappyTemplates.
-
-Unfortunately this means you can't tell whether a given token is a
-terminal or non-terminal without knowing the boundaries of the
-namespace, which are kept in the Grammar structure.
-
-In hindsight, this was probably a bad idea.
-
-> startName, eofName, errorName, dummyName :: String
-> startName = "%start" -- with a suffix, like %start_1, %start_2 etc.
-> eofName   = "%eof"
-> errorName = "error"
-> dummyName = "%dummy"  -- shouldn't occur in the grammar anywhere
-
-> firstStartTok, dummyTok, errorTok, epsilonTok :: Name
-> firstStartTok   = 3
-> dummyTok        = 2
-> errorTok        = 1
-> epsilonTok      = 0
 
 -----------------------------------------------------------------------------
 -- The Mangler
@@ -239,6 +121,12 @@ Deal with priorities...
 
 >       priodir = zip [1..] (getPrios dirs)
 >
+>       mkPrio :: Int -> Directive a -> Priority
+>       mkPrio i (TokenNonassoc _) = Prio None i
+>       mkPrio i (TokenRight _) = Prio RightAssoc i
+>       mkPrio i (TokenLeft _) = Prio LeftAssoc i
+>       mkPrio _ _ = error "Panic: impossible case in mkPrio"
+
 >       prios = [ (name,mkPrio i dir)
 >               | (i,dir) <- priodir
 >               , nm <- AbsSyn.getPrioNames dir
@@ -393,7 +281,6 @@ So is this.
 >       | otherwise = checkRules rest name (name : nonterms)
 
 > checkRules [] _ nonterms = return (reverse nonterms)
-
 
 -----------------------------------------------------------------------------
 -- If any attribute directives were used, we are in an attribute grammar, so
@@ -579,29 +466,3 @@ So is this.
 
 > mkHappyVar :: Int -> String
 > mkHappyVar n  = "happy_var_" ++ show n
-
------------------------------------------------------------------------------
--- Internal Reduction Datatypes
-
-> data LRAction = LR'Shift Int Priority -- state number and priority
->               | LR'Reduce Int Priority-- rule no and priority
->               | LR'Accept             -- :-)
->               | LR'Fail               -- :-(
->               | LR'MustFail           -- :-(
->               | LR'Multiple [LRAction] LRAction       -- conflict
->       deriving (Eq,Show)
-
-> type ActionTable = Array Int{-state-} (Array Int{-terminal#-} LRAction)
-
- instance Text LRAction where
-   showsPrec _ (LR'Shift i _)  = showString ("s" ++ show i)
-   showsPrec _ (LR'Reduce i _)
-       = showString ("r" ++ show i)
-   showsPrec _ (LR'Accept)     = showString ("acc")
-   showsPrec _ (LR'Fail)       = showString (" ")
- instance Eq LRAction where { (==) = primGenericEq }
-
-> data Goto = Goto Int | NoGoto
->       deriving (Eq, Show)
-
-> type GotoTable = Array Int{-state-} (Array Int{-nonterminal #-} Goto)

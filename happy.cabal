@@ -160,7 +160,8 @@ executable happy
   build-depends: base < 5,
                  array,
                  containers >= 0.4.2,
-                 mtl >= 2.2.1
+                 mtl >= 2.2.1,
+                 happy-grammar == 1.21.0
                      -- mtl-2.2.1 added Control.Monad.Except
 
   default-language: Haskell98
@@ -171,10 +172,10 @@ executable happy
         AbsSyn
         First
         GenUtils
-        Grammar
         Info
         LALR
         Lexer
+        Mangler
         ParseMonad
         ParseMonad.Class
         Parser
