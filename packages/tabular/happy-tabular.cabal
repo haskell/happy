@@ -41,6 +41,9 @@ library
                        Happy.Tabular.Info,
                        Happy.Tabular.LALR,
                        Happy.Tabular.NameSet
+                       Happy.Tabular.Main
+                       Happy.Tabular.FindRedundancies
+                       Happy.Tabular.Tables
   build-depends:       base < 5,
                        array,
                        containers >= 0.4.2,

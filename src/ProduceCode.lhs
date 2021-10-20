@@ -13,7 +13,7 @@ The code generator.
 > import GenUtils               ( str, char, nl, strspace,
 >                                 interleave, interleave', maybestr,
 >                                 brack, brack' )
-> import Happy.Tabular.LALR
+> import Happy.Tabular.Tables
 
 > import Data.Maybe             ( isJust, isNothing, fromMaybe )
 > import Data.Char              ( ord, chr )

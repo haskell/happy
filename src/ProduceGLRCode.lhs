@@ -21,7 +21,7 @@ This module is designed as an extension to the Haskell parser generator Happy.
 > import Data.Char ( isSpace, isAlphaNum )
 > import Data.List ( nub, (\\), sort, find, tails )
 > import Data.Version ( showVersion )
-> import Happy.Tabular.LALR
+> import Happy.Tabular.Tables
 
 %-----------------------------------------------------------------------------
 File and Function Names

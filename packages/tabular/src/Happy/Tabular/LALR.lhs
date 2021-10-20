@@ -8,14 +8,14 @@ Generation of LALR parsing tables.
 > module Happy.Tabular.LALR
 >       (genActionTable, genGotoTable, genLR0items, precalcClosure0,
 >        propLookaheads, calcLookaheads, mergeLookaheadInfo, countConflicts,
->        Lr0Item(..), Lr1Item(..), ItemSetWithGotos, LRAction(..), Lr1State,
->        ActionTable, GotoTable, Goto(..))
+>        Lr0Item(..), Lr1Item, ItemSetWithGotos, Lr1State)
 >       where
 
 > import Happy.Tabular.First ( mkClosure )
 > import Happy.Tabular.NameSet ( NameSet )
 > import qualified Happy.Tabular.NameSet as NameSet
 > import Happy.Grammar
+> import Happy.Tabular.Tables
 > import qualified Data.Set as Set hiding ( Set )
 > import Data.Set ( Set )
 
@@ -46,19 +46,6 @@ This means rule $a$, with dot at $b$ (all starting at 0)
 > type RuleList = [Lr0Item]
 
 > type ItemSetWithGotos = (Set Lr0Item, [(Name,Int)])
-
-> data LRAction = LR'Shift Int Priority -- state number and priority
->               | LR'Reduce Int Priority-- rule no and priority
->               | LR'Accept             -- :-)
->               | LR'Fail               -- :-(
->               | LR'MustFail           -- :-(
->               | LR'Multiple [LRAction] LRAction       -- conflict
->       deriving (Eq,Show)
-
-> type ActionTable = Array Int{-state-} (Array Int{-terminal#-} LRAction)
-> type GotoTable = Array Int{-state-} (Array Int{-nonterminal #-} Goto)
-> data Goto = Goto Int | NoGoto
->       deriving (Eq, Show)
 
 -----------------------------------------------------------------------------
 Token numbering in an array-based parser:

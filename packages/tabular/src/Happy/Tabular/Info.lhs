@@ -6,11 +6,12 @@ Generating info files.
 
 > module Happy.Tabular.Info (genInfoFile) where
 
+> import Happy.Grammar
+> import Happy.Tabular.Tables
+> import Happy.Tabular.LALR   ( Lr0Item(..) )
+
 > import Data.Set ( Set )
 > import qualified Data.Set as Set hiding ( Set )
-> import Happy.Grammar
-> import Happy.Tabular.LALR   ( Lr0Item(..), LRAction(..), Goto(..), GotoTable, ActionTable )
-
 > import Data.Array
 > import Data.List (nub)
 > import Data.Version           ( Version, showVersion )
