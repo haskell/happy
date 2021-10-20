@@ -1,3 +1,4 @@
 packages:
   packages/grammar
+  packages/tabular
   ./

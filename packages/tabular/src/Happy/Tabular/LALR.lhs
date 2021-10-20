@@ -5,19 +5,19 @@ Generation of LALR parsing tables.
 (c) 1997-2001 Simon Marlow
 -----------------------------------------------------------------------------
 
-> module LALR
->       (ActionTable, GotoTable,
->        genActionTable, genGotoTable, genLR0items, precalcClosure0,
+> module Happy.Tabular.LALR
+>       (genActionTable, genGotoTable, genLR0items, precalcClosure0,
 >        propLookaheads, calcLookaheads, mergeLookaheadInfo, countConflicts,
->        Lr0Item(..), Lr1Item(..), ItemSetWithGotos, LRAction(..), Goto(..))
+>        Lr0Item(..), Lr1Item(..), ItemSetWithGotos, LRAction(..), Lr1State,
+>        ActionTable, GotoTable, Goto(..))
 >       where
 
-> import GenUtils
-> import Data.Set ( Set )
-> import qualified Data.Set as Set hiding ( Set )
-> import qualified NameSet
-> import NameSet ( NameSet )
+> import Happy.Tabular.First ( mkClosure )
+> import Happy.Tabular.NameSet ( NameSet )
+> import qualified Happy.Tabular.NameSet as NameSet
 > import Happy.Grammar
+> import qualified Data.Set as Set hiding ( Set )
+> import Data.Set ( Set )
 
 > import Control.Monad (guard)
 > import Control.Monad.ST
@@ -277,8 +277,8 @@ calcLookaheads pass.
 
 > propLookaheads
 >       :: Grammar
->       -> [(Set Lr0Item,[(Name,Int)])]         -- LR(0) kernel sets
->       -> ([Name] -> NameSet)                  -- First function
+>       -> [ItemSetWithGotos]                   -- ^ LR(0) kernel sets
+>       -> ([Name] -> NameSet)                  -- ^ First function
 >       -> (
 >               [(Int, Lr0Item, NameSet)],      -- spontaneous lookaheads
 >               Array Int [(Lr0Item, Int, Lr0Item)]     -- propagated lookaheads
@@ -417,18 +417,21 @@ the spontaneous lookaheads in the right form to begin with (ToDo).
 -----------------------------------------------------------------------------
 Merge lookaheads
 
+> -- TODO needs better name
+> type Lr1State = ([Lr1Item], [(Name, Int)])
+
 Stick the lookahead info back into the state table.
 
 > mergeLookaheadInfo
->       :: Array Int [(Lr0Item, NameSet)]       -- lookahead info
->       -> [(Set Lr0Item, [(Name,Int)])]        -- state table
->       -> [ ([Lr1Item], [(Name,Int)]) ]
+>       :: Array Int [(Lr0Item, NameSet)]       -- ^ lookahead info
+>       -> [ItemSetWithGotos]                   -- ^ state table
+>       -> [Lr1State]
 
 > mergeLookaheadInfo lookaheads sets
 >       = zipWith mergeIntoSet sets [0..]
 >       where
 
->         mergeIntoSet :: (Set Lr0Item, [(Name, Int)]) -> Int -> ([Lr1Item], [(Name, Int)])
+>         mergeIntoSet :: ItemSetWithGotos -> Int -> Lr1State
 >         mergeIntoSet (items, goto) i
 >               = (map mergeIntoItem (Set.toAscList items), goto)
 >               where
@@ -449,7 +452,7 @@ while generating the LR0 sets of items.
 
 Generating the goto table doesn't need lookahead info.
 
-> genGotoTable :: Grammar -> [(Set Lr0Item,[(Name,Int)])] -> GotoTable
+> genGotoTable :: Grammar -> [ItemSetWithGotos] -> GotoTable
 > genGotoTable g sets = gotoTable
 >   where
 >       Grammar{ first_nonterm = fst_nonterm,
@@ -469,7 +472,7 @@ Generating the goto table doesn't need lookahead info.
 Generate the action table
 
 > genActionTable :: Grammar -> ([Name] -> NameSet) ->
->                [([Lr1Item],[(Name,Int)])] -> ActionTable
+>                [Lr1State] -> ActionTable
 > genActionTable g first sets = actionTable
 >   where
 >       Grammar { first_term = fst_term,

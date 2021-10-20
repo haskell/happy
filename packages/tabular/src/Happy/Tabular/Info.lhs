@@ -4,18 +4,16 @@ Generating info files.
 (c) 1993-2001 Andy Gill, Simon Marlow
 -----------------------------------------------------------------------------
 
-> module Info (genInfoFile) where
+> module Happy.Tabular.Info (genInfoFile) where
 
-> import Paths_happy            ( version )
-> import LALR                   ( Lr0Item(..), Goto(..), LRAction(..), ActionTable, GotoTable )
-> import GenUtils               ( str, interleave, interleave' )
 > import Data.Set ( Set )
 > import qualified Data.Set as Set hiding ( Set )
 > import Happy.Grammar
+> import Happy.Tabular.LALR   ( Lr0Item(..), LRAction(..), Goto(..), GotoTable, ActionTable )
 
 > import Data.Array
 > import Data.List (nub)
-> import Data.Version           ( showVersion )
+> import Data.Version           ( Version, showVersion )
 
 Produce a file of parser information, useful for debugging the parser.
 
@@ -29,6 +27,7 @@ Produce a file of parser information, useful for debugging the parser.
 >       -> String
 >       -> [Int]                        -- unused rules
 >       -> [String]                     -- unused terminals
+>       -> Version
 >       -> String
 
 > genInfoFile items
@@ -38,7 +37,7 @@ Produce a file of parser information, useful for debugging the parser.
 >                , non_terminals = nonterms
 >                , token_names = env
 >                })
->        action goto tokens conflictArray filename unused_rules unused_terminals
+>        action goto tokens conflictArray filename unused_rules unused_terminals version
 >       = (showHeader
 >       . showConflicts
 >       . showUnused
@@ -222,3 +221,10 @@ Produce a file of parser information, useful for debugging the parser.
 >       = str "-----------------------------------------------------------------------------\n"
 >       . str s
 >       . str "\n-----------------------------------------------------------------------------\n"
+
+> str :: String -> String -> String
+> str = showString
+> interleave :: String -> [String -> String] -> String -> String
+> interleave s = foldr (\a b -> a . str s . b) id
+> interleave' :: String -> [String -> String] -> String -> String
+> interleave' s = foldr1 (\a b -> a . str s . b)

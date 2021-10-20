@@ -12,11 +12,13 @@ The Grammar data type.
 >       Assoc(..),
 >
 >       errorName, errorTok, startName, dummyName, firstStartTok, dummyTok,
->       eofName, epsilonTok
+>       eofName, epsilonTok,
+>
+>       mapDollarDollar
 >       ) where
 
 > import Data.Array
-
+> import Data.Char (isAlphaNum)
 > type Name = Int
 
 > data ErrorHandlerType
@@ -124,3 +126,23 @@ In hindsight, this was probably a bad idea.
 > dummyTok        = 2
 > errorTok        = 1
 > epsilonTok      = 0
+
+-----------------------------------------------------------------------------
+Replace $$ with an arbitrary string, being careful to avoid ".." and '.'.
+
+> mapDollarDollar :: String -> Maybe (String -> String)
+> mapDollarDollar code0 = go code0 ""
+>   where go code acc =
+>           case code of
+>               [] -> Nothing
+>
+>               '"'  :r    -> case reads code :: [(String,String)] of
+>                                []       -> go r ('"':acc)
+>                                (s,r'):_ -> go r' (reverse (show s) ++ acc)
+>               a:'\'' :r | isAlphaNum a -> go r ('\'':a:acc)
+>               '\'' :r    -> case reads code :: [(Char,String)] of
+>                                []       -> go r ('\'':acc)
+>                                (c,r'):_ -> go r' (reverse (show c) ++ acc)
+>               '\\':'$':r -> go r ('$':acc)
+>               '$':'$':r  -> Just (\repl -> reverse acc ++ repl ++ r)
+>               c:r  -> go r (c:acc)

@@ -1,4 +1,4 @@
-> module Tabular (
+> module Happy.Tabular (
 >     Tables(..),
 >     genTables,
 >     SelectReductions,
@@ -6,10 +6,10 @@
 >     select_first_reduction
 >   ) where
 
-> import NameSet (NameSet)
-> import First
 > import Happy.Grammar
-> import LALR
+> import Happy.Tabular.First
+> import Happy.Tabular.LALR
+> import Happy.Tabular.NameSet (NameSet)
 
 > import Data.Array( Array, assocs, elems, (!) )
 > import Data.List ( nub )
