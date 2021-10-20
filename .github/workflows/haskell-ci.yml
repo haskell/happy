@@ -107,6 +107,7 @@ jobs:
           echo "CABAL_CONFIG=$HOME/.cabal/config" >> "$GITHUB_ENV"
           HCDIR=/opt/$HCKIND/$HCVER
           HC=$HCDIR/bin/$HCKIND
+          echo "$HCDIR/bin" >> "$GITHUB_PATH"
           echo "HC=$HC" >> "$GITHUB_ENV"
           echo "HCPKG=$HCDIR/bin/$HCKIND-pkg" >> "$GITHUB_ENV"
           echo "HADDOCK=$HCDIR/bin/haddock" >> "$GITHUB_ENV"
@@ -170,6 +171,7 @@ jobs:
         run: |
           touch cabal.project
           echo "packages: $GITHUB_WORKSPACE/source/." >> cabal.project
+          echo "packages: $GITHUB_WORKSPACE/source/packages/grammar" >> cabal.project
           cat cabal.project
       - name: sdist
         run: |
@@ -181,17 +183,21 @@ jobs:
           find sdist -maxdepth 1 -type f -name '*.tar.gz' -exec tar -C $GITHUB_WORKSPACE/unpacked -xzvf {} \;
       - name: generate cabal.project
         run: |
+          PKGDIR_happy_grammar="$(find "$GITHUB_WORKSPACE/unpacked" -maxdepth 1 -type d -regex '.*/happy-grammar-[0-9.]*')"
+          echo "PKGDIR_happy_grammar=${PKGDIR_happy_grammar}" >> "$GITHUB_ENV"
           PKGDIR_happy="$(find "$GITHUB_WORKSPACE/unpacked" -maxdepth 1 -type d -regex '.*/happy-[0-9.]*')"
           echo "PKGDIR_happy=${PKGDIR_happy}" >> "$GITHUB_ENV"
           rm -f cabal.project cabal.project.local
           touch cabal.project
           touch cabal.project.local
+          echo "packages: ${PKGDIR_happy_grammar}" >> cabal.project
           echo "packages: ${PKGDIR_happy}" >> cabal.project
+          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package happy-grammar" >> cabal.project ; fi
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package happy" >> cabal.project ; fi
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
           cat >> cabal.project <<EOF
           EOF
-          $HCPKG list --simple-output --names-only | perl -ne 'for (split /\s+/) { print "constraints: $_ installed\n" unless /^(containers|happy|mtl|transformers)$/; }' >> cabal.project.local
+          $HCPKG list --simple-output --names-only | perl -ne 'for (split /\s+/) { print "constraints: $_ installed\n" unless /^(containers|happy|happy-grammar|mtl|transformers)$/; }' >> cabal.project.local
           cat cabal.project
           cat cabal.project.local
       - name: dump install plan
@@ -206,24 +212,27 @@ jobs:
           restore-keys: ${{ runner.os }}-${{ matrix.compiler }}-
       - name: install dependencies
         run: |
-          $CABAL v2-build --flags=-bootstrap $ARG_COMPILER --disable-tests --disable-benchmarks --dependencies-only -j2 all
+          $CABAL v2-build --flags=-bootstrap $ARG_COMPILER --disable-tests --dependencies-only -j2 all
           $CABAL v2-build --flags=-bootstrap $ARG_COMPILER $ARG_TESTS $ARG_BENCH --dependencies-only -j2 all
       - name: build w/o tests and install
         run: |
-          $CABAL v2-install --reinstall --overwrite-policy=always --flags=-bootstrap $ARG_COMPILER --disable-tests --disable-benchmarks all
+          $CABAL v2-install --reinstall --overwrite-policy=always --flags=-bootstrap $ARG_COMPILER --disable-tests happy
       - name: build
         run: |
           $CABAL v2-build --flags=-bootstrap $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --write-ghc-environment-files=always
       - name: tests
         run: |
           export HAPPY=$HOME/.cabal/bin/happy
-          export HC=$HC
+          export HC
+          export CABAL
           $CABAL v2-test --flags=-bootstrap $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --test-show-details=direct
       - name: cabal check
         run: |
+          cd ${PKGDIR_happy_grammar} || false
+          ${CABAL} -vnormal check
           cd ${PKGDIR_happy} || false
           ${CABAL} -vnormal check
       - name: unconstrained build
         run: |
           rm -f cabal.project.local
-          $CABAL v2-build --flags=-bootstrap $ARG_COMPILER --disable-tests --disable-benchmarks all
+          $CABAL v2-build --flags=-bootstrap $ARG_COMPILER --disable-tests all
