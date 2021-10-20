@@ -15,13 +15,13 @@ This module is designed as an extension to the Haskell parser generator Happy.
 >                       ) where
 
 > import Paths_happy ( version )
-> import GenUtils ( mapDollarDollar )
-> import GenUtils ( str, char, nl, brack, brack', interleave, maybestr )
-> import Grammar
+> import GenUtils ( str, char, nl, brack, brack', interleave, maybestr, mapDollarDollar )
+> import Happy.Grammar
 > import Data.Array ( Array, (!), array, assocs )
 > import Data.Char ( isSpace, isAlphaNum )
 > import Data.List ( nub, (\\), sort, find, tails )
 > import Data.Version ( showVersion )
+> import LALR
 
 %-----------------------------------------------------------------------------
 File and Function Names

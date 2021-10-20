@@ -7,11 +7,11 @@ Generating info files.
 > module Info (genInfoFile) where
 
 > import Paths_happy            ( version )
-> import LALR                   ( Lr0Item(..) )
+> import LALR                   ( Lr0Item(..), Goto(..), LRAction(..), ActionTable, GotoTable )
 > import GenUtils               ( str, interleave, interleave' )
 > import Data.Set ( Set )
 > import qualified Data.Set as Set hiding ( Set )
-> import Grammar
+> import Happy.Grammar
 
 > import Data.Array
 > import Data.List (nub)

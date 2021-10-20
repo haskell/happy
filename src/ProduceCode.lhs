@@ -8,8 +8,9 @@ The code generator.
 
 > import Paths_happy            ( version )
 > import Data.Version           ( showVersion )
-> import Grammar
+> import Happy.Grammar
 > import Target                 ( Target(..) )
+> import LALR
 > import GenUtils               ( mapDollarDollar, str, char, nl, strspace,
 >                                 interleave, interleave', maybestr,
 >                                 brack, brack' )
