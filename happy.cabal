@@ -144,11 +144,6 @@ extra-source-files:
         tests/rank2.y
         tests/shift01.y
 
-flag bootstrap
-  description: Optimize the implementation of happy using a pre-built happy
-  manual: True
-  default: True
-
 source-repository head
   type:     git
   location: https://github.com/simonmar/happy.git
@@ -187,20 +182,49 @@ executable happy
         ParamRules
         PrettyGrammar
 
-  if flag(bootstrap)
-    -- TODO put this back when Cabal can use it's qualified goals to better
-    -- understand bootstrapping, see
-    -- https://github.com/haskell/cabal/issues/7189
-    --build-tools: happy
-    cpp-options: -DHAPPY_BOOTSTRAP
-    other-modules:
-      ParseMonad.Bootstrapped
-      Parser.Bootstrapped
-      AttrGrammarParser
-  else
-    other-modules:
-      ParseMonad.Oracle
-      Parser.Oracle
+        ParseMonad.Bootstrapped
+        Parser.Bootstrapped
+        AttrGrammarParser
+
+  build-tool-depends: happy:happy-boot
+  cpp-options: -DHAPPY_BOOTSTRAP
+
+executable happy-boot
+  hs-source-dirs: src
+  main-is: Main.lhs
+
+  build-depends: base < 5,
+                 array,
+                 containers >= 0.4.2,
+                 mtl >= 2.2.1
+                     -- mtl-2.2.1 added Control.Monad.Except
+
+  default-language: Haskell98
+  default-extensions: CPP, MagicHash, FlexibleContexts, NamedFieldPuns
+  ghc-options: -Wall
+  other-modules:
+        Paths_happy
+        AbsSyn
+        First
+        GenUtils
+        Grammar
+        Info
+        LALR
+        Lexer
+        ParseMonad
+        ParseMonad.Class
+        Parser
+        ProduceCode
+        ProduceGLRCode
+        NameSet
+        Tabular
+        Target
+        AttrGrammar
+        ParamRules
+        PrettyGrammar
+
+        ParseMonad.Oracle
+        Parser.Oracle
 
 
 test-suite tests
