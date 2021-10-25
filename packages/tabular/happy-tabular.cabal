@@ -33,8 +33,6 @@ tested-with:
         GHC == 8.10.4
         GHC == 9.0.1
 
-extra-source-files:  src/Happy/Tabular/ARRAY-NOTES
-
 library
   hs-source-dirs:      src
 

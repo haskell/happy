@@ -61,6 +61,32 @@ This means rule $a$, with dot at $b$ (all starting at 0)
 >       deriving (Eq, Show)
 
 -----------------------------------------------------------------------------
+Token numbering in an array-based parser:
+
+% Action Table
+
+We have an action table, indexed by states in the y direction, and
+terminal number in the x direction.  ie. action = (state * n_terminals +
+terminal).  The terminal number is given by (for terminals only):
+
+	tok_number - n_nonterminals - 3
+
+so we have
+
+error		= 0
+terminals 	= 1..n
+%eof 		= n+1
+
+
+% Goto Table
+
+The goto table is indexed by nonterminal number (without %starts), ie
+
+	(state * (n_nonterminals-s)) + tok_number - s
+
+
+-----------------------------------------------------------------------------
+
 Generating the closure of a set of LR(0) items
 
 Precalculate the rule closure for each non-terminal in the grammar,

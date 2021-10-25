@@ -105,6 +105,9 @@ non-terminals   = s..n
 terminals       = n..m
 %eof            = m
 
+where n_nonterminals = n - 3 (including %starts)
+      n_terminals    = 1{-error-} + (m-n) + 1{-eof-} (including error and %eof)
+
 These numbers are deeply magical, change at your own risk.  Several
 other places rely on these being arranged as they are, including
 ProduceCode.lhs and the various HappyTemplates.
@@ -114,6 +117,10 @@ terminal or non-terminal without knowing the boundaries of the
 namespace, which are kept in the Grammar structure.
 
 In hindsight, this was probably a bad idea.
+
+In normal and GHC-based parsers, these numbers are also used in the
+generated grammar itself, except that the error token is mapped to -1.
+For array-based parsers, see the note in Tabular/LALR.lhs.
 
 > startName, eofName, errorName, dummyName :: String
 > startName = "%start" -- with a suffix, like %start_1, %start_2 etc.
