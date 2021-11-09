@@ -10,10 +10,10 @@ The code generator.
 > import Data.Version           ( showVersion )
 > import Happy.Grammar
 > import Target                 ( Target(..) )
-> import LALR
-> import GenUtils               ( mapDollarDollar, str, char, nl, strspace,
+> import GenUtils               ( str, char, nl, strspace,
 >                                 interleave, interleave', maybestr,
 >                                 brack, brack' )
+> import Happy.Tabular.LALR
 
 > import Data.Maybe             ( isJust, isNothing, fromMaybe )
 > import Data.Char              ( ord, chr )

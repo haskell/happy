@@ -6,9 +6,7 @@ All the code below is understood to be in the public domain.
 
 > module GenUtils (
 
->       mkClosure,
 >       combinePairs,
->       mapDollarDollar,
 >       str, char, nl, brack, brack',
 >       interleave, interleave',
 >       strspace, maybestr
@@ -20,18 +18,6 @@ All the code below is understood to be in the public domain.
 
 %------------------------------------------------------------------------------
 
-@mkClosure@ makes a closure, when given a comparison and iteration loop.
-Be careful, because if the functional always makes the object different,
-This will never terminate.
-
-> mkClosure :: (a -> a -> Bool) -> (a -> a) -> a -> a
-> mkClosure eq f = match . iterate f
->   where
->       match (a:b:_) | a `eq` b = a
->       match (_:c)              = match c
->       match [] = error "Can't happen: match []"
-
-
 Gofer-like stuff:
 
 > combinePairs :: (Ord a) => [(a,b)] -> [(a,[b])]
@@ -42,26 +28,6 @@ Gofer-like stuff:
 >       combine ((a,b):(c,d):r) | a == c = combine ((a,b++d) : r)
 >       combine (a:r) = a : combine r
 >
-
-
-Replace $$ with an arbitrary string, being careful to avoid ".." and '.'.
-
-> mapDollarDollar :: String -> Maybe (String -> String)
-> mapDollarDollar code0 = go code0 ""
->   where go code acc =
->           case code of
->               [] -> Nothing
->
->               '"'  :r    -> case reads code :: [(String,String)] of
->                                []       -> go r ('"':acc)
->                                (s,r'):_ -> go r' (reverse (show s) ++ acc)
->               a:'\'' :r | isAlphaNum a -> go r ('\'':a:acc)
->               '\'' :r    -> case reads code :: [(Char,String)] of
->                                []       -> go r ('\'':acc)
->                                (c,r'):_ -> go r' (reverse (show c) ++ acc)
->               '\\':'$':r -> go r ('$':acc)
->               '$':'$':r  -> Just (\repl -> reverse acc ++ repl ++ r)
->               c:r  -> go r (c:acc)
 
 
 %-------------------------------------------------------------------------------

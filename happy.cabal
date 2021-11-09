@@ -112,7 +112,6 @@ extra-source-files:
         examples/ErlParser.ly
         examples/SimonsExample.ly
         examples/LexerTest.ly
-        src/ARRAY-NOTES
         tests/AttrGrammar001.y
         tests/AttrGrammar002.y
         tests/Makefile
@@ -160,8 +159,8 @@ executable happy
                  array,
                  containers >= 0.4.2,
                  mtl >= 2.2.1,
-                 happy-grammar == 1.21.0
-                     -- mtl-2.2.1 added Control.Monad.Except
+                 happy-grammar == 1.21.0,
+                 happy-tabular == 1.21.0
 
   default-language: Haskell98
   default-extensions: CPP, MagicHash, FlexibleContexts, NamedFieldPuns
@@ -169,10 +168,7 @@ executable happy
   other-modules:
         Paths_happy
         AbsSyn
-        First
         GenUtils
-        Info
-        LALR
         Lexer
         Mangler
         ParseMonad
@@ -180,8 +176,6 @@ executable happy
         Parser
         ProduceCode
         ProduceGLRCode
-        NameSet
-        Tabular
         Target
         AttrGrammar
         ParamRules

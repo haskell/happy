@@ -12,11 +12,13 @@ The Grammar data type.
 >       Assoc(..),
 >
 >       errorName, errorTok, startName, dummyName, firstStartTok, dummyTok,
->       eofName, epsilonTok
+>       eofName, epsilonTok,
+>
+>       mapDollarDollar
 >       ) where
 
 > import Data.Array
-
+> import Data.Char (isAlphaNum)
 > type Name = Int
 
 > data ErrorHandlerType
@@ -103,6 +105,9 @@ non-terminals   = s..n
 terminals       = n..m
 %eof            = m
 
+where n_nonterminals = n - 3 (including %starts)
+      n_terminals    = 1{-error-} + (m-n) + 1{-eof-} (including error and %eof)
+
 These numbers are deeply magical, change at your own risk.  Several
 other places rely on these being arranged as they are, including
 ProduceCode.lhs and the various HappyTemplates.
@@ -112,6 +117,10 @@ terminal or non-terminal without knowing the boundaries of the
 namespace, which are kept in the Grammar structure.
 
 In hindsight, this was probably a bad idea.
+
+In normal and GHC-based parsers, these numbers are also used in the
+generated grammar itself, except that the error token is mapped to -1.
+For array-based parsers, see the note in Tabular/LALR.lhs.
 
 > startName, eofName, errorName, dummyName :: String
 > startName = "%start" -- with a suffix, like %start_1, %start_2 etc.
@@ -124,3 +133,23 @@ In hindsight, this was probably a bad idea.
 > dummyTok        = 2
 > errorTok        = 1
 > epsilonTok      = 0
+
+-----------------------------------------------------------------------------
+Replace $$ with an arbitrary string, being careful to avoid ".." and '.'.
+
+> mapDollarDollar :: String -> Maybe (String -> String)
+> mapDollarDollar code0 = go code0 ""
+>   where go code acc =
+>           case code of
+>               [] -> Nothing
+>
+>               '"'  :r    -> case reads code :: [(String,String)] of
+>                                []       -> go r ('"':acc)
+>                                (s,r'):_ -> go r' (reverse (show s) ++ acc)
+>               a:'\'' :r | isAlphaNum a -> go r ('\'':a:acc)
+>               '\'' :r    -> case reads code :: [(Char,String)] of
+>                                []       -> go r ('\'':acc)
+>                                (c,r'):_ -> go r' (reverse (show c) ++ acc)
+>               '\\':'$':r -> go r ('$':acc)
+>               '$':'$':r  -> Just (\repl -> reverse acc ++ repl ++ r)
+>               c:r  -> go r (c:acc)
