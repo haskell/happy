@@ -6,7 +6,7 @@ Abstract syntax for grammar files.
 
 Here is the abstract syntax of the language we parse.
 
-> module AbsSyn (
+> module Happy.Frontend.AbsSyn (
 >       AbsSyn(..), Directive(..),
 >       getTokenType, getTokenSpec, getParserNames, getLexer,
 >       getImportedIdentity, getMonad, getError,

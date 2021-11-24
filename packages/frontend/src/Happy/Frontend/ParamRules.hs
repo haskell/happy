@@ -1,6 +1,6 @@
-module ParamRules(expand_rules, Prod1(..), Rule1(..)) where
+module Happy.Frontend.ParamRules(expand_rules, Prod1(..), Rule1(..)) where
 
-import AbsSyn
+import Happy.Frontend.AbsSyn
 import Control.Monad.Writer
 import Control.Monad.Except
 import Data.List(partition,intersperse)

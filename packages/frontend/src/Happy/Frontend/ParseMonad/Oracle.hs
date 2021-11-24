@@ -1,13 +1,13 @@
 {-# LANGUAGE RankNTypes #-}
 
-module ParseMonad.Oracle where
+module Happy.Frontend.ParseMonad.Oracle where
 
 #if !MIN_VERSION_base(4,8,0)
 import Control.Applicative
 #endif
 import Control.Monad
 
-import ParseMonad.Class
+import Happy.Frontend.ParseMonad.Class
 
 data PState token =
   PS !String

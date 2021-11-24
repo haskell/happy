@@ -6,29 +6,29 @@ The Grammar data type.
 
 Mangler converts AbsSyn to Grammar
 
-> module Mangler (mangler) where
+> module Happy.Frontend.Mangler (mangler) where
 
 > import Happy.Grammar
-> import GenUtils
-> import AbsSyn
+> import Happy.Frontend.AbsSyn
 #ifdef HAPPY_BOOTSTRAP
-> import ParseMonad.Class
-> import AttrGrammar
+> import Happy.Frontend.ParseMonad.Class
+> import Happy.Frontend.AttrGrammar
 #endif
 
 This is only supported in the bootstrapped version
 #ifdef HAPPY_BOOTSTRAP
-> import AttrGrammarParser
-> import Data.List     ( findIndices, groupBy, intersperse, nub, sortBy )
+> import Happy.Frontend.AttrGrammar.Parser
+> import Data.List     ( findIndices, groupBy, intersperse, nub )
 > import Control.Monad ( when )
 #endif
 
-> import ParamRules
+> import Happy.Frontend.ParamRules
 
 > import Data.Array ( Array, (!), accumArray, array, listArray )
 > import Data.Char  ( isAlphaNum, isDigit, isLower )
-> import Data.List  ( zip4 )
+> import Data.List  ( zip4, sortBy )
 > import Data.Maybe ( fromMaybe )
+> import Data.Ord
 
 > import Control.Monad.Writer ( Writer, MonadWriter(..), mapWriter, runWriter )
 
@@ -129,13 +129,13 @@ Deal with priorities...
 
 >       prios = [ (name,mkPrio i dir)
 >               | (i,dir) <- priodir
->               , nm <- AbsSyn.getPrioNames dir
+>               , nm <- getPrioNames dir
 >               , name <- lookupName nm
 >               ]
 
 >       prioByString = [ (name, mkPrio i dir)
 >                      | (i,dir) <- priodir
->                      , name <- AbsSyn.getPrioNames dir
+>                      , name <- getPrioNames dir
 >                      ]
 
 Translate the rules from string to name-based.
@@ -260,6 +260,17 @@ Get the token specs in terms of Names.
 >               attributes        = attrs,
 >               attributetype     = attrType
 >       })
+
+Gofer-like stuff:
+
+> combinePairs :: (Ord a) => [(a,b)] -> [(a,[b])]
+> combinePairs xs =
+>       combine [ (a,[b]) | (a,b) <- sortBy (comparing fst) xs]
+>  where
+>       combine [] = []
+>       combine ((a,b):(c,d):r) | a == c = combine ((a,b++d) : r)
+>       combine (a:r) = a : combine r
+>
 
 For combining actions with possible error messages.
 

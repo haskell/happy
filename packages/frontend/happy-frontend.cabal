@@ -1,0 +1,81 @@
+name:            happy-frontend
+version:         1.21.0
+license:         BSD2
+license-file:    LICENSE
+copyright:       (c) Andy Gill, Simon Marlow
+author:          Andy Gill and Simon Marlow
+maintainer:      Simon Marlow <marlowsd@gmail.com>
+bug-reports:     https://github.com/simonmar/happy/issues
+stability:       stable
+homepage:        https://www.haskell.org/happy/
+category:        Development
+cabal-version:   >= 1.10
+build-type:      Simple
+synopsis:        A yacc-like frontend for happy
+
+Description:
+  Happy is a parser generator for Haskell.
+  Happy-Frontend is responsible for parsing .y- and .ly-files
+  and mangling them into a Grammar datatype.
+  These .y- and .ly-files work similar to yacc's .y-files, but
+  have some Haskell-specific features.
+
+tested-with:
+        GHC == 7.0.4
+        GHC == 7.4.2
+        GHC == 7.6.3
+        GHC == 7.8.4
+        GHC == 7.10.3
+        GHC == 8.0.2
+        GHC == 8.2.2
+        GHC == 8.4.4
+        GHC == 8.6.5
+        GHC == 8.8.4
+        GHC == 8.10.4
+        GHC == 9.0.1
+
+flag bootstrap
+  description: Optimize the implementation of happy using a pre-built happy
+  manual: True
+  default: True
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     Happy.Frontend,
+                       Happy.Frontend.AbsSyn,
+                       Happy.Frontend.Mangler,
+                       Happy.Frontend.PrettyGrammar
+
+  build-depends:       base < 5,
+                       array,
+                       containers >= 0.4.2,
+                       transformers >= 0.5.6.2,
+                       mtl >= 2.2.2,
+                       happy-grammar == 1.21.0
+
+  default-language:    Haskell98
+  default-extensions:  CPP, MagicHash, FlexibleContexts
+  ghc-options: -Wall
+  other-modules:
+        Happy.Frontend.ParseMonad
+        Happy.Frontend.ParseMonad.Class
+        Happy.Frontend.AttrGrammar
+        Happy.Frontend.Parser
+        Happy.Frontend.Lexer
+        Happy.Frontend.ParamRules
+
+
+  if flag(bootstrap)
+    -- TODO put this back when Cabal can use it's qualified goals to better
+    -- understand bootstrapping, see
+    -- https://github.com/haskell/cabal/issues/7189
+    --build-tools: happy
+    cpp-options: -DHAPPY_BOOTSTRAP
+    other-modules:
+      Happy.Frontend.ParseMonad.Bootstrapped
+      Happy.Frontend.Parser.Bootstrapped
+      Happy.Frontend.AttrGrammar.Parser
+  else
+    other-modules:
+      Happy.Frontend.ParseMonad.Oracle
+      Happy.Frontend.Parser.Oracle

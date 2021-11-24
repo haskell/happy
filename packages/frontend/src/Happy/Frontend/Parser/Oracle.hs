@@ -1,6 +1,6 @@
 {-# LANGUAGE RankNTypes, ScopedTypeVariables #-}
 
-module Parser.Oracle (ourParser, AbsSyn) where
+module Happy.Frontend.Parser.Oracle (ourParser, AbsSyn) where
 
 #if !MIN_VERSION_base(4,8,0)
 import Control.Applicative
@@ -8,10 +8,10 @@ import Control.Applicative
 
 import Control.Monad (when)
 import Data.Maybe (isJust)
-import ParseMonad.Class
-import ParseMonad.Oracle
-import AbsSyn
-import Lexer
+import Happy.Frontend.ParseMonad.Class
+import Happy.Frontend.ParseMonad.Oracle
+import Happy.Frontend.AbsSyn
+import Happy.Frontend.Lexer
 
 type Parser = P Token
 
