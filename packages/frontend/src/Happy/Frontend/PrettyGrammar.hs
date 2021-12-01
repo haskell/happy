@@ -1,10 +1,10 @@
 {-# LANGUAGE CPP #-}
-module PrettyGrammar where
+module Happy.Frontend.PrettyGrammar where
 
 #if MIN_VERSION_base(4,11,0)
 import Prelude hiding ((<>))
 #endif
-import AbsSyn
+import Happy.Frontend.AbsSyn
 
 render :: Doc -> String
 render = maybe "" ($ "")

@@ -4,12 +4,12 @@ The lexer.
 (c) 1993-2001 Andy Gill, Simon Marlow
 -----------------------------------------------------------------------------
 
-> module Lexer (
+> module Happy.Frontend.Lexer (
 >       Token(..),
 >       TokenId(..),
 >       HasLexer(..) ) where
 
-> import ParseMonad.Class
+> import Happy.Frontend.ParseMonad.Class
 
 > import Data.Char ( isSpace, isAlphaNum, isDigit, digitToInt )
 

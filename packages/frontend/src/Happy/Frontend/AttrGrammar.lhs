@@ -1,4 +1,4 @@
-> module AttrGrammar
+> module Happy.Frontend.AttrGrammar
 > ( AgToken (..)
 > , AgRule (..)
 > , HasLexer (..)
@@ -9,7 +9,7 @@
 > ) where
 
 > import Data.Char
-> import ParseMonad.Class
+> import Happy.Frontend.ParseMonad.Class
 
 > data AgToken
 >   = AgTok_LBrace

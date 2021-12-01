@@ -8,10 +8,10 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 #endif
 
-module ParseMonad.Bootstrapped where
+module Happy.Frontend.ParseMonad.Bootstrapped where
 
 import Control.Monad.Reader
-import ParseMonad.Class
+import Happy.Frontend.ParseMonad.Class
 
 type P = ReaderT (String, Int) ParseResult
 

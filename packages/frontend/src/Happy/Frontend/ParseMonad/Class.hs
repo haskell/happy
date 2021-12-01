@@ -1,4 +1,4 @@
-module ParseMonad.Class where
+module Happy.Frontend.ParseMonad.Class where
 
 type Pfunc a = String -> Int -> ParseResult a
 

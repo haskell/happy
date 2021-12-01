@@ -8,11 +8,11 @@ The parser.
 
 > {
 > {-# OPTIONS_GHC -w #-}
-> module Parser.Bootstrapped (ourParser,AbsSyn) where
-> import ParseMonad.Class
-> import ParseMonad.Bootstrapped
-> import AbsSyn
-> import Lexer
+> module Happy.Frontend.Parser.Bootstrapped (ourParser,AbsSyn) where
+> import Happy.Frontend.ParseMonad.Class
+> import Happy.Frontend.ParseMonad.Bootstrapped
+> import Happy.Frontend.AbsSyn
+> import Happy.Frontend.Lexer
 > }
 
 > %name ourParser
