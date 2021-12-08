@@ -97,7 +97,11 @@ Main exported function
 >                                    putStrLn "Defaulting to first start point."
 >                                    return s
 >                          [] -> error "produceGLRParser: []"
->     mkFiles basename tbls parseName template_dir header trailer options g
+>     base <- readFile (base_template template_dir)
+>     lib <- readFile (lib_template template_dir)
+>     let (dat, parser) = mkFiles (base, lib) basename tbls parseName header trailer options g
+>     writeFile (basename ++ "Data.hs") dat
+>     writeFile (basename ++ ".hs") parser
 
 
 %-----------------------------------------------------------------------------
@@ -105,33 +109,32 @@ Main exported function
 It produces two files - one for the data (small template), and one for
 the driver and data strs (large template).
 
-> mkFiles :: FilePath     -- Root of Output file name
+> mkFiles :: (String      -- Base Template
+>            ,String)     -- Lib template
+>        -> String        -- Root of Output file name
 >        -> (ActionTable
 >           ,GotoTable)   -- LR tables
 >        -> String        -- Start parse function name
->        -> String        -- Templates directory
 >        -> Maybe String  -- Module header
 >        -> Maybe String  -- User-defined stuff (token DT, lexer etc.)
 >        -> (DebugMode,Options)       -- selecting code-gen style
 >        -> Grammar       -- Happy Grammar
->        -> IO ()
+>        -> (String       -- data
+>           ,String)      -- parser
 >
-> mkFiles basename tables start templdir header trailer (debug,options) g
->  = do
->       let (imps, lang_exts) = case ghcExts_opt of
->             UseGhcExts is os -> (is, os)
->             _                -> ("", [])
->       base <- readFile (base_template templdir)
->       --writeFile (basename ++ ".si") (unlines $ map show sem_info)
->       writeFile (basename ++ "Data.hs") (content base lang_exts $ "")
-
->       lib <- readFile (lib_template templdir)
->       let defines = concat
->              [ [ "HAPPY_DEBUG" | debug ]
->              , [ "HAPPY_GHC"   | UseGhcExts _ _ <- return ghcExts_opt ]
->              ]
->       writeFile (basename ++ ".hs") (lib_content defines imps lang_exts lib)
+> mkFiles (base, lib) basename tables start header trailer (debug,options) g
+>  = ( content base $ ""
+>    , lib_content lib
+>    )
 >  where
+>   (imps, lang_exts) = case ghcExts_opt of
+>     UseGhcExts is os -> (is, os)
+>     _                -> ("", [])
+>
+>   defines = concat
+>      [ [ "HAPPY_DEBUG" | debug ]
+>      , [ "HAPPY_GHC"   | UseGhcExts _ _ <- return ghcExts_opt ]
+>      ]
 >   (_,_,ghcExts_opt) = options
 
 Extract the module name from the given module declaration, if it exists.
@@ -178,7 +181,7 @@ Extract the string that comes before the module declaration...
 >       -- Assume these options ONLY related to code which is in
 >       --   parser tail or in sem. rules
 
->   content base_defs lang_exts
+>   content base_defs
 >    = str (unlines
 >            [ "{-# LANGUAGE " ++ l ++ " #-}\n" | l <- lang_exts ])
 >    . str (unlines $ maybe [] fst header_parts) .nl
@@ -225,7 +228,7 @@ Extract the string that comes before the module declaration...
 >     . nl
 >     . table_text
 
->   lib_content defines imps lang_exts lib_text
+>   lib_content lib_text
 >    = let (pre,_drop_me : post) = break (== "fakeimport DATA") $ lines lib_text
 >      in
 >      unlines [ "{-# LANGUAGE CPP #-}"
