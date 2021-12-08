@@ -1,5 +1,5 @@
 packages:
-  packages/backend
+  packages/backend-lalr
   packages/backend-glr
   packages/frontend
   packages/grammar

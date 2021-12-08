@@ -1,10 +1,10 @@
-module Happy.Backend where
+module Happy.Backend.LALR where
 
-import Paths_happy_backend
+import Paths_happy_backend_lalr
 import Data.Char
 
-backendDataDir :: IO String
-backendDataDir = getDataDir
+lalrBackendDataDir :: IO String
+lalrBackendDataDir = getDataDir
 
 magicFilter :: Maybe String -> String -> String
 magicFilter magicName = case magicName of
