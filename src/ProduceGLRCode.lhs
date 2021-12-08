@@ -8,6 +8,8 @@ This module is designed as an extension to the Haskell parser generator Happy.
 %-----------------------------------------------------------------------------
 
 > module ProduceGLRCode ( produceGLRParser
+>                       , baseTemplate
+>                       , libTemplate
 >                       , DecodeOption(..)
 >                       , FilterOption(..)
 >                       , GhcExts(..)
@@ -26,9 +28,9 @@ This module is designed as an extension to the Haskell parser generator Happy.
 %-----------------------------------------------------------------------------
 File and Function Names
 
-> base_template, lib_template :: String -> String
-> base_template td = td ++ "/GLR_Base.hs"          -- NB Happy uses / too
-> lib_template  td = td ++ "/GLR_Lib.hs"           -- Windows accepts this?
+> baseTemplate, libTemplate :: String -> String
+> baseTemplate td = td ++ "/GLR_Base.hs"          -- NB Happy uses / too
+> libTemplate  td = td ++ "/GLR_Lib.hs"           -- Windows accepts this?
 
 ---
 prefix for production names, to avoid name clashes
@@ -73,44 +75,13 @@ this is where the exts matter
 
 
 %-----------------------------------------------------------------------------
-Main exported function
-
-> produceGLRParser
->        :: FilePath      -- Output file name
->        -> String        -- Templates directory
->        -> ActionTable   -- LR tables
->        -> GotoTable     -- LR tables
->        -> Maybe String  -- Module header
->        -> Maybe String  -- User-defined stuff (token DT, lexer etc.)
->        -> (DebugMode,Options)       -- selecting code-gen style
->        -> Grammar       -- Happy Grammar
->        -> IO ()
-
-> produceGLRParser outfilename template_dir action goto header trailer options g
->  = do
->     let basename  = takeWhile (/='.') outfilename
->     let tbls  = (action,goto)
->     (parseName,_,_,_) <- case starts g of
->                          [s] -> return s
->                          s:_ -> do
->                                    putStrLn "GLR-Happy doesn't support multiple start points (yet)"
->                                    putStrLn "Defaulting to first start point."
->                                    return s
->                          [] -> error "produceGLRParser: []"
->     base <- readFile (base_template template_dir)
->     lib <- readFile (lib_template template_dir)
->     let (dat, parser) = mkFiles (base, lib) basename tbls parseName header trailer options g
->     writeFile (basename ++ "Data.hs") dat
->     writeFile (basename ++ ".hs") parser
-
-
-%-----------------------------------------------------------------------------
-"mkFiles" generates the files containing the Tomita parsing code.
+"produceGLRParser" generates the files containing the Tomita parsing code.
 It produces two files - one for the data (small template), and one for
 the driver and data strs (large template).
 
-> mkFiles :: (String      -- Base Template
->            ,String)     -- Lib template
+> produceGLRParser
+>        :: (String      -- Base Template
+>           ,String)     -- Lib template
 >        -> String        -- Root of Output file name
 >        -> (ActionTable
 >           ,GotoTable)   -- LR tables
@@ -122,7 +93,7 @@ the driver and data strs (large template).
 >        -> (String       -- data
 >           ,String)      -- parser
 >
-> mkFiles (base, lib) basename tables start header trailer (debug,options) g
+> produceGLRParser (base, lib) basename tables start header trailer (debug,options) g
 >  = ( content base $ ""
 >    , lib_content lib
 >    )

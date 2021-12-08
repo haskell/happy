@@ -203,16 +203,32 @@ Unlike below, don't always passs CPP, because only one of the files needs it.
 >                      | otherwise                = NoGhcExts
 >           debug      = OptDebugParser `elem` cli
 >       if OptGLR `elem` cli
->         then produceGLRParser
->           outfilename   -- specified output file name
->           template'     -- template files directory
->           action        -- action table (:: ActionTable)
->           goto          -- goto table (:: GotoTable)
->           header        -- header from grammar spec
->           tl            -- trailer from grammar spec
->           (debug, (glr_decode,filtering,ghc_exts))
->                         -- controls decoding code-gen
->           g             -- grammar object
+>         then do
+>           let basename  = takeWhile (/='.') outfilename
+>           let tbls  = (action,goto)
+>           (parseName,_,_,_) <- case starts g of
+>                                [s] -> return s
+>                                s:_ -> do
+>                                          putStrLn "GLR-Happy doesn't support multiple start points (yet)"
+>                                          putStrLn "Defaulting to first start point."
+>                                          return s
+>                                [] -> error "produceGLRParser: []"
+>           base <- readFile (baseTemplate template')
+>           lib <- readFile (libTemplate template')
+>           let (dat, parser) = produceGLRParser
+>                 (base, lib)   -- templates
+>                 basename      -- basename of specified output file name
+>                 tbls          -- action table (:: ActionTable)
+>                               -- goto table (:: GotoTable)
+>                 parseName
+>                 header        -- header from grammar spec
+>                 tl            -- trailer from grammar spec
+>                 (debug, (glr_decode,filtering,ghc_exts))
+>                               -- controls decoding code-gen
+>                 g             -- grammar object
+>           writeFile (basename ++ "Data.hs") dat
+>           writeFile (basename ++ ".hs") parser
+
 >         else do
 
 
