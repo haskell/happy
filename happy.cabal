@@ -32,13 +32,6 @@ tested-with:
         GHC == 8.10.4
         GHC == 9.0.1
 
-data-dir: data/
-
-data-files:
-        HappyTemplate.hs
-        GLR_Base.hs
-        GLR_Lib.hs
-
 extra-source-files:
         ChangeLog.md
         Makefile
@@ -156,17 +149,15 @@ executable happy
                  mtl >= 2.2.1,
                  happy-grammar == 1.21.0,
                  happy-tabular == 1.21.0,
-                 happy-frontend == 1.21.0
+                 happy-frontend == 1.21.0,
+                 happy-backend == 1.21.0,
+                 happy-backend-glr == 1.21.0
 
   default-language: Haskell98
   default-extensions: CPP, MagicHash, FlexibleContexts, NamedFieldPuns
   ghc-options: -Wall
   other-modules:
         Paths_happy
-        GenUtils
-        ProduceCode
-        ProduceGLRCode
-        Target
 
 test-suite tests
   type: exitcode-stdio-1.0

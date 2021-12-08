@@ -1,4 +1,6 @@
 packages:
+  packages/backend
+  packages/backend-glr
   packages/frontend
   packages/grammar
   packages/tabular

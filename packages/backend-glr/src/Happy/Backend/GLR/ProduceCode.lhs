@@ -7,7 +7,8 @@ This module is designed as an extension to the Haskell parser generator Happy.
         -- extension to semantic rules, and various optimisations
 %-----------------------------------------------------------------------------
 
-> module ProduceGLRCode ( produceGLRParser
+> module Happy.Backend.GLR.ProduceCode
+>                       ( produceGLRParser
 >                       , baseTemplate
 >                       , libTemplate
 >                       , DecodeOption(..)
@@ -16,14 +17,13 @@ This module is designed as an extension to the Haskell parser generator Happy.
 >                       , Options
 >                       ) where
 
-> import Paths_happy ( version )
-> import GenUtils ( str, char, nl, brack, brack', interleave, maybestr )
+> import Paths_happy_backend_glr ( version )
 > import Happy.Grammar
+> import Happy.Tabular.LALR
 > import Data.Array ( Array, (!), array, assocs )
 > import Data.Char ( isSpace, isAlphaNum )
 > import Data.List ( nub, (\\), sort, find, tails )
 > import Data.Version ( showVersion )
-> import Happy.Tabular.LALR
 
 %-----------------------------------------------------------------------------
 File and Function Names
@@ -713,3 +713,25 @@ remove Happy-generated start symbols.
 
 > mkHappyVar :: Int -> String -> String
 > mkHappyVar n = str "happy_var_" . shows n
+
+%------------------------------------------------------------------------------
+Fast string-building functions
+
+> str :: String -> String -> String
+> str = showString
+> char :: Char -> String -> String
+> char c = (c :)
+> interleave :: String -> [String -> String] -> String -> String
+> interleave s = foldr (\a b -> a . str s . b) id
+
+> nl :: String -> String
+> nl = char '\n'
+
+> maybestr :: Maybe String -> String -> String
+> maybestr (Just s)     = str s
+> maybestr _            = id
+
+> brack :: String -> String -> String
+> brack s = str ('(' : s) . char ')'
+> brack' :: (String -> String) -> String -> String
+> brack' s = char '(' . s . char ')'
