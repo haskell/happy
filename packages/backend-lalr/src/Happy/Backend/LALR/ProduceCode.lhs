@@ -4,25 +4,25 @@ The code generator.
 (c) 1993-2001 Andy Gill, Simon Marlow
 -----------------------------------------------------------------------------
 
-> module Happy.Backend.ProduceCode (produceParser) where
+> module Happy.Backend.LALR.ProduceCode (produceParser) where
 
-> import Paths_happy_backend    ( version )
-> import Data.Version           ( showVersion )
+> import Paths_happy_backend_lalr  ( version )
+> import Data.Version              ( showVersion )
 > import Happy.Grammar
-> import Happy.Backend.Target   ( Target(..) )
+> import Happy.Backend.LALR.Target ( Target(..) )
 > import Happy.Tabular.LALR
 
-> import Data.Maybe             ( isJust, isNothing, fromMaybe )
-> import Data.Char              ( ord, chr )
-> import Data.List              ( sortBy )
+> import Data.Maybe                ( isJust, isNothing, fromMaybe )
+> import Data.Char                 ( ord, chr )
+> import Data.List                 ( sortBy )
 
-> import Control.Monad          ( forM_ )
-> import Control.Monad.ST       ( ST, runST )
-> import Data.Bits              ( setBit )
-> import Data.Array.ST          ( STUArray )
-> import Data.Array.Unboxed     ( UArray )
-> import Data.Array.MArray      ( MArray(..), freeze, readArray, writeArray )
-> import Data.Array.IArray      ( Array, IArray(..), (!), array, assocs, elems )
+> import Control.Monad             ( forM_ )
+> import Control.Monad.ST          ( ST, runST )
+> import Data.Bits                 ( setBit )
+> import Data.Array.ST             ( STUArray )
+> import Data.Array.Unboxed        ( UArray )
+> import Data.Array.MArray         ( MArray(..), freeze, readArray, writeArray )
+> import Data.Array.IArray         ( Array, IArray(..), (!), array, assocs, elems )
 
 %-----------------------------------------------------------------------------
 Produce the complete output file.

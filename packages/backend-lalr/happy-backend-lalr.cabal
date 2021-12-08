@@ -1,4 +1,4 @@
-name:            happy-backend
+name:            happy-backend-lalr
 version:         1.21.0
 license:         BSD2
 license-file:    LICENSE
@@ -15,8 +15,8 @@ synopsis:        A table-based backend for happy
 
 Description:
   Happy is a parser generator for Haskell.
-  Happy-Backend is responsible for code-generation:
-  It converts action and goto tables into Haskell code.
+  Happy-Backend-LALR is responsible for code-generation:
+  It converts action and goto tables into LALR Haskell code.
 
 
 tested-with:
@@ -41,9 +41,9 @@ data-files:
 library
   hs-source-dirs:      src
 
-  exposed-modules:     Happy.Backend,
-                       Happy.Backend.Target,
-                       Happy.Backend.ProduceCode
+  exposed-modules:     Happy.Backend.LALR,
+                       Happy.Backend.LALR.Target,
+                       Happy.Backend.LALR.ProduceCode
   build-depends:       base < 5,
                        array,
                        happy-grammar == 1.21.0,
@@ -52,4 +52,4 @@ library
   default-language:    Haskell98
   default-extensions:  CPP, MagicHash, FlexibleContexts
   ghc-options:         -Wall
-  other-modules:       Paths_happy_backend
+  other-modules:       Paths_happy_backend_lalr
