@@ -11,6 +11,7 @@ The code generator.
 > import Happy.Grammar
 > import Happy.Backend.LALR.Target ( Target(..) )
 > import Happy.Tabular.LALR
+> import Happy.Backend.LALR.SyntaxLib
 
 > import Data.Maybe                ( isJust, isNothing, fromMaybe )
 > import Data.Char                 ( ord, chr )
@@ -576,9 +577,18 @@ machinery to discard states in the parser...
 >
 >    produceActionTable TargetArrayBased
 >       = produceActionArray
->       . produceReduceArray
->       . str "happy_n_terms = " . shows n_terminals . str " :: Prelude.Int\n"
->       . str "happy_n_nonterms = " . shows n_nonterminals . str " :: Prelude.Int\n\n"
+>       . renderDocDecs [
+>           [produceReduceArray],
+>           [
+>             sigD    "happy_n_terms" (varE "Prelude.Int"),
+>             varBind "happy_n_terms" (intE n_terminals)
+>           ],
+>           [
+>             sigD    "happy_n_nonterms" (varE "Prelude.Int"),
+>             varBind "happy_n_nonterms" (intE n_nonterminals)
+>           ]
+>         ]
+>       . nl
 >
 >    produceExpListPerState
 >       = produceExpListArray
@@ -744,15 +754,13 @@ action array indexed by (terminal * last_state) + state
 >
 >    table_size = length table - 1
 >
->    produceReduceArray
->       = {- str "happyReduceArr :: Array Int a\n" -}
->         str "happyReduceArr = Happy_Data_Array.array ("
->               . shows (n_starts :: Int) -- omit the %start reductions
->               . str ", "
->               . shows n_rules
->               . str ") [\n"
->       . interleave' ",\n" (map reduceArrElem [n_starts..n_rules])
->       . str "\n\t]\n\n"
+>    produceReduceArray =
+>       {- str "happyReduceArr :: Array Int a\n" -}
+>       varBind "happyReduceArr" $
+>         varE "Happy_Data_Array.array"
+>           `appE` tupE [intE n_starts, -- omit the %start reductions
+>                        intE n_rules]
+>           `appE` listE (map reduceArrElem [n_starts..n_rules])
 
 >    n_rules = length prods - 1 :: Int
 
@@ -917,8 +925,7 @@ directive determins the API of the provided function.
 >                               Just _  -> str "(\\(tokens, explist) -> happyError)"
 
 >    reduceArrElem n
->      = str "\t(" . shows n . str " , "
->      . str "happyReduce_" . shows n . char ')'
+>      = tupE [intE n, varE (mkReduceFun n "")]
 
 -----------------------------------------------------------------------------
 -- Produce the parser entry and exit points
