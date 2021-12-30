@@ -258,7 +258,9 @@ Get the token specs in terms of Names.
 >               token_type        = getTokenType dirs,
 >               expect            = getExpect dirs,
 >               attributes        = attrs,
->               attributetype     = attrType
+>               attributetype     = attrType,
+>               hd                = _hd,
+>               tl                = _tl
 >       })
 
 Gofer-like stuff:

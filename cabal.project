@@ -2,6 +2,7 @@ packages:
   packages/backend-lalr
   packages/backend-glr
   packages/frontend
+  packages/frontend-cli
   packages/grammar
   packages/tabular
   ./

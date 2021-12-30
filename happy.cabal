@@ -150,6 +150,7 @@ executable happy
                  happy-grammar == 1.21.0,
                  happy-tabular == 1.21.0,
                  happy-frontend == 1.21.0,
+                 happy-frontend-cli == 1.21.0,
                  happy-backend-lalr == 1.21.0,
                  happy-backend-glr == 1.21.0
 

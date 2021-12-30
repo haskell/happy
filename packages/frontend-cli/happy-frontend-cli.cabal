@@ -1,0 +1,40 @@
+name:            happy-frontend-cli
+version:         1.21.0
+license:         BSD2
+license-file:    LICENSE
+copyright:       (c) Andy Gill, Simon Marlow
+author:          Andy Gill and Simon Marlow
+maintainer:      Simon Marlow <marlowsd@gmail.com>
+bug-reports:     https://github.com/simonmar/happy/issues
+stability:       stable
+homepage:        https://www.haskell.org/happy/
+category:        Development
+cabal-version:   >= 1.10
+build-type:      Simple
+synopsis:        CLI for happy-frontend
+
+tested-with:
+        GHC == 7.0.4
+        GHC == 7.4.2
+        GHC == 7.6.3
+        GHC == 7.8.4
+        GHC == 7.10.3
+        GHC == 8.0.2
+        GHC == 8.2.2
+        GHC == 8.4.4
+        GHC == 8.6.5
+        GHC == 8.8.4
+        GHC == 8.10.4
+        GHC == 9.0.1
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     Happy.Frontend.CLI
+
+  build-depends:       base < 5,
+                       happy-grammar == 1.21.0,
+                       happy-frontend == 1.21.0
+
+  default-language:    Haskell98
+  default-extensions:  CPP, MagicHash, FlexibleContexts
+  ghc-options: -Wall

@@ -52,7 +52,9 @@ The Grammar data type.
 >               attributetype     :: String,
 >               lexer             :: Maybe (String,String),
 >               error_handler     :: Maybe String,
->               error_sig         :: ErrorHandlerType
+>               error_sig         :: ErrorHandlerType,
+>               hd                :: Maybe String,
+>               tl                :: Maybe String
 >       }
 
 > instance Show Grammar where
