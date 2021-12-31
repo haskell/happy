@@ -1,4 +1,6 @@
-# Unreleased
+# Revision history for Happy
+
+## Unreleased
 
 The main focus of this release was modularizing Happy.
 
