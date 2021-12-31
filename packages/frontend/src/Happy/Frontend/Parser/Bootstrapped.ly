@@ -8,7 +8,7 @@ The parser.
 
 > {
 > {-# OPTIONS_GHC -w #-}
-> module Happy.Frontend.Parser.Bootstrapped (ourParser,AbsSyn) where
+> module Happy.Frontend.Parser.Bootstrapped (ourParser) where
 > import Happy.Frontend.ParseMonad.Class
 > import Happy.Frontend.ParseMonad.Bootstrapped
 > import Happy.Frontend.AbsSyn
@@ -52,9 +52,11 @@ The parser.
 
 > %%
 
-> parser :: { AbsSyn }
->       : optCode tokInfos "%%" rules optCode
->                               { AbsSyn $1 (reverse $2) (reverse $4) $5 }
+> parser :: { BookendedAbsSyn }
+>       : optCode core_parser optCode   { BookendedAbsSyn $1 $2 $3 }
+
+> core_parser :: { AbsSyn }
+>       : tokInfos "%%" rules           { AbsSyn (reverse $1) (reverse $3) }
 
 > rules :: { [Rule] }
 >       : rules rule    { $2 : $1 }

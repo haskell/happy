@@ -75,9 +75,9 @@ Open the file.
 
 Parse, using bootstrapping parser.
 
->       (abssyn, hd, tl) <- case parseYFileContents file of
+>       (BookendedAbsSyn hd abssyn tl) <- case parseYFileContents file of
 >               Left err -> die (fl_name ++ ':' : err)
->               Right abssyn@(AbsSyn hd _ _ tl) -> return (abssyn, hd, tl)
+>               Right bas -> return bas
 
 Mangle the syntax into something useful.
 

@@ -10,7 +10,7 @@ render :: Doc -> String
 render = maybe "" ($ "")
 
 ppAbsSyn :: AbsSyn -> Doc
-ppAbsSyn (AbsSyn _ ds rs _) = vsep (vcat (map ppDirective ds) : map ppRule rs)
+ppAbsSyn (AbsSyn ds rs) = vsep (vcat (map ppDirective ds) : map ppRule rs)
 
 ppDirective :: Directive a -> Doc
 ppDirective dir =
