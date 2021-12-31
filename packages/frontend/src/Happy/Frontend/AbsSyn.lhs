@@ -7,6 +7,7 @@ Abstract syntax for grammar files.
 Here is the abstract syntax of the language we parse.
 
 > module Happy.Frontend.AbsSyn (
+>       BookendedAbsSyn(..),
 >       AbsSyn(..), Directive(..),
 >       getTokenType, getTokenSpec, getParserNames, getLexer,
 >       getImportedIdentity, getMonad, getError,
@@ -17,12 +18,16 @@ Here is the abstract syntax of the language we parse.
 
 > import Happy.Grammar (ErrorHandlerType(..))
 
+> data BookendedAbsSyn
+>     = BookendedAbsSyn
+>         (Maybe String)       -- header
+>         AbsSyn
+>         (Maybe String)       -- footer
+
 > data AbsSyn
 >     = AbsSyn
->         (Maybe String)       -- header
 >         [Directive String]   -- directives
 >         [Rule]               -- productions
->         (Maybe String)       -- footer
 
 > data Rule
 >     = Rule

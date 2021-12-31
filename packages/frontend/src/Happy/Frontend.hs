@@ -4,7 +4,7 @@ import Happy.Frontend.AbsSyn
 import Happy.Frontend.Parser
 import Happy.Frontend.ParseMonad.Class
 
-parseYFileContents :: String -> ParseResult AbsSyn
+parseYFileContents :: String -> ParseResult BookendedAbsSyn
 parseYFileContents contents = runFromStartP ourParser contents 1
 
 data FileType = Y | LY

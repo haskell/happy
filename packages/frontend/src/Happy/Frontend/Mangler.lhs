@@ -50,7 +50,7 @@ This bit is a real mess, mainly because of the error message support.
 >   where (g, errs) = runWriter (manglerM file abssyn)
 
 > manglerM :: FilePath -> AbsSyn -> M Grammar
-> manglerM file (AbsSyn _hd dirs rules' _tl) =
+> manglerM file (AbsSyn dirs rules') =
 >   -- add filename to all error messages
 >   mapWriter (\(a,e) -> (a, map (\s -> file ++ ": " ++ s) e)) $ do
 

@@ -15,15 +15,20 @@ import Happy.Frontend.Lexer
 
 type Parser = P Token
 
-ourParser :: Parser AbsSyn
+ourParser :: Parser BookendedAbsSyn
 ourParser = do
   headerCode <- optCodeP
+  absSyn <- coreParser
+  footerCode <- optCodeP
+  eofP
+  return $ BookendedAbsSyn headerCode absSyn footerCode
+
+coreParser :: Parser AbsSyn
+coreParser = do
   tokInfos <- manyP optTokInfoP
   expectKW "Expected %%" TokDoublePercent
   rules <- rulesP
-  footerCode <- optCodeP
-  eofP
-  return (AbsSyn headerCode tokInfos rules footerCode)
+  return $ AbsSyn tokInfos rules
 
 optCodeP :: Parser (Maybe String)
 optCodeP = withToken match where
