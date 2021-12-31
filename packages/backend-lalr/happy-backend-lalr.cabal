@@ -43,13 +43,15 @@ library
 
   exposed-modules:     Happy.Backend.LALR,
                        Happy.Backend.LALR.Target,
-                       Happy.Backend.LALR.ProduceCode
+                       Happy.Backend.LALR.ProduceCode,
+                       Happy.Backend.LALR.SyntaxLib
   build-depends:       base < 5,
                        array,
+                       pretty,
                        happy-grammar == 1.21.0,
                        happy-tabular == 1.21.0
 
   default-language:    Haskell98
-  default-extensions:  CPP, MagicHash, FlexibleContexts
+  default-extensions:  CPP, MagicHash, FlexibleContexts, GeneralizedNewtypeDeriving
   ghc-options:         -Wall
   other-modules:       Paths_happy_backend_lalr
