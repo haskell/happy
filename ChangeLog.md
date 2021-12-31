@@ -1,3 +1,15 @@
+# Unreleased
+
+The main focus of this release was modularizing Happy.
+
+* Break up into libraries:
+
+  - `happy-backend-glr`
+  - `happy-backend-lalr`
+  - `happy-frontend`
+  - `happy-grammar`
+  - `happy-tabular`
+
 ## 1.21.0
 
 The main focus of this release was revamping the build system and bootstrapping.
