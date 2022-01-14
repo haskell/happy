@@ -8,6 +8,7 @@ Mangler converts AbsSyn to Grammar
 
 > module Happy.Frontend.Mangler (mangler) where
 
+> import Happy.CodeGen.Common.Options
 > import Happy.Grammar
 > import Happy.Frontend.AbsSyn
 #ifdef HAPPY_BOOTSTRAP
@@ -43,13 +44,13 @@ This bit is a real mess, mainly because of the error message support.
 > addErr :: ErrMsg -> M ()
 > addErr e = tell [e]
 
-> mangler :: FilePath -> AbsSyn -> Either [ErrMsg] Grammar
+> mangler :: FilePath -> AbsSyn -> Either [ErrMsg] (Grammar, CommonOptions)
 > mangler file abssyn
->   | null errs = Right g
+>   | null errs = Right gd
 >   | otherwise = Left errs
->   where (g, errs) = runWriter (manglerM file abssyn)
+>   where (gd, errs) = runWriter (manglerM file abssyn)
 
-> manglerM :: FilePath -> AbsSyn -> M Grammar
+> manglerM :: FilePath -> AbsSyn -> M (Grammar, CommonOptions)
 > manglerM file (AbsSyn dirs rules') =
 >   -- add filename to all error messages
 >   mapWriter (\(a,e) -> (a, map (\s -> file ++ ": " ++ s) e)) $ do
@@ -250,15 +251,17 @@ Get the token specs in terms of Names.
 >               first_term        = first_t,
 >               eof_term          = last terminal_names,
 >               priorities        = prios,
+>               attributes        = attrs,
+>               attributetype     = attrType
+>       },
+>       CommonOptions {
 >               imported_identity                 = getImportedIdentity dirs,
 >               monad             = getMonad dirs,
 >               lexer             = getLexer dirs,
 >               error_handler     = getError dirs,
 >               error_sig         = getErrorHandlerType dirs,
 >               token_type        = getTokenType dirs,
->               expect            = getExpect dirs,
->               attributes        = attrs,
->               attributetype     = attrType
+>               expect            = getExpect dirs
 >       })
 
 Gofer-like stuff:

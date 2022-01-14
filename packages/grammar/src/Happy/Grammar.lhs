@@ -7,7 +7,7 @@ The Grammar data type.
 > module Happy.Grammar (
 >       Name,
 >
->       Production(..), Grammar(..), ErrorHandlerType(..),
+>       Production(..), Grammar(..),
 >       Priority(..),
 >       Assoc(..),
 >
@@ -20,10 +20,6 @@ The Grammar data type.
 > import Data.Array
 > import Data.Char (isAlphaNum)
 > type Name = Int
-
-> data ErrorHandlerType
->   = ErrorHandlerTypeDefault
->   | ErrorHandlerTypeExpList
 
 > data Production
 >       = Production Name [Name] (String,[Int]) Priority
@@ -44,15 +40,8 @@ The Grammar data type.
 >               first_term        :: Name,
 >               eof_term          :: Name,
 >               priorities        :: [(Name,Priority)],
->               token_type        :: String,
->               imported_identity :: Bool,
->               monad             :: (Bool,String,String,String,String),
->               expect            :: Maybe Int,
 >               attributes        :: [(String,String)],
->               attributetype     :: String,
->               lexer             :: Maybe (String,String),
->               error_handler     :: Maybe String,
->               error_sig         :: ErrorHandlerType
+>               attributetype     :: String
 >       }
 
 > instance Show Grammar where

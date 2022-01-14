@@ -8,6 +8,7 @@ The code generator.
 
 > import Paths_happy_backend_lalr  ( version )
 > import Data.Version              ( showVersion )
+> import Happy.CodeGen.Common.Options
 > import Happy.Grammar
 > import Happy.Backend.LALR.Target ( Target(..) )
 > import Happy.Tabular.LALR
@@ -28,6 +29,7 @@ The code generator.
 Produce the complete output file.
 
 > produceParser :: Grammar                      -- grammar info
+>               -> CommonOptions                -- common codegen options
 >               -> ActionTable                  -- action table
 >               -> GotoTable                    -- goto table
 >               -> [String]                     -- language extensions
@@ -48,16 +50,18 @@ Produce the complete output file.
 >               , eof_term = eof
 >               , first_term = fst_term
 >               , token_names = token_names'
->               , lexer = lexer'
->               , imported_identity = imported_identity'
->               , monad = (use_monad,monad_context,monad_tycon,monad_then,monad_return)
 >               , token_specs = token_rep
->               , token_type = token_type'
 >               , starts = starts'
->               , error_handler = error_handler'
->               , error_sig = error_sig'
 >               , attributetype = attributetype'
 >               , attributes = attributes'
+>               })
+>               (CommonOptions
+>               { lexer = lexer'
+>               , imported_identity = imported_identity'
+>               , monad = (use_monad,monad_context,monad_tycon,monad_then,monad_return)
+>               , token_type = token_type'
+>               , error_handler = error_handler'
+>               , error_sig = error_sig'
 >               })
 >               action goto lang_exts module_header module_trailer
 >               target coerce ghc strict
