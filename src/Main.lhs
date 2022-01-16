@@ -188,23 +188,29 @@ Add any special options or imports required by the parsing machinery.
 >             (case hd of Just s -> s; Nothing -> "")
 >             ++ importsToInject opt_ghc opt_debug
 
+>       if OptGLR `elem` cli
+
 
 %---------------------------------------
 Branch off to GLR parser production
 
->       let glr_decode | OptGLR_Decode `elem` cli = TreeDecode
->                      | otherwise                = LabelDecode
->           filtering  | OptGLR_Filter `elem` cli = UseFiltering
->                      | otherwise                = NoFiltering
->           ghc_exts   | OptGhcTarget `elem` cli  = UseGhcExts
->                                                   (importsToInject opt_ghc opt_debug)
+>         then do
+
+>           let
+>             glr_decode
+>               | OptGLR_Decode `elem` cli = TreeDecode
+>               | otherwise                = LabelDecode
+>             filtering
+>               | OptGLR_Filter `elem` cli = UseFiltering
+>               | otherwise                = NoFiltering
+>             ghc_exts
+>               | OptGhcTarget `elem` cli  = UseGhcExts
+>                                              (importsToInject opt_ghc opt_debug)
 
 Unlike below, don't always pass CPP, because only one of the files needs it.
 
->                                                   (langExtsToInject opt_ghc)
->                      | otherwise                = NoGhcExts
->       if OptGLR `elem` cli
->         then do
+>                                              (langExtsToInject opt_ghc)
+>               | otherwise                = NoGhcExts
 >           template' <- getTemplate glrBackendDataDir cli
 >           let basename  = takeWhile (/='.') outfilename
 >           let tbls  = (action,goto)
@@ -231,11 +237,11 @@ Unlike below, don't always pass CPP, because only one of the files needs it.
 >           writeFile (basename ++ "Data.hs") dat
 >           writeFile (basename ++ ".hs") parser
 
->         else do
-
 
 %---------------------------------------
 Resume normal (ie, non-GLR) processing
+
+>         else do
 
 >           template'   <- getTemplate lalrBackendDataDir cli
 >           let
