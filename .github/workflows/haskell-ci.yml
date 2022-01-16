@@ -107,6 +107,7 @@ jobs:
           echo "CABAL_CONFIG=$HOME/.cabal/config" >> "$GITHUB_ENV"
           HCDIR=/opt/$HCKIND/$HCVER
           HC=$HCDIR/bin/$HCKIND
+          echo "$HCDIR/bin" >> "$GITHUB_PATH"
           echo "HC=$HC" >> "$GITHUB_ENV"
           echo "HCPKG=$HCDIR/bin/$HCKIND-pkg" >> "$GITHUB_ENV"
           echo "HADDOCK=$HCDIR/bin/haddock" >> "$GITHUB_ENV"
@@ -232,7 +233,7 @@ jobs:
           cat cabal.project.local
       - name: dump install plan
         run: |
-          $CABAL v2-build $ARG_COMPILER $ARG_TESTS $ARG_BENCH --dry-run all
+          $CABAL v2-build --flags=-bootstrap $ARG_COMPILER $ARG_TESTS $ARG_BENCH --dry-run all
           cabal-plan
       - name: cache
         uses: actions/cache@v2
@@ -242,17 +243,20 @@ jobs:
           restore-keys: ${{ runner.os }}-${{ matrix.compiler }}-
       - name: install dependencies
         run: |
-          $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks --dependencies-only -j2 all
-          $CABAL v2-build $ARG_COMPILER $ARG_TESTS $ARG_BENCH --dependencies-only -j2 all
-      - name: build w/o tests
+          $CABAL v2-build --flags=-bootstrap $ARG_COMPILER --disable-tests --disable-benchmarks --dependencies-only -j2 all
+          $CABAL v2-build --flags=-bootstrap $ARG_COMPILER $ARG_TESTS $ARG_BENCH --dependencies-only -j2 all
+      - name: build w/o tests and install
         run: |
-          $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks all
+          $CABAL v2-install --reinstall --overwrite-policy=always --flags=-bootstrap $ARG_COMPILER --disable-tests --disable-benchmarks happy
       - name: build
         run: |
-          $CABAL v2-build $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --write-ghc-environment-files=always
+          $CABAL v2-build --flags=-bootstrap $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --write-ghc-environment-files=always
       - name: tests
         run: |
-          $CABAL v2-test $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --test-show-details=direct
+          export HAPPY=$HOME/.cabal/bin/happy
+          export HC
+          export CABAL
+          $CABAL v2-test --flags=-bootstrap $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --test-show-details=direct
       - name: cabal check
         run: |
           cd ${PKGDIR_happy_backend_glr} || false
@@ -275,4 +279,4 @@ jobs:
       - name: unconstrained build
         run: |
           rm -f cabal.project.local
-          $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks all
+          $CABAL v2-build --flags=-bootstrap $ARG_COMPILER --disable-tests --disable-benchmarks all
