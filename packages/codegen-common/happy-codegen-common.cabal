@@ -1,4 +1,4 @@
-name:            happy-backend-lalr
+name:            happy-codegen-common
 version:         1.21.0
 license:         BSD2
 license-file:    LICENSE
@@ -11,13 +11,12 @@ homepage:        https://www.haskell.org/happy/
 category:        Development
 cabal-version:   >= 1.10
 build-type:      Simple
-synopsis:        A table-based backend for happy
+synopsis:        Defintions for any code generator for Happy
 
 Description:
   Happy is a parser generator for Haskell.
-  Happy-Backend-LALR is responsible for code-generation:
-  It converts action and goto tables into LALR Haskell code.
-
+  Happy.CodeGen.Common.Options exposes the cross-package CommonOptions datatype,
+  which represents a directives as can be parsed and processed by happy.
 
 tested-with:
         GHC == 7.0.4
@@ -33,24 +32,14 @@ tested-with:
         GHC == 8.10.4
         GHC == 9.0.1
 
-data-dir: data
-
-data-files:
-        HappyTemplate.hs
-
 library
   hs-source-dirs:      src
 
-  exposed-modules:     Happy.Backend.LALR,
-                       Happy.Backend.LALR.Target,
-                       Happy.Backend.LALR.ProduceCode
+  exposed-modules:     Happy.CodeGen.Common.Options
   build-depends:       base < 5,
-                       array,
-                       happy-codegen-common == 1.21.0,
-                       happy-grammar == 1.21.0,
-                       happy-tabular == 1.21.0
+                       array
 
   default-language:    Haskell98
   default-extensions:  CPP, MagicHash, FlexibleContexts
-  ghc-options:         -Wall
-  other-modules:       Paths_happy_backend_lalr
+  ghc-options: -Wall
+  other-modules:

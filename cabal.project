@@ -1,7 +1,3 @@
 packages:
-  packages/backend-lalr
-  packages/backend-glr
-  packages/frontend
-  packages/grammar
-  packages/tabular
+  packages/*/happy-*.cabal
   ./

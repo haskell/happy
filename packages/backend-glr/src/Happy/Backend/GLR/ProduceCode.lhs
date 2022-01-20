@@ -18,6 +18,7 @@ This module is designed as an extension to the Haskell parser generator Happy.
 >                       ) where
 
 > import Paths_happy_backend_glr ( version )
+> import Happy.CodeGen.Common.Options
 > import Happy.Grammar
 > import Happy.Tabular.LALR
 > import Data.Array ( Array, (!), array, assocs )
@@ -90,10 +91,11 @@ the driver and data strs (large template).
 >        -> Maybe String  -- User-defined stuff (token DT, lexer etc.)
 >        -> (DebugMode,Options)       -- selecting code-gen style
 >        -> Grammar       -- Happy Grammar
+>        -> CommonOptions -- Happy.CodeGen.Common.Options
 >        -> (String       -- data
 >           ,String)      -- parser
 >
-> produceGLRParser (base, lib) basename tables start header trailer (debug,options) g
+> produceGLRParser (base, lib) basename tables start header trailer (debug,options) g common_options
 >  = ( content base $ ""
 >    , lib_content lib
 >    )
@@ -142,7 +144,7 @@ Extract the string that comes before the module declaration...
 
 >       return $ before ++ "\n" ++ after
 
->   (sem_def, sem_info) = mkGSemType options g
+>   (sem_def, sem_info) = mkGSemType options g common_options
 >   table_text = mkTbls tables sem_info (ghcExts_opt) g
 
 >   header_parts = fmap (span (\x -> take 3 (dropWhile isSpace x) == "{-#")
@@ -187,15 +189,15 @@ Extract the string that comes before the module declaration...
 >       . nl
 >       . nl
 
->     . mkGSymbols g     .nl
+>     . mkGSymbols g common_options .nl
 >     . nl
->     . sem_def          .nl
+>     . sem_def                     .nl
 >     . nl
->     . mkSemObjects  options (monad_sub g) sem_info      .nl
+>     . mkSemObjects  options (monad_sub common_options) sem_info  .nl
 >     . nl
->     . mkDecodeUtils options (monad_sub g) sem_info      .nl
+>     . mkDecodeUtils options (monad_sub common_options) sem_info  .nl
 >     . nl
->     . user_def_token_code (token_type g)                .nl
+>     . user_def_token_code (token_type common_options)            .nl
 >     . nl
 >     . table_text
 
@@ -209,7 +211,7 @@ Extract the string that comes before the module declaration...
 >                  [ "{-# LANGUAGE " ++ l ++ " #-}\n" | l <- lang_exts ]
 >              , comment "driver" ++ "\n"
 >              , "module " ++ mod_name ++ "("
->              , case lexer g of
+>              , case lexer common_options of
 >                  Nothing     -> ""
 >                  Just (lf,_) -> "  " ++ lf ++ ","
 >              , "  " ++ start
@@ -371,8 +373,8 @@ Do the same with the Happy goto table.
 %-----------------------------------------------------------------------------
 Create the 'GSymbol' ADT for the symbols in the grammar
 
-> mkGSymbols :: Grammar -> ShowS
-> mkGSymbols g
+> mkGSymbols :: Grammar -> CommonOptions -> ShowS
+> mkGSymbols g common_options
 >  = str dec
 >  . str eof
 >  . str tok
@@ -384,7 +386,7 @@ Create the 'GSymbol' ADT for the symbols in the grammar
 >  where
 >   dec  = "data GSymbol"
 >   eof  = " = HappyEOF"
->   tok  = " | HappyTok {-!Int-} (" ++ token_type g ++ ")"
+>   tok  = " | HappyTok {-!Int-} (" ++ token_type common_options ++ ")"
 >   der  = "   deriving (Show,Eq,Ord)"
 >   syms = [ token_names g ! i | i <- user_non_terminals g ]
 
@@ -422,17 +424,17 @@ Creating a type for storing semantic rules
 > type SemInfo
 >  = [(String, String, [Int], [((Int,Int), ([(Int,String)],String), [Int])])]
 
-> mkGSemType :: Options -> Grammar -> (ShowS, SemInfo)
-> mkGSemType (TreeDecode,_,_) g
+> mkGSemType :: Options -> Grammar -> CommonOptions -> (ShowS, SemInfo)
+> mkGSemType (TreeDecode,_,_) g common_options
 >  = (def, map snd syms)
 >  where
->   mtype s = case monad_sub g of
+>   mtype s = case monad_sub common_options of
 >               Nothing       -> s
 >               Just (ty,_,_) -> ty ++ ' ' : brack s ""
 
 >   def  = str "data GSem" . nl
 >        . str " = NoSem"  . nl
->        . str (" | SemTok (" ++  token_type g ++ ")") . nl
+>        . str (" | SemTok (" ++  token_type common_options ++ ")") . nl
 >        . interleave "\n" [ str " | " . str sym . str " "
 >                          | sym <- map fst syms ]
 >        . str "instance Show GSem where" . nl
@@ -470,18 +472,18 @@ Creating a type for storing semantic rules
 >                                    , ts !! k == t ]
 >          ]
 
->   typeOf n | n `elem` terminals g = token_type g
+>   typeOf n | n `elem` terminals g = token_type common_options
 >            | otherwise            = case types g ! n of
 >                                       Nothing -> "()"         -- default
 >                                       Just t  -> t
 
 > -- NB expects that such labels are Showable
-> mkGSemType (LabelDecode,_,_) g
+> mkGSemType (LabelDecode,_,_) g common_options
 >  = (def, map snd syms)
 >  where
 >   def = str "data GSem" . nl
 >       . str " = NoSem"  . nl
->       . str (" | SemTok (" ++  token_type g ++ ")")
+>       . str (" | SemTok (" ++  token_type common_options ++ ")")
 >       . interleave "\n" [ str " | "  . str sym . str " "
 >                         | sym <- map fst syms ]
 >       . str "   deriving (Show)" . nl
@@ -670,9 +672,9 @@ only unpacked when needed. Using classes here to manage the unpacking.
 This selects the info used for monadic parser generation
 
 > type MonadInfo = Maybe (String,String,String)
-> monad_sub :: Grammar -> MonadInfo
-> monad_sub g
->  = case monad g of
+> monad_sub :: CommonOptions -> MonadInfo
+> monad_sub common_options
+>  = case monad common_options of
 >      (True, _, ty,bd,ret) -> Just (ty,bd,ret)
 >      _                    -> Nothing
 >    -- TMP: only use monad info if it was user-declared, and ignore ctxt

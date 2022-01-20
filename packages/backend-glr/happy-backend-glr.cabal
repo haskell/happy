@@ -46,6 +46,7 @@ library
                        Happy.Backend.GLR.ProduceCode
   build-depends:       base < 5,
                        array,
+                       happy-codegen-common == 1.21.0,
                        happy-grammar == 1.21.0,
                        happy-tabular == 1.21.0
 
