@@ -8,6 +8,9 @@
 > , AgConditional(..)
 
 > , HasLexer (..)
+
+> , Index
+
 > , agLexAll
 > , subRefVal
 > , selfRefVal
@@ -17,6 +20,8 @@
 > import Data.Char
 > import Happy.Frontend.ParseMonad.Class
 
+> type Index = Int
+
 > data AgToken
 >   = AgTok_LBrace
 >   | AgTok_RBrace
@@ -24,13 +29,13 @@
 >   | AgTok_Semicolon
 >   | AgTok_Eq
 >   | AgTok_SelfRef String
->   | AgTok_SubRef (Int, String)
+>   | AgTok_SubRef (Index, String)
 >   | AgTok_RightmostRef String
 >   | AgTok_Unknown String
 >   | AgTok_EOF
 >  deriving (Show,Eq,Ord)
 
-> subRefVal :: AgToken -> (Int, String)
+> subRefVal :: AgToken -> (Index, String)
 > subRefVal   (AgTok_SubRef x)       = x
 > subRefVal   _ = error "subRefVal: Bad value"
 > selfRefVal :: AgToken -> String
@@ -55,7 +60,7 @@ a separate data type for each core rule type. We don't need one for
 > data AgSelfAssign = MkAgSelfAssign String [AgToken]
 >  deriving (Show,Eq,Ord)
 
-> data AgSubAssign = MkAgSubAssign (Int, String) [AgToken]
+> data AgSubAssign = MkAgSubAssign (Index, String) [AgToken]
 >  deriving (Show,Eq,Ord)
 
 > data AgConditional = MkAgConditional [AgToken]

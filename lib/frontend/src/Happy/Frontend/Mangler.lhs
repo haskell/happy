@@ -70,14 +70,13 @@ go do special processing.  If not, pass on to the regular processing routine
 
 >       terminal_strs  = concat (map getTerm dirs) ++ [eofName]
 
->       n_starts   = length starts'
->       n_nts      = length nonterm_strs
->       n_ts       = length terminal_strs
->       first_nt   = firstStartTok + n_starts
->       first_t    = first_nt + n_nts
->       last_start = first_nt - 1
->       last_nt    = first_t  - 1
->       last_t     = first_t + n_ts - 1
+>       first_nt, first_t, last_start, last_nt, last_t :: Name
+
+>       first_nt   = MkName $ getName firstStartTok + length starts'
+>       first_t    = MkName $ getName first_nt + length nonterm_strs
+>       last_start = MkName $ getName first_nt - 1
+>       last_nt    = MkName $ getName first_t  - 1
+>       last_t     = MkName $ getName first_t + length terminal_strs - 1
 
 >       start_names    = [ firstStartTok .. last_start ]
 >       nonterm_names  = [ first_nt .. last_nt ]
@@ -210,11 +209,11 @@ Translate the rules from string to name-based.
 >
 
 >   let
->       type_array :: Array Int (Maybe String)
+>       type_array :: Array Name (Maybe String)
 >       type_array = accumArray (\_ x -> x) Nothing (first_nt, last_nt)
 >                    [ (nm, Just t) | (nm, t) <- tys ]
 
->       env_array :: Array Int String
+>       env_array :: Array Name String
 >       env_array = array (errorTok, last_t) name_env
 >   -- in
 
@@ -228,7 +227,7 @@ Get the token specs in terms of Names.
 >   let
 >      ass = combinePairs [ (a,no)
 >                         | (Production a _ _ _,no) <- zip productions' [0..] ]
->      arr = array (firstStartTok, length ass - 1 + firstStartTok) ass
+>      arr = array (firstStartTok, MkName $ length ass - 1 + getName firstStartTok) ass
 
 >      lookup_prods :: Name -> [Int]
 >      lookup_prods x | x >= firstStartTok && x < first_t = arr ! x
