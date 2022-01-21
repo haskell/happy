@@ -9,7 +9,6 @@ Implementation of FIRST
 > import Happy.Tabular.NameSet ( NameSet )
 > import qualified Happy.Tabular.NameSet as Set
 > import Happy.Grammar
-> import Data.IntSet (IntSet)
 
 \subsection{Utilities}
 
@@ -45,7 +44,7 @@ This will never terminate.
 >               [ (name,Set.empty) | name <- nts ]
 
 > getNext :: Name -> (a -> Production e) -> (Name -> [a])
->         -> [(Name, IntSet)] -> [(Name, NameSet)]
+>         -> [(Name, NameSet)] -> [(Name, NameSet)]
 > getNext fst_term prodNo prodsOfName env =
 >               [ (nm, next nm) | (nm,_) <- env ]
 >    where

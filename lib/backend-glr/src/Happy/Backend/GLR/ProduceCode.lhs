@@ -278,7 +278,7 @@ that will be used for them in the GLR parser.
 >                   TokenFixed t -> t
 >                   TokenWithValue e -> substExpressionWithHole e "_"
 
-> toGSym :: [(Int, String)] -> Int -> String
+> toGSym :: [(Name, String)] -> Name -> String
 > toGSym gsMap i
 >  = case lookup i gsMap of
 >     Nothing -> error $ "No representation for symbol " ++ show i
@@ -291,7 +291,7 @@ function that can be included as the action table in the GLR parser.
 It also shares identical reduction values as CAFs
 
 > writeActionTbl
->  :: ActionTable -> [(Int,String)] -> (Name->String)
+>  :: ActionTable -> [(Name,String)] -> (Name->String)
 >                                       -> GhcExts -> Grammar String -> ShowS
 > writeActionTbl acTbl gsMap semfn_map exts g
 >  = interleave "\n"
@@ -331,7 +331,7 @@ It also shares identical reduction values as CAFs
 
 >   mkRed r = "red_" ++ show r
 >   mkReductions = [ mkRedDefn p
->                  | p@(_, Production n _ _ _) <- zip [0..] $ productions g
+>                  | p@(_, Production n _ _ _) <- zip [MkName 0 ..] $ productions g
 >                  , n `notElem` start_productions g ]
 
 >   mkRedDefn (r, Production lhs_id rhs_ids (_code,_dollar_vars) _)
@@ -345,7 +345,7 @@ It also shares identical reduction values as CAFs
 %-----------------------------------------------------------------------------
 Do the same with the Happy goto table.
 
-> writeGotoTbl :: GotoTable -> [(Int,String)] -> GhcExts -> ShowS
+> writeGotoTbl :: GotoTable -> [(Name,String)] -> GhcExts -> ShowS
 > writeGotoTbl goTbl gsMap exts
 >  = interleave "\n" (map str $ filter (not.null) mkLines)
 >  . str errorLine . nl
@@ -588,9 +588,11 @@ maps production name to the underlying (possibly shared) semantic function
 
 > mk_semfn_map :: SemInfo -> Array Name String
 > mk_semfn_map sem_info
->  = array (0,maximum $ map fst prod_map) prod_map
+>  = array (i_min, i_max) prod_map
 >    where
->        prod_map = [ (p, mkSemFn_Name ij)
+>        i_min = MkName 0
+>        i_max = MkName $ maximum $ map (getName . fst) prod_map
+>        prod_map = [ (MkName p, mkSemFn_Name ij)
 >                   | (_,_,_,pi') <- sem_info, (ij,_,ps) <- pi', p <- ps ]
 
 

@@ -21,7 +21,7 @@ manipulation and let binding goop
 
 > import Control.Monad
 
-> rewriteAttributeGrammar :: [Name] -> [Name] -> String -> AttributeGrammarExtras -> M (String,[Int])
+> rewriteAttributeGrammar :: [Name] -> [Name] -> String -> AttributeGrammarExtras -> M (String,[Index])
 > rewriteAttributeGrammar lhs nonterm_names code ag =
 
    first we need to parse the body of the code block
@@ -43,7 +43,8 @@ manipulation and let binding goop
 
    now check that $i references are in range
 
->            in do let prods = mentionedProductions rules
+>            in do let prods :: [Index]
+>                      prods = mentionedProductions rules
 >                  mapM_ checkArity prods
 
    and output the rules
@@ -57,7 +58,8 @@ manipulation and let binding goop
 >                  return (rulesStr,nub (allSubProductions++prods))
 
 
->    where arity = length lhs
+>    where arity :: Index 
+>          arity = length lhs
 
 >          partitionRules a b c [] = (a,b,c)
 >          partitionRules a b c (RightmostAssign attr toks : xs) = partitionRules a (x:b) c xs
@@ -70,10 +72,10 @@ manipulation and let binding goop
 
 >          mentionedProductions rules    = [ i | (AgTok_SubRef (i,_)) <- concat (map getTokens rules) ]
 
->          getTokens (SelfAssign (MkAgSelfAssign _ toks)) = toks
->          getTokens (SubAssign (MkAgSubAssign _ toks))   = toks
->          getTokens (Conditional (MkAgConditional toks)) = toks
->          getTokens (RightmostAssign _ toks)             = toks
+>          getTokens (SelfAssign (MkAgSelfAssign _ toks))  = toks
+>          getTokens (SubAssign (MkAgSubAssign _ toks))    = toks
+>          getTokens (Conditional (MkAgConditional toks))  = toks
+>          getTokens (RightmostAssign _ toks)           = toks
 >
 >          checkArity x = when (x > arity) $ addErr (show x++" out of range")
 
@@ -82,7 +84,7 @@ manipulation and let binding goop
 -- Actually emit the code for the record bindings and conditionals
 --
 
-> formatRules :: Int -> [String] -> String -> [Name]
+> formatRules :: Index -> [String] -> String -> [Index]
 >             -> [AgSelfAssign] -> [AgSubAssign] -> [AgConditional]
 >             -> M String
 

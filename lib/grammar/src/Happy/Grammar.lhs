@@ -4,9 +4,11 @@ The Grammar data type.
 (c) 1993-2001 Andy Gill, Simon Marlow
 -----------------------------------------------------------------------------
 
+> {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 > -- | This module exports the 'Grammar' data type, which
 > module Happy.Grammar (
->       Name,
+>       Name (..),
 >
 >       Production(..),
 >       TokenSpec(..),
@@ -22,8 +24,6 @@ The Grammar data type.
 
 > import Data.Array
 > import Happy.Grammar.ExpressionWithHole (ExpressionWithHole)
-
-> type Name = Int
 
 > data Production eliminator
 >       = Production Name [Name] (eliminator,[Int]) Priority
@@ -48,8 +48,8 @@ The Grammar data type.
 >               terminals         :: [Name],
 >               non_terminals     :: [Name],
 >               starts            :: [(String,Name,Name,Bool)],
->               types             :: Array Int (Maybe String),
->               token_names       :: Array Int String,
+>               types             :: Array Name (Maybe String),
+>               token_names       :: Array Name String,
 >               first_nonterm     :: Name,
 >               first_term        :: Name,
 >               eof_term          :: Name,
@@ -117,6 +117,11 @@ The Grammar data type.
 -----------------------------------------------------------------------------
 -- Magic name values
 
+> newtype Name
+>       = MkName { getName :: Int }
+>       deriving ( Read, Show
+>                , Eq, Ord, Enum, Ix)
+
 All the tokens in the grammar are mapped onto integers, for speed.
 The namespace is broken up as follows:
 
@@ -152,7 +157,7 @@ For array-based parsers, see the note in Tabular/LALR.lhs.
 > dummyName = "%dummy"  -- shouldn't occur in the grammar anywhere
 
 > firstStartTok, dummyTok, errorTok, epsilonTok :: Name
-> firstStartTok   = 3
-> dummyTok        = 2
-> errorTok        = 1
-> epsilonTok      = 0
+> firstStartTok   = MkName 3
+> dummyTok        = MkName 2
+> errorTok        = MkName 1
+> epsilonTok      = MkName 0

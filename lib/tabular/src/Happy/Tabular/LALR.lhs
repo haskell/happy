@@ -16,8 +16,10 @@ Generation of LALR parsing tables.
 > import Happy.Tabular.NameSet ( NameSet )
 > import qualified Happy.Tabular.NameSet as NameSet
 > import Happy.Grammar
-> import qualified Data.Set as Set hiding ( Set )
+> import Data.IntSet ( IntSet )
+> import qualified Data.IntSet as IntSet hiding ( IntSet )
 > import Data.Set ( Set )
+> import qualified Data.Set as Set hiding ( Set )
 
 > import Control.Monad (guard)
 > import Control.Monad.ST
@@ -29,6 +31,9 @@ Generation of LALR parsing tables.
 
 > unionMap :: (Ord b) => (a -> Set b) -> Set a -> Set b
 > unionMap f = Set.foldr (Set.union . f) Set.empty
+
+> unionIntMap :: (Int -> IntSet) -> IntSet -> IntSet
+> unionIntMap f = IntSet.foldr (IntSet.union . f) IntSet.empty
 
 > unionNameMap :: (Name -> NameSet) -> NameSet -> NameSet
 > unionNameMap f = NameSet.foldr (NameSet.union . f) NameSet.empty
@@ -55,8 +60,8 @@ This means rule $a$, with dot at $b$ (all starting at 0)
 >               | LR'Multiple [LRAction] LRAction       -- conflict
 >       deriving (Eq,Show)
 
-> type ActionTable = Array Int{-state-} (Array Int{-terminal#-} LRAction)
-> type GotoTable = Array Int{-state-} (Array Int{-nonterminal #-} Goto)
+> type ActionTable = Array Int{-state-} (Array Name{-terminal#-} LRAction)
+> type GotoTable = Array Int{-state-} (Array Name{-nonterminal #-} Goto)
 > data Goto = Goto Int | NoGoto
 >       deriving (Eq, Show)
 
@@ -98,21 +103,21 @@ using a memo table so that no work is repeated.
 >  where
 >
 >       info' :: [(Name, RuleList)]
->       info' = map (\(n,rules) -> (n,map (\rule -> Lr0 rule 0) (NameSet.toAscList rules))) info
+>       info' = map (\(n,rules) -> (n,map (\rule -> Lr0 rule 0) (IntSet.toAscList rules))) info
 
->       info :: [(Name, NameSet)]
+>       info :: [(Name, IntSet)]
 >       info = mkClosure (==) (\f -> map (follow f) f)
->                       (map (\nt -> (nt,NameSet.fromList (lookupProdsOfName g nt))) nts)
+>                       (map (\nt -> (nt,IntSet.fromList (lookupProdsOfName g nt))) nts)
 
->       follow :: [(Name, NameSet)] -> (Name, NameSet) -> (Name, NameSet)
->       follow f (nt,rules) = (nt, unionNameMap (followNT f) rules `NameSet.union` rules)
+>       follow :: [(Name, IntSet)] -> (Name, IntSet) -> (Name, IntSet)
+>       follow f (nt,rules) = (nt, unionIntMap (followNT f) rules `IntSet.union` rules)
 
->       followNT :: [(Name, NameSet)] -> Int -> NameSet
+>       followNT :: [(Name, IntSet)] -> Int -> IntSet
 >       followNT f rule =
 >               case findRule g rule 0 of
 >                       Just nt | nt >= firstStartTok && nt < fst_term ->
 >                               maybe (error "followNT") id (lookup nt f)
->                       _ -> NameSet.empty
+>                       _ -> IntSet.empty
 
 >       nts = non_terminals g
 >       fst_term = first_term g
@@ -488,7 +493,7 @@ Generating the goto table doesn't need lookahead info.
 >       -- goto array doesn't include %start symbols
 >       gotoTable  = listArray (0,length sets-1)
 >         [
->           (array (fst_nonterm, fst_term-1) [
+>           (array (fst_nonterm, MkName $ getName fst_term - 1) [
 >               (n, maybe NoGoto Goto (lookup n goto))
 >                             | n <- non_terms,
 >                               n >= fst_nonterm, n < fst_term ])
