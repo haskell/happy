@@ -6,3 +6,4 @@ cabal-dev
 cabal.sandbox.config
 .*.swp
 .*.swo
+/.vscode/
