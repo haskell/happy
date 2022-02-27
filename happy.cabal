@@ -36,14 +36,6 @@ extra-source-files:
         ChangeLog.md
         Makefile
         README.md
-        doc/Makefile
-        doc/aclocal.m4
-        doc/config.mk.in
-        doc/configure.ac
-        doc/docbook-xml.mk
-        doc/fptools.css
-        doc/happy.1.in
-        doc/happy.xml
         examples/glr/nlp/Main.lhs
         examples/glr/nlp/Makefile
         examples/glr/nlp/README
