@@ -25,6 +25,8 @@ The code generator.
 > import Data.Array.MArray         ( MArray(..), freeze, readArray, writeArray )
 > import Data.Array.IArray         ( Array, IArray(..), (!), array, assocs, elems )
 
+> import Happy.Backend.CodeCombinators
+
 %-----------------------------------------------------------------------------
 Produce the complete output file.
 
@@ -581,8 +583,20 @@ machinery to discard states in the parser...
 >    produceActionTable TargetArrayBased
 >       = produceActionArray
 >       . produceReduceArray
->       . str "happy_n_terms = " . shows n_terminals . str " :: Prelude.Int\n"
->       . str "happy_n_nonterms = " . shows n_nonterminals . str " :: Prelude.Int\n\n"
+>       . renderDocDecs [
+>           [
+>             sigD happy_n_terms_name (conT $ mkName "Prelude.Int"),
+>             funD happy_n_terms_name [buildClause [] (intE n_terminals)]
+>           ],
+>           [
+>             sigD happy_n_nonterms_name (conT $ mkName "Prelude.Int"),
+>             funD happy_n_nonterms_name [buildClause [] (intE n_nonterminals)]
+>           ]
+>         ] 
+>       . nl
+>       where happy_n_terms_name = mkName "happy_n_terms"
+>             happy_n_nonterms_name = mkName "happy_n_nonterms_name"
+                 
 >
 >    produceExpListPerState
 >       = produceExpListArray
