@@ -2438,11 +2438,11 @@ class LabelDecode a where
         <para>
 	The original implementation was developed by Ben Medlock,
 	as his undergraduate final year project,
-	using ideas from Peter Ljungloef's Licentiate thesis
-	(see <ulink url="http://www.cs.chalmers.se/~peb/parsing"/>, and
+	using ideas from Peter Ljunglöf's Licentiate thesis
+	(see <ulink url="https://gup.ub.gu.se/publication/10783"/>, and
 	we recommend the thesis for its clear analysis of parsing
 	algorithms).
-	Ljungloef's version produces lists of parse trees, but Medlock
+	Ljunglöf's version produces lists of parse trees, but Medlock
 	adapted this to produce an explicit graph containing parse structure
 	information. He also incorporated
 	the code into <application>Happy</application>.
@@ -2493,7 +2493,7 @@ A ->
 
 	<para>
 	The forest is held in a chart-style data structure, and this supports
-	local ambiguity packing (chart parsing is discussed in Ljungloef's
+	local ambiguity packing (chart parsing is discussed in Ljunglöf's
 	thesis, among other places).
 	A limited amount of packing of live stacks is also done, to avoid
 	some repetition of work.
