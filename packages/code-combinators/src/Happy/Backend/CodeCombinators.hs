@@ -5,7 +5,6 @@
 {-# LANGUAGE InstanceSigs #-}
 
 module Happy.Backend.CodeCombinators where 
-
 import qualified Text.PrettyPrint as PP
 import Language.Haskell.TH(Lit(..))
 
@@ -24,7 +23,7 @@ class CodeGen exp type_ name clause dec pat | exp    -> type_ name clause dec pa
     appE    :: exp -> exp -> exp
 
     tupE    :: [exp] -> exp
-    listE   :: [exp] -> exp 
+    listE   :: [exp] -> exp
 
     conT    :: name -> type_
     varT    :: name -> type_
@@ -35,7 +34,7 @@ class CodeGen exp type_ name clause dec pat | exp    -> type_ name clause dec pa
     tupP    :: [pat] -> pat
     conP    :: name -> [pat] -> pat
 
-    buildClause :: [pat] -> exp -> clause
+    clause :: [pat] -> exp -> [dec] -> clause
 
     sigD    :: name -> type_    -> dec
     funD    :: name -> [clause] -> dec
@@ -97,8 +96,8 @@ instance CodeGen DocExp DocType DocName DocClause DocDec DocPat where
                                                     PP.sep [t1 appPrec, t2 atomPrec]
 
     litP :: Lit -> DocPat
-    litP (CharL c)    = DocPat $ \_ -> PP.text ['\'', c, '\'']
-    litP (StringL s)  = DocPat $ \_ -> PP.text "\"" <> PP.text s <> PP.text "\""
+    litP (CharL c)    = DocPat $ \_ -> PP.quotes $ PP.text [c]
+    litP (StringL s)  = DocPat $ \_ -> PP.doubleQuotes $ PP.text s
     litP (IntegerL n) = DocPat $ \_ -> parensIf (n < 0) $ PP.text $ show n
 
     varP :: DocName -> DocPat
@@ -112,19 +111,22 @@ instance CodeGen DocExp DocType DocName DocClause DocDec DocPat where
     conP (DocName name) ps = DocPat $ \p -> parensIf (p > appPrec) $
                                             name PP.<+> PP.sep [p atomPrec | DocPat p <- ps]
 
-    buildClause :: [DocPat] -> DocExp -> DocClause
-    buildClause ps (DocExp exp) = DocClause $ PP.sep [p noPrec | DocPat p <- ps] PP.<+>
-                                            PP.text "=" PP.<+> exp noPrec
+    clause :: [DocPat] -> DocExp -> [DocDec] -> DocClause
+    clause ps (DocExp exp) decs = DocClause $ (PP.sep [p noPrec | DocPat p <- ps] PP.<+>
+                                               PP.text "=" PP.<+> exp noPrec) PP.$+$ PP.nest 4 whereSection
+                                               where whereSection = case decs of
+                                                                    [] -> PP.empty
+                                                                    _  -> PP.text "where" PP.$+$
+                                                                          foldr (PP.$+$) PP.empty [PP.nest 4 dec | DocDec dec <- decs]
 
     sigD :: DocName -> DocType -> DocDec
-    sigD (DocName name) (DocType type_)  = DocDec $ name PP.<+> PP.text "::" PP.<+> (type_ noPrec)
+    sigD (DocName name) (DocType type_)  = DocDec $ name PP.<+> PP.text "::" PP.<+> type_ noPrec
 
     funD :: DocName -> [DocClause] -> DocDec
-    funD (DocName name) cls = DocDec $ foldr1 (<>) $ PP.punctuate (PP.text "\n")
-                                                    [name PP.<+> cl | DocClause cl <- cls]
+    funD (DocName name) cls = DocDec $ foldr1 (PP.$+$) [name PP.<+> cl | DocClause cl <- cls]
 
 
-fromTextDetails :: PP.TextDetails -> ShowS 
+fromTextDetails :: PP.TextDetails -> ShowS
 fromTextDetails td =
   case td of
     PP.Chr c -> (c:)
@@ -136,7 +138,7 @@ renderDocDecs dss =
   PP.fullRender PP.PageMode 80 1.5 (\td s -> fromTextDetails td . s) id d
   where
     d = PP.vcat (map renderGroup dss)
-    renderGroup ds = PP.vcat [ d1 | DocDec d1 <- ds ] PP.$$ PP.text ""
+    renderGroup ds = PP.vcat [ d1 | DocDec d1 <- ds ] PP.$+$ PP.text ""
 
 parensIf :: Bool -> PP.Doc -> PP.Doc
 parensIf True = PP.parens

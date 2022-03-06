@@ -586,11 +586,11 @@ machinery to discard states in the parser...
 >       . renderDocDecs [
 >           [
 >             sigD happy_n_terms_name (conT $ mkName "Prelude.Int"),
->             funD happy_n_terms_name [buildClause [] (intE n_terminals)]
+>             funD happy_n_terms_name [clause [] (intE n_terminals) []]
 >           ],
 >           [
 >             sigD happy_n_nonterms_name (conT $ mkName "Prelude.Int"),
->             funD happy_n_nonterms_name [buildClause [] (intE n_nonterminals)]
+>             funD happy_n_nonterms_name [clause [] (intE n_nonterminals) []]
 >           ]
 >         ] 
 >       . nl
