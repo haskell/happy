@@ -2,7 +2,7 @@
 Test for monadic Happy Parsers, Simon Marlow 1996.
 
 > {
-> import Char
+> import Data.Char
 > }
 
 > %name calc
