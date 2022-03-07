@@ -26,6 +26,7 @@ The code generator.
 > import Data.Array.IArray         ( Array, IArray(..), (!), array, assocs, elems )
 
 > import Happy.Backend.CodeCombinators
+> import Happy.Backend.CodeCombinators.Syntax
 
 %-----------------------------------------------------------------------------
 Produce the complete output file.

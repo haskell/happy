@@ -37,7 +37,8 @@ tested-with:
 library
   hs-source-dirs:      src
 
-  exposed-modules:     Happy.Backend.CodeCombinators
+  exposed-modules:     Happy.Backend.CodeCombinators,
+                       Happy.Backend.CodeCombinators.Syntax
 
   build-depends:       base < 5,
                        array,
