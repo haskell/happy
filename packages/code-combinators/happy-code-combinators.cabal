@@ -45,6 +45,6 @@ library
                        template-haskell
 
   default-language:    Haskell98
-  default-extensions:  CPP, MagicHash, FlexibleContexts
+  default-extensions:  CPP, MagicHash, InstanceSigs, TypeFamilyDependencies
   ghc-options:         -Wall
 --   other-modules:       Paths_happy_backend_lalr

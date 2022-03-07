@@ -1,48 +1,43 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE InstanceSigs #-}
-
 module Happy.Backend.CodeCombinators where 
+  
 import qualified Text.PrettyPrint as PP
 import qualified Language.Haskell.TH as TH
 
-class CodeGen exp type_ name clause dec pat range | exp    -> type_ name clause dec pat range,
-                                                    type_  -> exp  name  clause dec pat range,
-                                                    name   -> exp  type_ clause dec pat range,
-                                                    clause -> exp  type_ name dec pat range,
-                                                    dec    -> exp  type_ name clause pat range,
-                                                    pat    -> exp  type_ name clause dec range,
-                                                    range  -> exp  type_ name clause dec pat range 
-                                                    where
-    mkName  :: String -> name
-    intE    :: Int -> exp
-    stringE :: String -> exp
+class CodeGen e  where
+    type NameT e = n | n -> e
+    type RangeT e = r | r -> e
+    type TypeT e = t | t -> e
+    type PatT e = p | p -> e
+    type DecT e = d | d -> e
+    type ClauseT e = c | c -> e
 
-    conE    :: name -> exp
-    varE    :: name -> exp
-    appE    :: exp -> exp -> exp
+    mkName  :: String -> NameT e
+    intE    :: Int -> e
+    stringE :: String -> e
 
-    tupE      :: [exp] -> exp
-    listE     :: [exp] -> exp
-    arithSeqE :: range -> exp 
+    conE    :: NameT e -> e
+    varE    :: NameT e -> e
+    appE    :: e -> e -> e
 
-    conT    :: name -> type_
-    varT    :: name -> type_
-    appT    :: type_ -> type_ -> type_
+    tupE      :: [e] -> e
+    listE     :: [e] -> e
+    arithSeqE :: RangeT e -> e 
 
-    litP    :: TH.Lit -> pat
-    varP    :: name -> pat
-    tupP    :: [pat] -> pat
-    conP    :: name -> [pat] -> pat
-    wildP   :: pat
+    conT    :: NameT e -> TypeT e
+    varT    :: NameT e -> TypeT e
+    appT    :: TypeT e -> TypeT e -> TypeT e
 
-    clause :: [pat] -> exp -> [dec] -> clause
+    litP    :: TH.Lit -> PatT e
+    varP    :: NameT e -> PatT e
+    tupP    :: [PatT e] -> PatT e
+    conP    :: NameT e -> [PatT e] -> PatT e
+    wildP   :: PatT e
 
-    sigD    :: name -> type_    -> dec
-    funD    :: name -> [clause] -> dec
+    clause :: [PatT e] -> e -> [DecT e] -> ClauseT e
 
+    sigD    :: NameT e -> TypeT e  -> DecT e
+    funD    :: NameT e -> [ClauseT e] -> DecT e
+ 
 newtype Prec = Prec Int
   deriving (Eq, Ord, Show, Bounded)
 
@@ -68,7 +63,14 @@ data DocRange = FromR DocExp
               | FromToR DocExp DocExp
               | FromThenToR DocExp DocExp DocExp
 
-instance CodeGen DocExp DocType DocName DocClause DocDec DocPat DocRange where
+instance CodeGen DocExp where
+    type NameT DocExp = DocName
+    type RangeT DocExp = DocRange
+    type TypeT DocExp = DocType
+    type PatT DocExp = DocPat
+    type DecT DocExp = DocDec
+    type ClauseT DocExp = DocClause
+
     mkName :: String -> DocName
     mkName name = DocName $ PP.text name
 
@@ -151,7 +153,7 @@ fromTextDetails td =
     PP.PStr str -> (str++)
 
 renderDocDec :: DocDec -> ShowS 
-renderDocDec (DocDec dec) = \_ -> PP.render dec 
+renderDocDec (DocDec dec) = showString $ PP.render dec 
 
 renderDocDecs :: [[DocDec]] -> ShowS
 renderDocDecs dss =

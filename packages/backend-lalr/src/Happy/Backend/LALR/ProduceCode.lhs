@@ -613,8 +613,7 @@ machinery to discard states in the parser...
 >    produceExpListPerState
 >       = produceExpListArray
 >       . str "{-# NOINLINE happyExpListPerState #-}\n"
->       . (renderDocDecs [[happy_exp_list_per_state_dec]])
->       . nl
+>       . (renderDocDec happy_exp_list_per_state_dec)
 >       . nl
 >       where (first_token, last_token) = bounds token_names'
 >             nr_tokens = last_token - first_token + 1
