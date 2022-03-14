@@ -586,11 +586,11 @@ machinery to discard states in the parser...
 >       . produceReduceArray
 >       . renderDocDecs [
 >           [
->             sigD happy_n_terms_name (conT $ mkName "Prelude.Int"),
+>             sigD happy_n_terms_name intT,
 >             funD happy_n_terms_name [clause [] (intE n_terminals) []]
 >           ],
 >           [
->             sigD happy_n_nonterms_name (conT $ mkName "Prelude.Int"),
+>             sigD happy_n_nonterms_name intT,
 >             funD happy_n_nonterms_name [clause [] (intE n_nonterminals) []]
 >           ]
 >         ]
@@ -632,14 +632,11 @@ machinery to discard states in the parser...
 >                   f_dec,
 >                   token_strs_expected_dec
 >                 ]
->               ] :: DocDec
+>               ]
 >
 >             st_name = mkName "st"
 >             st_var = varE st_name
 >             st_pat = varP st_name
->             mulE = varE $ mkName "(Prelude.*)"
->             addE = varE $ mkName "(Prelude.+)"
->             subE = varE $ mkName "(Prelude.-)"
 >
 >           --token_strs = elems token_names'
 >             token_strs_name = mkName "token_strs"
@@ -689,8 +686,8 @@ machinery to discard states in the parser...
 >           --f (Prelude.True, nr) = [token_strs Prelude.!! nr]\n
 >             f_name = mkName "f"
 >             f_dec  = funD f_name [clause1, clause2]
->                 where clause1 = clause [tupP [conP (mkName "Prelude.False") [], wildP]] (conE $ mkName "[]") []
->                       clause2 = clause [tupP [conP (mkName "Prelude.True")  [], varP nr]] exp2 []
+>                 where clause1 = clause [tupP [falseP, wildP]] emptyListE []
+>                       clause2 = clause [tupP [trueP, varP nr]] exp2 []
 >                       nr = mkName "nr"
 >                       exp2 =
 >                         listE [
