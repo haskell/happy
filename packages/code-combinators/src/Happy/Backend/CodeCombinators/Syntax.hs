@@ -42,6 +42,9 @@ instance CodeGen DocExp where
   mkName :: String -> DocName
   mkName name = DocName $ PP.text name
 
+  mkOpName :: String -> DocName
+  mkOpName name = DocName $ PP.parens $ PP.text name
+
   intE :: Int -> DocExp
   intE num = DocExp (\_ -> parensIf (num < 0) (PP.int num))
 

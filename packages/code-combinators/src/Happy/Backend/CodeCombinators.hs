@@ -11,6 +11,7 @@ class CodeGen e where
   type ClauseT e = c | c -> e
 
   mkName :: String -> NameT e
+  mkOpName :: String -> NameT e
   intE :: Int -> e
   stringE :: String -> e
 
@@ -52,13 +53,13 @@ falseP :: CodeGen e => PatT e
 falseP = conP (mkName "Prelude.False") []
 
 mulE :: CodeGen e => e
-mulE = varE $ mkName "(Prelude.*)"
+mulE = varE $ mkOpName "Prelude.*"
 
 addE :: CodeGen e => e
-addE = varE $ mkName "(Prelude.+)"
+addE = varE $ mkOpName "Prelude.+"
 
 subE :: CodeGen e => e
-subE = varE $ mkName "(Prelude.-)"
+subE = varE $ mkOpName "Prelude.-"
 
 intT :: CodeGen e => TypeT e
 intT = conT $ mkName "Prelude.Int"
