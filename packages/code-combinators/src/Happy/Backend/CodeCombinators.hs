@@ -36,3 +36,35 @@ class CodeGen e where
 
   sigD :: NameT e -> TypeT e  -> DecT e
   funD :: NameT e -> [ClauseT e] -> DecT e
+
+
+
+trueE :: CodeGen e => e
+trueE = conE $ mkName "Prelude.True"
+
+falseE :: CodeGen e => e
+falseE = conE $ mkName "Prelude.False"
+
+trueP :: CodeGen e => PatT e
+trueP = conP (mkName "Prelude.True") []
+
+falseP :: CodeGen e => PatT e
+falseP = conP (mkName "Prelude.False") []
+
+mulE :: CodeGen e => e
+mulE = varE $ mkName "(Prelude.*)"
+
+addE :: CodeGen e => e
+addE = varE $ mkName "(Prelude.+)"
+
+subE :: CodeGen e => e
+subE = varE $ mkName "(Prelude.-)"
+
+intT :: CodeGen e => TypeT e
+intT = conT $ mkName "Prelude.Int"
+
+emptyListE :: CodeGen e => e
+emptyListE = conE $ mkName "[]"
+
+emptyListP :: CodeGen e => PatT e
+emptyListP = conP (mkName "[]") []
