@@ -38,7 +38,8 @@ library
   hs-source-dirs:      src
 
   exposed-modules:     Happy.Backend.CodeCombinators,
-                       Happy.Backend.CodeCombinators.Syntax
+                       Happy.Backend.CodeCombinators.Syntax,
+                       Happy.Backend.CodeCombinators.Abstract
 
   build-depends:       base < 5,
                        array,
