@@ -3,6 +3,7 @@ module Happy.Backend.CodeCombinators.Syntax where
 import Happy.Backend.CodeCombinators
 import qualified Text.PrettyPrint as PP
 import qualified Language.Haskell.TH as TH
+import Control.Monad.Identity (Identity)
 
 
 newtype Prec = Prec Int
@@ -38,12 +39,16 @@ instance CodeGen DocExp where
   type PatT DocExp = DocPat
   type DecT DocExp = DocDec
   type ClauseT DocExp = DocClause
+  type NewNameM DocExp = Identity
 
   mkName :: String -> DocName
   mkName name = DocName $ PP.text name
 
   mkOpName :: String -> DocName
   mkOpName name = DocName $ PP.parens $ PP.text name
+
+  newName :: String -> Identity DocName
+  newName = return . mkName
 
   intE :: Int -> DocExp
   intE num = DocExp (\_ -> parensIf (num < 0) (PP.int num))

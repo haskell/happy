@@ -44,9 +44,16 @@ library
   build-depends:       base < 5,
                        array,
                        pretty,
-                       template-haskell
+                       template-haskell,
+                       mtl,
+                       containers
 
   default-language:    Haskell98
-  default-extensions:  CPP, MagicHash, InstanceSigs, TypeFamilyDependencies
+  default-extensions:  CPP,
+                       MagicHash,
+                       InstanceSigs,
+                       TypeFamilyDependencies,
+                       KindSignatures,
+                       FlexibleContexts
+
   ghc-options:         -Wall
---   other-modules:       Paths_happy_backend_lalr

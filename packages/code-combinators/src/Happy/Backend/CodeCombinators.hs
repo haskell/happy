@@ -1,6 +1,11 @@
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE FlexibleContexts #-}
 module Happy.Backend.CodeCombinators where
 
 import qualified Language.Haskell.TH as TH
+import Control.Monad.State
+import qualified Data.Map as Map
+import Data.Kind (Type)
 
 class CodeGen e where
   type NameT e = n | n -> e
@@ -9,9 +14,12 @@ class CodeGen e where
   type PatT e = p | p -> e
   type DecT e = d | d -> e
   type ClauseT e = c | c -> e
+  type NewNameM e :: Type -> Type
 
   mkName :: String -> NameT e
   mkOpName :: String -> NameT e
+  newName :: String -> NewNameM e (NameT e)
+
   intE :: Int -> e
   stringE :: String -> e
 
@@ -37,8 +45,6 @@ class CodeGen e where
 
   sigD :: NameT e -> TypeT e  -> DecT e
   funD :: NameT e -> [ClauseT e] -> DecT e
-
-
 
 trueE :: CodeGen e => e
 trueE = conE $ mkName "Prelude.True"
@@ -69,3 +75,13 @@ emptyListE = conE $ mkName "[]"
 
 emptyListP :: CodeGen e => PatT e
 emptyListP = conP (mkName "[]") []
+
+type NameContext e r = StateT (Map.Map String (NameT e)) (NewNameM e) r
+
+createName :: (CodeGen e, Monad (NewNameM e)) => String -> NameContext e ()
+createName name = do
+  newName_ <- lift $ newName name
+  modify $ \treeMap -> Map.insert name newName_ treeMap
+
+getName :: (CodeGen e, Monad (NewNameM e)) => String -> NameContext e (NameT e)
+getName name = gets (Map.! name)

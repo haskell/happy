@@ -12,12 +12,16 @@ instance CodeGen TH.Exp where
   type PatT TH.Exp = TH.Pat
   type DecT TH.Exp = TH.Dec
   type ClauseT TH.Exp = TH.Clause
+  type NewNameM TH.Exp = TH.Q
 
   mkName :: String -> TH.Name
   mkName = TH.mkName
 
   mkOpName :: String -> TH.Name
   mkOpName = TH.mkName
+
+  newName :: String -> TH.Q TH.Name
+  newName = TH.newName
 
   intE :: Int -> TH.Exp
   intE num = TH.LitE $ TH.IntegerL $ fromIntegral num
