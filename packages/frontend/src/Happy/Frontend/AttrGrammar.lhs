@@ -43,10 +43,10 @@
 
 -----------------------------------------------------------------
 -- For the most part, the body of the attribute grammar rules
--- is uninterpreted haskell expressions.  We only need to know about
+-- is uninterpreted Haskell expressions.  We only need to know about
 --    a) braces and semicolons to break the rules apart
 --    b) the equals sign to break the rules into LValues and the RHS
---    c) attribute references, which are $$, $x (postivie integer x)
+--    c) attribute references, which are $$, $x (positive integer x)
 --       or $> (for the rightmost symbol) followed by an optional
 --       attribute specifier, which is a dot followed by a
 --       Haskell variable identifier

@@ -1221,7 +1221,7 @@ data Token
   deriving Show 
 
 
--- This is an intentionally simplfied tokenizer
+-- This is an intentionally simplified tokenizer
 lexNonSpace :: P Token
 lexNonSpace "" = Right (Eof, "")
 lexNonSpace ('.':cs) = Right (Dot, cs)
