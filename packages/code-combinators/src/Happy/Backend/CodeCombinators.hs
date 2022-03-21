@@ -21,6 +21,7 @@ class CodeGen e where
   newName :: String -> NewNameM e (NameT e)
 
   intE :: Int -> e
+  negateE :: e -> e
   stringE :: String -> e
 
   conE :: NameT e -> e

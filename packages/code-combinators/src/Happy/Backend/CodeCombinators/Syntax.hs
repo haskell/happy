@@ -1,4 +1,16 @@
-module Happy.Backend.CodeCombinators.Syntax where
+module Happy.Backend.CodeCombinators.Syntax
+  (
+    DocExp(..),
+    DocName(..),
+    DocClause(..),
+    DocDec(..),
+    DocRange(..),
+    CodeGen(..),
+    renderDocDecs,
+    renderDocDec,
+    render
+  )
+  where
 
 import Happy.Backend.CodeCombinators
 import qualified Text.PrettyPrint as PP
@@ -50,11 +62,24 @@ instance CodeGen DocExp where
   newName :: String -> Identity DocName
   newName = return . mkName
 
+  negateE :: DocExp -> DocExp
+  negateE = appE $ varE $ mkName "GHC.Num.negate"
+
   intE :: Int -> DocExp
-  intE num = DocExp (\_ -> parensIf (num < 0) (PP.int num))
+  intE num
+    | num < 0 = negateE absE
+    | otherwise = absE
+    where absE =
+            DocExp $ \_ ->
+              PP.int $ abs num
 
   stringE :: String -> DocExp
-  stringE str = DocExp (\_ -> PP.doubleQuotes $ PP.text str)
+  stringE str = DocExp (\_ -> PP.doubleQuotes $ PP.text $ escape str)
+    where escape ('\'':xs) =  '\\' : '\'' : escape xs
+          escape ('\"':xs) =  '\\' : '\"' : escape xs
+          escape ('\\':xs) =  '\\' : '\\' : escape xs
+          escape (x:xs) = x : escape xs
+          escape [] = []
 
   conE :: DocName -> DocExp
   conE (DocName name) = DocExp $ \_ -> name
@@ -146,6 +171,10 @@ fromTextDetails td =
     PP.Chr c -> (c:)
     PP.Str str -> (str++)
     PP.PStr str -> (str++)
+
+render :: DocExp -> ShowS
+render (DocExp exp) = showString $ PP.render $ exp noPrec
+
 
 renderDocDec :: DocDec -> ShowS
 renderDocDec (DocDec dec) = showString $ PP.render dec

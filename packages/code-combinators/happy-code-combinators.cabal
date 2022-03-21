@@ -57,3 +57,28 @@ library
                        FlexibleContexts
 
   ghc-options:         -Wall
+
+
+test-suite test
+  type: exitcode-stdio-1.0
+  main-is: Test.hs
+  other-modules:
+      Test.CodeCombinators.GenExp
+
+  hs-source-dirs:
+      test
+
+  default-extensions:
+      OverloadedStrings
+    , TemplateHaskell
+
+  ghc-options: -Wall
+  build-depends:
+      HUnit
+    , base < 5
+    , hedgehog
+    , template-haskell
+    , happy-code-combinators
+    , haskell-src-meta
+
+  default-language: Haskell98

@@ -23,8 +23,16 @@ instance CodeGen TH.Exp where
   newName :: String -> TH.Q TH.Name
   newName = TH.newName
 
+  negateE :: TH.Exp -> TH.Exp
+  negateE = TH.AppE (TH.VarE $ mkName "GHC.Num.negate")
+
   intE :: Int -> TH.Exp
-  intE num = TH.LitE $ TH.IntegerL $ fromIntegral num
+  intE num
+    | num < 0 = negateE absE
+    | otherwise = absE
+    where absE =
+            TH.LitE $ TH.IntegerL $
+            fromIntegral $ abs num
 
   stringE :: String -> TH.Exp
   stringE str = TH.LitE $ TH.StringL str
