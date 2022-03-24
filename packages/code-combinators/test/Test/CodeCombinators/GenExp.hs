@@ -26,7 +26,7 @@ genClassName = do
 genIntE :: MonadGen m => m TH.Exp
 genIntE = do
   x <- Gen.int $ Range.linear minBound maxBound
-  return $ intE x
+  return $ intE $ fromIntegral x
 
 genStringE :: MonadGen m => m TH.Exp
 genStringE = do
@@ -59,19 +59,26 @@ genListE = do
   es <- Gen.list (Range.linear 1 20) genExp
   return $ listE es
 
+genArithSeqE :: MonadGen m => m TH.Exp
+genArithSeqE = do
+  e1 <- genExp
+  e2 <- genExp
+  return $ TH.ArithSeqE $ TH.FromToR e1 e2
+
 genExp :: MonadGen m => m TH.Exp
 genExp =
   Gen.recursive Gen.choice
     [
-      genIntE,
-      genStringE,
-      genConE,
-      genVarE
+        genIntE
+      , genStringE
+      , genConE
+      , genVarE
     ]
     [
-      genAppE,
-      genTupE,
-      genListE
+        genAppE
+      , genTupE
+      , genListE
+      , genArithSeqE
     ]
 
 
@@ -90,7 +97,7 @@ expToDocExp :: TH.Exp -> SnGen.DocExp
 expToDocExp (TH.LitE l) =
   case l of
     TH.StringL str -> SnGen.stringE str
-    TH.IntegerL num -> SnGen.intE (fromIntegral num)
+    TH.IntegerL num -> SnGen.intE num
     _ -> error "invalid literal"
 
 expToDocExp (TH.ConE nm) =
@@ -107,6 +114,14 @@ expToDocExp (TH.ListE es) =
 
 expToDocExp (TH.TupE es) =
   SnGen.tupE $ map (\(Just e) -> expToDocExp e) es
+
+expToDocExp (TH.ArithSeqE range) =
+  case range of
+    TH.FromToR e1 e2 ->
+      SnGen.arithSeqE $
+        SnGen.FromToR (expToDocExp e1) (expToDocExp e2)
+    _ ->
+       error "invalid range"
 
 expToDocExp _ = error "invalid exp"
 
@@ -133,4 +148,11 @@ deleteParensE (TH.ListE es) =
 deleteParensE (TH.TupE es) =
   TH.TupE $ map (\(Just e) -> Just $ deleteParensE e) es
 
-deleteParensE _ = error "invalid exp"
+deleteParensE (TH.ArithSeqE range) =
+  case range of
+    TH.FromToR e1 e2 ->
+      TH.ArithSeqE $ TH.FromToR (deleteParensE e1) (deleteParensE e2)
+    _ ->
+      error "invalid range"
+
+deleteParensE e = error $ "invalid exp" ++ show e

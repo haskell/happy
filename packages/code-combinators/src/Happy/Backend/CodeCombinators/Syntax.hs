@@ -17,7 +17,6 @@ import qualified Text.PrettyPrint as PP
 import qualified Language.Haskell.TH as TH
 import Control.Monad.Identity (Identity)
 
-
 newtype Prec = Prec Int
   deriving (Eq, Ord, Show, Bounded)
 
@@ -65,16 +64,16 @@ instance CodeGen DocExp where
   negateE :: DocExp -> DocExp
   negateE = appE $ varE $ mkName "GHC.Num.negate"
 
-  intE :: Int -> DocExp
+  intE :: Integral a => a -> DocExp
   intE num
-    | num < 0 = negateE absE
+    | num < 0 = negateE $ absE
     | otherwise = absE
     where absE =
             DocExp $ \_ ->
-              PP.int $ abs num
+              PP.integer $ abs $ fromIntegral $ num
 
   stringE :: String -> DocExp
-  stringE str = DocExp (\_ -> PP.doubleQuotes $ PP.text $ escape str)
+  stringE str = DocExp $ \_ -> PP.doubleQuotes $ PP.text $ escape str
     where escape ('\'':xs) =  '\\' : '\'' : escape xs
           escape ('\"':xs) =  '\\' : '\"' : escape xs
           escape ('\\':xs) =  '\\' : '\\' : escape xs
@@ -109,7 +108,7 @@ instance CodeGen DocExp where
   arithSeqE :: DocRange -> DocExp
   arithSeqE (FromToR (DocExp e1) (DocExp e2)) =
     DocExp $ \_ ->
-      PP.brackets  $ e1 noPrec <> PP.text ".." <> e2 noPrec
+      PP.brackets  $ e1 noPrec PP.<+> PP.text ".." PP.<+> e2 noPrec
 
   conT :: DocName -> DocType
   conT (DocName name) = DocType $ \_ -> name

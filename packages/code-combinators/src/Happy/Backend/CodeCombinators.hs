@@ -20,7 +20,7 @@ class CodeGen e where
   mkOpName :: String -> NameT e
   newName :: String -> NewNameM e (NameT e)
 
-  intE :: Int -> e
+  intE :: Integral a => a -> e
   negateE :: e -> e
   stringE :: String -> e
 
