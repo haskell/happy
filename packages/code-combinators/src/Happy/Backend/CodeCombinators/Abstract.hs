@@ -1,9 +1,8 @@
-{-# OPTIONS_GHC -Wno-deferred-out-of-scope-variables #-}
-{-# OPTIONS_GHC -Wno-orphans #-}
 module Happy.Backend.CodeCombinators.Abstract where
 
 import Happy.Backend.CodeCombinators
 import qualified Language.Haskell.TH as TH
+import Data.Word
 
 instance CodeGen TH.Exp where
   type NameT TH.Exp = TH.Name
@@ -36,6 +35,24 @@ instance CodeGen TH.Exp where
 
   stringE :: String -> TH.Exp
   stringE str = TH.LitE $ TH.StringL str
+
+  hexCharsE :: [Int] -> TH.Exp
+  hexCharsE ls =
+    TH.LitE $ TH.StringPrimL hexChars
+    where
+      -- these functions are analogues of the functions from ProduceCode.lhs (happy-backend-lalr package)
+      hexChars :: [Word8]
+      hexChars = concatMap hexChar ls
+
+      hexChar :: Int -> [Word8]
+      hexChar i | i < 0 = hexChar (i + 65536)
+      hexChar i =  toHex (i `mod` 256) ++ toHex (i `div` 256)
+
+      toHex :: Int -> [Word8]
+      toHex i = [hexDig (i `div` 16), hexDig (i `mod` 16)]
+
+      hexDig :: Int -> Word8
+      hexDig = fromIntegral
 
   conE :: TH.Name  -> TH.Exp
   conE = TH.ConE

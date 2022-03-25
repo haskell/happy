@@ -23,6 +23,7 @@ class CodeGen e where
   intE :: Integral a => a -> e
   negateE :: e -> e
   stringE :: String -> e
+  hexCharsE :: [Int] -> e
 
   conE :: NameT e -> e
   varE :: NameT e -> e

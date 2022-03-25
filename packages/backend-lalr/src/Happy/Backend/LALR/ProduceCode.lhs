@@ -832,16 +832,59 @@ action array indexed by (terminal * last_state) + state
 
 >    produceExpListArray
 >       | ghc
->           = str "happyExpList :: HappyAddr\n"
->           . str "happyExpList = HappyA# \"" --"
->           . str (hexChars explist)
->           . str "\"#\n\n" --"
+>           =
+>           -- happyExpList :: HappyAddr
+>           -- happyExpList = HappyA# "hexCharsE explist"#
+>              let happy_exp_list_name =
+>                    mkName "happyExpList"
+>           in let happy_exp_list_sig =
+>                    sigD happy_exp_list_name (conT $ mkName "HappyAddr")
+>           in let happy_exp_list_exp =
+>                    appE (conE $ mkName "HappyA#") (hexCharsE explist)
+>           in let happy_exp_list_dec =
+>                    funD happy_exp_list_name [(clause [] happy_exp_list_exp [])]
+>           in
+>           renderDocDecs [
+>             [
+>                 happy_exp_list_sig
+>               , happy_exp_list_dec
+>             ]
+>           ]
 >       | otherwise
->           = str "happyExpList :: Happy_Data_Array.Array Prelude.Int Prelude.Int\n"
->           . str "happyExpList = Happy_Data_Array.listArray (0,"
->               . shows table_size . str ") (["
->           . interleave' "," (map shows explist)
->           . str "\n\t])\n\n"
+>           =
+>           -- happyExpList :: Happy_Data_Array.Array Prelude.Int Prelude.Int
+>           -- happyExpList = Happy_Data_Array.listArray (0, table_size) [explist]
+>              let happy_exp_list_name =
+>                   mkName "happyExpList"
+>           in let happy_exp_list_type =
+>                    appT
+>                      (
+>                        appT
+>                          (conT $ mkName "Happy_Data_Array.Array")
+>                          intT
+>                      )
+>                      intT
+>           in let happy_exp_list_sig =
+>                    sigD happy_exp_list_name happy_exp_list_type
+>           in let happy_exp_list_exp =
+>                    appE
+>                      (
+>                        appE
+>                          (varE $ mkName "Happy_Data_Array.listArray")
+>                          (tupE [intE 0, intE table_size])
+>                      )
+>                      (
+>                        listE $ intE <$> explist
+>                      )
+>           in let happy_exp_list_dec =
+>                    funD happy_exp_list_name [(clause [] happy_exp_list_exp [])]
+>           in
+>           renderDocDecs [
+>             [
+>                 happy_exp_list_sig
+>               , happy_exp_list_dec
+>             ]
+>           ]
 
 >    (_, last_state) = bounds action
 >    n_states = last_state + 1

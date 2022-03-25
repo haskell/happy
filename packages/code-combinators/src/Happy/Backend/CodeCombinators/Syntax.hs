@@ -16,6 +16,8 @@ import Happy.Backend.CodeCombinators
 import qualified Text.PrettyPrint as PP
 import qualified Language.Haskell.TH as TH
 import Control.Monad.Identity (Identity)
+import Data.Word
+import Data.Char (chr, ord)
 
 newtype Prec = Prec Int
   deriving (Eq, Ord, Show, Bounded)
@@ -79,6 +81,26 @@ instance CodeGen DocExp where
           escape ('\\':xs) =  '\\' : '\\' : escape xs
           escape (x:xs) = x : escape xs
           escape [] = []
+
+  hexCharsE :: [Int] -> DocExp
+  hexCharsE ls =
+    DocExp $ \_ ->
+      (PP.doubleQuotes $ PP.text hexChars) PP.<> PP.text "#"
+    where
+      -- these functions are taken from ProduceCode.lhs (happy-backend-lalr package)
+      hexChars :: String
+      hexChars = concatMap hexChar ls
+
+      hexChar :: Int -> String
+      hexChar i | i < 0 = hexChar (i + 65536)
+      hexChar i =  toHex (i `mod` 256) ++ toHex (i `div` 256)
+
+      toHex :: Int -> String
+      toHex i = ['\\','x', hexDig (i `div` 16), hexDig (i `mod` 16)]
+
+      hexDig :: Int -> Char
+      hexDig i | i <= 9    = chr (i + ord '0')
+               | otherwise = chr (i - 10 + ord 'a')
 
   conE :: DocName -> DocExp
   conE (DocName name) = DocExp $ \_ -> name
