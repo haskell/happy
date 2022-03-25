@@ -1,5 +1,3 @@
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE FlexibleContexts #-}
 module Happy.Backend.CodeCombinators where
 
 import qualified Language.Haskell.TH as TH
@@ -80,10 +78,13 @@ emptyListP = conP (mkName "[]") []
 
 type NameContext e r = StateT (Map.Map String (NameT e)) (NewNameM e) r
 
-createName :: (CodeGen e, Monad (NewNameM e)) => String -> NameContext e ()
-createName name = do
-  newName_ <- lift $ newName name
-  modify $ \treeMap -> Map.insert name newName_ treeMap
-
-getName :: (CodeGen e, Monad (NewNameM e)) => String -> NameContext e (NameT e)
-getName name = gets (Map.! name)
+getName ::  (CodeGen e, Monad (NewNameM e)) => String -> NameContext e (NameT e)
+getName str_name = do
+  maybe_name <- gets (Map.lookup str_name)
+  case maybe_name of
+    Just name ->
+      return name
+    Nothing -> do
+      newName_ <- lift $ newName str_name
+      modify $ \treeMap -> Map.insert str_name newName_ treeMap
+      return newName_
