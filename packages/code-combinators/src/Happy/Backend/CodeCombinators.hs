@@ -76,8 +76,11 @@ emptyListE = conE $ mkName "[]"
 emptyListP :: CodeGen e => PatT e
 emptyListP = conP (mkName "[]") []
 
+-- this monad keeps map from String names representation to Name
 type NameContext e r = StateT (Map.Map String (NameT e)) (NewNameM e) r
 
+-- returns the name if it already exists
+-- otherwise function creates a new name, puts it in the map, and returns that name
 getName ::  (CodeGen e, Monad (NewNameM e)) => String -> NameContext e (NameT e)
 getName str_name = do
   maybe_name <- gets (Map.lookup str_name)
