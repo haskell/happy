@@ -56,7 +56,7 @@ genTupE = do
 
 genListE :: MonadGen m => m TH.Exp
 genListE = do
-  es <- Gen.list (Range.linear 1 20) genExp
+  es <- Gen.list (Range.linear 0 20) genExp
   return $ listE es
 
 genArithSeqE :: MonadGen m => m TH.Exp
