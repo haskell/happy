@@ -866,13 +866,9 @@ action array indexed by (terminal * last_state) + state
 >           let list_array_name =
 >                 mkName "Happy_Data_Array.listArray"
 >           let happy_exp_list_type =
->                 appT
->                   (
->                     appT
->                       (conT data_array_name)
->                       intT
->                   )
->                   intT
+>                 appManyArgsT
+>                   (conT data_array_name)
+>                   [intT, intT]
 >           let happy_exp_list_sig =
 >                 sigD happy_exp_list_name happy_exp_list_type
 >           let happy_exp_list_exp =

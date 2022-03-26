@@ -74,6 +74,9 @@ intT = conT $ mkName "Prelude.Int"
 appManyArgsE :: CodeGen e => e -> [e] -> e
 appManyArgsE fun args = foldl' appE fun args
 
+appManyArgsT :: CodeGen e => TypeT e -> [TypeT e] -> TypeT e
+appManyArgsT fun args = foldl' appT fun args
+
 emptyListE :: CodeGen e => e
 emptyListE = conE $ mkName "[]"
 
