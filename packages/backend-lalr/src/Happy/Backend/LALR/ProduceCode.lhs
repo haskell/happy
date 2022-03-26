@@ -649,12 +649,12 @@ machinery to discard states in the parser...
 >           --bit_start = st Prelude.* nr_tokens
 >             bit_start_name = mkName "bit_start"
 >             bit_start_dec = funD bit_start_name [clause [] bit_start_exp []]
->                 where bit_start_exp = appE (appE mulE st_var) (intE nr_tokens)
+>                 where bit_start_exp = appManyArgsE mulE [st_var, intE nr_tokens]
 >
 >           --bit_end = (st Prelude.+ 1) Prelude.* nr_tokens
 >             bit_end_name = mkName "bit_end"
 >             bit_end_dec = funD bit_end_name [clause [] bit_end_exp []]
->                 where bit_end_exp = appE (appE mulE (appE (appE addE st_var) (intE 1))) (intE nr_tokens)
+>                 where bit_end_exp = appManyArgsE mulE [appManyArgsE addE [st_var, intE 1], intE nr_tokens]
 >
 >           --read_bit = readArrayBit happyExpList
 >             read_bit_name = mkName "read_bit"
@@ -665,25 +665,29 @@ machinery to discard states in the parser...
 >             bits_name = mkName "bits"
 >             bits_dec = funD bits_name [clause [] bits_exp []]
 >                 where bits_exp =
->                         appE (
->                           appE (varE $ mkName "Prelude.map")
->                           (varE $ mkName "read_bit")
->                         )
->                         (
->                           arithSeqE (
->                             FromToR
->                             (varE bit_start_name)
->                             (appE (appE subE (varE bit_end_name)) (intE 1))
->                           )
->                         )
+>                         appManyArgsE
+>                           (varE $ mkName "Prelude.map")
+>                           [
+>                               varE read_bit_name
+>                             , arithSeqE $
+>                                 FromToR
+>                                   (varE bit_start_name)
+>                                   (appManyArgsE subE [varE bit_end_name, intE 1])
+>                           ]
 >
 >           --bits_indexed = Prelude.zip bits [0... nr_tokens - 1]
 >             bits_indexed_name = mkName "bits_indexed"
 >             bits_indexed_dec = funD bits_indexed_name [clause [] bits_indexed_exp []]
 >                 where bits_indexed_exp =
->                         appE
->                           (appE (varE $ mkName "Prelude.zip") (varE bits_name))
->                           (arithSeqE $ FromToR (intE 0) (intE $ nr_tokens - 1))
+>                         appManyArgsE
+>                           (varE $ mkName "Prelude.zip")
+>                           [
+>                               varE bits_name
+>                             , arithSeqE $
+>                                 FromToR
+>                                   (intE 0)
+>                                   (intE $ nr_tokens - 1)
+>                           ]
 >
 >           --f (Prelude.False, _) = []\n"
 >           --f (Prelude.True, nr) = [token_strs Prelude.!! nr]\n
@@ -694,24 +698,25 @@ machinery to discard states in the parser...
 >                       nr = mkName "nr"
 >                       exp2 =
 >                         listE [
->                           appE (
->                             appE
->                               (varE $ mkName "(Prelude.!!)")
->                               (varE token_strs_name)
->                           )
->                           (varE nr)
+>                           appManyArgsE
+>                             (varE $ mkName "(Prelude.!!)")
+>                             [
+>                                 varE token_strs_name
+>                               , varE nr
+>                             ]
 >                         ]
 >
 >           --token_strs_expected = Prelude.concatMap f token_strs_name = mkName "token_strs"
 >             token_strs_expected_name = mkName "token_strs_expected"
 >             token_strs_expected_dec = funD token_strs_expected_name [clause [] token_strs_expected_exp []]
 >                 where token_strs_expected_exp =
->                         appE (
->                           appE
->                             (varE $ mkName "Prelude.concatMap")
->                             (varE f_name)
->                         )
->                         (varE bits_indexed_name)
+>                         appManyArgsE
+>                           (varE $ mkName "Prelude.concatMap")
+>                           [
+>                               varE f_name
+>                             , varE bits_indexed_name
+>                           ]
+>
 >    produceStateFunction goto' (state, acts)
 >       = foldr (.) id (map produceActions assocs_acts)
 >       . foldr (.) id (map produceGotos   (assocs gotos))
@@ -849,7 +854,7 @@ action array indexed by (terminal * last_state) + state
 >                 appE (conE happy_addr_con_name) (hexCharsE explist)
 >           let happy_exp_list_dec =
 >                 funD happy_exp_list_name [(clause [] happy_exp_list_exp [])]
->           return [[ happy_exp_list_sig, happy_exp_list_dec]]
+>           return [[happy_exp_list_sig, happy_exp_list_dec]]
 >       | otherwise
 >           =
 >           -- happyExpList :: Happy_Data_Array.Array Prelude.Int Prelude.Int
@@ -871,15 +876,12 @@ action array indexed by (terminal * last_state) + state
 >           let happy_exp_list_sig =
 >                 sigD happy_exp_list_name happy_exp_list_type
 >           let happy_exp_list_exp =
->                 appE
->                   (
->                     appE
->                       (varE list_array_name)
->                       (tupE [intE 0, intE table_size])
->                   )
->                   (
->                     listE $ intE <$> explist
->                   )
+>                 appManyArgsE
+>                   (varE list_array_name)
+>                   [
+>                       tupE [intE 0, intE table_size]
+>                     , listE $ intE <$> explist
+>                   ]
 >           let happy_exp_list_dec =
 >                 funD happy_exp_list_name [(clause [] happy_exp_list_exp [])]
 >           return [[ happy_exp_list_sig, happy_exp_list_dec]]

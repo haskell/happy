@@ -4,6 +4,7 @@ import qualified Language.Haskell.TH as TH
 import Control.Monad.State
 import qualified Data.Map as Map
 import Data.Kind (Type)
+import Data.Foldable
 
 class CodeGen e where
   type NameT e = n | n -> e
@@ -69,6 +70,9 @@ subE = varE $ mkOpName "Prelude.-"
 
 intT :: CodeGen e => TypeT e
 intT = conT $ mkName "Prelude.Int"
+
+appManyArgsE :: CodeGen e => e -> [e] -> e
+appManyArgsE fun args = foldl' appE fun args
 
 emptyListE :: CodeGen e => e
 emptyListE = conE $ mkName "[]"
