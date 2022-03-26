@@ -5,10 +5,12 @@ module Happy.Backend.CodeCombinators.Syntax
     DocClause(..),
     DocDec(..),
     DocRange(..),
+    DocPat(..),
     CodeGen(..),
     renderDocDecs,
     renderDocDec,
-    render
+    renderE,
+    renderP
   )
   where
 
@@ -76,11 +78,6 @@ instance CodeGen DocExp where
 
   stringE :: String -> DocExp
   stringE str = DocExp $ \_ -> PP.doubleQuotes $ PP.text $ escape str
-    where escape ('\'':xs) =  '\\' : '\'' : escape xs
-          escape ('\"':xs) =  '\\' : '\"' : escape xs
-          escape ('\\':xs) =  '\\' : '\\' : escape xs
-          escape (x:xs) = x : escape xs
-          escape [] = []
 
   hexCharsE :: [Int] -> DocExp
   hexCharsE ls =
@@ -145,8 +142,8 @@ instance CodeGen DocExp where
       PP.sep [t1 appPrec, t2 atomPrec]
 
   litP :: TH.Lit -> DocPat
-  litP (TH.CharL c) = DocPat $ \_ -> PP.quotes $ PP.text [c]
-  litP (TH.StringL s) = DocPat $ \_ -> PP.doubleQuotes $ PP.text s
+  litP (TH.CharL c) = DocPat $ \_ -> PP.quotes $ PP.text $ escape [c]
+  litP (TH.StringL s) = DocPat $ \_ -> PP.doubleQuotes $ PP.text $ escape s
   litP (TH.IntegerL n) = DocPat $ \_ -> parensIf (n < 0) $ PP.text $ show n
 
   varP :: DocName -> DocPat
@@ -185,6 +182,11 @@ instance CodeGen DocExp where
   funD :: DocName -> [DocClause] -> DocDec
   funD (DocName name) cls = DocDec $ foldr1 (PP.$+$) [name PP.<+> cl | DocClause cl <- cls]
 
+escape ('\'':xs) = '\\' : '\'' : escape xs
+escape ('\"':xs) = '\\' : '\"' : escape xs
+escape ('\\':xs) = '\\' : '\\' : escape xs
+escape (x:xs) = x : escape xs
+escape [] = []
 
 fromTextDetails :: PP.TextDetails -> ShowS
 fromTextDetails td =
@@ -193,8 +195,11 @@ fromTextDetails td =
     PP.Str str -> (str++)
     PP.PStr str -> (str++)
 
-render :: DocExp -> ShowS
-render (DocExp exp) = showString $ PP.render $ exp noPrec
+renderE :: DocExp -> ShowS
+renderE (DocExp exp) = showString $ PP.render $ exp noPrec
+
+renderP :: DocPat -> ShowS
+renderP (DocPat pat) = showString $ PP.render $ pat noPrec
 
 
 renderDocDec :: DocDec -> ShowS

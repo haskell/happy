@@ -7,21 +7,9 @@ import qualified Language.Haskell.TH as TH
 import qualified Happy.Backend.CodeCombinators.Syntax as SnGen
 import qualified Happy.Backend.CodeCombinators.Abstract as AbsGen
 import Happy.Backend.CodeCombinators
+import Test.CodeCombinators.Common
 import Data.List
 import Data.Maybe
-
-
-genFunName :: MonadGen m => m TH.Name
-genFunName = do
-  name_tail <- Gen.list (Range.linear 1 10) Gen.alphaNum
-  name_head <- Gen.lower
-  return $ mkName $ (name_head : name_tail) ++ "_"
-
-genClassName :: MonadGen m => m TH.Name
-genClassName = do
-  name_tail <- Gen.list (Range.linear 1 10) Gen.alphaNum
-  name_head <- Gen.upper
-  return $ mkName $ (name_head : name_tail) ++ "_"
 
 genIntE :: MonadGen m => m TH.Exp
 genIntE = do
@@ -81,17 +69,8 @@ genExp =
       , genArithSeqE
     ]
 
-
-fullName :: TH.Name -> String
-fullName nm =
-  moduleName ++ TH.nameBase nm
-  where moduleName =
-          case TH.nameModule nm of
-            Just str -> str ++ "."
-            Nothing -> ""
-
 expToString :: TH.Exp -> String
-expToString e = SnGen.render (expToDocExp e) ""
+expToString e = SnGen.renderE (expToDocExp e) ""
 
 expToDocExp :: TH.Exp -> SnGen.DocExp
 expToDocExp (TH.LitE l) =
