@@ -37,6 +37,12 @@ genAppE = do
   e2 <- genExp
   return $ appE e1 e2
 
+genAppManyArgsE :: MonadGen m => m TH.Exp
+genAppManyArgsE = do
+  e <- genExp
+  es <- Gen.list (Range.linear 0 5) genExp
+  return $ appManyArgsE e es
+
 genTupE :: MonadGen m => m TH.Exp
 genTupE = do
   es <- Gen.list (Range.linear 2 20) genExp
@@ -67,6 +73,7 @@ genExp =
       , genTupE
       , genListE
       , genArithSeqE
+      , genAppManyArgsE
     ]
 
 expToString :: TH.Exp -> String
