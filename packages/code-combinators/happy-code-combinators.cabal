@@ -66,6 +66,7 @@ test-suite test
       Test.CodeCombinators.Common
     , Test.CodeCombinators.GenExp
     , Test.CodeCombinators.GenPat
+    , Test.CodeCombinators.GenType
 
   hs-source-dirs:
       test

@@ -4,6 +4,7 @@ import qualified Hedgehog.Range as Range
 import qualified Language.Haskell.TH as TH
 import Test.CodeCombinators.GenExp
 import Test.CodeCombinators.GenPat
+import Test.CodeCombinators.GenType
 import Language.Haskell.Meta.Parse
 import Data.Either
 
@@ -24,6 +25,15 @@ prop_pat =
     assert $ isRight parse_result
     let Right result = parse_result
     pat === deleteParensP result
+
+prop_type :: Property
+prop_type =
+  property $ do
+    pat <- forAll genType
+    let parse_result = parseType (typeToString pat)
+    assert $ isRight parse_result
+    let Right result = parse_result
+    pat === deleteParensT result
 
 main :: IO Bool
 main = checkParallel $$(discover)

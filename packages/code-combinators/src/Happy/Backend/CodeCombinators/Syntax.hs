@@ -6,11 +6,13 @@ module Happy.Backend.CodeCombinators.Syntax
     DocDec(..),
     DocRange(..),
     DocPat(..),
+    DocType(..),
     CodeGen(..),
     renderDocDecs,
     renderDocDec,
     renderE,
-    renderP
+    renderP,
+    renderT
   )
   where
 
@@ -200,6 +202,9 @@ renderE (DocExp exp) = showString $ PP.render $ exp noPrec
 
 renderP :: DocPat -> ShowS
 renderP (DocPat pat) = showString $ PP.render $ pat noPrec
+
+renderT :: DocType -> ShowS
+renderT (DocType tp) = showString $ PP.render $ tp noPrec
 
 
 renderDocDec :: DocDec -> ShowS
