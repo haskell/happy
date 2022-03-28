@@ -5,6 +5,7 @@ import qualified Language.Haskell.TH as TH
 import Test.CodeCombinators.GenExp
 import Test.CodeCombinators.GenPat
 import Test.CodeCombinators.GenType
+import Test.CodeCombinators.GenDec
 import Language.Haskell.Meta.Parse
 import Data.Either
 
@@ -34,6 +35,15 @@ prop_type =
     assert $ isRight parse_result
     let Right result = parse_result
     pat === deleteParensT result
+
+prop_dec :: Property
+prop_dec =
+  property $ do
+    ds <- forAll genDecList
+    let parse_result = parseDecs (decListToString ds)
+    assert $ isRight parse_result
+    let Right result = parse_result
+    ds === deleteParensDecList result
 
 main :: IO Bool
 main = checkParallel $$(discover)

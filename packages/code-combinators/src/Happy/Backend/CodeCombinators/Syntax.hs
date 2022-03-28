@@ -169,7 +169,7 @@ instance CodeGen DocExp where
   clause :: [DocPat] -> DocExp -> [DocDec] -> DocClause
   clause ps (DocExp exp) decs =
     DocClause $
-      (PP.sep [p noPrec | DocPat p <- ps] PP.<+> PP.text "=" PP.<+> exp noPrec)
+      (PP.sep [p atomPrec | DocPat p <- ps] PP.<+> PP.text "=" PP.<+> exp noPrec)
       PP.$+$ PP.nest 4 whereSection
     where whereSection =
             case decs of
