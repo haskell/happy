@@ -54,6 +54,7 @@ library
                        InstanceSigs,
                        KindSignatures,
                        MagicHash,
+                       OverloadedStrings,
                        TypeFamilyDependencies
 
   ghc-options:         -Wall

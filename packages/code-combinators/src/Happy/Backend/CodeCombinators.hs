@@ -5,8 +5,9 @@ import Control.Monad.State
 import qualified Data.Map as Map
 import Data.Kind (Type)
 import Data.Foldable
+import Data.String
 
-class Monad (NewNameM e) => CodeGen e where
+class (IsString (NameT e), Monad (NewNameM e)) => CodeGen e where
   type NameT e = n | n -> e
   type RangeT e = r | r -> e
   type TypeT e = t | t -> e
@@ -47,17 +48,18 @@ class Monad (NewNameM e) => CodeGen e where
   sigD :: NameT e -> TypeT e  -> DecT e
   funD :: NameT e -> [ClauseT e] -> DecT e
 
+
 trueE :: CodeGen e => e
-trueE = conE $ mkName "Prelude.True"
+trueE = conE "Prelude.True"
 
 falseE :: CodeGen e => e
-falseE = conE $ mkName "Prelude.False"
+falseE = conE "Prelude.False"
 
 trueP :: CodeGen e => PatT e
-trueP = conP (mkName "Prelude.True") []
+trueP = conP "Prelude.True" []
 
 falseP :: CodeGen e => PatT e
-falseP = conP (mkName "Prelude.False") []
+falseP = conP "Prelude.False" []
 
 mulE :: CodeGen e => e
 mulE = varE $ mkOpName "Prelude.*"
@@ -69,7 +71,7 @@ subE :: CodeGen e => e
 subE = varE $ mkOpName "Prelude.-"
 
 intT :: CodeGen e => TypeT e
-intT = conT $ mkName "Prelude.Int"
+intT = conT "Prelude.Int"
 
 appManyArgsE :: CodeGen e => e -> [e] -> e
 appManyArgsE fun args = foldl' appE fun args
@@ -78,10 +80,10 @@ appManyArgsT :: CodeGen e => TypeT e -> [TypeT e] -> TypeT e
 appManyArgsT fun args = foldl' appT fun args
 
 emptyListE :: CodeGen e => e
-emptyListE = conE $ mkName "[]"
+emptyListE = conE "[]"
 
 emptyListP :: CodeGen e => PatT e
-emptyListP = conP (mkName "[]") []
+emptyListP = conP "[]" []
 
 -- this monad keeps map from String names representation to Name
 type NameContext e r = StateT (Map.Map String (NameT e)) (NewNameM e) r

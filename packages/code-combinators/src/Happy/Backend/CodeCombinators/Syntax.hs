@@ -22,6 +22,7 @@ import qualified Language.Haskell.TH as TH
 import Control.Monad.Identity (Identity)
 import Data.Word
 import Data.Char (chr, ord)
+import Data.String
 
 newtype Prec = Prec Int
   deriving (Eq, Ord, Show, Bounded)
@@ -183,6 +184,9 @@ instance CodeGen DocExp where
 
   funD :: DocName -> [DocClause] -> DocDec
   funD (DocName name) cls = DocDec $ foldr1 (PP.$+$) [name PP.<+> cl | DocClause cl <- cls]
+
+instance IsString DocName where
+  fromString = mkName
 
 escape ('\'':xs) = '\\' : '\'' : escape xs
 escape ('\"':xs) = '\\' : '\"' : escape xs

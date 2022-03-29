@@ -598,8 +598,8 @@ machinery to discard states in the parser...
 >           ]
 >         ]
 >       . nl
->       where happy_n_terms_name = mkName "happy_n_terms"
->             happy_n_nonterms_name = mkName "happy_n_nonterms_name"
+>       where happy_n_terms_name = "happy_n_terms"
+>             happy_n_nonterms_name = "happy_n_nonterms_name"
 
 %  {-# NOINLINE happyExpListPerState #-}
 %  happyExpListPerState st = token_strs_expected
@@ -622,7 +622,7 @@ machinery to discard states in the parser...
 >             nr_tokens = last_token - first_token + 1
 >
 >          --happyExpListPerState st = token_strs_expected
->             happy_exp_list_per_state_name = mkName "happyExpListPerState"
+>             happy_exp_list_per_state_name = "happyExpListPerState"
 >             happy_exp_list_per_state_dec =
 >               funD happy_exp_list_per_state_name [
 >                 clause [st_pat] (varE token_strs_expected_name) [
@@ -637,36 +637,36 @@ machinery to discard states in the parser...
 >                 ]
 >               ]
 >
->             st_name = mkName "st"
+>             st_name = "st"
 >             st_var = varE st_name
 >             st_pat = varP st_name
 >
 >           --token_strs = elems token_names'
->             token_strs_name = mkName "token_strs"
+>             token_strs_name = "token_strs"
 >             token_strs_dec = funD token_strs_name [clause [] token_strs_exp []]
 >                 where token_strs_exp = listE [stringE str_elem | str_elem <- elems token_names']
 >
 >           --bit_start = st Prelude.* nr_tokens
->             bit_start_name = mkName "bit_start"
+>             bit_start_name = "bit_start"
 >             bit_start_dec = funD bit_start_name [clause [] bit_start_exp []]
 >                 where bit_start_exp = appManyArgsE mulE [st_var, intE nr_tokens]
 >
 >           --bit_end = (st Prelude.+ 1) Prelude.* nr_tokens
->             bit_end_name = mkName "bit_end"
+>             bit_end_name = "bit_end"
 >             bit_end_dec = funD bit_end_name [clause [] bit_end_exp []]
 >                 where bit_end_exp = appManyArgsE mulE [appManyArgsE addE [st_var, intE 1], intE nr_tokens]
 >
 >           --read_bit = readArrayBit happyExpList
->             read_bit_name = mkName "read_bit"
+>             read_bit_name = "read_bit"
 >             read_bit_dec = funD read_bit_name [clause [] read_bit_exp []]
->                 where read_bit_exp = appE (varE $ mkName "readArrayBit") (varE $ mkName "happyExpList")
+>                 where read_bit_exp = appE (varE "readArrayBit") (varE "happyExpList")
 >
 >           --bits = Prelude.map read_bit [bit_start..bit_end Prelude.- 1]
->             bits_name = mkName "bits"
+>             bits_name = "bits"
 >             bits_dec = funD bits_name [clause [] bits_exp []]
 >                 where bits_exp =
 >                         appManyArgsE
->                           (varE $ mkName "Prelude.map")
+>                           (varE "Prelude.map")
 >                           [
 >                               varE read_bit_name
 >                             , arithSeqE $
@@ -676,11 +676,11 @@ machinery to discard states in the parser...
 >                           ]
 >
 >           --bits_indexed = Prelude.zip bits [0... nr_tokens - 1]
->             bits_indexed_name = mkName "bits_indexed"
+>             bits_indexed_name = "bits_indexed"
 >             bits_indexed_dec = funD bits_indexed_name [clause [] bits_indexed_exp []]
 >                 where bits_indexed_exp =
 >                         appManyArgsE
->                           (varE $ mkName "Prelude.zip")
+>                           (varE "Prelude.zip")
 >                           [
 >                               varE bits_name
 >                             , arithSeqE $
@@ -691,27 +691,27 @@ machinery to discard states in the parser...
 >
 >           --f (Prelude.False, _) = []\n"
 >           --f (Prelude.True, nr) = [token_strs Prelude.!! nr]\n
->             f_name = mkName "f"
+>             f_name = "f"
 >             f_dec  = funD f_name [clause1, clause2]
 >                 where clause1 = clause [tupP [falseP, wildP]] emptyListE []
 >                       clause2 = clause [tupP [trueP, varP nr]] exp2 []
->                       nr = mkName "nr"
+>                       nr = "nr"
 >                       exp2 =
 >                         listE [
 >                           appManyArgsE
->                             (varE $ mkName "(Prelude.!!)")
+>                             (varE "(Prelude.!!)")
 >                             [
 >                                 varE token_strs_name
 >                               , varE nr
 >                             ]
 >                         ]
 >
->           --token_strs_expected = Prelude.concatMap f token_strs_name = mkName "token_strs"
->             token_strs_expected_name = mkName "token_strs_expected"
+>           --token_strs_expected = Prelude.concatMap f token_strs_name = "token_strs"
+>             token_strs_expected_name = "token_strs_expected"
 >             token_strs_expected_dec = funD token_strs_expected_name [clause [] token_strs_expected_exp []]
 >                 where token_strs_expected_exp =
 >                         appManyArgsE
->                           (varE $ mkName "Prelude.concatMap")
+>                           (varE "Prelude.concatMap")
 >                           [
 >                               varE f_name
 >                             , varE bits_indexed_name
@@ -838,7 +838,7 @@ action array indexed by (terminal * last_state) + state
 >           . interleave' "," (map shows table)
 >           . str "\n\t])\n\n"
 
->    produceExpListArray :: CodeGen e => NameContext e [[DecT e]]
+>    produceExpListArray :: (CodeGen e, Monad (NewNameM e)) => NameContext e [[DecT e]]
 >    produceExpListArray
 >       | ghc
 >           =
@@ -861,10 +861,8 @@ action array indexed by (terminal * last_state) + state
 >           -- happyExpList = Happy_Data_Array.listArray (0, table_size) [explist]
 >           do
 >           happy_exp_list_name <- getName "happyExpList"
->           let data_array_name =
->                 mkName "Happy_Data_Array.Array"
->           let list_array_name =
->                 mkName "Happy_Data_Array.listArray"
+>           let data_array_name = "Happy_Data_Array.Array"
+>           let list_array_name = "Happy_Data_Array.listArray"
 >           let happy_exp_list_type =
 >                 appManyArgsT
 >                   (conT data_array_name)

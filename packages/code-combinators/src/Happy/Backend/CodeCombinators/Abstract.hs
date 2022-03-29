@@ -3,6 +3,7 @@ module Happy.Backend.CodeCombinators.Abstract where
 import Happy.Backend.CodeCombinators
 import qualified Language.Haskell.TH as TH
 import Data.Word
+import Data.String
 
 instance CodeGen TH.Exp where
   type NameT TH.Exp = TH.Name
@@ -105,3 +106,6 @@ instance CodeGen TH.Exp where
 
   funD :: TH.Name -> [TH.Clause] -> TH.Dec
   funD = TH.FunD
+
+instance IsString TH.Name where
+  fromString = mkName
