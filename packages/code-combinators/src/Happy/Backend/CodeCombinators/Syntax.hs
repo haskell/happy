@@ -20,7 +20,6 @@ import Happy.Backend.CodeCombinators
 import qualified Text.PrettyPrint as PP
 import qualified Language.Haskell.TH as TH
 import Control.Monad.Identity (Identity)
-import Data.Word
 import Data.Char (chr, ord)
 import Data.String
 
@@ -45,10 +44,7 @@ newtype DocDec = DocDec PP.Doc
   deriving (Eq, Show)
 
 data DocRange
-  = FromR DocExp
-  | FromThenR DocExp DocExp
-  | FromToR DocExp DocExp
-  | FromThenToR DocExp DocExp DocExp
+  = FromToR DocExp DocExp
 
 instance CodeGen DocExp where
   type NameT DocExp = DocName
@@ -69,7 +65,7 @@ instance CodeGen DocExp where
   newName = return . mkName
 
   negateE :: DocExp -> DocExp
-  negateE = appE $ varE $ mkName "GHC.Num.negate"
+  negateE = appE $ varE "GHC.Num.negate"
 
   intE :: Integral a => a -> DocExp
   intE num
@@ -148,6 +144,7 @@ instance CodeGen DocExp where
   litP (TH.CharL c) = DocPat $ \_ -> PP.quotes $ PP.text $ escape [c]
   litP (TH.StringL s) = DocPat $ \_ -> PP.doubleQuotes $ PP.text $ escape s
   litP (TH.IntegerL n) = DocPat $ \_ -> parensIf (n < 0) $ PP.text $ show n
+  litP l = error $ "unsupported literal: " ++ show l
 
   varP :: DocName -> DocPat
   varP (DocName name)    = DocPat $ \_ -> name
@@ -168,9 +165,9 @@ instance CodeGen DocExp where
   wildP = DocPat $ \_ -> PP.text "_"
 
   clause :: [DocPat] -> DocExp -> [DocDec] -> DocClause
-  clause ps (DocExp exp) decs =
+  clause ps (DocExp exp_) decs =
     DocClause $
-      (PP.sep [p atomPrec | DocPat p <- ps] PP.<+> PP.text "=" PP.<+> exp noPrec)
+      (PP.sep [p atomPrec | DocPat p <- ps] PP.<+> PP.text "=" PP.<+> exp_ noPrec)
       PP.$+$ PP.nest 4 whereSection
     where whereSection =
             case decs of
@@ -188,6 +185,7 @@ instance CodeGen DocExp where
 instance IsString DocName where
   fromString = mkName
 
+escape :: String -> String
 escape ('\'':xs) = '\\' : '\'' : escape xs
 escape ('\"':xs) = '\\' : '\"' : escape xs
 escape ('\\':xs) = '\\' : '\\' : escape xs
@@ -202,7 +200,7 @@ fromTextDetails td =
     PP.PStr str -> (str++)
 
 renderE :: DocExp -> ShowS
-renderE (DocExp exp) = showString $ PP.render $ exp noPrec
+renderE (DocExp exp_) = showString $ PP.render $ exp_ noPrec
 
 renderP :: DocPat -> ShowS
 renderP (DocPat pat) = showString $ PP.render $ pat noPrec

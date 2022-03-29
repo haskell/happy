@@ -57,7 +57,7 @@ library
                        OverloadedStrings,
                        TypeFamilyDependencies
 
-  ghc-options:         -Wall
+  ghc-options:         -Wall -Wno-orphans
 
 
 test-suite test

@@ -28,7 +28,7 @@ The code generator.
 > import Happy.Backend.CodeCombinators
 > import Happy.Backend.CodeCombinators.Syntax
 > import Control.Monad.State  ( evalStateT )
-> import Control.Monad.Identity    ( runIdentity, Identity )
+> import Control.Monad.Identity    ( runIdentity )
 > import qualified Data.Map as Map
 
 %-----------------------------------------------------------------------------
