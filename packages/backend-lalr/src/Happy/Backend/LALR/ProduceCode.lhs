@@ -588,14 +588,10 @@ machinery to discard states in the parser...
 >       = produceActionArray
 >       . produceReduceArray
 >       . renderDocDecs [
->           [
->             sigD happy_n_terms_name intT,
->             funD happy_n_terms_name [clause [] (intE n_terminals) []]
->           ],
->           [
->             sigD happy_n_nonterms_name intT,
->             funD happy_n_nonterms_name [clause [] (intE n_nonterminals) []]
->           ]
+>             fullFunD happy_n_terms_name intT
+>               [clause [] (intE n_terminals) []]
+>           , fullFunD happy_n_nonterms_name intT
+>               [clause [] (intE n_nonterminals) []]
 >         ]
 >       . nl
 >       where happy_n_terms_name = "happy_n_terms"
@@ -848,13 +844,12 @@ action array indexed by (terminal * last_state) + state
 >           happy_exp_list_name <- getName "happyExpList"
 >           happy_addr_name <- getName "HappyAddr"
 >           happy_addr_con_name <- getName "HappyA#"
->           let happy_exp_list_sig =
->                 sigD happy_exp_list_name (conT happy_addr_name)
 >           let happy_exp_list_exp =
 >                 appE (conE happy_addr_con_name) (hexCharsE explist)
 >           let happy_exp_list_dec =
->                 funD happy_exp_list_name [(clause [] happy_exp_list_exp [])]
->           return [[happy_exp_list_sig, happy_exp_list_dec]]
+>                 fullFunD happy_exp_list_name (conT happy_addr_name)
+>                   [(clause [] happy_exp_list_exp [])]
+>           return [happy_exp_list_dec]
 >       | otherwise
 >           =
 >           -- happyExpList :: Happy_Data_Array.Array Prelude.Int Prelude.Int
@@ -867,8 +862,6 @@ action array indexed by (terminal * last_state) + state
 >                 appManyArgsT
 >                   (conT data_array_name)
 >                   [intT, intT]
->           let happy_exp_list_sig =
->                 sigD happy_exp_list_name happy_exp_list_type
 >           let happy_exp_list_exp =
 >                 appManyArgsE
 >                   (varE list_array_name)
@@ -877,8 +870,9 @@ action array indexed by (terminal * last_state) + state
 >                     , listE $ intE <$> explist
 >                   ]
 >           let happy_exp_list_dec =
->                 funD happy_exp_list_name [(clause [] happy_exp_list_exp [])]
->           return [[ happy_exp_list_sig, happy_exp_list_dec]]
+>                 fullFunD happy_exp_list_name happy_exp_list_type
+>                   [(clause [] happy_exp_list_exp [])]
+>           return [happy_exp_list_dec]
 
 >    (_, last_state) = bounds action
 >    n_states = last_state + 1

@@ -45,7 +45,7 @@ class (IsString (NameT e), Monad (NewNameM e)) => CodeGen e where
 
   clause :: [PatT e] -> e -> [DecT e] -> ClauseT e
 
-  sigD :: NameT e -> TypeT e  -> DecT e
+  sigD :: NameT e -> TypeT e -> DecT e
   funD :: NameT e -> [ClauseT e] -> DecT e
 
 
@@ -84,6 +84,13 @@ emptyListE = conE "[]"
 
 emptyListP :: CodeGen e => PatT e
 emptyListP = conP "[]" []
+
+fullFunD :: CodeGen e => NameT e -> TypeT e -> [ClauseT e] -> [DecT e]
+fullFunD name type_ clauses =
+  [
+      sigD name type_
+    , funD name clauses
+  ]
 
 -- this monad keeps map from String names representation to Name
 type NameContext e r = StateT (Map.Map String (NameT e)) (NewNameM e) r
