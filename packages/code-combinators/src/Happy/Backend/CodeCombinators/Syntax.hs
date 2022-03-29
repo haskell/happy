@@ -67,7 +67,7 @@ instance CodeGen DocExp where
   negateE :: DocExp -> DocExp
   negateE = appE $ varE "GHC.Num.negate"
 
-  intE :: Integral a => a -> DocExp
+  intE :: Int -> DocExp
   intE num
     | num < 0 = negateE $ absE
     | otherwise = absE

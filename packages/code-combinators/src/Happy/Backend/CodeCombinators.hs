@@ -20,7 +20,7 @@ class (IsString (NameT e), Monad (NewNameM e)) => CodeGen e where
   mkOpName :: String -> NameT e
   newName :: String -> NewNameM e (NameT e)
 
-  intE :: Integral a => a -> e
+  intE :: Int -> e
   negateE :: e -> e
   stringE :: String -> e
   hexCharsE :: [Int] -> e

@@ -14,7 +14,7 @@ import Data.Maybe
 genIntE :: MonadGen m => m TH.Exp
 genIntE = do
   x <- Gen.int $ Range.linear minBound maxBound
-  return $ intE $ fromIntegral x
+  return $ intE x
 
 genStringE :: MonadGen m => m TH.Exp
 genStringE = do
@@ -83,7 +83,7 @@ expToDocExp :: TH.Exp -> SnGen.DocExp
 expToDocExp (TH.LitE l) =
   case l of
     TH.StringL str -> SnGen.stringE str
-    TH.IntegerL num -> SnGen.intE num
+    TH.IntegerL num -> SnGen.intE $ fromIntegral num
     _ -> error "invalid literal"
 
 expToDocExp (TH.ConE nm) =
