@@ -38,23 +38,23 @@ library
   hs-source-dirs:      src
 
   exposed-modules:     Happy.Backend.CodeCombinators,
-                       Happy.Backend.CodeCombinators.Syntax,
-                       Happy.Backend.CodeCombinators.Abstract
+                       Happy.Backend.CodeCombinators.Abstract,
+                       Happy.Backend.CodeCombinators.Syntax
 
-  build-depends:       base < 5,
-                       array,
-                       pretty,
-                       template-haskell,
+  build-depends:       array,
+                       base < 5,
+                       containers,
                        mtl,
-                       containers
+                       pretty,
+                       template-haskell
 
   default-language:    Haskell98
   default-extensions:  CPP,
-                       MagicHash,
+                       FlexibleContexts,
                        InstanceSigs,
-                       TypeFamilyDependencies,
                        KindSignatures,
-                       FlexibleContexts
+                       MagicHash,
+                       TypeFamilyDependencies
 
   ghc-options:         -Wall
 
@@ -65,9 +65,9 @@ test-suite test
   other-modules:
       Test.CodeCombinators.Common
     , Test.CodeCombinators.GenExp
+    , Test.CodeCombinators.GenDec
     , Test.CodeCombinators.GenPat
     , Test.CodeCombinators.GenType
-    , Test.CodeCombinators.GenDec
 
   hs-source-dirs:
       test
@@ -78,11 +78,10 @@ test-suite test
 
   ghc-options: -Wall
   build-depends:
-      HUnit
-    , base < 5
-    , hedgehog
-    , template-haskell
+      base < 5
     , happy-code-combinators
     , haskell-src-meta
+    , hedgehog
+    , template-haskell
 
   default-language: Haskell98
