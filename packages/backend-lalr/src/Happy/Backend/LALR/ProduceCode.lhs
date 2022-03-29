@@ -610,9 +610,10 @@ machinery to discard states in the parser...
 %               f (Prelude.True, nr) = [token_strs Prelude.!! nr]
 
 >    produceExpListPerState
->       = renderDocDecs (runIdentity $ evalStateT (produceExpListArray @DocExp) Map.empty)
->       . str "{-# NOINLINE happyExpListPerState #-}\n"
->       . renderDocDecs [[happy_exp_list_per_state_dec]]
+>       =
+>       (renderDocDecs $
+>            (runIdentity $ evalStateT (produceExpListArray @DocExp) Map.empty)
+>         ++ [[noInlinePragmaD happy_exp_list_per_state_name, happy_exp_list_per_state_dec]])
 >       . nl
 >       where (first_token, last_token) = bounds token_names'
 >             nr_tokens = last_token - first_token + 1
