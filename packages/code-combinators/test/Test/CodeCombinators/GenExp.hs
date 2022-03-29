@@ -5,11 +5,10 @@ import qualified Hedgehog.Gen as Gen
 import qualified Hedgehog.Range as Range
 import qualified Language.Haskell.TH as TH
 import qualified Happy.Backend.CodeCombinators.Syntax as SnGen
-import qualified Happy.Backend.CodeCombinators.Abstract as AbsGen
+import qualified Happy.Backend.CodeCombinators.Abstract()
 import Happy.Backend.CodeCombinators
 import Test.CodeCombinators.Common
 import Data.List
-import Data.Maybe
 
 genIntE :: MonadGen m => m TH.Exp
 genIntE = do

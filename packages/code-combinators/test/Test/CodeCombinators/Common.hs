@@ -4,7 +4,7 @@ import Hedgehog
 import qualified Hedgehog.Gen as Gen
 import qualified Hedgehog.Range as Range
 import qualified Language.Haskell.TH as TH
-import qualified Happy.Backend.CodeCombinators.Abstract as AbsGen
+import qualified Happy.Backend.CodeCombinators.Abstract()
 import Happy.Backend.CodeCombinators
 
 genFunName :: MonadGen m => m TH.Name
