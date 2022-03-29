@@ -15,8 +15,8 @@ synopsis:        Code combinators for simple code generation
 
 Description:
   Happy is a parser generator for Haskell.
-  Happy-Backend-LALR is responsible for code-generation:
-  It converts action and goto tables into LALR Haskell code.
+  Happy-Backend-CodeCombinators allows to generate code
+  in both abstract and text represantation.
 
 
 tested-with:
