@@ -47,4 +47,3 @@ prop_dec =
 
 main :: IO Bool
 main = checkParallel $$(discover)
-

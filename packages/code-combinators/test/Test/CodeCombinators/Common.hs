@@ -26,4 +26,3 @@ fullName nm =
           case TH.nameModule nm of
             Just str -> str ++ "."
             Nothing -> ""
-
