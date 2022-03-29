@@ -26,7 +26,7 @@ instance CodeGen TH.Exp where
   negateE :: TH.Exp -> TH.Exp
   negateE = TH.AppE (TH.VarE $ mkName "GHC.Num.negate")
 
-  intE :: Integral a => a -> TH.Exp
+  intE :: Int -> TH.Exp
   intE num
     | num < 0 = negateE absE
     | otherwise = absE
@@ -106,6 +106,11 @@ instance CodeGen TH.Exp where
 
   funD :: TH.Name -> [TH.Clause] -> TH.Dec
   funD = TH.FunD
+
+  noInlinePragmaD :: TH.Name -> TH.Dec
+  noInlinePragmaD name =
+    TH.PragmaD $
+      TH.InlineP name TH.NoInline TH.FunLike TH.AllPhases
 
 instance IsString TH.Name where
   fromString = mkName

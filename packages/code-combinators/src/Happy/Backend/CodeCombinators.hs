@@ -47,6 +47,7 @@ class (IsString (NameT e), Monad (NewNameM e)) => CodeGen e where
 
   sigD :: NameT e -> TypeT e -> DecT e
   funD :: NameT e -> [ClauseT e] -> DecT e
+  noInlinePragmaD :: NameT e -> DecT e
 
 
 trueE :: CodeGen e => e

@@ -182,6 +182,11 @@ instance CodeGen DocExp where
   funD :: DocName -> [DocClause] -> DocDec
   funD (DocName name) cls = DocDec $ foldr1 (PP.$+$) [name PP.<+> cl | DocClause cl <- cls]
 
+  noInlinePragmaD :: DocName -> DocDec
+  noInlinePragmaD (DocName name) =
+    DocDec $
+      PP.text "{-# NOINLINE" PP.<+> name PP.<+> PP.text "#-}"
+
 instance IsString DocName where
   fromString = mkName
 
