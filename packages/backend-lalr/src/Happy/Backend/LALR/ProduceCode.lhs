@@ -834,7 +834,7 @@ action array indexed by (terminal * last_state) + state
 >           . interleave' "," (map shows table)
 >           . str "\n\t])\n\n"
 
->    produceExpListArray :: (CodeGen e, Monad (NewNameM e)) => NameContext e [[DecT e]]
+>    produceExpListArray :: CodeGen e => NameContext e [[DecT e]]
 >    produceExpListArray
 >       | ghc
 >           =
