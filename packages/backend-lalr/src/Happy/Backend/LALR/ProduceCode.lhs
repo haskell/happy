@@ -592,18 +592,6 @@ machinery to discard states in the parser...
 >         ]
 >       . nl
 
-%  {-# NOINLINE happyExpListPerState #-}
-%  happyExpListPerState st = token_strs_expected
-%        where token_strs = " . str (show $ elems token_names')
-%              bit_start = st Prelude.* " . str (show nr_tokens)
-%              bit_end = (st Prelude.+ 1) Prelude.* " . str (show nr_tokens)
-%              read_bit = readArrayBit happyExpList
-%              bits = Prelude.map read_bit [bit_start..bit_end Prelude.- 1]
-%              bits_indexed = Prelude.zip bits [0..nr_tokens - 1]
-%               token_strs_expected = Prelude.concatMap f bits_indexed
-%               f (Prelude.False, _) = []
-%               f (Prelude.True, nr) = [token_strs Prelude.!! nr]
-
 >    produceExpListPerState
 >       =
 >         produceExpListArray
