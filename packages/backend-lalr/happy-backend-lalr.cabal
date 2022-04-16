@@ -55,6 +55,6 @@ library
                        happy-code-combinators == 1.21.0
 
   default-language:    Haskell98
-  default-extensions:  CPP, MagicHash, FlexibleContexts, TypeApplications, OverloadedStrings
+  default-extensions:  CPP, MagicHash, FlexibleContexts, OverloadedStrings
   ghc-options:         -Wall
   other-modules:       Paths_happy_backend_lalr

@@ -27,9 +27,6 @@ The code generator.
 
 > import Happy.Backend.CodeCombinators
 > import Happy.Backend.CodeCombinators.Syntax
-> import Control.Monad.State  ( evalStateT )
-> import Control.Monad.Identity    ( runIdentity )
-> import qualified Data.Map as Map
 
 %-----------------------------------------------------------------------------
 Produce the complete output file.
@@ -609,9 +606,8 @@ machinery to discard states in the parser...
 
 >    produceExpListPerState
 >       =
->       (renderDocDecs $
->            (runIdentity $ evalStateT (produceExpListArray @DocExp) Map.empty)
->         ++ [[noInlinePragmaD happy_exp_list_per_state_name, happy_exp_list_per_state_dec]])
+>         produceExpListArray
+>       . renderDocDecs [[noInlinePragmaD happy_exp_list_per_state_name, happy_exp_list_per_state_dec]]
 >       . nl
 >       where (first_token, last_token) = bounds token_names'
 >             nr_tokens = last_token - first_token + 1
@@ -833,45 +829,38 @@ action array indexed by (terminal * last_state) + state
 >           . interleave' "," (map shows table)
 >           . str "\n\t])\n\n"
 
->    produceExpListArray :: CodeGen e => NameContext e [[DecT e]]
 >    produceExpListArray
 >       | ghc
 >           =
 >           -- happyExpList :: HappyAddr
 >           -- happyExpList = HappyA# "hexCharsE explist"#
->           do
->           happy_exp_list_name <- getName "happyExpList"
->           happy_addr_name <- getName "HappyAddr"
->           happy_addr_con_name <- getName "HappyA#"
 >           let happy_exp_list_exp =
->                 appE (conE happy_addr_con_name) (hexCharsE explist)
->           let happy_exp_list_dec =
->                 fullFunD happy_exp_list_name (conT happy_addr_name)
+>                 appE (conE "HappyA#") (hexCharsE explist)
+>               happy_exp_list_dec =
+>                 fullFunD "happyExpList" (conT "HappyAddr")
 >                   [(clause [] happy_exp_list_exp [])]
->           return [happy_exp_list_dec]
+>           in
+>           renderDocDecs [happy_exp_list_dec]
 >       | otherwise
 >           =
 >           -- happyExpList :: Happy_Data_Array.Array Prelude.Int Prelude.Int
 >           -- happyExpList = Happy_Data_Array.listArray (0, table_size) [explist]
->           do
->           happy_exp_list_name <- getName "happyExpList"
->           let data_array_name = "Happy_Data_Array.Array"
->           let list_array_name = "Happy_Data_Array.listArray"
 >           let happy_exp_list_type =
 >                 appManyArgsT
->                   (conT data_array_name)
+>                   (conT "Happy_Data_Array.Array")
 >                   [intT, intT]
->           let happy_exp_list_exp =
+>               happy_exp_list_exp =
 >                 appManyArgsE
->                   (varE list_array_name)
+>                   (varE "Happy_Data_Array.listArray")
 >                   [
 >                       tupE [intE 0, intE table_size]
 >                     , listE $ intE <$> explist
 >                   ]
->           let happy_exp_list_dec =
->                 fullFunD happy_exp_list_name happy_exp_list_type
+>               happy_exp_list_dec =
+>                 fullFunD "happyExpList" happy_exp_list_type
 >                   [(clause [] happy_exp_list_exp [])]
->           return [happy_exp_list_dec]
+>           in
+>           renderDocDecs [happy_exp_list_dec]
 
 >    (_, last_state) = bounds action
 >    n_states = last_state + 1
