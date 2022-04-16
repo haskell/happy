@@ -588,14 +588,12 @@ machinery to discard states in the parser...
 >       = produceActionArray
 >       . produceReduceArray
 >       . renderDocDecs [
->             fullFunD happy_n_terms_name intT
+>             fullFunD "happy_n_terms" intT
 >               [clause [] (intE n_terminals) []]
->           , fullFunD happy_n_nonterms_name intT
+>           , fullFunD "happy_n_nonterms_name" intT
 >               [clause [] (intE n_nonterminals) []]
 >         ]
 >       . nl
->       where happy_n_terms_name = "happy_n_terms"
->             happy_n_nonterms_name = "happy_n_nonterms_name"
 
 %  {-# NOINLINE happyExpListPerState #-}
 %  happyExpListPerState st = token_strs_expected
