@@ -3,7 +3,7 @@ $Id: ErlParser.ly,v 1.2 1997/09/24 10:11:23 simonm Exp $
 
 Syntactic analyser for Erlang
 
-Copyright : (c) 1996 Ellemtel Telecommunications Systems Laborotories, Sweden
+Copyright : (c) 1996 Ellemtel Telecommunications Systems Laboratories, Sweden
 Author    : Simon Marlow <simonm@dcs.gla.ac.uk>
 -----------------------------------------------------------------------------
 

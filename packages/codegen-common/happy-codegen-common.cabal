@@ -11,7 +11,7 @@ homepage:        https://www.haskell.org/happy/
 category:        Development
 cabal-version:   >= 1.10
 build-type:      Simple
-synopsis:        Defintions for any code generator for Happy
+synopsis:        Definitions for any code generator for Happy
 
 Description:
   Happy is a parser generator for Haskell.

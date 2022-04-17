@@ -619,7 +619,7 @@ NOTE: on (LR'Multiple as a) handling
 >                               | j > i     -> a
 >                               | r < r'    -> LR'Multiple [b] a
 >                               | otherwise -> LR'Multiple [a] b
->       res _ _ = error "confict in resolve"
+>       res _ _ = error "conflict in resolve"
 
 -----------------------------------------------------------------------------
 Count the conflicts

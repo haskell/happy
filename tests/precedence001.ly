@@ -18,7 +18,7 @@ This module demonstrates a Happy bug (in version <= 1.10).
 > 
 > %%
 
-Ambiguos grammar.
+Ambiguous grammar.
 
 > E    : E '+' E  { Plus' $1 $3 }
 >      | E '-' E  { Minus' $1 $3 }
