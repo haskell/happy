@@ -1,7 +1,1 @@
-autom4te.cache/
-config.log
-config.mk
-config.status
-configure
-happy/
-happy.1
+_build/
