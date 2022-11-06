@@ -30,10 +30,9 @@ the intention being that we can experiment with different kinds of functional co
 and compiler writers can use the different types of parser to tune their compilers.
 The types of parser supported are:
 
-#.
-   .. _item-default-backend:
+.. _item-default-backend:
 
-   “standard” Haskell 98 (should work with any compiler that compiles Haskell 98).
+#. “standard” Haskell 98 (should work with any compiler that compiles Haskell 98).
 
 #. standard Haskell using :index:`arrays`
 
