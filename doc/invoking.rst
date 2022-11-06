@@ -40,7 +40,7 @@ The flags accepted by Happy are as follows:
 ``-p``\ [<file>]; ``--pretty``\ [=<file>]
    pretty print
    Directs Happy to produce a file containing a pretty-printed form of
-   the grammar, containing only the productions, withouth any semantic
+   the grammar, containing only the productions, without any semantic
    actions or type signatures. If no file name is provided, then the
    file name will be computed by replacing the extension of the input
    file with ``.grammar``.

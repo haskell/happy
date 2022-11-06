@@ -2,7 +2,8 @@ module Happy.Frontend.ParamRules(expand_rules, Prod1(..), Rule1(..)) where
 
 import Happy.Frontend.AbsSyn
 import Control.Monad.Writer
-import Control.Monad.Except
+import Control.Monad.Except(throwError)
+import Control.Monad.Trans.Except
 import Data.List(partition,intersperse)
 import qualified Data.Set as S
 import qualified Data.Map as M    -- XXX: Make it work with old GHC.
@@ -97,6 +98,3 @@ split_rules :: [Rule] -> (Funs,[Rule])
 split_rules rs = let (xs,ys) = partition has_args rs
                  in (Funs (M.fromList [ (x,r) | r@(Rule x _ _ _) <- xs ]),ys)
   where has_args (Rule _ args _ _) = not (null args)
-
-
-

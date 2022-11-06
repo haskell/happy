@@ -188,7 +188,7 @@ occur immediately afterwards (indeed these source rules are factored
 such that there is no rule of the form ``... -> type '->' ...``).
 
 The best way this author knows how to sleuth this out is to look for
-instances of the token and check if any of the preceeding non-terminals
+instances of the token and check if any of the preceding non-terminals
 could terminate in a type:
 
 ::

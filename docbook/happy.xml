@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
    "http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
 
@@ -839,7 +839,7 @@ Exp   : let var '=' Exp in Exp  { Let $2 $4 $6 }
       <sect2 id="context-precedence">
 	<title>Context-dependent Precedence</title>
 
-	<para>The precedence of an individual rule can be overriden,
+	<para>The precedence of an individual rule can be overridden,
 	using <firstterm>context precedence</firstterm>.  This is
 	useful when, for example, a particular token has a different
 	precedence depending on the context.  A common example is the
@@ -2156,7 +2156,7 @@ decode :: TreeDecode a => (ForestId -> [Branch]) -> ForestId -> [Decode_Result a
 	The parser generator also creates instances of the
 	<literal>TreeDecode</literal> class, which unpacks the semantic
 	function and applies it across the decodings of the possible
-	combinations of children. Effectively, it does a cartesian product
+	combinations of children. Effectively, it does a Cartesian product
 	operation across the lists of semantic results from each of the
 	children. Eg <literal>[1,2] "+" [3,4]</literal> produces
 	<literal>[4,5,5,6]</literal>.
@@ -2438,11 +2438,11 @@ class LabelDecode a where
         <para>
 	The original implementation was developed by Ben Medlock,
 	as his undergraduate final year project,
-	using ideas from Peter Ljungloef's Licentiate thesis
-	(see <ulink url="http://www.cs.chalmers.se/~peb/parsing"/>, and
+	using ideas from Peter Ljunglöf's Licentiate thesis
+	(see <ulink url="https://gup.ub.gu.se/publication/10783"/>, and
 	we recommend the thesis for its clear analysis of parsing
 	algorithms).
-	Ljungloef's version produces lists of parse trees, but Medlock
+	Ljunglöf's version produces lists of parse trees, but Medlock
 	adapted this to produce an explicit graph containing parse structure
 	information. He also incorporated
 	the code into <application>Happy</application>.
@@ -2493,7 +2493,7 @@ A ->
 
 	<para>
 	The forest is held in a chart-style data structure, and this supports
-	local ambiguity packing (chart parsing is discussed in Ljungloef's
+	local ambiguity packing (chart parsing is discussed in Ljunglöf's
 	thesis, among other places).
 	A limited amount of packing of live stacks is also done, to avoid
 	some repetition of work.
@@ -2995,7 +2995,7 @@ happyError = error "parse error"
 	  </indexterm>
 	  <para> Directs <application>Happy</application> to produce a file
           containing a pretty-printed form of the grammar, containing only
-          the productions, withouth any semantic actions or type signatures.
+          the productions, without any semantic actions or type signatures.
           If no file name is provided, then the file name will be computed
           by replacing the extension of the input file with
           <literal>.grammar</literal>.
@@ -3973,7 +3973,7 @@ State 49
   <literal>... -> type '->' ...</literal>).</para>
 
 <para>The best way this author knows how to sleuth this out is to
-  look for instances of the token and check if any of the preceeding
+  look for instances of the token and check if any of the preceding
   non-terminals could terminate in a type:</para>
 
 <programlisting>

@@ -524,7 +524,7 @@ lookahead token are examined in order to resolve the conflict:
 Context-dependent Precedence
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The precedence of an individual rule can be overriden, using context
+The precedence of an individual rule can be overridden, using context
 precedence. This is useful when, for example, a particular token has a
 different precedence depending on the context. A common example is the
 minus sign: it has high precedence when used as prefix negation, but a

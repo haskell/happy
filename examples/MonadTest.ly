@@ -2,7 +2,7 @@
 Tests %monad without %lexer.
 
 > {
-> import Char
+> import Data.Char
 > }
 
 > %name calc

@@ -771,14 +771,14 @@ This lets examples like:
                 | HappyAbsSyn2 (  HaskExp  )
                 | HappyAbsSyn3 t1
 
-*share* the defintion for ( HaskExp )
+*share* the definition for ( HaskExp )
 
         data HappyAbsSyn t1
                 = HappyTerminal ( HaskToken )
                 | HappyAbsSyn1 (  HaskExp  )
                 | HappyAbsSyn3 t1
 
-... cuting down on the work that the type checker has to do.
+... cutting down on the work that the type checker has to do.
 
 Note, this *could* introduce lack of polymophism,
 for types that have alphas in them. Maybe we should
@@ -909,7 +909,7 @@ MonadStuff:
 An error handler specified with %error is passed the current token
 when used with %lexer, but happyError (the old way but kept for
 compatibility) is not passed the current token. Also, the %errorhandlertype
-directive determins the API of the provided function.
+directive determines the API of the provided function.
 
 >    errorHandler =
 >       case error_handler' of
@@ -1325,7 +1325,7 @@ See notes under "Action Tables" above for some subtleties in this function.
 >          new_fst_zero <- findFstFreeSlot check fst_zero
 >          return (off, new_min_off, new_max_off, new_fst_zero)
 
-When looking for a free offest in the table, we use the 'check' table
+When looking for a free offset in the table, we use the 'check' table
 rather than the main table.  The check table starts off with (-1) in
 every slot, because that's the only thing that doesn't overlap with
 any tokens (non-terminals start at 0, terminals start at 1).

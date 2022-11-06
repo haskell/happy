@@ -395,7 +395,7 @@ applied to the first and second constituents, or to the first and
 third.) The parser generator also creates instances of the
 ``TreeDecode`` class, which unpacks the semantic function and applies it
 across the decodings of the possible combinations of children.
-Effectively, it does a cartesian product operation across the lists of
+Effectively, it does a Cartesian product operation across the lists of
 semantic results from each of the children. Eg ``[1,2] "+" [3,4]``
 produces ``[4,5,5,6]``. Information is extracted from token values using
 the patterns supplied by the user when declaring tokens and their
@@ -612,10 +612,10 @@ Technical details
 ~~~~~~~~~~~~~~~~~
 
 The original implementation was developed by Ben Medlock, as his
-undergraduate final year project, using ideas from Peter Ljungloef's
-Licentiate thesis (see ` <http://www.cs.chalmers.se/~peb/parsing>`__,
+undergraduate final year project, using ideas from Peter Ljunglöf's
+Licentiate thesis (see ` <https://gup.ub.gu.se/publication/10783>`__,
 and we recommend the thesis for its clear analysis of parsing
-algorithms). Ljungloef's version produces lists of parse trees, but
+algorithms). Ljunglöf's version produces lists of parse trees, but
 Medlock adapted this to produce an explicit graph containing parse
 structure information. He also incorporated the code into Happy.
 
@@ -654,7 +654,7 @@ allows sufficient copies of the empty symbol to appear on some stack,
 hence allowing the parse to complete.
 
 The forest is held in a chart-style data structure, and this supports
-local ambiguity packing (chart parsing is discussed in Ljungloef's
+local ambiguity packing (chart parsing is discussed in Ljunglöf's
 thesis, among other places). A limited amount of packing of live stacks
 is also done, to avoid some repetition of work.
 
