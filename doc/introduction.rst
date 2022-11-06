@@ -30,7 +30,10 @@ the intention being that we can experiment with different kinds of functional co
 and compiler writers can use the different types of parser to tune their compilers.
 The types of parser supported are:
 
-#. “standard” Haskell 98 (should work with any compiler that compiles Haskell 98).
+#.
+   .. _item-default-backend:
+
+   “standard” Haskell 98 (should work with any compiler that compiles Haskell 98).
 
 #. standard Haskell using :index:`arrays`
 
@@ -38,14 +41,14 @@ The types of parser supported are:
      single: back-ends; arrays
 
    (this is not the default because we have found this generates slower parsers than
-   `listitem_title <#item-default-backend>`__).
+   `<#item-default-backend>`__).
 
 #. Haskell with :index:`GHC` (Glasgow Haskell) extensions.
 
    .. index::
      single: back-ends; GHC
 
-   This is a slightly faster option than `listitem_title <#item-default-backend>`__ for Glasgow Haskell users.
+   This is a slightly faster option than `<#item-default-backend>`__ for Glasgow Haskell users.
 
 #. GHC Haskell with string-encoded arrays.
    This is the fastest/smallest option for GHC users.

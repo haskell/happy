@@ -399,7 +399,7 @@ Viewing forests as graphs
 
 If you run the examples with GHC, each run will produce a file ``out.daVinci``.
 This is a graph in the format expected by the *daVinci* graph visualization tool.
-(See ` <http://www.informatik.uni-bremen.de/~davinci/>`__ for more information.
+(See `<http://www.informatik.uni-bremen.de/~davinci/>`__ for more information.
 Educational use licenses are currently available without charge.)
 
 We highly recommend looking at graphs of parse results --- it really helps to understand the results.
@@ -456,7 +456,7 @@ Technical details
 ~~~~~~~~~~~~~~~~~
 
 The original implementation was developed by Ben Medlock, as his undergraduate final year project, using ideas from Peter Ljunglöf's Licentiate thesis
-(see ` <https://gup.ub.gu.se/publication/10783>`__, and we recommend the thesis for its clear analysis of parsing algorithms).
+(see `<https://gup.ub.gu.se/publication/10783>`__, and we recommend the thesis for its clear analysis of parsing algorithms).
 Ljunglöf's version produces lists of parse trees, but Medlock adapted this to produce an explicit graph containing parse structure information.
 He also incorporated the code into Happy.
 

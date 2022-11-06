@@ -22,11 +22,11 @@ The examples distributed with Happy are all of the ``.ly`` form.
 
 The flags accepted by Happy are as follows:
 
-``-o`` <file>; ``--outfile``\ =<file>
+``-o <file>``; ``--outfile=<file>``
    Specifies the destination of the generated parser module.
    If omitted, the parser will be placed in <file>\ ``.hs``, where <file> is the name of the input file with any extension removed.
 
-``-i``\ [<file>]; ``--info``\ [=<file>]
+``-i [<file>]``; ``--info[=<file>]``
 
    .. index:: info file
 
@@ -37,26 +37,28 @@ The flags accepted by Happy are as follows:
    and if omitted the info file will be written to <file>\ ``.info``
    (where <file> is the input file name with any extension removed).
 
-``-p``\ [<file>]; ``--pretty``\ [=<file>]
+``-p [<file>]``; ``--pretty[=<file>]``
 
    .. index:: pretty print
 
    Directs Happy to produce a file containing a pretty-printed form of the grammar, containing only the productions, without any semantic actions or type signatures.
    If no file name is provided, then the file name will be computed by replacing the extension of the input file with ``.grammar``.
 
-``-t`` <dir>; ``--template``\ =<dir>
+``-t <dir>``; ``--template=<dir>``
 
    .. index:: template files
 
    Instructs Happy to use this directory when looking for template files: these files contain the static code that Happy includes in every generated parser.
    You shouldn't need to use this option if Happy is properly configured for your computer.
 
-``-m`` <name>; ``--magic-name``\ =<name>
+``-m <name>``; ``--magic-name=<name>``
    Happy prefixes all the symbols it uses internally with either ``happy`` or ``Happy``.
    To use a different string, for example if the use of ``happy`` is conflicting with one of your own functions, specify the prefix using the ``-m`` option.
 
 ``-s``; ``--strict``
-   NOTE: the ``--strict`` option is experimental and may cause unpredictable results.
+
+   .. warning::
+     The ``--strict`` option is experimental and may cause unpredictable results.
 
    This option causes the right hand side of each production (the semantic value) to be evaluated eagerly at the moment the production is reduced.
    If the lazy behaviour is not required, then using this option will improve performance and may reduce space leaks.
