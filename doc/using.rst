@@ -38,7 +38,7 @@ Next comes a couple of declarations:
    %tokentype { Token }
    %error { parseError }
 
-.. index:: ``%name``; ``%tokentype``; ``%error``
+.. index:: ``%name``, ``%tokentype``, ``%error``
 
 The first line declares the name of the parsing function that Happy will generate, in this case ``calc``.
 In many cases, this is the only symbol you need to export from the module.
