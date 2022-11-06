@@ -19,22 +19,32 @@ Furthermore, any future improvements made to Happy will benefit an existing gram
 
 Happy is sufficiently powerful to parse full Haskell --- `GHC <http://www.haskell.org/ghc>`__ itself uses a Happy parser.
 
-hsparser
-Haskell parser
-hsparser
+.. index::
+  single: ``hsparser``
+  see: Haskell parser; ``hsparser``
+
 Happy can currently generate four types of parser from a given grammar,
 the intention being that we can experiment with different kinds of functional code to see which is the best,
 and compiler writers can use the different types of parser to tune their compilers.
 The types of parser supported are:
 
-#. “standard” Haskell 98 (should work with any compiler that compiles
-   Haskell 98).
+#. “standard” Haskell 98 (should work with any compiler that compiles Haskell 98).
 
-#. standard Haskell using arrays (this is not the default because we
-   have found this generates slower parsers than
+#. standard Haskell using arrays
+
+   .. index::
+     single: arrays
+     single: back-ends; arrays
+
+   (this is not the default because we have found this generates slower parsers than
    `listitem_title <#item-default-backend>`__).
 
 #. Haskell with GHC (Glasgow Haskell) extensions.
+
+   .. index::
+     single: GHC
+     single: back-ends; GHC
+
    This is a slightly faster option than `listitem_title <#item-default-backend>`__ for Glasgow Haskell users.
 
 #. GHC Haskell with string-encoded arrays.
@@ -60,7 +70,9 @@ Remember: parsers produced using Happy should compile without difficulty under a
 Reporting Bugs
 --------------
 
-bugs, reporting
+.. index::
+   single: bugs; reporting
+
 Any bugs found in Happy should be reported to me: Simon Marlow marlowsd@gmail.com including all the relevant information:
 the compiler used to compile Happy,
 the command-line options used,
@@ -75,7 +87,9 @@ Requests for new features should also be sent to the above address, especially i
 License
 -------
 
-License
+.. index::
+   single: License
+
 Previous versions of Happy were covered by the GNU general public license.
 We're now distributing Happy with a less restrictive BSD-style license.
 If this license doesn't work for you, please get in touch.

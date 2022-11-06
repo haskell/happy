@@ -197,7 +197,7 @@ Lexical Analyser
 
    %lexer { <lexer> } { <eof> }
 
-%lexer
+``%lexer``
 (optional)
 The ``%lexer`` directive takes two arguments:
 ``<lexer>`` is the name of the lexical analyser function,
@@ -216,12 +216,9 @@ Precedence declarations
    %right    <name> ...
    %nonassoc <name> ...
 
-%left
-directive
-%right
-directive
-%nonassoc
-directive
+``%left`` directive
+``%right`` directive
+``%nonassoc`` directive
 These declarations are used to specify the precedences and associativity of tokens.
 The precedence assigned by a ``%left``, ``%right`` or ``%nonassoc`` declaration is defined to be higher than the precedence assigned by all declarations earlier in the file,
 and lower than the precedence assigned by all declarations later in the file.
@@ -239,8 +236,7 @@ Expect declarations
 
    %expect <number>
 
-%expect
-directive
+``%expect`` directive
 (optional)
 More often than not the grammar you write will have conflicts.
 These conflicts generate warnings.
