@@ -27,17 +27,17 @@ the intention being that we can experiment with different kinds of functional co
 and compiler writers can use the different types of parser to tune their compilers.
 The types of parser supported are:
 
-3. “standard” Haskell 98 (should work with any compiler that compiles
+#. “standard” Haskell 98 (should work with any compiler that compiles
    Haskell 98).
 
-3. standard Haskell using arrays (this is not the default because we
+#. standard Haskell using arrays (this is not the default because we
    have found this generates slower parsers than
    `listitem_title <#item-default-backend>`__).
 
-3. Haskell with GHC (Glasgow Haskell) extensions.
+#. Haskell with GHC (Glasgow Haskell) extensions.
    This is a slightly faster option than `listitem_title <#item-default-backend>`__ for Glasgow Haskell users.
 
-4. GHC Haskell with string-encoded arrays.
+#. GHC Haskell with string-encoded arrays.
    This is the fastest/smallest option for GHC users.
    If you're using GHC, the optimum flag settings are ``-agc`` (see `Invoking <#sec-invoking>`__).
 
