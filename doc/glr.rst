@@ -23,7 +23,7 @@ Here's an ambiguous grammar.
 It has no information about the associativity of ``+``, so for example, ``1+2+3`` can be parsed as ``(1+(2+3))`` or ``((1+2)+3)``.
 In conventional mode, Happy, would complain about a shift/reduce conflict, although it would generate a parser which always shifts in such a conflict, and hence would produce *only* the first alternative above.
 
-::
+.. code-block:: none
 
    E -> E + E
    E -> i       -- any integer
@@ -35,7 +35,7 @@ A further property of the GLR output is that such sub-results are shared, hence 
 there is no combinatorial explosion.
 Below is the simplified output of the GLR parser for this example.
 
-::
+.. code-block:: none
 
    Root (0,7,G_E)
    (0,1,G_E)     => [[(0,1,Tok '1'))]]
@@ -203,7 +203,7 @@ A global parse error means that it was not possible to continue parsing *any* of
 In both error cases, the forest at failure point is returned, since it may contain useful information.
 Unconsumed tokens are returned when there is a global parse error.
 
-::
+.. code-block:: haskell
 
    type ForestId = (Int,Int,GSymbol)
    data GSymbol  = <... automatically generated ...>
@@ -275,7 +275,7 @@ You may access semantic results from components of a reduction using the dollar 
 As a working example, the following is taken from the ``expr-tree`` grammar in the examples.
 Note that the type signature is required, else the types in use can't be determined by the parser generator.
 
-::
+.. code-block:: none
 
    E :: {Int} -- type signature needed
      : E '+' E  { $1 + $3 }
@@ -296,7 +296,7 @@ I.e., you have to indicate in some way what type the semantic result should have
 for non-monadic semantics, it is equivalent to ``a``; when monads are in use, it becomes the declared monad type.
 See the full ``expr-eval`` example for more information.
 
-::
+.. code-block:: haskell
 
    class TreeDecode a where
            decode_b :: (ForestId -> [Branch]) -> Branch -> [Decode_Result a]
@@ -325,7 +325,7 @@ As above, code fragments are given in braces and can contain dollar-variables.
 But these variables are expanded to node names in the graph, with the intention of easing navigation.
 The following grammar is from the ``expr-tree`` example.
 
-::
+.. code-block:: none
 
    E :: {Tree ForestId Int}
      : E '+' E      { Plus  $1 $3 }
@@ -350,7 +350,7 @@ The parser generator will create appropriate instances of this class, based on t
 Observe that use of the labels is often like traversing an abstract syntax, and the structure of the abstract syntax type usually constrains the types of constituents;
 so once the overall type is fixed (e.g. with a type cast or signature) then there are no problems with resolution of class instances.
 
-::
+.. code-block:: haskell
 
    class LabelDecode a where
            unpack :: GSem -> a
@@ -470,7 +470,7 @@ The current code implements the standard GLR algorithm extended to handle hidden
 Such recursion, as in the grammar below from [Rekers1992]_, causes the standard algorithm to loop because the empty reduction ``A ->`` is always possible and the LR parser will not change state.
 Alternatively, there is a problem because an unknown (at the start of parsing) number of ``A`` items are required, to match the number of ``i`` tokens in the input.
 
-::
+.. code-block:: none
 
    S -> A Q i | +
    A ->

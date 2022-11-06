@@ -18,7 +18,7 @@ Let's run through an example.
 We'll implement a parser for a simple expression syntax, consisting of integers, variables, the operators ``+``, ``-``, ``*``, ``/``, and the form ``let var = exp in exp``.
 The grammar file starts off like this:
 
-::
+.. code-block:: none
 
    {
    module Main where
@@ -32,7 +32,7 @@ In this case, the parser will be a standalone program so we'll call the module `
 
 Next comes a couple of declarations:
 
-::
+.. code-block:: none
 
    %name calc
    %tokentype { Token }
@@ -51,7 +51,7 @@ More about this later.
 
 Now we declare all the possible tokens:
 
-::
+.. code-block:: none
 
    %token
          let             { TokenLet }
@@ -78,13 +78,13 @@ Normally the value of a token is the token itself, but by using the ``$$`` symbo
 
 Like yacc, we include ``%%`` here, for no real reason.
 
-::
+.. code-block:: none
 
    %%
 
 Now we have the production rules for the grammar.
 
-::
+.. code-block:: none
 
    Exp   : let var '=' Exp in Exp  { Let $2 $4 $6 }
          | Exp1                    { Exp1 $1 }
@@ -111,7 +111,7 @@ The way to think about a parser is with each symbol having a “value”:
 we defined the values of the tokens above, and the grammar defines the values of non-terminal symbols in terms of sequences of other symbols (either tokens or non-terminals).
 In a production like this:
 
-::
+.. code-block:: none
 
    n   : t_1 ... t_n   { E }
 
@@ -125,14 +125,14 @@ The value of this symbol is the return value from the parser.
 To complete the program, we need some extra code.
 The grammar file may optionally contain a final code section, enclosed in curly braces.
 
-::
+.. code-block:: none
 
    {
 
 All parsers must include a function to be called in the event of a parse error.
 In the ``%error`` directive earlier, we specified that the function to be called on a parse error is ``parseError``:
 
-::
+.. code-block:: haskell
 
    parseError :: [Token] -> a
    parseError _ = error "Parse error"
@@ -144,7 +144,7 @@ It's also possible to keep track of line numbers in the parser for use in error 
 
 Next we can declare the data type that represents the parsed expression:
 
-::
+.. code-block:: haskell
 
    data Exp
          = Let String Exp Exp
@@ -171,7 +171,7 @@ Next we can declare the data type that represents the parsed expression:
 
 And the data structure for the tokens...
 
-::
+.. code-block:: haskell
 
    data Token
          = TokenLet
@@ -189,7 +189,7 @@ And the data structure for the tokens...
 
 ... and a simple lexer that returns this data structure.
 
-::
+.. code-block:: haskell
 
    lexer :: String -> [Token]
    lexer [] = []
@@ -216,9 +216,14 @@ And the data structure for the tokens...
 
 And finally a top-level function to take some input, parse it, and print out the result.
 
-::
+.. code-block:: haskell
 
    main = getContents >>= print . calc . lexer
+
+After which we close the final code section:
+
+.. code-block:: none
+
    }
 
 And that's it!
@@ -244,7 +249,7 @@ In the above example, we used a data type to represent the syntax being parsed.
 However, there's no reason why it has to be this way:
 you could calculate the value of the expression on the fly, using productions like this:
 
-::
+.. code-block:: none
 
    Term  : Term '*' Factor         { $1 * $3 }
          | Term '/' Factor         { $1 / $3 }
@@ -256,7 +261,7 @@ This works for simple expression types, but our grammar includes variables and t
 How do we know the value of a variable while we're parsing it?
 We don't, but since the Haskell code for a production can be anything at all, we could make it a function that takes an environment of variable values, and returns the computed value of the expression:
 
-::
+.. code-block:: none
 
    Exp   : let var '=' Exp in Exp  { \p -> $6 (($2,$4 p):p) }
          | Exp1                    { $1 }
@@ -291,7 +296,7 @@ Happy doesn't support this syntax explicitly, but you can define the equivalent 
 
 For example, the grammar for Happy itself contains a rule like this:
 
-::
+.. code-block:: none
 
    prods : prod                   { [$1] }
          | prods prod             { $2 : $1 }
@@ -305,7 +310,7 @@ One thing to note about this rule is that we used *left recursion* to define it
 .. index::
    single: recursion; left vs. right
 
-::
+.. code-block:: none
 
    prods : prod                  { [$1] }
          | prod prods            { $1 : $2 }
@@ -322,7 +327,7 @@ Take a look at the Happy grammar for Haskell for many examples of this.
 
 Parsing sequences of zero or more elements requires a trivial change to the above pattern:
 
-::
+.. code-block:: none
 
    prods : {- empty -}           { [] }
          | prods prod            { $2 : $1 }
@@ -339,7 +344,7 @@ A common type of sequence is one with a *separator*:
 for instance function bodies in C consist of statements separated by semicolons.
 To parse this kind of sequence we use a production like this:
 
-::
+.. code-block:: none
 
    stmts : stmt                   { [$1] }
          | stmts ';' stmt         { $3 : $1 }
@@ -348,7 +353,7 @@ If the ``;`` is to be a *terminator* rather than a separator (i.e. there
 should be one following each statement), we can remove the semicolon
 from the above rule and redefine ``stmt`` as
 
-::
+.. code-block:: none
 
    stmt : stmt1 ';'              { $1 }
 
@@ -358,7 +363,7 @@ We might like to allow extra semicolons between statements, to be a bit more lib
 We probably just want the parser to ignore these extra semicolons, and not generate a \``null statement'' value or something.
 The following rule parses a sequence of zero or more statements separated by semicolons, in which the statements may be empty:
 
-::
+.. code-block:: none
 
    stmts : stmts ';' stmt          { $3 : $1 }
          | stmts ';'               { $1 }
@@ -380,7 +385,7 @@ merely to make it clear that ``'*'`` and ``'/'`` operators bind more tightly tha
 
 We could just change the grammar as follows (making the appropriate changes to the expression datatype too):
 
-::
+.. code-block:: none
 
    Exp   : let var '=' Exp in Exp  { Let $2 $4 $6 }
          | Exp '+' Exp             { Plus $1 $3 }
@@ -395,7 +400,7 @@ but now Happy will complain that there are shift/reduce conflicts because the gr
 --- we haven't specified whether e.g. ``1 + 2 * 3`` is to be parsed as ``1 + (2 * 3)`` or ``(1 + 2) * 3``.
 Happy allows these ambiguities to be resolved by specifying the precedences of the operators involved using directives in the header [2]_:
 
-::
+.. code-block:: none
 
    ...
    %right in
@@ -422,7 +427,7 @@ There is also a ``%nonassoc`` directive which indicates that the specified opera
 For example, if we add the comparison operators ``'>'`` and ``'<'`` to our grammar,
 then we would probably give their precedence as:
 
-::
+.. code-block:: none
 
    ...
    %right in
@@ -471,7 +476,7 @@ it has high precedence when used as prefix negation, but a lower precedence when
 
 We can implement this in Happy as follows:
 
-::
+.. code-block:: none
 
    %right in
    %nonassoc '>' '<'
@@ -530,7 +535,7 @@ This has several benefits:
 
 The syntax for type signatures in the grammar file is as follows:
 
-::
+.. code-block:: none
 
    stmts   :: { [ Stmt ] }
    stmts   : stmts stmt                { $2 : $1 }
@@ -538,7 +543,7 @@ The syntax for type signatures in the grammar file is as follows:
 
 In fact, you can leave out the superfluous occurrence of ``stmts``:
 
-::
+.. code-block:: none
 
    stmts   :: { [ Stmt ] }
        : stmts stmt                { $2 : $1 }
@@ -574,7 +579,7 @@ This might be useful for several reasons:
 Adding monadic support to your parser couldn't be simpler.
 Just add the following directive to the declaration section of the grammar file:
 
-::
+.. code-block:: none
 
    %monad { <type> } [ { <then> } { <return> } ]
 
@@ -597,7 +602,7 @@ Most of the time, you don't want a production to have this type: you'd have to w
 However, there may be a few rules in a grammar that need to get at the monad,
 so Happy has a special syntax for monadic actions:
 
-::
+.. code-block:: none
 
    n  :  t_1 ... t_n          {% <expr> }
 
@@ -607,14 +612,14 @@ so Happy has a special syntax for monadic actions:
 The ``%`` in the action indicates that this is a monadic action, with type ``P a``, where ``a`` is the real return type of the production.
 When Happy reduces one of these rules, it evaluates the expression
 
-::
+.. code-block:: none
 
    <expr> `then` \result -> <continue parsing>
 
 Happy uses ``result`` as the real semantic value of the production.
 During parsing, several monadic actions might be reduced, resulting in a sequence like
 
-::
+.. code-block:: none
 
    <expr1> `then` \r1 ->
    <expr2> `then` \r2 ->
@@ -644,7 +649,7 @@ in a robust setting, you'd like the program to recover gracefully and report a u
 Exceptions (of which errors are a special case) are normally implemented in Haskell by using an exception monad,
 something like:
 
-::
+.. code-block:: haskell
 
    data E a = Ok a | Failed String
 
@@ -673,13 +678,13 @@ and ``catchE`` is a combinator for handling exceptions.
 
 We can add this monad to the parser with the declaration
 
-::
+.. code-block:: none
 
    %monad { E } { thenE } { returnE }
 
 Now, without changing the grammar, we can change the definition of ``parseError`` and have something sensible happen for a parse error:
 
-::
+.. code-block:: haskell
 
    parseError tokens = failE "Parse error"
 
@@ -690,7 +695,7 @@ There are times when it is more convenient to parse a more general language than
 An example comes from Haskell,
 where the precedence values in infix declarations must be between 0 and 9:
 
-::
+.. code-block:: none
 
    prec :: { Int }
          : int    {% if $1 < 0 || $1 > 9
@@ -727,7 +732,7 @@ This has several useful consequences:
 
 A monadic lexer is requested by adding the following declaration to the grammar file:
 
-::
+.. code-block:: none
 
    %lexer { <lexer> } { <eof> }
 
@@ -749,7 +754,7 @@ and otherwise the lexer would have to store this token in the monad.
 
 The lexical analysis function must have the following type:
 
-::
+.. code-block:: haskell
 
    lexer :: (Token -> P a) -> P a
 
@@ -764,7 +769,7 @@ so that the lexer can do something different each time it's called!
 Let's take the exception monad above,
 and extend it to add the input string so that we can use it with a threaded lexer.
 
-::
+.. code-block:: haskell
 
    data ParseResult a = Ok a | Failed String
    type P a = String -> ParseResult a
@@ -790,7 +795,7 @@ and extend it to add the input string so that we can use it with a threaded lexe
 Notice that this isn't a real state monad --- the input string just gets passed around, not returned.
 Our lexer will now look something like this:
 
-::
+.. code-block:: haskell
 
    lexer :: (Token -> P a) -> P a
    lexer cont s =
@@ -810,7 +815,7 @@ and it's entirely possible that the use of a continuation here is just a misfeat
 
 If you want a lexer of type ``P Token``, then just define a wrapper to deal with the continuation:
 
-::
+.. code-block:: haskell
 
    lexwrap :: (Token -> P a) -> P a
    lexwrap cont = real_lexer `thenP` \token -> cont token
@@ -821,7 +826,7 @@ Monadic productions with %lexer
 The ``{% ... }`` actions work fine with ``%lexer``, but additionally there are two more forms which are useful in certain cases.
 Firstly:
 
-::
+.. code-block:: none
 
    n  :  t_1 ... t_n          {%^ <expr> }
 
@@ -829,7 +834,7 @@ In this case, ``<expr>`` has type ``Token -> P a``.
 That is, Happy passes the current lookahead token to the monadic action ``<expr>``.
 This is a useful way to get hold of Happy's current lookahead token without having to store it in the monad.
 
-::
+.. code-block:: none
 
    n  :  t_1 ... t_n          {%% <expr> }
 
@@ -852,7 +857,7 @@ We warned you that this facility may go away and be replaced by something more g
 Line numbers can now be dealt with quite straightforwardly using a monadic parser/lexer combination.
 Ok, we have to extend the monad a bit more:
 
-::
+.. code-block:: haskell
 
    type LineNumber = Int
    type P a = String -> LineNumber -> ParseResult a
@@ -866,7 +871,7 @@ this is OK because of the continuation-based lexer that can change the line numb
 
 The lexer can now update the line number as follows:
 
-::
+.. code-block:: haskell
 
    lexer cont s =
      case s of
@@ -878,7 +883,7 @@ Take a look at Happy's own parser if you have the sources lying around, it uses 
 
 Reporting the line number of a parse error is achieved by changing ``parseError`` to look something like this:
 
-::
+.. code-block:: haskell
 
    parseError :: Token -> P a
    parseError = getLineNo `thenP` \line ->
@@ -887,7 +892,7 @@ Reporting the line number of a parse error is achieved by changing ``parseError`
 We can also get hold of the line number during parsing, to put it in the parsed data structure for future reference.
 A good way to do this is to have a production in the grammar that returns the current line number:
 
-::
+.. code-block:: none
 
    lineno :: { LineNumber }
            : {- empty -}      {% getLineNo }
@@ -916,7 +921,7 @@ A type containing a type variable indicates that the specified function must be 
 
       **No ``%monad`` or ``%lexer``**
 
-   ::
+   .. code-block:: haskell
 
       parse      :: [Token] -> t
       parseError :: [Token] -> a
@@ -927,7 +932,7 @@ A type containing a type variable indicates that the specified function must be 
 
       **with ``%monad``**
 
-   ::
+   .. code-block:: haskell
 
       parse      :: [Token] -> P t
       parseError :: [Token] -> P a
@@ -938,7 +943,7 @@ A type containing a type variable indicates that the specified function must be 
 
       **with ``%lexer``**
 
-   ::
+   .. code-block:: haskell
 
       parse      :: T t
       parseError :: Token -> T a
@@ -953,7 +958,7 @@ A type containing a type variable indicates that the specified function must be 
 
       **with ``%monad`` and ``%lexer``**
 
-   ::
+   .. code-block:: haskell
 
       parse      :: P t
       parseError :: Token -> P a
@@ -973,7 +978,7 @@ if your grammar deals with ``error`` explicitly, then it can detect the error an
 For example, the Happy grammar for Haskell uses error recovery to implement Haskell layout.
 The grammar has a rule that looks like this:
 
-::
+.. code-block:: none
 
    close : '}'                  { () }
          | error            { () }
@@ -1009,7 +1014,7 @@ The ``%name`` directive takes an optional second parameter specifying the top-le
 
 .. index:: %name directive
 
-::
+.. code-block:: none
 
    %name parse1 non-terminal1
    %name parse2 non-terminal2

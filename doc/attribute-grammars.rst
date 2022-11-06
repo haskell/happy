@@ -58,7 +58,7 @@ If the ``%attributetype`` directive is given without any ``%attribute`` declarat
 
 For example, the following declarations:
 
-::
+.. code-block:: none
 
    %attributetype { MyAttributes a }
    %attribute value { a }
@@ -67,7 +67,7 @@ For example, the following declarations:
 
 would generate this attribute record declaration in the parser:
 
-::
+.. code-block:: haskell
 
    data MyAttributes a =
       HappyAttributes {
@@ -97,7 +97,7 @@ Additionally, the reference ``$>`` always references the rightmost symbol in the
 
 An attribute calculation rule is of the form:
 
-::
+.. code-block:: none
 
    <attribute reference> = <Haskell expression>
 
@@ -106,20 +106,20 @@ The value for an attribute can only be defined once for a particular production.
 
 The following rule calculates the default attribute of the current production in terms of the first and second items of the production (a synthesized attribute):
 
-::
+.. code-block:: none
 
    $$ = $1 : $2
 
 This rule calculates the length attribute of a non-terminal in terms of the length of the current non-terminal (an inherited attribute):
 
-::
+.. code-block:: none
 
    $1.length = $$.length + 1
 
 Conditional rules allow the rejection of strings due to context-sensitive properties.
 All conditional rules have the form:
 
-::
+.. code-block:: none
 
    where <Haskell expression>
 
@@ -130,13 +130,13 @@ All conditionals will be sequenced at the end of the parse, which allows the con
 
 The following conditional rule will cause the (non-monadic) parser to fail if the inherited length attribute is not 0.
 
-::
+.. code-block:: none
 
    where if $$.length == 0 then () else error "length not equal to 0"
 
 This conditional is the monadic equivalent:
 
-::
+.. code-block:: none
 
    where unless ($$.length == 0) (fail "length not equal to 0")
 
@@ -162,7 +162,7 @@ The following two toy attribute grammars may prove instructive.
 The first is an attribute grammar for the classic context-sensitive grammar { a^n b^n c^n \| n >= 0 }.
 It demonstrates the use of conditionals, inherited and synthesized attributes.
 
-::
+.. code-block:: none
 
    {
    module ABCParser (parse) where
@@ -223,7 +223,7 @@ It demonstrates the use of conditionals, inherited and synthesized attributes.
 This grammar parses binary numbers and calculates their value.
 It demonstrates the use of inherited and synthesized attributes.
 
-::
+.. code-block:: none
 
    {
    module BitsParser (parse) where
