@@ -467,7 +467,7 @@ The performance of the code was significantly improved, after changes of represe
 Medlock's code was also used in several student projects, including analysis of gene sequences (Fischer) and analysis of rhythmic patterns in poetry (Henderson).
 
 The current code implements the standard GLR algorithm extended to handle hidden left recursion.
-Such recursion, as in the grammar below from Rekers [1992], causes the standard algorithm to loop because the empty reduction ``A ->`` is always possible and the LR parser will not change state.
+Such recursion, as in the grammar below from [Rekers1992]_, causes the standard algorithm to loop because the empty reduction ``A ->`` is always possible and the LR parser will not change state.
 Alternatively, there is a problem because an unknown (at the start of parsing) number of ``A`` items are required, to match the number of ``i`` tokens in the input.
 
 ::
@@ -485,7 +485,7 @@ This allows sufficient copies of the empty symbol to appear on some stack, hence
 The forest is held in a chart-style data structure, and this supports local ambiguity packing (chart parsing is discussed in Ljunglöf's thesis, among other places).
 A limited amount of packing of live stacks is also done, to avoid some repetition of work.
 
-[Rekers 1992] Parser Generation for Interactive Environments, PhD thesis, University of Amsterdam, 1992.
+.. [Rekers1992] Parser Generation for Interactive Environments, PhD thesis, University of Amsterdam, 1992.
 
 .. _sec-glr-misc-filter:
 
