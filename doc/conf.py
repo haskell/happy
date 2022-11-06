@@ -56,3 +56,5 @@ pygments_style = 'sphinx'
 highlight_language = 'Peg'
 # Andreas Abel, 2022-02-27: Peg looked best from the "grammar" highlighters.
 # I also tried 'Bnf' and 'Abnf'.
+
+html_logo = "Happy.gif"
