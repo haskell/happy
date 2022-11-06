@@ -48,7 +48,7 @@ Each ``%attribute`` directive generates a field in the attributes record with th
 
 The first ``%attribute`` directive in a grammar defines the default attribute.
 The default attribute is distinguished in two ways:
-1) if no attribute specifier is given on an attribute reference, the default attribute is assumed (see `Semantic Rules <#sec-semanticRules>`__)
+1) if no attribute specifier is given on an attribute reference, the default attribute is assumed (see :ref:`Semantic Rules <sec-semanticRules>`)
 and
 2) the value for the default attribute of the starting non-terminal becomes the return value of the parse.
 

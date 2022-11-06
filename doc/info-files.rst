@@ -16,7 +16,7 @@ An info file contains the following information:
    A rule is written in the form ``<non-terminal> -> <id> ...``
 
 #. Under section ``Terminals``, a summary of all the terminal tokens you may run against, as well as a the Haskell pattern which matches against them.
-   This corresponds directly to the contents of your ``%token`` directive (`Tokens <#sec-tokens>`__).
+   This corresponds directly to the contents of your ``%token`` directive (:ref:`Tokens <sec-tokens>`).
 
 #. Under section ``Non-terminals``, a summary of which rules apply to which productions.
    This is generally redundant with the ``Grammar`` section.
@@ -41,7 +41,7 @@ because in general the parser does not know what the actual production for the t
 There's no direct correspondence between the state-machine and the input grammar;
 this is something you have to reverse engineer.
 
-With this knowledge in mind, we can look at two example states from the example grammar from `Using <#sec-using>`__:
+With this knowledge in mind, we can look at two example states from the example grammar from :ref:`Using <sec-using>`:
 
 ::
 
@@ -118,7 +118,7 @@ On large, complex grammars, determining what the conflict is can be a bit of an 
 since the state with the conflict may not have enough information to determine why a conflict is occurring).
 
 In some cases, the rules associated with the state with the conflict will immediately give you enough guidance to determine what the ambiguous syntax is.
-For example, in the miniature shift/reduce conflict described in `Conflict Tips <#sec-conflict-tips>`__,
+For example, in the miniature shift/reduce conflict described in :ref:`Conflict Tips <sec-conflict-tips>`,
 the conflict looks like this:
 
 ::

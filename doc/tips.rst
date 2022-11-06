@@ -36,7 +36,7 @@ so here's some tips on making things more sensible:
 -  Include as little code as possible in the module trailer.
    This code is included verbatim in the generated parser, so if any of it can go in a separate module, do so.
 
--  Give :index:`type signatures <single: type; signatures in grammar>` for everything (see `Type Signatures <#sec-type-signatures>`__.
+-  Give :index:`type signatures <single: type; signatures in grammar>` for everything (see :ref:`Type Signatures <sec-type-signatures>`.
    This is reported to improve things by about 50%.
    If there is a type signature for every single non-terminal in the grammar, then Happy automatically generates type signatures for most functions in the parser.
 

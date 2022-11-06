@@ -139,8 +139,8 @@ In the ``%error`` directive earlier, we specified that the function to be called
 
 Note that ``parseError`` must be polymorphic in its return type ``a``,
 which usually means it must be a call to ``error``.
-We'll see in `Monadic Parsers <#sec-monads>`__ how to wrap the parser in a monad so that we can do something more sensible with errors.
-It's also possible to keep track of line numbers in the parser for use in error messages, this is described in `Line Numbers <#sec-line-numbers>`__.
+We'll see in :ref:`Monadic Parsers <sec-monads>` how to wrap the parser in a monad so that we can do something more sensible with errors.
+It's also possible to keep track of line numbers in the parser for use in error messages, this is described in :ref:`Line Numbers <sec-line-numbers>`.
 
 Next we can declare the data type that represents the parsed expression:
 
@@ -232,7 +232,7 @@ To generate the Haskell module for this parser, type the command ``happy example
 (where ``example.y`` is the name of the grammar file).
 The Haskell module will be placed in a file named ``example.hs``.
 Additionally, invoking the command ``happy example.y -i`` will produce the file ``example.info`` which contains detailed information about the parser,
-including states and reduction rules (see `Info Files <#sec-info-files>`__).
+including states and reduction rules (see :ref:`Info Files <sec-info-files>`).
 This can be invaluable for debugging parsers, but requires some knowledge of the operation of a shift-reduce parser.
 
 .. _sec-other-datatypes:
@@ -563,9 +563,9 @@ Monadic Parsers
 Happy has support for threading a monad through the generated parser.
 This might be useful for several reasons:
 
--  :index:`Handling parse errors <single: parse errors; handling>` by using an exception monad (see `Handling Parse Errors <#sec-exception>`__).
+-  :index:`Handling parse errors <single: parse errors; handling>` by using an exception monad (see :ref:`Handling Parse Errors <sec-exception>`).
 
--  Keeping track of :index:`line numbers` in the input file, for example for use in error messages (see `Line Numbers <#sec-line-numbers>`__).
+-  Keeping track of :index:`line numbers` in the input file, for example for use in error messages (see :ref:`Line Numbers <sec-line-numbers>`).
 
 -  Performing IO operations during parsing.
 

@@ -71,13 +71,13 @@ Educational use licenses are currently available without charge.)
 
 The GLR extension also allows semantic information to be attached to productions, as in conventional Happy, although there are further issues to consider.
 Two modes are provided, one for simple applications and one for more complex use.
-See `Including semantic results <#sec-glr-semantics>`__.
+See :ref:`Including semantic results <sec-glr-semantics>`.
 The extension is also integrated with Happy's token handling, e.g. extraction of information from tokens.
 
 One key feature of this implementation in Haskell is that its main result is a *graph*.
 Other implementations effectively produce a list of trees, but this limits practical use to small examples.
 For large and interesting applications,
-some of which are discussed in `Some Applications of GLR parsing <#sec-glr-misc-applications>`__,
+some of which are discussed in :ref:`Some Applications of GLR parsing <sec-glr-misc-applications>`,
 a graph is essential due to the large number of possibilities and the need to analyse the structure of the ambiguity.
 Converting the graph to trees could produce huge numbers of results and will lose information about sharing etc.
 
@@ -94,7 +94,7 @@ Basic use of a Happy-generated GLR parser
 
 This section explains how to generate and to use a GLR parser to produce structural results.
 Please check the examples for further information.
-Discussion of semantic issues comes later; see `Including semantic results <#sec-glr-semantics>`__.
+Discussion of semantic issues comes later; see :ref:`Including semantic results <sec-glr-semantics>`.
 
 .. _sec-glr-using-intro:
 
@@ -142,8 +142,8 @@ precedence information
 
 monad directive
    There is some support for monadic parsers.
-   The "tree decoding" mode (see `Tree decoding <#sec-glr-semantics-tree>`__) can use the information given in the ``%monad`` declaration to monadify the decoding process.
-   This is explained in more detail in `Monadic tree decoding <#sec-glr-semantics-tree-monad>`__.
+   The "tree decoding" mode (see :ref:`Tree decoding <sec-glr-semantics-tree>`) can use the information given in the ``%monad`` declaration to monadify the decoding process.
+   This is explained in more detail in :ref:`Monadic tree decoding <sec-glr-semantics-tree-monad>`.
 
    *Note*: the generated parsers don't include Ashley Yakeley's monad context information yet.
    It is currently just ignored.

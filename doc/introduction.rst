@@ -40,18 +40,18 @@ The types of parser supported are:
      single: back-ends; arrays
 
    (this is not the default because we have found this generates slower parsers than
-   `<#item-default-backend>`__).
+   :ref:`item-default-backend`).
 
 #. Haskell with :index:`GHC` (Glasgow Haskell) extensions.
 
    .. index::
      single: back-ends; GHC
 
-   This is a slightly faster option than `<#item-default-backend>`__ for Glasgow Haskell users.
+   This is a slightly faster option than :ref:`item-default-backend` for Glasgow Haskell users.
 
 #. GHC Haskell with string-encoded arrays.
    This is the fastest/smallest option for GHC users.
-   If you're using GHC, the optimum flag settings are ``-agc`` (see `Invoking <#sec-invoking>`__).
+   If you're using GHC, the optimum flag settings are ``-agc`` (see :ref:`Invoking <sec-invoking>`).
 
 Happy can also generate parsers which will dump debugging information at run time,
 showing state transitions and the input tokens to the parser.
@@ -133,4 +133,4 @@ Happy source and binaries can be downloaded from there.
 .. [1]
    With one exception:
    if you have a production with a polymorphic type signature, then a compiler that supports local universal quantification is required.
-   See `Type Signatures <#sec-type-signatures>`__.
+   See :ref:`Type Signatures <sec-type-signatures>`.

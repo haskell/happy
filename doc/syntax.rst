@@ -156,7 +156,7 @@ The ``%name`` directive takes an optional second parameter which specifies the t
 If this parameter is omitted, it defaults to the first non-terminal defined in the grammar.
 
 Multiple ``%name`` directives may be given, specifying multiple parser entry points for this grammar
-(see `Generating Multiple Parsers From a Single Grammar <#sec-multiple-parsers>`__).
+(see :ref:`Generating Multiple Parsers From a Single Grammar <sec-multiple-parsers>`).
 When multiple ``%name`` directives are given, they must all specify explicit non-terminals.
 
 .. _sec-partial-parsers:
@@ -194,7 +194,7 @@ Monad Directive
 The ``%monad`` directive takes three arguments: the type constructor of the monad, the ``then`` (or ``bind``) operation, and the ``return`` (or ``unit``) operation.
 The type constructor can be any type with kind ``* -> *``.
 
-Monad declarations are described in more detail in `Monadic Parsers <#sec-monads>`__.
+Monad declarations are described in more detail in :ref:`Monadic Parsers <sec-monads>`.
 
 .. _sec-lexer-decl:
 
@@ -212,7 +212,7 @@ The ``%lexer`` directive takes two arguments:
 ``<lexer>`` is the name of the lexical analyser function,
 and ``<eof>`` is a token that is to be treated as the end of file.
 
-Lexer declarations are described in more detail in `Threaded Lexers <#sec-lexers>`__.
+Lexer declarations are described in more detail in :ref:`Threaded Lexers <sec-lexers>`.
 
 .. _sec-prec-decls:
 
@@ -236,7 +236,7 @@ and lower than the precedence assigned by all declarations later in the file.
 
 The associativity of a token relative to tokens in the same ``%left``, ``%right``, or ``%nonassoc`` declaration is to the left, to the right, or non-associative respectively.
 
-Precedence declarations are described in more detail in `Using Precedences <#sec-Precedences>`__.
+Precedence declarations are described in more detail in :ref:`Using Precedences <sec-Precedences>`.
 
 .. _sec-expect:
 
@@ -273,7 +273,7 @@ Error declaration
 .. index:: ``%error``
 
 Specifies the function to be called in the event of a parse error.
-The type of ``<identifier>`` varies depending on the presence of ``%lexer`` (see `Summary <#sec-monad-summary>`__) and ``%errorhandlertype`` (see the following).
+The type of ``<identifier>`` varies depending on the presence of ``%lexer`` (see :ref:`Summary <sec-monad-summary>`) and ``%errorhandlertype`` (see the following).
 
 .. _sec-errorhandlertype-directive:
 
@@ -309,7 +309,7 @@ This directive allows you to declare the type of the attributes record when defi
 If this declaration is not given, Happy will choose a default.
 This declaration may only appear once in a grammar.
 
-Attribute grammars are explained in `Attribute Grammars <#sec-AttributeGrammar>`__.
+Attribute grammars are explained in :ref:`Attribute Grammars <sec-AttributeGrammar>`.
 
 .. _sec-attribute:
 
@@ -327,7 +327,7 @@ The first attribute listed becomes the default attribute.
 Each ``%attribute`` directive generates a field in the attributes record with the given label and type.
 If there is an ``%attributetype`` declaration in the grammar which introduces type variables, then the type of an attribute may mention any such type variables.
 
-Attribute grammars are explained in `Attribute Grammars <#sec-AttributeGrammar>`__.
+Attribute grammars are explained in :ref:`Attribute Grammars <sec-AttributeGrammar>`.
 
 .. _sec-grammar:
 
@@ -348,7 +348,7 @@ Each production has the following syntax:
            ... ]
 
 The first line gives the non-terminal to be defined by the production and optionally its type
-(type signatures for productions are discussed in `Type Signatures <#sec-type-signatures>`__).
+(type signatures for productions are discussed in :ref:`Type Signatures <sec-type-signatures>`).
 
 Each production has at least one, and possibly many right-hand sides.
 Each right-hand side consists of zero or more symbols (terminals or non-terminals) and a Haskell expression enclosed in braces.
@@ -359,8 +359,8 @@ The symbol ``$`` may be inserted literally in the Haskell expression using the s
 
 Additionally, the sequence ``$>`` can be used to represent the value of the rightmost symbol.
 
-A semantic value of the form ``{% ... }`` is a *monadic action*, and is only valid when the grammar file contains a ``%monad`` directive (`Monad Directive <#sec-monad-decl>`__).
-Monadic actions are discussed in `Monadic Parsers <#sec-monads>`__.
+A semantic value of the form ``{% ... }`` is a *monadic action*, and is only valid when the grammar file contains a ``%monad`` directive (:ref:`Monad Directive <sec-monad-decl>`).
+Monadic actions are discussed in :ref:`Monadic Parsers <sec-monads>`.
 
 .. index::
   single: monadic; action
