@@ -39,13 +39,11 @@ can be properly expressed and everything works automatically.*
 
 ## Documentation & Examples
 
-Complete documentation can be found in the directory 'doc', in
-DocBook XML format.  To format the documentation, the DocBook-Tools
-suite (see https://github.com/docbook/wiki/wiki/DocBookTools)
-provides all the bits & pieces you need.  Alternatively, pre-formatted
-documentation is available from Happy's homepage (URL above).
+Complete documentation can be found in the directory `/doc`, in reStructured Text format as is common for many Haskell tools' dococumentation.
+To build the documentation, use [Sphinx](https://www.sphinx-doc.org/).
+Alternatively, pre-formatted documentation is available from https://haskell-happy.readthedocs.io.
 
-The directory 'examples' contains some example parsers that use Happy.
+The directory `/examples` contains some example parsers that use Happy.
 
 For information on copying and distributing this program, see the file
 LICENSE in this directory.
