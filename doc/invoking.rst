@@ -18,14 +18,18 @@ with the latter observing the reverse comment (or literate) convention
 (i.e. each code line must begin with the character ``>``, lines which don't begin with ``>`` are treated as comments).
 The examples distributed with Happy are all of the ``.ly`` form.
 
-literate grammar files The flags accepted by Happy are as follows:
+.. index:: literate grammar files
+
+The flags accepted by Happy are as follows:
 
 ``-o`` <file>; ``--outfile``\ =<file>
    Specifies the destination of the generated parser module.
    If omitted, the parser will be placed in <file>\ ``.hs``, where <file> is the name of the input file with any extension removed.
 
 ``-i``\ [<file>]; ``--info``\ [=<file>]
-   info file
+
+   .. index:: info file
+
    Directs Happy to produce an info file containing detailed information about the grammar, parser states, parser actions, and conflicts.
    Info files are vital during the debugging of grammars.
    The filename argument is optional.
@@ -34,12 +38,16 @@ literate grammar files The flags accepted by Happy are as follows:
    (where <file> is the input file name with any extension removed).
 
 ``-p``\ [<file>]; ``--pretty``\ [=<file>]
-   pretty print
+
+   .. index:: pretty print
+
    Directs Happy to produce a file containing a pretty-printed form of the grammar, containing only the productions, without any semantic actions or type signatures.
    If no file name is provided, then the file name will be computed by replacing the extension of the input file with ``.grammar``.
 
 ``-t`` <dir>; ``--template``\ =<dir>
-   template files
+
+   .. index:: template files
+
    Instructs Happy to use this directory when looking for template files: these files contain the static code that Happy includes in every generated parser.
    You shouldn't need to use this option if Happy is properly configured for your computer.
 
@@ -55,48 +63,62 @@ literate grammar files The flags accepted by Happy are as follows:
    Note that the parser as a whole is never lazy - the whole input will always be consumed before any input is produced, regardless of the setting of the ``--strict`` flag.
 
 ``-g``; ``--ghc``
-   GHC
-   back-ends
-   GHC
+
+   .. index::
+     single: GHC
+     single: back-ends; GHC
+
    Instructs Happy to generate a parser that uses GHC-specific extensions to obtain faster code.
 
 ``-c``; ``--coerce``
-   coerce
-   back-ends
-   coerce
+
+   .. index::
+     single: coerce
+     single: back-ends; coerce
+
    Use GHC's ``unsafeCoerce#`` extension to generate smaller faster parsers.
    Type-safety isn't compromised.
 
    This option may only be used in conjunction with ``-g``.
 
 ``-a``; ``--arrays``
-   arrays
-   back-ends
-   arrays
+
+   .. index::
+     single: arrays
+     single: back-ends; arrays
+
    Instructs Happy to generate a parser using an array-based shift reduce parser.
    When used in conjunction with ``-g``, the arrays will be encoded as strings, resulting in faster parsers.
    Without ``-g``, standard Haskell arrays will be used.
 
 ``-d``; ``--debug``
-   debug
-   back-ends
-   debug
+
+   .. index::
+     single: debug
+     single: back-ends; debug
+
    Generate a parser that will print debugging information to ``stderr`` at run-time, including all the shifts, reductions, state transitions and token inputs performed by the parser.
 
    This option can only be used in conjunction with ``-a``.
 
 ``-l``; ``--glr``
-   glr
-   back-ends
-   glr
-   G enerate a GLR parser for ambiguous grammars.
+
+   .. index::
+     single: glr
+     single: back-ends; glr
+
+   Generate a GLR parser for ambiguous grammars.
 
 ``-k``; ``--decode``
-   decode
+
+   .. index:: decode
+
    Generate simple decoding code for GLR result.
 
 ``-f``; ``--filter``
-   filter
+
+   .. index:: filter
+
    Filter the GLR parse forest with respect to semantic usage.
 
 ``-?``; ``--help``

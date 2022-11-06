@@ -18,10 +18,10 @@ The overall format of the grammar file is given below:
    <grammar>
    <optional module trailer>
 
-module
-header
-module
-trailer
+.. index::
+  single: module; header
+  single: module; trailer
+
 If the name of the grammar file ends in ``.ly``, then it is assumed to be a literate script.
 All lines except those beginning with a ``>`` will be ignored, and the ``>`` will be stripped from the beginning of all the code lines.
 There must be a blank line between each code section (lines beginning with ``>``) and comment section.
@@ -53,8 +53,9 @@ the BNF syntax from the Haskell Report):
 Module Header
 -------------
 
-module
-header
+.. index::
+  single: module; header
+
 This section is optional, but if included takes the following form:
 
 ::
@@ -89,7 +90,8 @@ Token Type
 
    %tokentype   { <valid Haskell type> }
 
-%tokentype
+.. index:: ``%tokentype``
+
 (mandatory)
 The ``%tokentype`` directive gives the type of the tokens passed from the lexical analyser to the parser
 (in order that Happy can supply types for functions and data in the generated parser).
@@ -105,7 +107,8 @@ Tokens
           <name> { <Haskell pattern> }
           ...
 
-%token
+.. index:: ``%token``
+
 (mandatory)
 The ``%token`` directive is used to tell Happy about all the terminal symbols used in the grammar.
 Each terminal has a name, by which it is referred to in the grammar itself, and a Haskell representation enclosed in braces.
@@ -120,7 +123,8 @@ Happy will give you a warning if you try to use the same identifier both as a no
 To save writing lots of projection functions that map tokens to their components, you can include ``$$`` in your Haskell pattern.
 For example:
 
-$$
+.. index:: ``$$``
+
 ::
 
    %token INT { TokenInt $$ }
@@ -138,14 +142,16 @@ Parser Name
    %name <Haskell identifier> [ <non-terminal> ]
    ...
 
-%name
+.. index:: ``%name``
+
 (optional)
 The ``%name`` directive is followed by a valid Haskell identifier, and gives the name of the top-level parsing function in the generated parser.
 This is the only function that needs to be exported from a parser module.
 
 If the ``%name`` directive is omitted, it defaults to ``happyParse``.
 
-happyParse
+.. index:: ``happyParse``
+
 The ``%name`` directive takes an optional second parameter which specifies the top-level non-terminal which is to be parsed.
 If this parameter is omitted, it defaults to the first non-terminal defined in the grammar.
 
@@ -163,7 +169,8 @@ Partial Parsers
    %partial <Haskell identifier> [ <non-terminal> ]
    ...
 
-%partial
+.. index:: ``%partial``
+
 The ``%partial`` directive can be used instead of ``%name``.
 It indicates that the generated parser should be able to parse an initial portion of the input.
 In contrast, a parser specified with ``%name`` will only parse the entire input.
@@ -181,7 +188,8 @@ Monad Directive
 
    %monad { <type> } { <then> } { <return> }
 
-%monad
+.. index:: ``%monad``
+
 (optional)
 The ``%monad`` directive takes three arguments: the type constructor of the monad, the ``then`` (or ``bind``) operation, and the ``return`` (or ``unit``) operation.
 The type constructor can be any type with kind ``* -> *``.
@@ -197,7 +205,8 @@ Lexical Analyser
 
    %lexer { <lexer> } { <eof> }
 
-``%lexer``
+.. index:: ``%lexer``
+
 (optional)
 The ``%lexer`` directive takes two arguments:
 ``<lexer>`` is the name of the lexical analyser function,
@@ -216,9 +225,11 @@ Precedence declarations
    %right    <name> ...
    %nonassoc <name> ...
 
-``%left`` directive
-``%right`` directive
-``%nonassoc`` directive
+.. index::
+  single: ``%left`` directive
+  single: ``%right`` directive
+  single: ``%nonassoc`` directive
+
 These declarations are used to specify the precedences and associativity of tokens.
 The precedence assigned by a ``%left``, ``%right`` or ``%nonassoc`` declaration is defined to be higher than the precedence assigned by all declarations earlier in the file,
 and lower than the precedence assigned by all declarations later in the file.
@@ -236,7 +247,8 @@ Expect declarations
 
    %expect <number>
 
-``%expect`` directive
+.. index:: ``%expect`` directive
+
 (optional)
 More often than not the grammar you write will have conflicts.
 These conflicts generate warnings.
@@ -258,7 +270,8 @@ Error declaration
 
    %error { <identifier> }
 
-%error
+.. index:: ``%error``
+
 Specifies the function to be called in the event of a parse error.
 The type of ``<identifier>`` varies depending on the presence of ``%lexer`` (see `Summary <#sec-monad-summary>`__) and ``%errorhandlertype`` (see the following).
 
@@ -271,7 +284,8 @@ Additional error information
 
    %errorhandlertype (explist | default)
 
-%errorhandlertype
+.. index:: ``%errorhandlertype``
+
 (optional)
 The expected type of the user-supplied error handling can be applied with additional information.
 By default, no information is added, for compatibility with previous versions.
@@ -287,7 +301,8 @@ Attribute Type Declaration
 
    %attributetype { <valid Haskell type declaration> }
 
-%attributetype
+.. index:: ``%attributetype``
+
 directive
 (optional)
 This directive allows you to declare the type of the attributes record when defining an attribute grammar.
@@ -305,8 +320,8 @@ Attribute declaration
 
    %attribute <Haskell identifier> { <valid Haskell type> }
 
-%attribute
-directive
+.. index:: ``%attribute`` directive
+
 The presence of one or more of these directives declares that the grammar is an attribute grammar.
 The first attribute listed becomes the default attribute.
 Each ``%attribute`` directive generates a field in the attributes record with the given label and type.
@@ -322,6 +337,8 @@ Grammar
 The grammar section comes after the directives, separated from them by a double-percent (``%%``) symbol.
 This section contains a number of *productions*, each of which defines a single non-terminal.
 Each production has the following syntax:
+
+.. index:: ``%%``
 
 ::
 
@@ -345,8 +362,9 @@ Additionally, the sequence ``$>`` can be used to represent the value of the righ
 A semantic value of the form ``{% ... }`` is a *monadic action*, and is only valid when the grammar file contains a ``%monad`` directive (`Monad Directive <#sec-monad-decl>`__).
 Monadic actions are discussed in `Monadic Parsers <#sec-monads>`__.
 
-monadic
-action
+.. index::
+  single: monadic; action
+
 Remember that all the expressions for a production must have the same type.
 
 .. _sec-param-prods:
@@ -431,8 +449,8 @@ We plan to implement that in the future --- the current workaround is to omit th
 Module Trailer
 --------------
 
-module
-trailer
+.. index:: module; trailer
+
 The module trailer is optional, comes right at the end of the grammar file, and takes the same form as the module header:
 
 ::

@@ -24,7 +24,7 @@ The grammar file starts off like this:
    module Main where
    }
 
-At the top of the file is an optional module header, which is just a Haskell module header enclosed in braces.
+At the top of the file is an optional :index:`module header <single: module; header>`, which is just a Haskell module header enclosed in braces.
 This code is emitted verbatim into the generated module, so you can put any Haskell code here at all.
 In a grammar file, Haskell code is always contained between curly braces to distinguish it from the grammar.
 
@@ -38,9 +38,8 @@ Next comes a couple of declarations:
    %tokentype { Token }
    %error { parseError }
 
-%name
-%tokentype
-%error
+.. index:: ``%name``; ``%tokentype``; ``%error``
+
 The first line declares the name of the parsing function that Happy will generate, in this case ``calc``.
 In many cases, this is the only symbol you need to export from the module.
 
@@ -67,14 +66,16 @@ Now we declare all the possible tokens:
          '('             { TokenOB }
          ')'             { TokenCB }
 
-%token
+.. index:: ``%token``
+
 The symbols on the left are the tokens as they will be referred to in the rest of the grammar, and to the right of each token enclosed in braces is a Haskell pattern that matches the token.
 The parser will expect to receive a stream of tokens, each of which will match one of the given patterns (the definition of the ``Token`` datatype is given later).
 
 The ``$$`` symbol is a placeholder that represents the *value* of this token.
 Normally the value of a token is the token itself, but by using the ``$$`` symbol you can specify some component of the token object to be the value.
 
-$$
+.. index:: ``$$``
+
 Like yacc, we include ``%%`` here, for no real reason.
 
 ::
@@ -101,7 +102,8 @@ Now we have the production rules for the grammar.
          | var                     { Var $1 }
          | '(' Exp ')'             { Brack $2 }
 
-non-terminal
+.. index:: non-terminal
+
 Each production consists of a non-terminal symbol on the left, followed by a colon, followed by one or more expansions on the right, separated by ``|``.
 Each expansion has some Haskell code associated with it, enclosed in braces as usual.
 
@@ -224,7 +226,8 @@ A whole lexer, parser and grammar in a few dozen lines.
 Another good example is Happy's own parser.
 Several features in Happy were developed using this as an example.
 
-info file
+.. index:: info file
+
 To generate the Haskell module for this parser, type the command ``happy example.y``
 (where ``example.y`` is the name of the grammar file).
 The Haskell module will be placed in a file named ``example.hs``.
@@ -299,7 +302,9 @@ This recursive rule defines a sequence of one or more productions.
 One thing to note about this rule is that we used *left recursion* to define it
 --- we could have written it like this:
 
-recursion, left vs. right
+.. index::
+   single: recursion; left vs. right
+
 ::
 
    prods : prod                  { [$1] }
@@ -367,8 +372,8 @@ Parsing sequences of *one* or more possibly null statements is left as an exerci
 Using Precedences
 -----------------
 
-precedences
-associativity
+.. index:: precedences; associativity
+
 Going back to our earlier expression-parsing example,
 wouldn't it be nicer if we didn't have to explicitly separate the expressions into terms and factors,
 merely to make it clear that ``'*'`` and ``'/'`` operators bind more tightly than ``'+'`` and ``'-'``?
@@ -399,12 +404,11 @@ Happy allows these ambiguities to be resolved by specifying the precedences of t
    %%
    ...
 
-%left
-directive
-%right
-directive
-%nonassoc
-directive
+.. index::
+  single: ``%left`` directive
+  single: ``%right`` directive
+  single: ``%nonassoc`` directive
+
 The ``%left`` or ``%right`` directive is followed by a list of terminals, and declares all these tokens to be left or right-associative respectively.
 The precedence of these tokens with respect to other tokens is established by the order of the ``%left`` and ``%right`` directives: earlier means lower precedence.
 A higher precedence causes an operator to bind more tightly;
@@ -486,8 +490,9 @@ We can implement this in Happy as follows:
          | int                     { Int $1 }
          | var                     { Var $1 }
 
-%prec
-directive
+.. index::
+  single: ``%prec`` directive
+
 We invent a new token ``NEG`` as a placeholder for the precedence of our prefix negation rule.
 The ``NEG`` token doesn't need to appear in a ``%token`` directive.
 The prefix negation rule has a ``%prec NEG`` directive attached,
@@ -509,8 +514,9 @@ This is useful in conjunction with ``%expect 0`` to explicitly point out all rul
 Type Signatures
 ---------------
 
-type
-signatures in grammar
+.. index::
+  single: type; signatures in grammar
+
 Happy allows you to include type signatures in the grammar file itself, to indicate the type of each production.
 This has several benefits:
 
@@ -551,14 +557,15 @@ GHC (with the ``-fglasgow-exts`` option) and Hugs are known to support this.
 Monadic Parsers
 ---------------
 
-monadic
-parsers
+.. index::
+  single: monadic; parsers
+
 Happy has support for threading a monad through the generated parser.
 This might be useful for several reasons:
 
--  Handling parse errors by using an exception monad (see `Handling Parse Errors <#sec-exception>`__).
+-  :index:`Handling parse errors <single: parse errors; handling>` by using an exception monad (see `Handling Parse Errors <#sec-exception>`__).
 
--  Keeping track of line numbers in the input file, for example for use in error messages (see `Line Numbers <#sec-line-numbers>`__).
+-  Keeping track of :index:`line numbers` in the input file, for example for use in error messages (see `Line Numbers <#sec-line-numbers>`__).
 
 -  Performing IO operations during parsing.
 
@@ -571,7 +578,8 @@ Just add the following directive to the declaration section of the grammar file:
 
    %monad { <type> } [ { <then> } { <return> } ]
 
-%monad
+.. index:: %monad
+
 where ``<type>`` is the type constructor for the monad, ``<then>`` is the bind operation of the monad, and ``<return>`` is the return operation.
 If you leave out the names for the bind and return operations, Happy assumes that ``<type>`` is an instance of the standard Haskell type class ``Monad`` and uses the overloaded names for the bind and return operations.
 
@@ -593,8 +601,9 @@ so Happy has a special syntax for monadic actions:
 
    n  :  t_1 ... t_n          {% <expr> }
 
-monadic
-actions
+.. index::
+  single: monadic; actions
+
 The ``%`` in the action indicates that this is a monadic action, with type ``P a``, where ``a`` is the real return type of the production.
 When Happy reduces one of these rules, it evaluates the expression
 
@@ -627,8 +636,9 @@ The following sections consider a couple of uses for monadic parsers, and descri
 Handling Parse Errors
 ~~~~~~~~~~~~~~~~~~~~~
 
-parse errors
-handling
+.. index:
+  single: parse errors; ! handling
+
 It's not very convenient to just call ``error`` when a parse error is detected:
 in a robust setting, you'd like the program to recover gracefully and report a useful error message to the user.
 Exceptions (of which errors are a special case) are normally implemented in Haskell by using an exception monad,
@@ -695,16 +705,17 @@ The monadic action allows the check to be placed in the parser itself, where it 
 Threaded Lexers
 ~~~~~~~~~~~~~~~
 
-lexer, threaded
-monadic
-lexer
+.. index::
+  single: lexer; threaded
+  single: monadic; lexer
+
 Happy allows the monad concept to be extended to the lexical analyser, too.
 This has several useful consequences:
 
 -  Lexical errors can be treated in the same way as parse errors, using an exception monad.
 
-   parse errors
-   lexical
+   .. index::
+     single: parse errors; lexical
 
 -  Information such as the current file and line number can be communicated between the lexer and parser.
 
@@ -720,7 +731,8 @@ A monadic lexer is requested by adding the following declaration to the grammar 
 
    %lexer { <lexer> } { <eof> }
 
-%lexer
+.. index:: ``%lexer``
+
 where ``<lexer>`` is the name of the lexical analyser function, and ``<eof>`` is a token that is to be treated as the end of file.
 
 When using a monadic lexer, the parser no longer reads a list of tokens.
@@ -830,8 +842,10 @@ This can be useful when you want to change the next token and continue parsing.
 Line Numbers
 ~~~~~~~~~~~~
 
-line numbers
-%newline
+.. index::
+  single: line numbers
+  single: ``%newline``
+
 Previous versions of Happy had a ``%newline`` directive that enabled simple line numbers to be counted by the parser and referenced in the actions.
 We warned you that this facility may go away and be replaced by something more general, well guess what? :-)
 
@@ -891,13 +905,10 @@ The types of various functions related to the parser are dependent on what combi
 For reference, we list those types here. In the following types, *t* is the return type of the parser.
 A type containing a type variable indicates that the specified function must be polymorphic.
 
-type
-of
-parseError
-type
-of parser
-type
-of lexer
+.. index::
+  single: type; of parseError
+  single: type; of parser
+  single: type; of lexer
 
 -
 
@@ -953,7 +964,8 @@ of lexer
 The Error Token
 ---------------
 
-error token
+.. index:: error token
+
 Happy supports a limited form of error recovery, using the special symbol ``error`` in a grammar file.
 When Happy finds a parse error during parsing, it automatically inserts the ``error`` symbol;
 if your grammar deals with ``error`` explicitly, then it can detect the error and carry on.
@@ -972,7 +984,8 @@ This rule is used to parse expressions like ``let x = e in e'``:
 the layout system inserts an open brace before ``x``,
 and the occurrence of the ``in`` symbol generates a parse error, which is interpreted as a close brace by the above rule.
 
-yacc
+.. index:: yacc
+
 Note for ``yacc`` users: this form of error recovery is strictly more limited than that provided by ``yacc``.
 During a parse error condition, ``yacc`` attempts to discard states and tokens in order to get back into a state where parsing may continue; Happy doesn't do this.
 The reason is that normal ``yacc`` error recovery is notoriously hard to describe, and the semantics depend heavily on the workings of a shift-reduce parser.
@@ -984,7 +997,8 @@ Happy's limited error recovery on the other hand is well-defined, as is just suf
 Generating Multiple Parsers From a Single Grammar
 -------------------------------------------------
 
-multiple parsers
+.. index:: multiple parsers
+
 It is often useful to use a single grammar to describe multiple parsers,
 where each parser has a different top-level non-terminal, but parts of the grammar are shared between parsers.
 A classic example of this is an interpreter, which needs to be able to parse both entire files and single expressions:
@@ -993,8 +1007,8 @@ the expression grammar is likely to be identical for the two parsers, so we woul
 Happy lets you do this by allowing multiple ``%name`` directives in the grammar file.
 The ``%name`` directive takes an optional second parameter specifying the top-level non-terminal for this parser, so we may specify multiple parsers like so:
 
-%name
-directive
+.. index:: %name directive
+
 ::
 
    %name parse1 non-terminal1
