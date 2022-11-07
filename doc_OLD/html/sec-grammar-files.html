@@ -1,0 +1,246 @@
+<HTML
+><HEAD
+><TITLE
+>Syntax of Grammar Files</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.44"><LINK
+REL="HOME"
+TITLE="Happy User Guide"
+HREF="book1.html"><LINK
+REL="PREVIOUS"
+TITLE="Invoking Happy"
+HREF="sec-invoking.html"><LINK
+REL="NEXT"
+TITLE="Module Header"
+HREF="sec-module-header.html"></HEAD
+><BODY
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Happy User Guide</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="sec-invoking.html"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="sec-module-header.html"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="CHAPTER"
+><H1
+><A
+NAME="SEC-GRAMMAR-FILES"
+>Chapter 4. Syntax of Grammar Files</A
+></H1
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+><A
+HREF="sec-grammar-files.html#SEC-LEXICAL-RULES"
+>Lexical Rules</A
+></DT
+><DT
+><A
+HREF="sec-module-header.html"
+>Module Header</A
+></DT
+><DT
+><A
+HREF="sec-directives.html"
+>Directives</A
+></DT
+><DT
+><A
+HREF="sec-grammar.html"
+>Grammar</A
+></DT
+><DT
+><A
+HREF="sec-module-trailer.html"
+>Module Trailer</A
+></DT
+></DL
+></DIV
+><P
+>The input to <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> is a text file containing
+    the grammar of the language you want to parse, together with some
+    annotations that help the parser generator make a legal Haskell
+    module that can be included in your program.  This section gives
+    the exact syntax of grammar files. </P
+><P
+>The overall format of the grammar file is given below:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>&#60;optional module header&#62;
+&#60;directives&#62;
+%%
+&#60;grammar&#62;
+&#60;optional module trailer&#62;</PRE
+></TD
+></TR
+></TABLE
+><P
+>If the name of the grammar file ends in <TT
+CLASS="LITERAL"
+>.ly</TT
+>, then
+    it is assumed to be a literate script.  All lines except those
+    beginning with a <TT
+CLASS="LITERAL"
+>&#62;</TT
+> will be ignored, and the
+    <TT
+CLASS="LITERAL"
+>&#62;</TT
+> will be stripped from the beginning of all the code
+    lines.  There must be a blank line between each code section
+    (lines beginning with <TT
+CLASS="LITERAL"
+>&#62;</TT
+>) and comment section.
+    Grammars not using the literate notation must be in a file with
+    the <TT
+CLASS="LITERAL"
+>.y</TT
+> suffix.</P
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="SEC-LEXICAL-RULES"
+>Lexical Rules</A
+></H1
+><P
+>Identifiers in <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> grammar files must take the following form (using
+the BNF syntax from the Haskell Report):</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>        id      ::= alpha { idchar }
+                  | ' { any{^'} | \' } '
+                  | " { any{^"} | \" } "
+
+        alpha   ::= A | B | ... | Z
+                  | a | b | ... | z
+
+        idchar  ::= alpha
+                  | 0 | 1 | ... | 9
+                  | _</PRE
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sec-invoking.html"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sec-module-header.html"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Invoking <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Module Header</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,342 @@
+<HTML
+><HEAD
+><TITLE
+>Parsing sequences</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.44"><LINK
+REL="HOME"
+TITLE="Happy User Guide"
+HREF="book1.html"><LINK
+REL="UP"
+TITLE="Using Happy"
+HREF="sec-using.html"><LINK
+REL="PREVIOUS"
+TITLE="Using Happy"
+HREF="sec-using.html"><LINK
+REL="NEXT"
+TITLE="Ambiguities"
+HREF="sec-ambiguities.html"></HEAD
+><BODY
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Happy User Guide</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="sec-using.html"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 2. Using <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="sec-ambiguities.html"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="SEC-SEQUENCES"
+>Parsing sequences</A
+></H1
+><P
+>A common feature in grammars is a <I
+CLASS="EMPHASIS"
+>sequence</I
+> of a
+      particular syntactic element.  In EBNF, we'd write something
+      like <TT
+CLASS="LITERAL"
+>n+</TT
+> to represent a sequence of one or more
+      <TT
+CLASS="LITERAL"
+>n</TT
+>s, and <TT
+CLASS="LITERAL"
+>n*</TT
+> for zero or more.
+      <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> doesn't support this syntax explicitly, but
+      you can define the equivalent sequences using simple
+      productions.</P
+><P
+>For example, the grammar for <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> itself
+      contains a rule like this:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>prods : prod                   { [$1] }
+      | prods prod             { $2 : $1 }</PRE
+></TD
+></TR
+></TABLE
+><P
+>In other words, a sequence of productions is either a
+      single production, or a sequence of productions followed by a
+      single production.  This recursive rule defines a sequence of
+      one or more productions.</P
+><P
+>One thing to note about this rule is that we used
+      <I
+CLASS="EMPHASIS"
+>left recursion</I
+> to define it - we could have written
+      it like this:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>prods : prod                  { [$1] }
+      | prod prods            { $1 : $2 }</PRE
+></TD
+></TR
+></TABLE
+><P
+>The only reason we used left recursion is that
+      <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> is more efficient at parsing left-recursive
+      rules; they result in a constant stack-space parser, whereas
+      right-recursive rules require stack space proportional to the
+      length of the list being parsed.  This can be extremely
+      important where long sequences are involved, for instance in
+      automatically generated output.  For example, the parser in GHC
+      used to use right-recursion to parse lists, and as a result it
+      failed to parse some <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+>-generated modules due
+      to running out of stack space!</P
+><P
+>One implication of using left recursion is that the resulting
+      list comes out reversed, and you have to reverse it again to get
+      it in the original order.  Take a look at the
+      <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> grammar for Haskell for many examples of
+      this.</P
+><P
+>Parsing sequences of zero or more elements requires a
+      trivial change to the above pattern:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>prods : {- empty -}           { [] }
+      | prods prod            { $2 : $1 }</PRE
+></TD
+></TR
+></TABLE
+><P
+>Yes - empty productions are allowed.  The normal
+      convention is to include the comment <TT
+CLASS="LITERAL"
+>{- empty -}</TT
+> to
+      make it more obvious to a reader of the code what's going
+      on.</P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="SEC-SEPARATORS"
+>Sequences with separators</A
+></H2
+><P
+>A common type of sequence is one with a
+        <I
+CLASS="EMPHASIS"
+>separator</I
+>: for instance function bodies in C
+        consist of statements separated by semicolons.  To parse this
+        kind of sequence we use a production like this:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>stmts : stmt                   { [$1] }
+      | stmts ';' stmt         { $3 : $1 }</PRE
+></TD
+></TR
+></TABLE
+><P
+>If the <TT
+CLASS="LITERAL"
+>;</TT
+> is to be a <I
+CLASS="EMPHASIS"
+>terminator</I
+>
+        rather than a separator (i.e. there should be one following
+        each statement), we can remove the semicolon from the above
+        rule and redefine <TT
+CLASS="LITERAL"
+>stmt</TT
+> as</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>stmt : stmt1 ';'              { $1 }</PRE
+></TD
+></TR
+></TABLE
+><P
+>where <TT
+CLASS="LITERAL"
+>stmt1</TT
+> is the real definition of statements.</P
+><P
+>We might like to allow extra semicolons between
+        statements, to be a bit more liberal in what we allow as legal
+        syntax.  We probably just want the parser to ignore these
+        extra semicolons, and not generate a ``null statement'' value
+        or something.  The following rule parses a sequence or zero or
+        more statements separated by semicolons, in which the
+        statements may be empty:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>stmts : stmts ';' stmt          { $3 : $1 }
+      | stmts ';'               { $1 }
+      | stmt			{ [$1] }
+      | {- empty -}		{ [] }</PRE
+></TD
+></TR
+></TABLE
+><P
+>Parsing sequences of <I
+CLASS="EMPHASIS"
+>one</I
+> or more possibly
+	null statements is left as an exercise for the reader...</P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sec-using.html"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sec-ambiguities.html"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Using <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sec-using.html"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Ambiguities</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

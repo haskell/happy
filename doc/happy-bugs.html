@@ -1,0 +1,94 @@
+<html> <head>
+<title>Known Happy bugs/problems</title>
+</head>
+
+<body>
+<h1>Known Happy Bugs and Problems</h1>
+
+This is the FEB (Frequently Encountered Bugs) page for 
+<a href="http://www.dcs.gla.ac.uk/fp/software/happy.html">Happy</a>, a parser
+generator for Haskell (version 0.8 and 0.9).<p>
+
+For <a href="http://www.dcs.gla.ac.uk/fp/software/ghc.html">GHC</a> related bugs,
+the FEB page can be found
+<a href="http://www.dcs.gla.ac.uk/fp/software/ghc-bugs.html">here.</a>
+
+<br>
+<h2>Contents</h2>
+
+<UL>
+<LI><A HREF="#Optim">Help! GHC falls over compiling Happy</A>
+<LI><A HREF="#Trace">Undefined function `trace' when compiling Happy-0.8 with ghc-0.26</a>
+</UL>
+<hr>
+
+<br><a name="Optim"><h2>Compiling Happy duznae work</h2></a>
+
+Symptom: compiling the main module for happy-0.8 with <tt>-O</tt> falls over miserably with ghc. 
+<p>
+The solution is either to work around the problem by compiling without <tt>-O</tt>,
+or if you have picked up a source distribution, apply the following patch and rebuild:
+
+<tt><pre>
+*** ghc-0.26/ghc/compiler/stgSyn/CoreToStg.lhs	Wed May 24 09:29:15 1995
+--- partain/ghc/compiler/stgSyn/CoreToStg.lhs	Tue Aug 22 18:12:27 1995
+***************
+*** 604,610 ****
+  	-- default binder to the scrutinee.
+  	--
+  	new_env = case discrim of
+! 		    CoVar v -&gt; addOneToIdEnv env binder (StgVarAtom v)
+  		    other   -&gt; env
+  \end{code}
+  
+--- 617,623 ----
+  	-- default binder to the scrutinee.
+  	--
+  	new_env = case discrim of
+! 		    CoVar v -&gt; addOneToIdEnv env binder (stgLookup env v)
+  		    other   -&gt; env
+  \end{code}
+</pre></tt><br>
+
+
+<br><a name="Trace"><h2>Function `trace' not defined (0.8)</h2></a>
+
+The simplest solution is to upgrade to happy-0.9 :-)
+
+Happy-0.8 was released with a version of the Glasgow Haskell
+Compiler(ghc-0.23) that had the function `trace' built-in.
+With the release of 0.26, `trace' was moved out of the user
+namespace and renamed `_trace', hence the error msg you're seeing.
+To fix, either define your own v. simple utility module Trace<p>
+
+<tt><pre>
+    module Trace where
+    trace = _trace -- that's it!
+</pre></tt>
+
+<p>
+and add it to Happy-0.8, or add the following line to GenUtils.lhs:<p>
+
+<tt><pre>
+#ifndef __GLASGOW_HASKELL__
+
+&gt; import 
+&gt; 	Maybe (Maybe(..))	-- on a different line to confuse mkdependHS (!)
+&gt; import 
+&gt; 	Trace
+
+#else
+
+&gt; import Trace
+
+#endif
+</pre></tt>
+
+and add <tt>-syslib hbc</tt> to <tt>OPT</tt> in the Makefile.
+
+<hr>
+<address><a href="http://www.dcs.gla.ac.uk/~sof/">Simon Marlow & Andy Gill &lt;{simonm,andy}@dcs.glasgow.ac.uk&gt;</a></address>
+<!-- hhmts start -->
+Last modified: Thu Apr 18 10:22:28 1996
+<!-- hhmts end -->
+</body> </html>

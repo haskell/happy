@@ -1,0 +1,213 @@
+<HTML
+><HEAD
+><TITLE
+>Type Signatures</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.54"><LINK
+REL="HOME"
+TITLE="Happy User Guide"
+HREF="happy.html"><LINK
+REL="UP"
+TITLE="Using Happy"
+HREF="sec-using.html"><LINK
+REL="PREVIOUS"
+TITLE="Using Precedences"
+HREF="sec-precedences.html"><LINK
+REL="NEXT"
+TITLE="Monadic Parsers"
+HREF="sec-monads.html"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Happy User Guide</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="sec-precedences.html"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 2. Using <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="sec-monads.html"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="SEC-TYPE-SIGNATURES"
+>2.4. Type Signatures</A
+></H1
+><P
+><SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> allows you to include type signatures
+      in the grammar file itself, to indicate the type of each
+      production.  This has several benefits:</P
+><P
+></P
+><UL
+><LI
+><P
+> Documentation: including types in the grammar helps
+          to document the grammar for someone else (and indeed
+          yourself) reading the code.</P
+></LI
+><LI
+><P
+> Fixing type errors in the generated module can become
+          slightly easier if <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> has inserted type
+          signatures for you.  This is a slightly dubious benefit,
+          since type errors in the generated module are still somewhat
+          difficult to find.  </P
+></LI
+><LI
+><P
+> Type signatures generally help the Haskell compiler
+          to compile the parser faster.  This is important when really
+          large grammar files are being used.</P
+></LI
+></UL
+><P
+>The syntax for type signatures in the grammar file is as
+      follows:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>stmts   :: { [ Stmt ] }
+stmts   : stmts stmt                { $2 : $1 }
+	| stmt                      { [$1] }</PRE
+></TD
+></TR
+></TABLE
+><P
+>In fact, you can leave out the superfluous occurrence of
+      <TT
+CLASS="LITERAL"
+>stmts</TT
+>:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>stmts   :: { [ Stmt ] }
+	: stmts stmt                { $2 : $1 }
+	| stmt                      { [$1] }</PRE
+></TD
+></TR
+></TABLE
+><P
+>Note that currently, you have to include type signatures
+      for <I
+CLASS="EMPHASIS"
+>all</I
+> the productions in the grammar to benefit
+      from the second and third points above.  This is due to boring
+      technical reasons, but it is hoped that this restriction can be
+      removed in the future.</P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sec-precedences.html"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="happy.html"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sec-monads.html"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Using Precedences</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sec-using.html"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Monadic Parsers</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

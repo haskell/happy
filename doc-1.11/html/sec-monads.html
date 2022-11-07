@@ -1,0 +1,995 @@
+<HTML
+><HEAD
+><TITLE
+>Monadic Parsers</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.54"><LINK
+REL="HOME"
+TITLE="Happy User Guide"
+HREF="happy.html"><LINK
+REL="UP"
+TITLE="Using Happy"
+HREF="sec-using.html"><LINK
+REL="PREVIOUS"
+TITLE="Type Signatures"
+HREF="sec-type-signatures.html"><LINK
+REL="NEXT"
+TITLE="The Error Token"
+HREF="sec-error.html"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Happy User Guide</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="sec-type-signatures.html"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 2. Using <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="sec-error.html"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="SEC-MONADS"
+>2.5. Monadic Parsers</A
+></H1
+><P
+><SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> has support for threading a monad
+      through the generated parser.  This might be useful for several
+      reasons:</P
+><P
+></P
+><UL
+><LI
+><P
+> Handling parse errors by using an exception monad
+          (see <A
+HREF="sec-monads.html#SEC-EXCEPTION"
+>Section 2.5.1</A
+>).</P
+></LI
+><LI
+><P
+> Keeping track of line numbers in the input file, for
+          example for use in error messages (see <A
+HREF="sec-monads.html#SEC-LINE-NUMBERS"
+>Section 2.5.3</A
+>).</P
+></LI
+><LI
+><P
+> Performing IO operations during parsing.</P
+></LI
+><LI
+><P
+> Parsing languages with context-dependencies (such as
+          C) require some state in the parser.</P
+></LI
+></UL
+><P
+>Adding monadic support to your parser couldn't be simpler.
+      Just add the following directive to the declaration section of
+      the grammar file:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>%monad { &#60;type&#62; } [ { &#60;then&#62; } { &#60;return&#62; } ]</PRE
+></TD
+></TR
+></TABLE
+><P
+>where <TT
+CLASS="LITERAL"
+>&#60;type&#62;</TT
+> is the type constructor for
+      the monad, <TT
+CLASS="LITERAL"
+>&#60;then&#62;</TT
+> is the bind operation of the
+      monad, and <TT
+CLASS="LITERAL"
+>&#60;return&#62;</TT
+> is the return operation. If
+      you leave out the names for the bind and return operations,
+      <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> assumes that <TT
+CLASS="LITERAL"
+>&#60;type&#62;</TT
+> is an
+      instance of the standard Haskell type class <TT
+CLASS="LITERAL"
+>Monad</TT
+> and
+      uses the overloaded names for the bind and return
+      operations.</P
+><P
+>When this declaration is included in the grammar,
+      <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> makes a couple of changes to the generated
+      parser: the types of the main parser function and
+      <TT
+CLASS="LITERAL"
+>happyError</TT
+> become <TT
+CLASS="LITERAL"
+>[Token] -&#62; P a</TT
+> where
+      <TT
+CLASS="LITERAL"
+>P</TT
+> is the monad type constructor, and the function must
+      be polymorphic in <TT
+CLASS="LITERAL"
+>a</TT
+>.  In other words,
+      <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> adds an application of the
+      <TT
+CLASS="LITERAL"
+>&#60;return&#62;</TT
+> operation defined in the declaration
+      above, around the result of the parser (<TT
+CLASS="LITERAL"
+>happyError</TT
+> is
+      affected because it must have the same return type as the
+      parser).  And that's all it does.</P
+><P
+>This still isn't very useful: all you can do is return
+      something of monadic type from <TT
+CLASS="LITERAL"
+>happyError</TT
+>.  How do you
+      specify that the productions can also have type <TT
+CLASS="LITERAL"
+>P a</TT
+>?
+      Most of the time, you don't want a production to have this type:
+      you'd have to write explicit <TT
+CLASS="LITERAL"
+>returnP</TT
+>s everywhere.
+      However, there may be a few rules in a grammar that need to get
+      at the monad, so <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> has a special syntax for
+      monadic actions:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>n  :  t_1 ... t_n          {% &#60;expr&#62; }</PRE
+></TD
+></TR
+></TABLE
+><P
+>The <TT
+CLASS="LITERAL"
+>%</TT
+> in the action indicates that this is a
+      monadic action, with type <TT
+CLASS="LITERAL"
+>P a</TT
+>, where <TT
+CLASS="LITERAL"
+>a</TT
+> is
+      the real return type of the production.  When
+      <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> reduces one of these rules, it evaluates the
+      expression </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>&#60;expr&#62; `then` \result -&#62; &#60;continue parsing&#62;</PRE
+></TD
+></TR
+></TABLE
+><P
+><SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> uses <TT
+CLASS="LITERAL"
+>result</TT
+> as the real
+      semantic value of the production.  During parsing, several
+      monadic actions might be reduced, resulting in a sequence
+      like</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>&#60;expr1&#62; `then` \r1 -&#62;
+&#60;expr2&#62; `then` \r2 -&#62;
+...
+return &#60;expr3&#62;</PRE
+></TD
+></TR
+></TABLE
+><P
+>The monadic actions are performed in the order that they
+      are <I
+CLASS="EMPHASIS"
+>reduced</I
+>.  If we consider the parse as a tree,
+      then reductions happen in a depth-first left-to-right manner.
+      The great thing about adding a monad to your parser is that it
+      doesn't impose any performance overhead for normal reductions -
+      only the monadic ones are translated like this.</P
+><P
+>Take a look at the Haskell parser for a good illustration
+      of how to use a monad in your parser: it contains examples of
+      all the principles discussed in this section, namely parse
+      errors, a threaded lexer, line/column numbers, and state
+      communication between the parser and lexer.</P
+><P
+>The following sections consider a couple of uses for
+      monadic parsers, and describe how to also thread the monad
+      through the lexical analyser.</P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="SEC-EXCEPTION"
+>2.5.1. Handling Parse Errors</A
+></H2
+><P
+>It's not very convenient to just call <TT
+CLASS="LITERAL"
+>error</TT
+> when
+      a parse error is detected: in a robust setting, you'd like the
+      program to recover gracefully and report a useful error message
+      to the user.  Exceptions (of which errors are a special case)
+      are normally implemented in Haskell by using an exception monad,
+      something like:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>data E a = Ok a | Failed String
+
+thenE :: E a -&#62; (a -&#62; E b) -&#62; E b
+m `thenE` k = 
+   case m of 
+       Ok a -&#62; k a
+	 Failed e -&#62; Failed e
+
+returnE :: a -&#62; E a
+returnE a = Ok a
+
+failE :: String -&#62; E a
+failE err = Failed err
+
+catchE :: E a -&#62; (String -&#62; E a) -&#62; E a
+catchE m k = 
+   case m of
+      Ok a -&#62; OK a
+	Failed e -&#62; k e</PRE
+></TD
+></TR
+></TABLE
+><P
+>This monad just uses a string as the error type.  The
+        functions <TT
+CLASS="LITERAL"
+>thenE</TT
+> and <TT
+CLASS="LITERAL"
+>returnE</TT
+> are the usual
+        bind and return operations of the monad, <TT
+CLASS="LITERAL"
+>failE</TT
+>
+        raises an error, and <TT
+CLASS="LITERAL"
+>catchE</TT
+> is a combinator for
+        handling exceptions.</P
+><P
+>We can add this monad to the parser with the declaration</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>%monad { E } { thenE } { returnE }</PRE
+></TD
+></TR
+></TABLE
+><P
+>Now, without changing the grammar, we can change the
+        definition of <TT
+CLASS="LITERAL"
+>happyError</TT
+> and have something sensible
+        happen for a parse error:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>happyError tokens = failE "Parse error"</PRE
+></TD
+></TR
+></TABLE
+><P
+>The parser now raises an exception in the monad instead
+	of bombing out on a parse error.</P
+><P
+>We can also generate errors during parsing.  There are
+        times when it is more convenient to parse a more general
+        language than that which is actually intended, and check it
+        later.  An example comes from Haskell, where the precedence
+        values in infix declarations must be between 0 and 9:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>prec :: { Int }
+      : int    {% if $1 &#60; 0 || $1 &#62; 9 
+	                then failE "Precedence out of range"
+		        else returnE $1
+		}</PRE
+></TD
+></TR
+></TABLE
+><P
+>The monadic action allows the check to be placed in the
+	parser itself, where it belongs.</P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="SEC-LEXERS"
+>2.5.2. Threaded Lexers</A
+></H2
+><P
+><SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> allows the monad concept to be
+	extended to the lexical analyser, too.  This has several
+	useful consequences:</P
+><P
+></P
+><UL
+><LI
+><P
+> Lexical errors can be treated in the same way as
+            parse errors, using an exception monad.</P
+></LI
+><LI
+><P
+> Information such as the current file and line
+            number can be communicated between the lexer and
+            parser. </P
+></LI
+><LI
+><P
+> General state communication between the parser and
+            lexer - for example, implementation of the Haskell layout
+            rule requires this kind of interaction.
+            </P
+></LI
+><LI
+><P
+> IO operations can be performed in the lexer - this
+            could be useful for following import/include declarations
+            for instance.</P
+></LI
+></UL
+><P
+>A monadic lexer is requested by adding the following
+	declaration to the grammar file:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>%lexer { &#60;lexer&#62; } { &#60;eof&#62; }</PRE
+></TD
+></TR
+></TABLE
+><P
+>where <TT
+CLASS="LITERAL"
+>&#60;lexer&#62;</TT
+> is the name of the lexical
+        analyser function, and <TT
+CLASS="LITERAL"
+>&#60;eof&#62;</TT
+> is a token that
+        is to be treated as the end of file.</P
+><P
+>When using a monadic lexer, the parser no longer reads a
+        list of tokens.  Instead, it calls the lexical analysis
+        function for each new token to be read.  This has the side
+        effect of eliminating the intermediate list of tokens, which
+        is a slight performance win.</P
+><P
+>The type of the main parser function and
+        <TT
+CLASS="LITERAL"
+>happyError</TT
+> is now just <TT
+CLASS="LITERAL"
+>P a</TT
+> - the input is
+        being handled completely within the monad.</P
+><P
+>The lexical analysis function must have the following
+	type:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>lexer :: (Token -&#62; P a) -&#62; P a</PRE
+></TD
+></TR
+></TABLE
+><P
+>where <TT
+CLASS="LITERAL"
+>P</TT
+> is the monad type constructor declared
+        with <TT
+CLASS="LITERAL"
+>%monad</TT
+>, and <TT
+CLASS="LITERAL"
+>a</TT
+> can be replaced by the
+        parser return type if desired.</P
+><P
+>You can see from this type that the lexer takes a
+        <I
+CLASS="EMPHASIS"
+>continuation</I
+> as an argument.  The lexer is to find
+        the next token, and pass it to this continuation to carry on
+        with the parse.  Obviously, we need to keep track of the input
+        in the monad somehow, so that the lexer can do something
+        different each time it's called!</P
+><P
+>Let's take the exception monad above, and extend it to
+        add the input string so that we can use it with a threaded
+        lexer.</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>data ParseResult a = Ok a | Failed String
+type P a = String -&#62; ParseResult a
+
+thenP :: P a -&#62; (a -&#62; P b) -&#62; P b
+m `thenP` k = \s -&#62;
+   case m s of 
+       Ok a -&#62; k a s
+	 Failed e -&#62; Failed e
+
+returnP :: a -&#62; P a
+returnP a = \s -&#62; Ok a
+
+failP :: String -&#62; P a
+failP err = \s -&#62; Failed err
+
+catchP :: P a -&#62; (String -&#62; P a) -&#62; P a
+catchP m k = \s -&#62;
+   case m s of
+      Ok a -&#62; OK a
+	Failed e -&#62; k e s</PRE
+></TD
+></TR
+></TABLE
+><P
+>Notice that this isn't a real state monad - the input
+        string just gets passed around, not returned.  Our lexer will
+        now look something like this:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>lexer :: (Token -&#62; P a) -&#62; P a
+lexer cont s = 
+    ... lexical analysis code ...
+    cont token s'</PRE
+></TD
+></TR
+></TABLE
+><P
+>the lexer grabs the continuation and the input string,
+        finds the next token <TT
+CLASS="LITERAL"
+>token</TT
+>, and passes it together
+        with the remaining input string <TT
+CLASS="LITERAL"
+>s'</TT
+> to the
+        continuation.</P
+><P
+>We can now indicate lexical errors by ignoring the
+        continuation and calling <TT
+CLASS="LITERAL"
+>failP "error message" s</TT
+>
+        within the lexer (don't forget to pass the input string to
+        make the types work out).</P
+><P
+>This may all seem a bit weird.  Why, you ask, doesn't
+        the lexer just have type <TT
+CLASS="LITERAL"
+>P Token</TT
+>?  Well, the
+        decision was taken to use a continuation purely for
+        performance reasons.  If the lexer must return a token, then
+        it turns out that the input string must be a real state
+        object, and the monad has to return it as well as pass it
+        around.  If you want a lexer of type <TT
+CLASS="LITERAL"
+>P Token</TT
+>, then
+        just define a wrapper to deal with the continuation:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>lexwrap :: (Token -&#62; P a) -&#62; P a
+lexwrap cont = real_lexer `thenP` \token -&#62; cont token</PRE
+></TD
+></TR
+></TABLE
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="SEC-LINE-NUMBERS"
+>2.5.3. Line Numbers</A
+></H2
+><P
+>Previous versions of <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> had a
+        <TT
+CLASS="LITERAL"
+>%newline</TT
+> directive that enabled simple line numbers
+        to be counted by the parser and referenced in the actions.  We
+        warned you that this facility may go away and be replaced by
+        something more general, well guess what? :-)</P
+><P
+>Line numbers can now be dealt with quite
+        straightforwardly using a monadic parser/lexer combination.
+        Ok, we have to extend the monad a bit more:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>type LineNumber = Int
+type P a = String -&#62; LineNumber -&#62; ParseResult a
+
+getLineNo :: P LineNumber
+getLineNo = \s l -&#62; Ok l</PRE
+></TD
+></TR
+></TABLE
+><P
+>(the rest of the functions in the monad follow by just
+        adding the extra line number argument in the same way as the
+        input string).  Again, the line number is just passed down,
+        not returned: this is OK because of the continuation-based
+        lexer that can change the line number and pass the new one to
+        the continuation.</P
+><P
+>The lexer can now update the line number as follows:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>lexer cont s =
+  case s of
+     '\n':s  -&#62;  \line -&#62; lexer cont s (line + 1)
+     ... rest of lexical analysis ...</PRE
+></TD
+></TR
+></TABLE
+><P
+>It's as simple as that.  Take a look at
+        <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+>'s own parser if you have the sources lying
+        around, it uses a monad just like the one above.</P
+><P
+>Reporting the line number of a parse error is achieved
+        by changing <TT
+CLASS="LITERAL"
+>happyError</TT
+> to look something like
+        this:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>happyError :: P a
+happyError = getLineNo `thenP` \line -&#62; 
+             failP (show line ++ ": parse error")</PRE
+></TD
+></TR
+></TABLE
+><P
+>We can also get hold of the line number during parsing,
+        to put it in the parsed data structure for future reference.
+        A good way to do this is to have a production in the grammar
+        that returns the current line number: </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>lineno :: { LineNumber }
+        : {- empty -}      {% getLineNo }</PRE
+></TD
+></TR
+></TABLE
+><P
+>The semantic value of <TT
+CLASS="LITERAL"
+>lineno</TT
+> is the line
+        number of the last token read - this will always be the token
+        directly following the <TT
+CLASS="LITERAL"
+>lineno</TT
+> symbol in the grammar,
+        since <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> always keeps one lookahead token in
+        reserve.</P
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="SEC-MONAD-SUMMARY"
+>2.5.4. Summary</A
+></H2
+><P
+>The types of various functions related to the parser are
+        dependent on what combination of <TT
+CLASS="LITERAL"
+>%monad</TT
+> and
+        <TT
+CLASS="LITERAL"
+>%lexer</TT
+> directives are present in the grammar.  For
+        reference, we list those types here.  In the following types,
+        <I
+CLASS="EMPHASIS"
+>t</I
+> is the return type of the
+        parser.  A type containing a type variable indicates that the
+        specified function must be polymorphic.</P
+><P
+></P
+><UL
+><LI
+><DIV
+CLASS="FORMALPARA"
+><P
+><B
+> No <TT
+CLASS="LITERAL"
+>%monad</TT
+> or
+	      <TT
+CLASS="LITERAL"
+>%lexer</TT
+> . </B
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="90%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>parse      :: [Token] -&#62; <I
+CLASS="EMPHASIS"
+>t</I
+>
+happyError :: [Token] -&#62; a</PRE
+></TD
+></TR
+></TABLE
+></P
+></DIV
+></LI
+><LI
+><DIV
+CLASS="FORMALPARA"
+><P
+><B
+> with <TT
+CLASS="LITERAL"
+>%monad</TT
+> . </B
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="90%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>parse      :: [Token] -&#62; P <I
+CLASS="EMPHASIS"
+>t</I
+>
+happyError :: [Token] -&#62; P a</PRE
+></TD
+></TR
+></TABLE
+></P
+></DIV
+></LI
+><LI
+><DIV
+CLASS="FORMALPARA"
+><P
+><B
+> with <TT
+CLASS="LITERAL"
+>%lexer</TT
+> . </B
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="90%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>parse      :: T <I
+CLASS="EMPHASIS"
+>t</I
+>
+happyError :: T a
+lexer      :: (Token -&#62; T a) -&#62; T a</PRE
+></TD
+></TR
+></TABLE
+>
+where the type constructor <TT
+CLASS="LITERAL"
+>T</TT
+> is whatever you want (usually <TT
+CLASS="LITERAL"
+>T
+a = String -&#62; a</TT
+>.  I'm not sure if this is useful, or even if it works
+properly.</P
+></DIV
+></LI
+><LI
+><DIV
+CLASS="FORMALPARA"
+><P
+><B
+> with <TT
+CLASS="LITERAL"
+>%monad</TT
+> and <TT
+CLASS="LITERAL"
+>%lexer</TT
+> . </B
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="90%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>parse      :: P <I
+CLASS="EMPHASIS"
+>t</I
+>
+happyError :: P a
+lexer      :: (Token -&#62; P a) -&#62; P a</PRE
+></TD
+></TR
+></TABLE
+></P
+></DIV
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sec-type-signatures.html"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="happy.html"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sec-error.html"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Type Signatures</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sec-using.html"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>The Error Token</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

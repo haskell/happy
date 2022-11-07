@@ -1,0 +1,37 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Chapter 4. Attribute Grammars</title><link rel="stylesheet" href="fptools.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.73.2"><link rel="start" href="index.html" title="Happy User Guide"><link rel="up" href="index.html" title="Happy User Guide"><link rel="prev" href="sec-glr-misc.html" title="3.4. Further information"><link rel="next" href="sec-AtrributeGrammarsInHappy.html" title="4.2. Attribute Grammars in Happy"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 4. Attribute Grammars</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="sec-glr-misc.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="sec-AtrributeGrammarsInHappy.html">Next</a></td></tr></table><hr></div><div class="chapter" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="sec-AttributeGrammar"></a>Chapter 4. Attribute Grammars</h2></div></div></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="sect1"><a href="sec-AttributeGrammar.html#sec-introAttributeGrammars">4.1. Introduction</a></span></dt><dt><span class="sect1"><a href="sec-AtrributeGrammarsInHappy.html">4.2. Attribute Grammars in Happy</a></span></dt><dd><dl><dt><span class="sect2"><a href="sec-AtrributeGrammarsInHappy.html#sec-declaringAttributes">4.2.1. Declaring Attributes</a></span></dt><dt><span class="sect2"><a href="sec-AtrributeGrammarsInHappy.html#sec-semanticRules">4.2.2. Semantic Rules</a></span></dt></dl></dd><dt><span class="sect1"><a href="sec-AttrGrammarLimits.html">4.3. Limits of Happy Attribute Grammars</a></span></dt><dt><span class="sect1"><a href="sec-AttributeGrammarExample.html">4.4. Example Attribute Grammars</a></span></dt></dl></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="sec-introAttributeGrammars"></a>4.1. Introduction</h2></div></div></div><p>Attribute grammars are a formalism for expressing syntax directed 
+    translation of a context-free grammar.  An introduction to attribute grammars 
+    may be found <a class="ulink" href="http://www-rocq.inria.fr/oscar/www/fnc2/manual/node32.html" target="_top">here</a>.
+    There is also an article in the Monad Reader about attribute grammars and a
+    different approach to attribute grammars using Haskell
+    <a class="ulink" href="http://www.haskell.org/tmrwiki/WhyAttributeGrammarsMatter" target="_top">here</a>.
+    </p><p>
+    The main practical difficulty that has prevented attribute grammars from
+    gaining widespread use involves evaluating the attributes.  Attribute grammars
+    generate non-trivial data dependency graphs that are difficult to evaluate
+    using mainstream languages and techniques.  The solutions generally involve
+    restricting the form of the grammars or using big hammers like topological sorts.
+    However, a language which supports lazy evaluation, such as Haskell, has no
+    problem forming complex data dependency graphs and evaluating them.  The primary
+    intellectual barrier to attribute grammar adoption seems to stem from the fact that
+    most programmers have difficulty with the declarative nature of the
+    specification.  Haskell programmers, on the other hand, have already
+    embraced a purely functional language.  In short, the Haskell language and
+    community seem like a perfect place to experiment with attribute grammars.
+    </p><p>
+    Embedding attribute grammars in Happy is easy because because Haskell supports
+    three important features: higher order functions, labeled records, and 
+    lazy evaluation.  Attributes are encoded as fields in a labeled record. The parse
+    result of each non-terminal in the grammar is a function which takes a record 
+    of inherited attributes and returns a record of synthesized attributes.  In each
+    production, the attributes of various non-terminals are bound together using
+    <code class="literal">let</code>.
+    Finally, at the end of the parse, a distinguished attribute is evaluated to be 
+    the final result.  Lazy evaluation takes care of evaluating each attribute in the 
+    correct order, resulting in an attribute grammar system that is capable of evaluating
+    a fairly large class of attribute grammars.
+    </p><p>
+    Attribute grammars in Happy do not use any language extensions, so the
+    parsers are Haskell 98 (assuming you don't use the GHC specific -g option).
+    Currently, attribute grammars cannot be generated for GLR parsers (It's not
+    exactly clear how these features should interact...)
+    </p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="sec-glr-misc.html">Prev</a> </td><td width="20%" align="center"> </td><td width="40%" align="right"> <a accesskey="n" href="sec-AtrributeGrammarsInHappy.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">3.4. Further information </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 4.2. Attribute Grammars in Happy</td></tr></table></div></body></html>

@@ -1,0 +1,130 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>6.3. Directives</title><link rel="stylesheet" href="fptools.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.73.2"><link rel="start" href="index.html" title="Happy User Guide"><link rel="up" href="sec-grammar-files.html" title="Chapter 6. Syntax of Grammar Files"><link rel="prev" href="sec-module-header.html" title="6.2. Module Header"><link rel="next" href="sec-grammar.html" title="6.4. Grammar"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">6.3. Directives</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="sec-module-header.html">Prev</a> </td><th width="60%" align="center">Chapter 6. Syntax of Grammar Files</th><td width="20%" align="right"> <a accesskey="n" href="sec-grammar.html">Next</a></td></tr></table><hr></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="sec-directives"></a>6.3. Directives</h2></div></div></div><p>This section contains a number of lines of the form:</p><pre class="programlisting">
+%&lt;directive name&gt; &lt;argument&gt; ...
+</pre><p>The statements here are all annotations to help
+      <span class="application">Happy</span> generate the Haskell code for the grammar.
+      Some of them are optional, and some of them are required.</p><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="sec-token-type"></a>6.3.1. Token Type</h3></div></div></div><pre class="programlisting">
+%tokentype   { &lt;valid Haskell type&gt; }
+</pre><a class="indexterm" name="id617916"></a><p>(mandatory) The <code class="literal">%tokentype</code> directive gives the
+        type of the tokens passed from the lexical analyser to the
+        parser (in order that <span class="application">Happy</span> can supply types for
+        functions and data in the generated parser).</p></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="sec-tokens"></a>6.3.2. Tokens</h3></div></div></div><pre class="programlisting">
+%token &lt;name&gt; { &lt;Haskell pattern&gt; }
+       &lt;name&gt; { &lt;Haskell pattern&gt; }
+       ...
+</pre><a class="indexterm" name="id617958"></a><p>(mandatory) The <code class="literal">%token</code> directive is used to
+        tell <span class="application">Happy</span> about all the terminal symbols used
+        in the grammar.  Each terminal has a name, by which it is
+        referred to in the grammar itself, and a Haskell
+        representation enclosed in braces.  Each of the patterns must
+        be of the same type, given by the <code class="literal">%tokentype</code>
+        directive.</p><p>The name of each terminal follows the lexical rules for
+        <span class="application">Happy</span> identifiers given above.  There are no
+        lexical differences between terminals and non-terminals in the
+        grammar, so it is recommended that you stick to a convention;
+        for example using upper case letters for terminals and lower
+        case for non-terminals, or vice-versa.</p><p><span class="application">Happy</span> will give you a warning if you try
+        to use the same identifier both as a non-terminal and a
+        terminal, or introduce an identifier which is declared as
+        neither.</p><p>To save writing lots of projection functions that map
+        tokens to their components, you can include
+        <code class="literal">$$</code> in your Haskell pattern. For
+        example:</p><a class="indexterm" name="id618021"></a><pre class="programlisting">
+%token INT { TokenInt $$ }
+       ...
+</pre><p>This makes the semantic value of <code class="literal">INT</code> refer to the first argument
+of <code class="literal">TokenInt</code> rather than the whole token, eliminating the need for
+any projection function.</p></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="sec-parser-name"></a>6.3.3. Parser Name</h3></div></div></div><pre class="programlisting">
+%name &lt;Haskell identifier&gt; [ &lt;non-terminal&gt; ]
+...
+</pre><a class="indexterm" name="id618066"></a><p>(optional) The <code class="literal">%name</code> directive is followed by
+        a valid Haskell identifier, and gives the name of the
+        top-level parsing function in the generated parser.  This is
+        the only function that needs to be exported from a parser
+        module.</p><p>If the <code class="literal">%name</code> directive is omitted, it
+        defaults to <code class="literal">happyParse</code>.</p><a class="indexterm" name="id618102"></a><p>The <code class="literal">%name</code> directive takes an optional
+	second parameter which specifies the top-level non-terminal
+	which is to be parsed.  If this parameter is omitted, it
+	defaults to the first non-terminal defined in the
+	grammar.</p><p>Multiple <code class="literal">%name</code> directives may be
+	given, specifying multiple parser entry points for this
+	grammar (see <a class="xref" href="sec-multiple-parsers.html" title="2.7. Generating Multiple Parsers From a Single Grammar">Section 2.7, &#8220;Generating Multiple Parsers From a Single Grammar&#8221;</a>).  When
+	multiple <code class="literal">%name</code> directives are given, they
+	must all specify explicit non-terminals.</p></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="sec-partial-parsers"></a>6.3.4. Partial Parsers</h3></div></div></div><pre class="programlisting">
+%partial &lt;Haskell identifier&gt; [ &lt;non-terminal&gt; ]
+...
+</pre><a class="indexterm" name="id618157"></a><p>The <code class="literal">%partial</code> directive can be used instead of
+	  <code class="literal">%name</code>.  It indicates that the generated parser
+	  should be able to parse an initial portion of the input.  In
+	  contrast, a parser specified with <code class="literal">%name</code> will only
+	  parse the entire input.</p><p>A parser specified with <code class="literal">%partial</code> will stop
+	  parsing and return a result as soon as there exists a complete parse,
+	  and no more of the input can be parsed.  It does this by accepting
+	  the parse if it is followed by the <code class="literal">error</code> token,
+	  rather than insisting that the parse is followed by the
+	  end of the token stream (or the <code class="literal">eof</code> token in the
+	  case of a <code class="literal">%lexer</code> parser).</p></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="sec-monad-decl"></a>6.3.5. Monad Directive</h3></div></div></div><pre class="programlisting">
+%monad { &lt;type&gt; } { &lt;then&gt; } { &lt;return&gt; }
+</pre><a class="indexterm" name="id618229"></a><p>(optional) The <code class="literal">%monad</code> directive takes three
+        arguments: the type constructor of the monad, the
+        <code class="literal">then</code> (or <code class="literal">bind</code>) operation, and the
+        <code class="literal">return</code> (or <code class="literal">unit</code>) operation.  The type
+        constructor can be any type with kind <code class="literal">* -&gt; *</code>.</p><p>Monad declarations are described in more detail in <a class="xref" href="sec-monads.html" title="2.5. Monadic Parsers">Section 2.5, &#8220;Monadic Parsers&#8221;</a>.</p></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="sec-lexer-decl"></a>6.3.6. Lexical Analyser</h3></div></div></div><pre class="programlisting">
+%lexer { &lt;lexer&gt; } { &lt;eof&gt; }
+</pre><a class="indexterm" name="id618297"></a><p>(optional) The <code class="literal">%lexer</code> directive takes two
+        arguments: <code class="literal">&lt;lexer&gt;</code> is the name of the lexical
+        analyser function, and <code class="literal">&lt;eof&gt;</code> is a token that
+        is to be treated as the end of file.</p><p>Lexer declarations are described in more detail in <a class="xref" href="sec-monads.html#sec-lexers" title="2.5.2. Threaded Lexers">Section 2.5.2, &#8220;Threaded Lexers&#8221;</a>.</p></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="sec-prec-decls"></a>6.3.7. Precedence declarations</h3></div></div></div><pre class="programlisting">
+%left     &lt;name&gt; ...
+%right    &lt;name&gt; ...
+%nonassoc &lt;name&gt; ...
+</pre><a class="indexterm" name="id618351"></a><a class="indexterm" name="id618363"></a><a class="indexterm" name="id618376"></a><p>These declarations are used to specify the precedences
+	and associativity of tokens.  The precedence assigned by a
+	<code class="literal">%left</code>, <code class="literal">%right</code> or
+	<code class="literal">%nonassoc</code> declaration is defined to be
+	higher than the precedence assigned by all declarations
+	earlier in the file, and lower than the precedence assigned by
+	all declarations later in the file.</p><p>The associativity of a token relative to tokens in the
+	same <code class="literal">%left</code>, <code class="literal">%right</code>, or
+	<code class="literal">%nonassoc</code> declaration is to the left, to
+	the right, or non-associative respectively.</p><p>Precedence declarations are described in more detail in
+	<a class="xref" href="sec-Precedences.html" title="2.3. Using Precedences">Section 2.3, &#8220;Using Precedences&#8221;</a>.</p></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="sec-expect"></a>6.3.8. Expect declarations</h3></div></div></div><pre class="programlisting">
+%expect &lt;number&gt;
+</pre><a class="indexterm" name="id618452"></a><p>(optional) More often than not the grammar you write
+	will have conflicts. These conflicts generate warnings. But
+	when you have checked the warnings and made sure that Happy
+	handles them correctly these warnings are just annoying. The
+	<code class="literal">%expect</code> directive gives a way of avoiding
+	them. Declaring <code class="literal">%expect
+	<em class="replaceable"><code>n</code></em></code> is a way of telling
+	Happy &#8220;There are exactly <em class="replaceable"><code>n</code></em>
+	shift/reduce conflicts and zero reduce/reduce conflicts in
+	this grammar. I promise I have checked them and they are
+	resolved correctly&#8221;.  When processing the grammar, Happy
+	will check the actual number of conflicts against the
+	<code class="literal">%expect</code> declaration if any, and if there is
+	a discrepancy then an error will be reported.</p><p>Happy's <code class="literal">%expect</code> directive works
+	exactly like that of yacc.</p></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="sec-error-directive"></a>6.3.9. Error declaration</h3></div></div></div><pre class="programlisting">
+%error { &lt;identifier&gt; }
+</pre><a class="indexterm" name="id618519"></a><p>Specifies the function to be called in the event of a
+	parse error.  The type of <code class="literal">&lt;f&gt;</code> varies
+	depending on the presence of <code class="literal">%lexer</code> (see
+	<a class="xref" href="sec-monads.html#sec-monad-summary" title="2.5.4. Summary">Section 2.5.4, &#8220;Summary&#8221;</a>).</p></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="sec-attributes"></a>6.3.10. Attribute Type Declaration</h3></div></div></div><pre class="programlisting">
+%attributetype { &lt;valid Haskell type declaration&gt; }
+</pre><a class="indexterm" name="id618564"></a><p>(optional) This directive allows you to declare the type of the
+	attributes record when defining an attribute grammar.  If this declaration
+	is not given, Happy will choose a default.  This declaration may only
+	appear once in a grammar.
+	</p><p>
+	  Attribute grammars are explained in <a class="xref" href="sec-AttributeGrammar.html" title="Chapter 4. Attribute Grammars">Chapter 4, <i>Attribute Grammars</i></a>.
+	</p></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="sec-attribute"></a>6.3.11. Attribute declaration</h3></div></div></div><pre class="programlisting">
+%attribute &lt;Haskell identifier&gt; { &lt;valid Haskell type&gt; }
+</pre><a class="indexterm" name="id618604"></a><p>The presence of one or more of these directives declares that the
+       grammar is an attribute grammar.  The first attribute listed becomes the
+       default attribute.  Each <code class="literal">%attribute</code> directive generates a
+       field in the attributes record with the given label and type.  If there
+       is an <code class="literal">%attributetype</code> declaration in the grammar which 
+       introduces type variables, then the type of an attribute may mention any
+       such type variables.
+       </p><p>
+       Attribute grammars are explained in <a class="xref" href="sec-AttributeGrammar.html" title="Chapter 4. Attribute Grammars">Chapter 4, <i>Attribute Grammars</i></a>.
+       </p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="sec-module-header.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="sec-grammar-files.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="sec-grammar.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">6.2. Module Header </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 6.4. Grammar</td></tr></table></div></body></html>

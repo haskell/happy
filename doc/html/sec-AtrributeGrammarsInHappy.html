@@ -1,0 +1,110 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>4.2. Attribute Grammars in Happy</title><link rel="stylesheet" href="fptools.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.73.2"><link rel="start" href="index.html" title="Happy User Guide"><link rel="up" href="sec-AttributeGrammar.html" title="Chapter 4. Attribute Grammars"><link rel="prev" href="sec-AttributeGrammar.html" title="Chapter 4. Attribute Grammars"><link rel="next" href="sec-AttrGrammarLimits.html" title="4.3. Limits of Happy Attribute Grammars"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">4.2. Attribute Grammars in Happy</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="sec-AttributeGrammar.html">Prev</a> </td><th width="60%" align="center">Chapter 4. Attribute Grammars</th><td width="20%" align="right"> <a accesskey="n" href="sec-AttrGrammarLimits.html">Next</a></td></tr></table><hr></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="sec-AtrributeGrammarsInHappy"></a>4.2. Attribute Grammars in Happy</h2></div></div></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="sec-declaringAttributes"></a>4.2.1. Declaring Attributes</h3></div></div></div><p>
+      The presence of one or more <code class="literal">%attribute</code> directives indicates
+      that a grammar is an attribute grammar.  Attributes are calculated properties 
+      that are associated with the non-terminals in a parse tree.  Each
+      <code class="literal">%attribute</code> directive generates a field in the attributes
+      record with the given name and type.
+      </p><p>
+      The first <code class="literal">%attribute</code>
+      directive in a grammar defines the default attribute.  The
+      default attribute is distinguished in two ways: 1) if no attribute specifier is 
+      given on an attribute reference,
+      the default attribute is assumed (see <a class="xref" href="sec-AtrributeGrammarsInHappy.html#sec-semanticRules" title="4.2.2. Semantic Rules">Section 4.2.2, &#8220;Semantic Rules&#8221;</a>)
+      and 2) the value for the default attribute of the starting non-terminal becomes the 
+      return value of the parse.
+      </p><p>
+      Optionally, one may specify a type declaration for the attribute record using
+      the <code class="literal">%attributetype</code> declaration.  This allows you to define the
+      type given to the attribute record and, more importantly, allows you to introduce
+      type variables that can be subsequently used in <code class="literal">%attribute</code> 
+      declarations.  If the <code class="literal">%attributetype</code> directive is given without
+      any <code class="literal">%attribute</code> declarations, then the <code class="literal">%attributetype</code>
+      declaration has no effect.
+      </p><p>
+      For example, the following declarations:
+      </p><pre class="programlisting">
+%attributetype { MyAttributes a }
+%attribute value { a }
+%attribute num   { Int }
+%attribute label { String }
+</pre><p>
+      would generate this attribute record declaration in the parser:
+      </p><pre class="programlisting">
+data MyAttributes a =
+   HappyAttributes {
+     value :: a,
+     num :: Int,
+     label :: String
+   }
+</pre><p>
+       and <code class="literal">value</code> would be the default attribute.
+       </p></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="sec-semanticRules"></a>4.2.2. Semantic Rules</h3></div></div></div><p>In an ordinary Happy grammar, a production consists of a list
+      of terminals and/or non-terminals followed by an uninterpreted
+      code fragment enclosed in braces.  With an attribute grammar, the 
+      format is very similar, but the braces enclose a set of semantic rules
+      rather than uninterpreted Haskell code.  Each semantic rule is either
+      an attribute calculation or a conditional, and rules are separated by
+      semicolons<sup>[<a name="id616930" href="#ftn.id616930" class="footnote">3</a>]</sup>.
+      </p><p>
+      Both attribute calculations and conditionals may contain attribute references
+      and/or terminal references.  Just like regular Happy grammars, the tokens 
+      <code class="literal">$1</code> through <code class="literal">$&lt;n&gt;</code>, where 
+      <code class="literal">n</code> is the number of symbols in the production, refer to
+      subtrees of the parse.  If the referenced symbol is a terminal, then the
+      value of the reference is just the value of the terminal, the same way as
+      in a regular Happy grammar.  If the referenced symbol is a non-terminal, 
+      then the reference may be followed by an attribute specifier, which is 
+      a dot followed by an attribute name.  If the attribute specifier is omitted,
+      then the default attribute is assumed (the default attribute is the first
+      attribute appearing in an <code class="literal">%attribute</code> declaration).
+      The special reference <code class="literal">$$</code> references the
+      attributes of the current node in the parse tree; it behaves exactly
+      like the numbered references.  Additionally, the reference <code class="literal">$&gt;</code>
+      always references the rightmost symbol in the production.
+      </p><p>      
+      An attribute calculation rule is of the form:
+      </p><pre class="programlisting">
+&lt;attribute reference&gt; = &lt;Haskell expression&gt;
+</pre><p>
+      A rule of this form defines the value of an attribute, possibly as a function
+      of the attributes of <code class="literal">$$</code> (inherited attributes), the attributes
+      of non-terminals in the production (synthesized attributes), or the values of
+      terminals in the production.  The value for an attribute can only
+      be defined once for a particular production.
+      </p><p>
+      The following rule calculates the default attribute of the current production in
+      terms of the first and second items of the production (a synthesized attribute):
+      </p><pre class="programlisting">
+$$ = $1 : $2
+</pre><p>
+      This rule calculates the length attribute of a non-terminal in terms of the
+      length of the current non-terminal (an inherited attribute):
+      </p><pre class="programlisting">
+$1.length = $$.length + 1
+</pre><p>
+      Conditional rules allow the rejection of strings due to context-sensitive properties.
+      All conditional rules have the form:
+      </p><pre class="programlisting">
+where &lt;Haskell expression&gt;
+</pre><p>
+      For non-monadic parsers, all conditional expressions
+      must be of the same (monomorphic) type.  At
+      the end of the parse, the conditionals will be reduced using 
+      <code class="literal">seq</code>, which gives the grammar an opportunity to call 
+      <code class="literal">error</code> with an informative message.  For monadic parsers,
+      all conditional statements must have type <code class="literal">Monad m =&gt; m ()</code> where
+      <code class="literal">m</code> is the monad in which the parser operates.  All conditionals
+      will be sequenced at the end of the parse, which allows the conditionals to call
+      <code class="literal">fail</code> with an informative message.
+      </p><p>
+      The following conditional rule will cause the (non-monadic) parser to fail
+      if the inherited length attribute is not 0.
+      </p><pre class="programlisting">
+where if $$.length == 0 then () else error "length not equal to 0"
+</pre><p>
+      This conditional is the monadic equivalent:
+      </p><pre class="programlisting">
+where unless ($$.length == 0) (fail "length not equal to 0")
+</pre></div><div class="footnotes"><br><hr width="100" align="left"><div class="footnote"><p><sup>[<a name="ftn.id616930" href="#id616930" class="para">3</a>] </sup>Note that semantic rules must not rely on
+      layout, because whitespace alignment is not guaranteed to be 
+      preserved</p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="sec-AttributeGrammar.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="sec-AttributeGrammar.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="sec-AttrGrammarLimits.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 4. Attribute Grammars </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 4.3. Limits of Happy Attribute Grammars</td></tr></table></div></body></html>

@@ -1,0 +1,31 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>2.4. Type Signatures</title><link rel="stylesheet" href="fptools.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.73.2"><link rel="start" href="index.html" title="Happy User Guide"><link rel="up" href="sec-using.html" title="Chapter 2. Using Happy"><link rel="prev" href="sec-Precedences.html" title="2.3. Using Precedences"><link rel="next" href="sec-monads.html" title="2.5. Monadic Parsers"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.4. Type Signatures</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="sec-Precedences.html">Prev</a> </td><th width="60%" align="center">Chapter 2. Using <span class="application">Happy</span></th><td width="20%" align="right"> <a accesskey="n" href="sec-monads.html">Next</a></td></tr></table><hr></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="sec-type-signatures"></a>2.4. Type Signatures</h2></div></div></div><a class="indexterm" name="id613844"></a><p><span class="application">Happy</span> allows you to include type signatures
+      in the grammar file itself, to indicate the type of each
+      production.  This has several benefits:</p><div class="itemizedlist"><ul type="disc"><li><p> Documentation: including types in the grammar helps
+          to document the grammar for someone else (and indeed
+          yourself) reading the code.</p></li><li><p> Fixing type errors in the generated module can become
+          slightly easier if <span class="application">Happy</span> has inserted type
+          signatures for you.  This is a slightly dubious benefit,
+          since type errors in the generated module are still somewhat
+          difficult to find.  </p></li><li><p> Type signatures generally help the Haskell compiler
+          to compile the parser faster.  This is important when really
+          large grammar files are being used.</p></li></ul></div><p>The syntax for type signatures in the grammar file is as
+      follows:</p><pre class="programlisting">
+stmts   :: { [ Stmt ] }
+stmts   : stmts stmt                { $2 : $1 }
+	| stmt                      { [$1] }
+</pre><p>In fact, you can leave out the superfluous occurrence of
+      <code class="literal">stmts</code>:</p><pre class="programlisting">
+stmts   :: { [ Stmt ] }
+	: stmts stmt                { $2 : $1 }
+	| stmt                      { [$1] }
+</pre><p>Note that currently, you have to include type signatures
+      for <span class="emphasis"><em>all</em></span> the productions in the grammar to benefit
+      from the second and third points above.  This is due to boring
+      technical reasons, but it is hoped that this restriction can be
+      removed in the future.</p><p>It is possible to have productions with polymorphic or overloaded
+	types.  However, because the type of each production becomes the
+	argument type of a constructor in an algebraic datatype in the
+	generated source file, compiling the generated file requires a compiler
+	that supports local universal quantification.  GHC (with the
+	<code class="option">-fglasgow-exts</code> option) and Hugs are known to support
+	this.</p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="sec-Precedences.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="sec-using.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="sec-monads.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">2.3. Using Precedences </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 2.5. Monadic Parsers</td></tr></table></div></body></html>

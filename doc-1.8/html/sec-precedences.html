@@ -1,0 +1,490 @@
+<HTML
+><HEAD
+><TITLE
+>Using Precedences</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.44"><LINK
+REL="HOME"
+TITLE="Happy User Guide"
+HREF="happy.html"><LINK
+REL="UP"
+TITLE="Using Happy"
+HREF="sec-using.html"><LINK
+REL="PREVIOUS"
+TITLE="Ambiguities"
+HREF="sec-ambiguities.html"><LINK
+REL="NEXT"
+TITLE="Type Signatures"
+HREF="sec-type-signatures.html"></HEAD
+><BODY
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Happy User Guide</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="sec-ambiguities.html"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 2. Using <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="sec-type-signatures.html"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="SEC-PRECEDENCES"
+>2.4. Using Precedences</A
+></H1
+><P
+>Going back to our earlier expression-parsing example,
+      wouldn't it be nicer if we didn't have to explicitly separate
+      the expressions into terms and factors, merely to make it
+      clear that <TT
+CLASS="LITERAL"
+>'*'</TT
+> and <TT
+CLASS="LITERAL"
+>'/'</TT
+>
+      operators bind more tightly than <TT
+CLASS="LITERAL"
+>'+'</TT
+> and
+      <TT
+CLASS="LITERAL"
+>'-'</TT
+>?</P
+><P
+>We could just change the grammar as follows (making the
+      appropriate changes to the expression datatype too):</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>Exp   : let var '=' Exp in Exp  { Let $2 $4 $6 }
+      | Exp '+' Exp             { Plus $1 $3 }
+      | Exp '-' Exp             { Minus $1 $3 }
+      | Exp '*' Exp             { Times $1 $3 }
+      | Exp '/' Exp             { Div $1 $3 }
+      | '(' Exp ')'             { Brack $2 }
+      | int                     { Int $1 }
+      | var                     { Var $1 }</PRE
+></TD
+></TR
+></TABLE
+><P
+>but now Happy will complain that there are shift/reduce
+      conflicts because the grammar is ambiguous - we haven't
+      specified whether e.g. <TT
+CLASS="LITERAL"
+>1 + 2 * 3</TT
+> is to be
+      parsed as <TT
+CLASS="LITERAL"
+>1 + (2 * 3)</TT
+> or <TT
+CLASS="LITERAL"
+>(1 + 2) *
+      3</TT
+>.  Happy allows these ambiguities to be resolved by
+      specifying the <I
+CLASS="FIRSTTERM"
+>precedences</I
+> of the
+      operators involved using directives in the
+      header<A
+NAME="AEN300"
+HREF="#FTN.AEN300"
+>[1]</A
+>:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>...
+%right in
+%left '+' '-'
+%left '*' '/'
+%%
+...</PRE
+></TD
+></TR
+></TABLE
+><P
+>The <TT
+CLASS="LITERAL"
+>%left</TT
+> or <TT
+CLASS="LITERAL"
+>%right</TT
+>
+      directive is followed by a list of terminals, and declares all
+      these tokens to be left or right-associative respectively.  The
+      precedence of these tokens with respect to other tokens is
+      established by the order of the <TT
+CLASS="LITERAL"
+>%left</TT
+> and
+      <TT
+CLASS="LITERAL"
+>%right</TT
+> directives: earlier means lower
+      precedence.  A higher precedence causes an operator to bind more
+      tightly; in our example above, because <TT
+CLASS="LITERAL"
+>'*'</TT
+>
+      has a higher precedence than <TT
+CLASS="LITERAL"
+>'+'</TT
+>, the
+      expression <TT
+CLASS="LITERAL"
+>1 + 2 * 3</TT
+> will parse as <TT
+CLASS="LITERAL"
+>1
+      + (2 * 3)</TT
+>.</P
+><P
+>What happens when two operators have the same precedence?
+      This is when the <I
+CLASS="FIRSTTERM"
+>associativity</I
+> comes into
+      play.  Operators specified as left associative will cause
+      expressions like <TT
+CLASS="LITERAL"
+>1 + 2 - 3</TT
+> to parse as
+      <TT
+CLASS="LITERAL"
+>(1 + 2) - 3</TT
+>, whereas right-associative
+      operators would parse as <TT
+CLASS="LITERAL"
+>1 + (2 - 3)</TT
+>.  There
+      is also a <TT
+CLASS="LITERAL"
+>%nonassoc</TT
+> directive which indicates
+      that the specified operators may not be used together.  For
+      example, if we add the comparison operators
+      <TT
+CLASS="LITERAL"
+>'&#62;'</TT
+> and <TT
+CLASS="LITERAL"
+>'&#60;'</TT
+> to our
+      grammar, then we would probably give their precedence as:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>...
+%nonassoc '&#62;' '&#60;'
+%right in
+%left '+' '-'
+%left '*' '/'
+%%
+...</PRE
+></TD
+></TR
+></TABLE
+><P
+>which indicates that <TT
+CLASS="LITERAL"
+>'&#62;'</TT
+> and
+      <TT
+CLASS="LITERAL"
+>'&#60;'</TT
+> bind less tightly than the other
+      operators, and the non-associativity causes expressions such as
+      <TT
+CLASS="LITERAL"
+>1 &#62; 2 &#62; 3</TT
+> to be disallowed.</P
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="HOW-PRECEDENCE-WORKS"
+>2.4.1. How precedence works</A
+></H2
+><P
+>The precedence directives, <TT
+CLASS="LITERAL"
+>%left</TT
+>,
+	<TT
+CLASS="LITERAL"
+>%right</TT
+> and <TT
+CLASS="LITERAL"
+>%nonassoc</TT
+>,
+	assign precedence levels to the tokens in the declaration.  A
+	rule in the grammar may also have a precedence: if the last
+	terminal in the left hand side of the rule has a precedence,
+	then this is the precedence of the whole rule.</P
+><P
+>The precedences are used to resolve ambiguities in the
+	grammar.  If there is a shift/reduce conflict, then the
+	precedence of the rule and the lookahead token are examined in
+	order to resolve the conflict:</P
+><P
+></P
+><UL
+><LI
+><P
+>If the precedence of the rule is higher, then the
+	    conflict is resolved as a reduce.</P
+></LI
+><LI
+><P
+>If the precedence of the lookahead token is higher,
+	    then the conflict is resolved as a shift.</P
+></LI
+><LI
+><P
+>If the precedences are equal, then</P
+><P
+></P
+><UL
+><LI
+><P
+>If the token is left-associative, then reduce</P
+></LI
+><LI
+><P
+>If the token is right-associative, then shift</P
+></LI
+><LI
+><P
+>If the token is non-associative, then fail</P
+></LI
+></UL
+></LI
+><LI
+><P
+>If either the rule or the token has no precedence,
+	    then the default is to shift (these conflicts are reported
+	    by Happy, whereas ones that are automatically resolved by
+	    the precedence rules are not).</P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="SECT2"
+><H2
+CLASS="SECT2"
+><A
+NAME="CONTEXT-PRECEDENCE"
+>2.4.2. Context-dependent Precedence</A
+></H2
+><P
+>The precedence of an individual rule can be overriden,
+	using <I
+CLASS="FIRSTTERM"
+>context precedence</I
+>.  This is
+	useful when, for example, a particular token has a different
+	precedence depending on the context.  A common example is the
+	minus sign: it has high precedence when used as prefix
+	negation, but a lower precedence when used as binary
+	subtraction.</P
+><P
+>We can implement this in Happy as follows:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>&#13;%nonassoc '&#62;' '&#60;'
+%right in
+%left '+' '-'
+%left '*' '/'
+%left NEG
+%%
+
+Exp   : let var '=' Exp in Exp  { Let $2 $4 $6 }
+      | Exp '+' Exp             { Plus $1 $3 }
+      | Exp '-' Exp             { Minus $1 $3 }
+      | Exp '*' Exp             { Times $1 $3 }
+      | Exp '/' Exp             { Div $1 $3 }
+      | '(' Exp ')'             { Brack $2 }
+      | '-' Exp %prec NEG       { Negate $2 }
+      | int                     { Int $1 }
+      | var                     { Var $1 }</PRE
+></TD
+></TR
+></TABLE
+><P
+>We invent a new token <TT
+CLASS="LITERAL"
+>NEG</TT
+> as a
+	placeholder for the precedence of our prefix negation rule.
+	The <TT
+CLASS="LITERAL"
+>NEG</TT
+> token doesn't need to appear in
+	a <TT
+CLASS="LITERAL"
+>%token</TT
+> directive.  The prefix negation
+	rule has a <TT
+CLASS="LITERAL"
+>%prec NEG</TT
+> directive attached,
+	which overrides the default precedence for the rule (which
+	would normally be the precedence of '-') with the precedence
+	of <TT
+CLASS="LITERAL"
+>NEG</TT
+>.</P
+></DIV
+></DIV
+><H3
+>Notes</H3
+><TABLE
+BORDER="0"
+CLASS="FOOTNOTES"
+WIDTH="100%"
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+WIDTH="5%"
+><A
+NAME="FTN.AEN300"
+HREF="sec-precedences.html#AEN300"
+>[1]</A
+></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+WIDTH="95%"
+><P
+>Users of <TT
+CLASS="LITERAL"
+>yacc</TT
+> will find
+      this familiar, Happy's precedence scheme works in exactly the
+      same way.</P
+></TD
+></TR
+></TABLE
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sec-ambiguities.html"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="happy.html"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sec-type-signatures.html"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Ambiguities</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sec-using.html"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Type Signatures</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

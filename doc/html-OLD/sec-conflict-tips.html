@@ -1,0 +1,66 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>8.4. Conflict Tips</title><link rel="stylesheet" href="fptools.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.73.2"><link rel="start" href="index.html" title="Happy User Guide"><link rel="up" href="sec-tips.html" title="Chapter 8. Tips"><link rel="prev" href="sec-finding-errors.html" title="8.3. Finding Type Errors"><link rel="next" href="sec-happy-ghci.html" title="8.5. Using Happy with GHCi"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">8.4. Conflict Tips</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="sec-finding-errors.html">Prev</a> </td><th width="60%" align="center">Chapter 8. Tips</th><td width="20%" align="right"> <a accesskey="n" href="sec-happy-ghci.html">Next</a></td></tr></table><hr></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="sec-conflict-tips"></a>8.4. Conflict Tips</h2></div></div></div><a class="indexterm" name="id521429"></a><p>Conflicts arise from ambiguities in the grammar.  That is,
+      some input sequences may possess more than one parse.
+      Shift/reduce conflicts are benign in the sense that they are
+      easily resolved (<span class="application">Happy</span> automatically selects the
+      shift action, as this is usually the intended one).
+      Reduce/reduce conflicts are more serious.  A reduce/reduce
+      conflict implies that a certain sequence of tokens on the input
+      can represent more than one non-terminal, and the parser is
+      uncertain as to which reduction rule to use.  It will select the
+      reduction rule uppermost in the grammar file, so if you really
+      must have a reduce/reduce conflict you can select which rule
+      will be used by putting it first in your grammar file.</p><p>It is usually possible to remove conflicts from the
+      grammar, but sometimes this is at the expense of clarity and
+      simplicity.  Here is a cut-down example from the grammar of
+      Haskell (1.2):</p><pre class="programlisting">
+exp     : exp op exp0
+        | exp0
+
+exp0    : if exp then exp else exp
+        ...
+        | atom
+
+atom    : var
+        | integer
+        | '(' exp ')'
+        ...
+</pre><p>This grammar has a shift/reduce conflict, due to the
+      following ambiguity.  In an input such as</p><pre class="programlisting">
+if 1 then 2 else 3 + 4
+</pre><p>the grammar doesn't specify whether the parse should be</p><pre class="programlisting">
+if 1 then 2 else (3 + 4)
+</pre><p>or</p><pre class="programlisting">
+(if 1 then 2 else 3) + 4
+</pre><p>and the ambiguity shows up as a shift/reduce conflict on
+      reading the 'op' symbol.  In this case, the first parse is the
+      intended one (the 'longest parse' rule), which corresponds to
+      the shift action.  Removing this conflict relies on noticing
+      that the expression on the left-hand side of an infix operator
+      can't be an <code class="literal">exp0</code> (the grammar previously said
+      otherwise, but since the conflict was resolved as shift, this
+      parse was not allowed).  We can reformulate the
+      <code class="literal">exp</code> rule as:</p><pre class="programlisting">
+exp     : atom op exp
+        | exp0
+</pre><p>and this removes the conflict, but at the expense of some
+      stack space while parsing (we turned a left-recursion into a
+      right-recursion).  There are alternatives using left-recursion,
+      but they all involve adding extra states to the parser, so most
+      programmers will prefer to keep the conflict in favour of a
+      clearer and more efficient parser.</p><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="sec-lalr"></a>8.4.1. LALR(1) parsers</h3></div></div></div><p>There are three basic ways to build a shift-reduce
+        parser.  Full LR(1) (the `L' is the direction in which the
+        input is scanned, the `R' is the way in which the parse is
+        built, and the `1' is the number of tokens of lookahead)
+        generates a parser with many states, and is therefore large
+        and slow.  SLR(1) (simple LR(1)) is a cut-down version of
+        LR(1) which generates parsers with roughly one-tenth as many
+        states, but lacks the power to parse many grammars (it finds
+        conflicts in grammars which have none under LR(1)). </p><p>LALR(1) (look-ahead LR(1)), the method used by
+        <span class="application">Happy</span> and
+        <span class="application">yacc</span>, is tradeoff between the two.
+        An LALR(1) parser has the same number of states as an SLR(1)
+        parser, but it uses a more complex method to calculate the
+        lookahead tokens that are valid at each point, and resolves
+        many of the conflicts that SLR(1) finds.  However, there may
+        still be conflicts in an LALR(1) parser that wouldn't be there
+        with full LR(1).</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="sec-finding-errors.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="sec-tips.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="sec-happy-ghci.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">8.3. Finding Type Errors </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 8.5. Using Happy with <span class="application">GHCi</span></td></tr></table></div></body></html>

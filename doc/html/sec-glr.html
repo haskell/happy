@@ -1,0 +1,122 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Chapter 3. Generalized LR Parsing</title><link rel="stylesheet" href="fptools.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.73.2"><link rel="start" href="index.html" title="Happy User Guide"><link rel="up" href="index.html" title="Happy User Guide"><link rel="prev" href="sec-multiple-parsers.html" title="2.7. Generating Multiple Parsers From a Single Grammar"><link rel="next" href="sec-glr-using.html" title="3.2. Basic use of a Happy-generated GLR parser"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 3. Generalized LR Parsing</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="sec-multiple-parsers.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> <a accesskey="n" href="sec-glr-using.html">Next</a></td></tr></table><hr></div><div class="chapter" lang="en"><div class="titlepage"><div><div><h2 class="title"><a name="sec-glr"></a>Chapter 3. Generalized LR Parsing</h2></div><div><p class="copyright">Copyright © 2004 University of Durham, Paul Callaghan, Ben Medlock</p></div></div></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><span class="sect1"><a href="sec-glr.html#sec-glr-intro">3.1. Introduction</a></span></dt><dt><span class="sect1"><a href="sec-glr-using.html">3.2. Basic use of a Happy-generated GLR parser</a></span></dt><dd><dl><dt><span class="sect2"><a href="sec-glr-using.html#sec-glr-using-intro">3.2.1. Overview</a></span></dt><dt><span class="sect2"><a href="sec-glr-using.html#sec-glr-using-main">3.2.2. The main function</a></span></dt><dt><span class="sect2"><a href="sec-glr-using.html#sec-glr-using-input">3.2.3. The input</a></span></dt><dt><span class="sect2"><a href="sec-glr-using.html#sec-glr-using-output">3.2.4. The Parse Result</a></span></dt><dt><span class="sect2"><a href="sec-glr-using.html#sec-glr-using-compiling">3.2.5. Compiling the parser</a></span></dt></dl></dd><dt><span class="sect1"><a href="sec-glr-semantics.html">3.3. Including semantic results</a></span></dt><dd><dl><dt><span class="sect2"><a href="sec-glr-semantics.html#sec-glr-semantics-intro">3.3.1. Forms of semantics</a></span></dt><dt><span class="sect2"><a href="sec-glr-semantics.html#sec-glr-semantics-tree">3.3.2. Tree decoding</a></span></dt><dt><span class="sect2"><a href="sec-glr-semantics.html#sec-glr-semantics-label">3.3.3. Label decoding</a></span></dt><dt><span class="sect2"><a href="sec-glr-semantics.html#sec-glr-semantics-tree-monad">3.3.4. Monadic tree decoding</a></span></dt></dl></dd><dt><span class="sect1"><a href="sec-glr-misc.html">3.4. Further information</a></span></dt><dd><dl><dt><span class="sect2"><a href="sec-glr-misc.html#sec-glr-misc-examples">3.4.1. The GLR examples</a></span></dt><dt><span class="sect2"><a href="sec-glr-misc.html#sec-glr-misc-graphs">3.4.2. Viewing forests as graphs</a></span></dt><dt><span class="sect2"><a href="sec-glr-misc.html#sec-glr-misc-applications">3.4.3. Some Applications of GLR parsing</a></span></dt><dt><span class="sect2"><a href="sec-glr-misc.html#sec-glr-misc-workings">3.4.4. Technical details</a></span></dt><dt><span class="sect2"><a href="sec-glr-misc.html#sec-glr-misc-filter">3.4.5. The <code class="option">--filter</code> option</a></span></dt><dt><span class="sect2"><a href="sec-glr-misc.html#sec-glr-misc-limitations">3.4.6. Limitations and future work</a></span></dt><dt><span class="sect2"><a href="sec-glr-misc.html#sec-glr-misc-acknowledgements">3.4.7. Thanks and acknowledgements</a></span></dt></dl></dd></dl></div><p>This chapter explains how to use the GLR parsing extension,
+    which allows <span class="application">Happy</span> to parse ambiguous 
+    grammars and produce useful results.
+    This extension is triggered with the <code class="option">--glr</code> flag, 
+    which causes <span class="application">Happy</span>
+    to use a different driver for the LALR(1) parsing
+    tables. The result of parsing is a structure which encodes compactly
+    <span class="emphasis"><em>all</em></span> of the possible parses. 
+    There are two options for how semantic information is combined with
+    the structural information. 
+    </p><p>
+    This extension was developed by Paul Callaghan and Ben Medlock
+    (University of Durham). It is based on the structural parser
+    implemented in Medlock's undergraduate project, but significantly
+    extended and improved by Callaghan. 
+    Bug reports, comments, questions etc should be sent to 
+    <code class="email">&lt;<a class="email" href="mailto:P.C.Callaghan@durham.ac.uk">P.C.Callaghan@durham.ac.uk</a>&gt;</code>. 
+    Further information can be found on Callaghan's
+    <a class="ulink" href="http://www.dur.ac.uk/p.c.callaghan/happy-glr" target="_top">GLR parser
+    page</a>.
+
+	
+    </p><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="sec-glr-intro"></a>3.1. Introduction</h2></div></div></div><p>
+      Here's an ambiguous grammar. It has no information about the 
+      associativity of <code class="literal">+</code>, so for example,
+      <code class="literal">1+2+3</code> can be parsed as 
+      <code class="literal">(1+(2+3))</code> or <code class="literal">((1+2)+3)</code>. 
+      In conventional mode, <span class="application">Happy</span>,
+      would complain about a shift/reduce 
+      conflict, although it would generate a parser which always shifts 
+      in such a conflict, and hence would produce <span class="emphasis"><em>only</em></span>
+      the first alternative above.
+      </p><pre class="programlisting">
+      E -&gt; E + E
+      E -&gt; i       -- any integer
+      </pre><p>
+      GLR parsing will accept this grammar without complaint, and produce
+      a result which encodes <span class="emphasis"><em>both</em></span> alternatives
+      simultaneously. Now consider the more interesting example of
+      <code class="literal">1+2+3+4</code>, which has five distinct parses -- try to
+      list them! You will see that some of the subtrees are identical. 
+      A further property of the GLR output is that such sub-results are 
+      shared, hence efficiently represented: there is no combinatorial 
+      explosion.
+      Below is the simplified output of the GLR parser for this example.
+      </p><pre class="programlisting">
+	Root (0,7,G_E)
+	(0,1,G_E)     =&gt; [[(0,1,Tok '1'))]]
+	(0,3,G_E)     =&gt; [[(0,1,G_E),(1,2,Tok '+'),(2,3,G_E)]]
+	(0,5,G_E)     =&gt; [[(0,1,G_E),(1,2,Tok '+'),(2,5,G_E)]
+	                 ,[(0,3,G_E),(3,4,Tok '+'),(4,5,G_E)]]
+	(0,7,G_E)     =&gt; [[(0,3,G_E),(3,4,Tok '+'),(4,7,G_E)]
+	                 ,[(0,1,G_E),(1,2,Tok '+'),(2,7,G_E)]
+	                 ,[(0,5,G_E),(5,6,Tok '+'),(6,7,G_E)]}]
+	(2,3,G_E)     =&gt; [[(2,3,Tok '2'))]}]
+	(2,5,G_E)     =&gt; [[(2,3,G_E),(3,4,Tok '+'),(4,5,G_E)]}]
+	(2,7,G_E)     =&gt; [[(2,3,G_E),(3,4,Tok '+'),(4,7,G_E)]}
+	                 ,[(2,5,G_E),(5,6,Tok '+'),(6,7,G_E)]}]
+	(4,5,G_E)     =&gt; [[(4,5,Tok '3'))]}]
+	(4,7,G_E)     =&gt; [[(4,5,G_E),(5,6,Tok '+'),(6,7,G_E)]}]
+	(6,7,G_E)     =&gt; [[(6,7,Tok '4'))]}]
+      </pre><p>
+      This is a directed, acyclic and-or graph. 
+      The node "names" are of form <code class="literal">(a,b,c)</code>
+      where <code class="literal">a</code> and <code class="literal">b</code>
+      are the start and end points (as positions in the input string)
+      and <code class="literal">c</code> is a category (or name of grammar rule). 
+      For example <code class="literal">(2,7,G_E)</code> spans positions 2 to 7
+      and contains analyses which match the <code class="literal">E</code>
+      grammar rule.
+      Such analyses are given as a list of alternatives (disjunctions), 
+      each corresponding to some use of a production of that 
+      category, which in turn are a conjunction of sub-analyses,
+      each represented as a node in the graph or an instance of a token.
+      </p><p>
+      Hence <code class="literal">(2,7,G_E)</code> contains two alternatives,
+      one which has <code class="literal">(2,3,G_E)</code> as its first child
+      and the other with <code class="literal">(2,5,G_E)</code> as its first child,
+      respectively corresponding to sub-analyses 
+      <code class="literal">(2+(3+4))</code> and <code class="literal">((2+3)+4)</code>.
+      Both alternatives have the token <code class="literal">+</code> as their
+      second child, but note that they are difference occurrences of
+      <code class="literal">+</code> in the input! 
+      We strongly recommend looking at such results in graphical form 
+      to understand these points. If you build the 
+      <code class="literal">expr-eval</code> example in the directory
+      <code class="literal">examples/glr</code> (NB you need to use GHC for this,
+      unless you know how to use the <code class="option">-F</code> flag for Hugs),
+      running the example will produce a file which can be viewed with
+      the <span class="emphasis"><em>daVinci</em></span> graph visualization tool.
+      (See <a class="ulink" href="http://www.informatik.uni-bremen.de/~davinci/" target="_top">http://www.informatik.uni-bremen.de/~davinci/</a>
+       for more information. Educational use licenses are currently 
+	available without charge.)  
+      </p><p>
+      The GLR extension also allows semantic information to be attached 
+      to productions, as in conventional <span class="application">Happy</span>, 
+      although there are further issues to consider.
+      Two modes are provided, one for simple applications and one for more
+      complex use.
+      See <a class="xref" href="sec-glr-semantics.html" title="3.3. Including semantic results">Section 3.3, &#8220;Including semantic results&#8221;</a>.
+      The extension is also integrated with <span class="application">Happy</span>'s
+      token handling, e.g. extraction of information from tokens. 
+      </p><p>
+      One key feature of this implementation in Haskell is that its main 
+      result is a <span class="emphasis"><em>graph</em></span>.
+      Other implementations effectively produce a list of trees, but this
+      limits practical use to small examples. 
+      For large and interesting applications, some of which are discussed
+      in <a class="xref" href="sec-glr-misc.html#sec-glr-misc-applications" title="3.4.3. Some Applications of GLR parsing">Section 3.4.3, &#8220;Some Applications of GLR parsing&#8221;</a>, a graph is essential due
+      to the large number of possibilities and the need to analyse the
+      structure of the ambiguity. Converting the graph to trees could produce
+      huge numbers of results and will lose information about sharing etc.
+      </p><p>
+      One final comment. You may have learnt through using 
+      <span class="application">yacc</span>-style tools that ambiguous grammars 
+      are to be avoided, and that ambiguity is something that appears 
+      only in Natural Language processing. 
+      This is definitely not true. 
+      Many interesting grammars are ambiguous, and with GLR tools they 
+      can be used effectively. 
+      We hope you enjoy exploring this fascinating area!
+      </p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="sec-multiple-parsers.html">Prev</a> </td><td width="20%" align="center"> </td><td width="40%" align="right"> <a accesskey="n" href="sec-glr-using.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">2.7. Generating Multiple Parsers From a Single Grammar </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 3.2. Basic use of a Happy-generated GLR parser</td></tr></table></div></body></html>

@@ -1,0 +1,751 @@
+<HTML
+><HEAD
+><TITLE
+>Using Happy</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.44"><LINK
+REL="HOME"
+TITLE="Happy User Guide"
+HREF="book1.html"><LINK
+REL="PREVIOUS"
+TITLE="Obtaining Happy"
+HREF="sec-obtaining.html"><LINK
+REL="NEXT"
+TITLE="Parsing sequences"
+HREF="sec-sequences.html"></HEAD
+><BODY
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Happy User Guide</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="sec-obtaining.html"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="sec-sequences.html"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="CHAPTER"
+><H1
+><A
+NAME="SEC-USING"
+>Chapter 2. Using <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+></A
+></H1
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+><A
+HREF="sec-using.html#SEC-OTHER-DATATYPES"
+>Returning other datatypes</A
+></DT
+><DT
+><A
+HREF="sec-sequences.html"
+>Parsing sequences</A
+></DT
+><DT
+><A
+HREF="sec-ambiguities.html"
+>Ambiguities</A
+></DT
+><DT
+><A
+HREF="sec-type-signatures.html"
+>Type Signatures</A
+></DT
+><DT
+><A
+HREF="sec-monads.html"
+>Monadic Parsers</A
+></DT
+><DT
+><A
+HREF="sec-error.html"
+>The Error Token</A
+></DT
+></DL
+></DIV
+><P
+> Users of <SPAN
+CLASS="APPLICATION"
+>Yacc</SPAN
+> will find <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+>
+  quite familiar.  The basic idea is as follows: </P
+><P
+></P
+><UL
+><LI
+><P
+>Define the grammar you want to parse in a
+      <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> grammar file. </P
+></LI
+><LI
+><P
+> Run the grammar through <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+>, to generate
+      a compilable Haskell module.</P
+></LI
+><LI
+><P
+> Use this module as part of your Haskell program, usually
+      in conjunction with a lexical analyser (a function that splits
+      the input into ``tokens'', the basic unit of parsing).</P
+></LI
+></UL
+><P
+> Let's run through an example.  We'll implement a parser for a
+  simple expression syntax, consisting of integers, variables, the
+  operators <TT
+CLASS="LITERAL"
+>+</TT
+>, <TT
+CLASS="LITERAL"
+>-</TT
+>, <TT
+CLASS="LITERAL"
+>*</TT
+>,
+  <TT
+CLASS="LITERAL"
+>/</TT
+>, and the form <TT
+CLASS="LITERAL"
+>let var = exp in exp</TT
+>.
+  The grammar file starts off like this:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>{
+module Main where
+}</PRE
+></TD
+></TR
+></TABLE
+><P
+>At the top of the file is an optional <I
+CLASS="FIRSTTERM"
+>module
+    header</I
+>,
+      
+    which is just a Haskell module header enclosed in braces.  This
+    code is emitted verbatim into the generated module, so you can put
+    any Haskell code here at all.  In a grammar file, Haskell code is
+    always contained between curly braces to distinguish it from the
+    grammar.</P
+><P
+>In this case, the parser will be a standalone program so
+    we'll call the module <TT
+CLASS="LITERAL"
+>Main</TT
+>.</P
+><P
+>Next comes a couple of declarations:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>%name calc
+%tokentype { Token }</PRE
+></TD
+></TR
+></TABLE
+><P
+>The first line declares the name of the parsing function
+    that <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> will generate, in this case
+    <TT
+CLASS="LITERAL"
+>calc</TT
+>.  In many cases, this is the only symbol you need
+    to export from the module.</P
+><P
+>The second line declares the type of tokens that the parser
+    will accept.  The parser (i.e. the function <TT
+CLASS="FUNCTION"
+>calc</TT
+>) will
+    be of type <TT
+CLASS="LITERAL"
+>[Token] -&#62; T</TT
+>, where <TT
+CLASS="LITERAL"
+>T</TT
+> is the return
+    type of the parser, determined by the production rules
+    below.</P
+><P
+>Now we declare all the possible tokens:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>%token 
+      let             { TokenLet }
+      in              { TokenIn }
+      int             { TokenInt $$ }
+      var             { TokenVar $$ }
+      '='             { TokenEq }
+      '+'             { TokenPlus }
+      '-'             { TokenMinus }
+      '*'             { TokenTimes }
+      '/'             { TokenDiv }
+      '('             { TokenOB }
+      ')'             { TokenCB }</PRE
+></TD
+></TR
+></TABLE
+><P
+>The symbols on the left are the tokens as they will be
+    referred to in the rest of the grammar, and to the right of each
+    token enclosed in braces is a Haskell pattern that matches the
+    token.  The parser will expect to receive a stream of tokens, each
+    of which will match one of the given patterns (the definition of
+    the <TT
+CLASS="LITERAL"
+>Token</TT
+> datatype is given later).</P
+><P
+>The <TT
+CLASS="LITERAL"
+>$$</TT
+> symbol is a placeholder that
+    represents the <I
+CLASS="EMPHASIS"
+>value</I
+> of this token.  Normally the value
+    of a token is the token itself, but by using the
+    <TT
+CLASS="LITERAL"
+>$$</TT
+> symbol you can specify some component
+    of the token object to be the value. </P
+><P
+>Like yacc, we include <TT
+CLASS="LITERAL"
+>%%</TT
+> here, for no real
+    reason.</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>%%</PRE
+></TD
+></TR
+></TABLE
+><P
+>Now we have the production rules for the grammar.</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>Exp   : let var '=' Exp in Exp  { Let $2 $4 $6 }
+      | Exp1                    { Exp1 $1 }
+
+Exp1  : Exp1 '+' Term           { Plus $1 $3 }
+      | Exp1 '-' Term           { Minus $1 $3 }
+      | Term                    { Term $1 }
+
+Term  : Term '*' Factor         { Times $1 $3 }
+      | Term '/' Factor         { Div $1 $3 }
+      | Factor                  { Factor $1 }
+
+Factor			  
+      : int                     { Int $1 }
+      | var                     { Var $1 }
+      | '(' Exp ')'             { Brack $2 }</PRE
+></TD
+></TR
+></TABLE
+><P
+>Each production consists of a <I
+CLASS="FIRSTTERM"
+>non-terminal</I
+>
+    symbol on the left, followed by a colon, followed by one or more
+    expansions on the right, separated by <TT
+CLASS="LITERAL"
+>|</TT
+>.  Each expansion
+    has some Haskell code associated with it, enclosed in braces as
+    usual.</P
+><P
+>The way to think about a parser is with each symbol having a
+    `value': we defined the values of the tokens above, and the
+    grammar defines the values of non-terminal symbols in terms of
+    sequences of other symbols (either tokens or non-terminals).  In a
+    production like this:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>n   : t_1 ... t_n   { E }</PRE
+></TD
+></TR
+></TABLE
+><P
+>whenever the parser finds the symbols <TT
+CLASS="LITERAL"
+>t_1..t_n</TT
+> in
+    the token stream, it constructs the symbol <TT
+CLASS="LITERAL"
+>n</TT
+> and gives
+    it the value <TT
+CLASS="LITERAL"
+>E</TT
+>, which may refer to the values of
+    <TT
+CLASS="LITERAL"
+>t_1...t_n</TT
+> using the symbols
+    <TT
+CLASS="LITERAL"
+>$1...$n</TT
+>.</P
+><P
+>The parser reduces the input using the rules in the grammar
+    until just one symbol remains: the first symbol defined in the
+    grammar (namely <TT
+CLASS="LITERAL"
+>Exp</TT
+> in our example).  The value of this
+    symbol is the return value from the parser.</P
+><P
+>To complete the program, we need some extra code.  The
+    grammar file may optionally contain a final code section, enclosed
+    in curly braces.</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>{</PRE
+></TD
+></TR
+></TABLE
+><P
+>All parsers must declare the function <TT
+CLASS="FUNCTION"
+>happyError</TT
+>,
+    which is called when an error is detected. </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>happyError :: [Token] -&#62; a
+happyError _ = error "Parse error"</PRE
+></TD
+></TR
+></TABLE
+><P
+><TT
+CLASS="FUNCTION"
+>happyError</TT
+> doesn't have to call <TT
+CLASS="FUNCTION"
+>error</TT
+>:
+    it can return a real value, which must be the same type as the
+    return value of the parser itself.  A convenient way to deal with
+    errors is to use an exception monad, which we'll talk about in
+    <A
+HREF="sec-monads.html"
+>the section called <I
+>Monadic Parsers</I
+></A
+>.  It's also possible to keep track of
+    line numbers in the parser for use in error messages, this is
+    described in <A
+HREF="sec-monads.html#SEC-LINE-NUMBERS"
+>the section called <I
+>Line Numbers</I
+></A
+>.</P
+><P
+>Next we can declare the data type that represents the parsed
+    expression:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>data Exp  
+      = Let String Exp Exp
+      | Exp1 Exp1
+
+data Exp1 
+      = Plus Exp1 Term 
+      | Minus Exp1 Term 
+      | Term Term
+
+data Term 
+      = Times Term Factor 
+      | Div Term Factor 
+      | Factor Factor
+
+data Factor 
+      = Int Int 
+      | Var String 
+      | Brack Exp</PRE
+></TD
+></TR
+></TABLE
+><P
+>And the data structure for the tokens...</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>data Token
+      = TokenLet
+      | TokenIn
+      | TokenInt Int
+      | TokenVar String
+      | TokenEq
+      | TokenPlus
+      | TokenMinus
+      | TokenTimes
+      | TokenDiv
+      | TokenOB
+      | TokenCB
+ deriving Show</PRE
+></TD
+></TR
+></TABLE
+><P
+>... and a simple lexer that returns this data
+    structure.</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>lexer :: String -&#62; [Token]
+lexer [] = []
+lexer (c:cs) 
+      | isSpace c = lexer cs
+      | isAlpha c = lexVar (c:cs)
+      | isDigit c = lexNum (c:cs)
+lexer ('=':cs) = TokenEq : lexer cs
+lexer ('+':cs) = TokenPlus : lexer cs
+lexer ('-':cs) = TokenMinus : lexer cs
+lexer ('*':cs) = TokenTimes : lexer cs
+lexer ('/':cs) = TokenDiv : lexer cs
+lexer ('(':cs) = TokenOB : lexer cs
+lexer (')':cs) = TokenCB : lexer cs
+
+lexNum cs = TokenInt (read num) : lexer rest
+      where (num,rest) = span isDigit cs
+
+lexVar cs =
+   case span isAlpha cs of
+      ("let",rest) -&#62; TokenLet : lexer rest
+      ("in",rest)  -&#62; TokenIn : lexer rest
+      (var,rest)   -&#62; TokenVar var : lexer rest</PRE
+></TD
+></TR
+></TABLE
+><P
+>And finally a top-level function to take some input, parse
+    it, and print out the result.</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>main = getContents &#62;&#62;= print . calc . lexer
+}</PRE
+></TD
+></TR
+></TABLE
+><P
+>And that's it! A whole lexer, parser and grammar in a few
+    dozen lines.  Another good example is <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+>'s own
+    parser. Several features in <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> were developed
+    using this as an example.</P
+><P
+>To generate the Haskell module for this parser, type the
+    command <B
+CLASS="COMMAND"
+>happy example.ly</B
+> (where <TT
+CLASS="FILENAME"
+>example.ly</TT
+> is
+    the name of the grammar file).  The Haskell module will be placed
+    in a file named <TT
+CLASS="FILENAME"
+>example.hs</TT
+>.  Additionally, invoking the
+    command <B
+CLASS="COMMAND"
+>happy example.ly -i</B
+> will produce the file
+    <TT
+CLASS="FILENAME"
+>example.info</TT
+> which contains detailed information about
+    the parser, including states and reduction rules (see <A
+HREF="sec-info-files.html"
+>Chapter 5</A
+>).  This can be invaluable for debugging
+    parsers, but requires some knowledge of the operation of a
+    shift-reduce parser. </P
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="SEC-OTHER-DATATYPES"
+>Returning other datatypes</A
+></H1
+><P
+>In the above example, we used a data type to represent the
+      syntax being parsed.  However, there's no reason why it has to
+      be this way: you could calculate the value of the expression on
+      the fly, using productions like this:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>Term  : Term '*' Factor         { $1 * $3 }
+      | Term '/' Factor         { $1 / $3 }
+      | Factor                  { $1 }</PRE
+></TD
+></TR
+></TABLE
+><P
+>The value of a <TT
+CLASS="LITERAL"
+>Term</TT
+> would be the value of the
+      expression itself, and the parser could return an integer.  </P
+><P
+>This works for simple expression types, but our grammar
+      includes variables and the <TT
+CLASS="LITERAL"
+>let</TT
+> syntax.  How do we know
+      the value of a variable while we're parsing it?  We don't, but
+      since the Haskell code for a production can be anything at all,
+      we could make it a function that takes an environment of
+      variable values, and returns the computed value of the
+      expression:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>Exp   : let var '=' Exp in Exp  { \p -&#62; $6 (($2,$4 p):p) }
+      | Exp1                    { $1 }
+
+Exp1  : Exp1 '+' Term           { \p -&#62; $1 p + $3 p }
+      | Exp1 '-' Term           { \p -&#62; $1 p - $3 p }
+      | Term                    { $1 }
+
+Term  : Term '*' Factor         { \p -&#62; $1 p * $3 p }
+      | Term '/' Factor         { \p -&#62; $1 p `div` $3 p }
+      | Factor                  { $1 }
+
+Factor			  
+      : int                     { \p -&#62; $1 }
+      | var                     { \p -&#62; case lookup $1 p of
+	                                    Nothing -&#62; error "no var"
+					    Just i  -&#62; i }
+      | '(' Exp ')'             { $2 }</PRE
+></TD
+></TR
+></TABLE
+><P
+>The value of each production is a function from an
+      environment <I
+CLASS="EMPHASIS"
+>p</I
+> to a value.  When parsing a
+      <TT
+CLASS="LITERAL"
+>let</TT
+> construct, we extend the environment with the new
+      binding to find the value of the body, and the rule for
+      <TT
+CLASS="LITERAL"
+>var</TT
+> looks up its value in the environment.  There's
+      something you can't do in <TT
+CLASS="LITERAL"
+>yacc</TT
+> :-)</P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sec-obtaining.html"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sec-sequences.html"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Obtaining <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Parsing sequences</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

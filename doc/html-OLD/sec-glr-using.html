@@ -1,0 +1,181 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>3.2. Basic use of a Happy-generated GLR parser</title><link rel="stylesheet" href="fptools.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.73.2"><link rel="start" href="index.html" title="Happy User Guide"><link rel="up" href="sec-glr.html" title="Chapter 3. Generalized LR Parsing"><link rel="prev" href="sec-glr.html" title="Chapter 3. Generalized LR Parsing"><link rel="next" href="sec-glr-semantics.html" title="3.3. Including semantic results"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">3.2. Basic use of a Happy-generated GLR parser</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="sec-glr.html">Prev</a> </td><th width="60%" align="center">Chapter 3. Generalized LR Parsing</th><td width="20%" align="right"> <a accesskey="n" href="sec-glr-semantics.html">Next</a></td></tr></table><hr></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="sec-glr-using"></a>3.2. Basic use of a Happy-generated GLR parser</h2></div></div></div><p>
+      This section explains how to generate and to use a GLR parser to 
+      produce structural results.
+      Please check the examples for further information.
+      Discussion of semantic issues comes later; see
+      <a class="xref" href="sec-glr-semantics.html" title="3.3. Including semantic results">Section 3.3, &#8220;Including semantic results&#8221;</a>.
+      </p><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="sec-glr-using-intro"></a>3.2.1. Overview</h3></div></div></div><p>
+	The process of generating a GLR parser is broadly the same as
+	for standard <span class="application">Happy</span>. You write a grammar
+	specification, run <span class="application">Happy</span> on this to 
+	generate some Haskell code, then compile and link this into your
+	program. 
+        </p><p>
+	An alternative to using Happy directly is to use the 
+	<a class="ulink" href="http://www.cs.chalmers.se/~markus/BNFC/" target="_top">
+	<span class="application">BNF Converter</span></a> tool by
+	Markus Forsberg, Peter Gammie, Michael Pellauer and Aarne Ranta.
+	This tool creates an abstract syntax, grammar, pretty-printer
+	and other useful items from a single grammar formalism, thus
+	it saves a lot of work and improves maintainability. 
+	The current output of BNFC can be used with GLR mode now
+	with just a few small changes, but from January 2005 we expect
+	to have a fully-compatible version of BNFC. 
+        </p><p>
+	Most of the features of <span class="application">Happy</span> still
+	work, but note the important points below.
+        </p><div class="variablelist"><dl><dt><span class="term">module header</span></dt><dd><p>
+	       The GLR parser is generated in TWO files, one for data and 
+	       one for the driver. This is because the driver code needs 
+	       to be optimized, but for large parsers with lots of data,
+	       optimizing the data tables too causes compilation to be 
+	       too slow. 
+	       </p><p>
+	       Given a file <code class="literal">Foo.y</code>, file
+	       <code class="literal">FooData.hs</code> is generated with basic type 
+	       information, the parser tables, and the header and tail code 
+	       that was included in the parser specification. 
+	       Note that <span class="application">Happy</span> generates the 
+	       module declaration line, so you should NOT give it in the 
+	       grammar file. 
+	       The driver is placed in file <code class="literal">Foo.hs</code>, and
+	       does not contain any user-supplied text.
+	       </p></dd><dt><span class="term">export of lexer</span></dt><dd><p>
+	       You can declare a lexer (and error token) with the 
+	       <code class="literal">%lexer</code> directive as normal, but the 
+	       generated parser does NOT call this lexer automatically.
+	       The action of the directive is only to 
+	       <span class="emphasis"><em>export</em></span> the lexer function to the top 
+	       level. This is because some applications need finer control
+	       of the lexing process.
+	       </p></dd><dt><span class="term">precedence information</span></dt><dd><p>
+	       This still works, but note the reasons.
+	       The precedence and associativity declarations are used in 
+	       <span class="application">Happy</span>'s LR table creation to 
+	       resolve certain conflicts. It does this by retaining the 
+	       actions implied by the declarations and removing the ones 
+	       which clash with these. 
+	       The GLR parser back-end then produces code from these 
+	       filtered tables, hence the rejected actions are never
+	       considered by the GLR parser. 
+	       </p><p>
+	       Hence, declaring precedence and associativity is still 
+	       a good thing, since it avoids a certain amount of ambiguity
+	       that the user knows how to remove. 
+	       </p></dd><dt><span class="term">monad directive</span></dt><dd><p>
+	       There is some support for monadic parsers.
+	       The "tree decoding" mode 
+	       (see <a class="xref" href="sec-glr-semantics.html#sec-glr-semantics-tree" title="3.3.2. Tree decoding">Section 3.3.2, &#8220;Tree decoding&#8221;</a>) can use the
+	       information given in the <code class="literal">%monad</code> 
+	       declaration to monadify the decoding process. 
+	       This is explained in more detail in
+	       <a class="xref" href="sec-glr-semantics.html#sec-glr-semantics-tree-monad" title="3.3.4. Monadic tree decoding">Section 3.3.4, &#8220;Monadic tree decoding&#8221;</a>.
+	       </p><p>
+	       <span class="emphasis"><em>Note</em></span>: the generated parsers don't include
+	       Ashley Yakeley's monad context information yet. It is currently
+	       just ignored. 
+	       If this is a problem, email and I'll make the changes required.
+	       </p></dd><dt><span class="term">parser name directive</span></dt><dd><p>
+	       This has no effect at present. It will probably remain this 
+	       way: if you want to control names, you could use qualified 
+	       import.
+	       </p></dd><dt><span class="term">type information on non-terminals</span></dt><dd><p>
+	       The generation of semantic code relies on type information
+	       given in the grammar specification. If you don't give an
+	       explicit signature, the type <code class="literal">()</code> is 
+	       assumed. If you get type clashes mentioning 
+	       <code class="literal">()</code> you may need to add type annotations.
+	       Similarly, if you don't supply code for the semantic rule 
+	       portion, then the value <code class="literal">()</code> is used.
+	       </p></dd><dt><span class="term"><code class="literal">error</code> symbol in grammars, and recovery
+		</span></dt><dd><p>
+	       No attempt to implement this yet. Any use of 
+	       <code class="literal">error</code> in grammars is thus ignored, and
+	       parse errors will eventually mean a parse will fail.
+	       </p></dd><dt><span class="term">the token type</span></dt><dd><p>
+	       The type used for tokens <span class="emphasis"><em>must</em></span> be in 
+	       the <code class="literal">Ord</code> type class (and hence in 
+	       <code class="literal">Eq</code>), plus it is recommended that they
+	       are in the <code class="literal">Show</code> class too. 
+	       The ordering is required for the implementation of 
+	       ambiguity packing. 
+	       It may be possible to relax this requirement, but it 
+	       is probably simpler just to require instances of the type 
+	       classes. Please tell us if this is a problem.
+	       </p></dd></dl></div></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="sec-glr-using-main"></a>3.2.2. The main function</h3></div></div></div><p>
+	The driver file exports a function 
+	<code class="literal">doParse :: [[UserDefTok]] -&gt; GLRResult</code>. 
+	If you are using several parsers, use qualified naming to 
+	distinguish them.
+	<code class="literal">UserDefTok</code> is a synonym for the type declared with 
+	the <code class="literal">%tokentype</code> directive.
+        </p></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="sec-glr-using-input"></a>3.2.3. The input</h3></div></div></div><p>
+	The input to <code class="literal">doParse</code> is a list of 
+	<span class="emphasis"><em>list of</em></span> token values. 
+	The outer level represents the sequence of input symbols, and 
+	the inner list represents ambiguity in the tokenisation of each
+	input symbol. 
+	For example, the word "run" can be at least a noun or a verb, 
+	hence the inner list will contain at least two values.
+	If your tokens are not ambiguous, you will need to convert each
+	token to a singleton list before parsing. 
+        </p></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="sec-glr-using-output"></a>3.2.4. The Parse Result</h3></div></div></div><p>
+	The parse result is expressed with the following types. 
+	A successful parse yields a forest (explained below) and a single 
+	root node for the forest.
+	A parse may fail for one of two reasons: running out of input or
+	a (global) parse error. A global parse error means that it was 
+	not possible to continue parsing <span class="emphasis"><em>any</em></span> of the
+	live alternatives; this is different from a local error, which simply
+	means that the current alternative dies and we try some other 
+	alternative. In both error cases, the forest at failure point is 
+	returned, since it may contain useful information. 
+	Unconsumed tokens are returned when there is a global parse error.
+        </p><pre class="programlisting">
+	type ForestId = (Int,Int,GSymbol)
+	data GSymbol  = &lt;... automatically generated ...&gt;
+	type Forest   = FiniteMap ForestId [Branch]
+	type RootNode = ForestId
+	type Tokens   = [[(Int, GSymbol)]]
+	data Branch   = Branch {b_sem :: GSem, b_nodes :: [ForestId]}
+	data GSem     = &lt;... automatically generated ...&gt;
+
+	data GLRResult
+	 = ParseOK     RootNode Forest    -- forest with root
+	 | ParseError  Tokens   Forest    -- partial forest with bad input
+	 | ParseEOF             Forest    -- partial forest (missing input)
+        </pre><p>
+	Conceptually, the parse forest is a directed, acyclic and-or
+	graph. It is represented by a mapping of <code class="literal">ForestId</code>s
+	to lists of possible analyses. The <code class="literal">FiniteMap</code> 
+	type is used to provide efficient and convenient access.
+	The <code class="literal">ForestId</code> type identifies nodes in the 
+	graph, named by the range of input they span and the category of
+	analysis they license. <code class="literal">GSymbol</code> is generated 
+	automatically as a union of the names of grammar rules (prefixed 
+	by <code class="literal">G_</code> to avoid name clashes) and of tokens and
+	an EOF symbol. Tokens are wrapped in the constructor
+	<code class="literal">HappyTok :: UserDefTok -&gt; GSymbol</code>. 
+	</p><p>
+	The <code class="literal">Branch</code> type represents a match for some 
+	right-hand side of a production, containing semantic information 
+	(see below)
+	and a list of sub-analyses. Each of these is a node in the graph.
+	Note that tokens are represented as childless nodes that span 
+	one input position. Empty productions will appear as childless nodes
+	that start and end at the same position. 
+	</p></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="sec-glr-using-compiling"></a>3.2.5. Compiling the parser</h3></div></div></div><p>
+	<span class="application">Happy</span> will generate two files, and these
+	should be compiled as normal Haskell files. 
+	If speed is an issue, then you should use the <code class="option">-O</code>
+	flags etc with the driver code, and if feasible, with the parser 
+	tables too. 
+        </p><p>
+        You can also use the <code class="option">--ghc</code> flag to trigger certain
+	<span class="application">GHC</span>-specific optimizations. At present,
+	this just causes use of unboxed types in the tables and in some key
+	code. 
+	Using this flag causes relevant <span class="application">GHC</span>
+	option pragmas to be inserted into the generated code, so you shouldn't
+	have to use any strange flags (unless you want to...).
+        </p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="sec-glr.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="sec-glr.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="sec-glr-semantics.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 3. Generalized LR Parsing </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 3.3. Including semantic results</td></tr></table></div></body></html>

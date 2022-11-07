@@ -1,0 +1,113 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<TITLE>Happy User Guide: Invoking Happy</TITLE>
+</HEAD>
+<BODY>
+<A HREF="happy-4.html">Next</A>
+<A HREF="happy-2.html">Previous</A>
+<A HREF="happy.html#toc3">Contents</A>
+<HR>
+<H2><A NAME="sec:invoking"></A> <A NAME="s3">3. Invoking Happy</A></H2>
+
+<P>
+<P>An invocation of Happy has the following syntax:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+happy [ options ] &lt;filename> [ options ]
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>All the command line options are optional (!) and may occur either
+before or after the input file name.
+<P>There are two types of grammar files, <CODE>file.y</CODE> and <CODE>file.ly</CODE>,
+with the latter observing the reverse comment bird track convention
+(i.e. each code line must begin with '>').  The examples distributed
+with Happy are all of the .ly form.
+<P>Caveat: When using hbc (Chalmers Haskell) the command argument structure
+is slightly different. This is because the hbc run time system takes
+some flags as its own (for setting things like the heap size, etc).
+This problem can be circumvented by adding a single @code{-} to your
+command line.  So when using a hbc generated version of Happy, the
+argument structure is:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+happy - [ options ] &lt;filename> [ options ]
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>Pedantic programmers can either use aliases or a short shell wrapper
+to automatically add the @code{-}, along with any required run time
+system arguments (Or just use GHC to compile Happy!).
+<P>The flags accepted by Happy are as follows:
+<P>
+<DL>
+<P>
+<DT><B> <CODE>-a | --arrays</CODE> </B><DD><P>Instructs Happy to generate a parser using an array-based shift reduce
+parser.  Currently this generates slower parsers for two reasons:
+standard Haskell arrays are surrounded by overloading and
+bounds-checking which makes lookup quite expensive, and secondly current
+compilers don't know how to generate static objects (i.e. they generate
+the code which builds the array at run-time).
+<P>
+<DT><B> <CODE>-g | --ghc</CODE> </B><DD><P>Instructs Happy to generate a parser that uses ghc-specific extensions
+to obtain faster code.  When compiling the resulting Haskell module,
+remember to use ghc with the <CODE>-fglasgow-exts</CODE> option, and to add
+the declaration <CODE>import GlaExts</CODE> to the module header.
+<P>
+<DT><B> <CODE>-i [ &lt;filename&gt; ] | --info [ &lt;filename&gt; ]</CODE> </B><DD><P>Directs Happy to produce an info file containing detailed information
+about the grammar, parser states, parser actions, and conflicts.  Info
+files are vital during the debugging of grammars.  The filename
+argument is optional, and if omitted the info file will be written to
+<CODE>&lt;file&gt;.info</CODE> (where <CODE>&lt;file&gt;</CODE>; is the input file name
+with any extension removed). Because this filename is optional, watch
+out for:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+happy --info foo.ly
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>which will use foo.ly as the name of the information file, and
+complain that you have not specified a input file name.  This can be
+solved by using:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+happy foo.ly --info
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>
+<DT><B> <CODE>-o &lt;filename&gt; | --outfile &lt;filename&gt;</CODE> </B><DD><P>Specifies the destination of the generated parser module.  If omitted,
+the parser will be placed in <CODE>&lt;file&gt;.hs</CODE>, where <CODE>&lt;file&gt;</CODE>
+is the name of the input file with any extension removed.
+<P>
+<DT><B> <CODE>-v | --verbose</CODE> </B><DD><P>Causes Happy to be more verbose.  At the moment this just prints out the
+copyright message and has no effect on anything else.
+<P>
+<DT><B> <CODE>-1.2</CODE> </B><DD><P>Instructs Happy to produce a Haskell 1.2-compatible module.  It may be
+used in conjuction with any of the other options. This option will
+almost certainly be removed in the future.
+<P>
+<DT><B> <CODE>--template &lt;directory&gt;</CODE> </B><DD><P>Instructs Happy to use this directory when looking for the template
+to including in the output.
+<P>
+</DL>
+<P>Note: only one of the options <CODE>-g</CODE> and <CODE>-a</CODE> may be given (or
+their long versions).  There is no array-based parser with ghc
+extensions yet, but this is planned for a future version.
+<P>
+<HR>
+<A HREF="happy-4.html">Next</A>
+<A HREF="happy-2.html">Previous</A>
+<A HREF="happy.html#toc3">Contents</A>
+</BODY>
+</HTML>

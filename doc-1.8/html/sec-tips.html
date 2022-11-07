@@ -1,0 +1,245 @@
+<HTML
+><HEAD
+><TITLE
+>Tips</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.44"><LINK
+REL="HOME"
+TITLE="Happy User Guide"
+HREF="happy.html"><LINK
+REL="PREVIOUS"
+TITLE="Info Files"
+HREF="sec-info-files.html"><LINK
+REL="NEXT"
+TITLE="Compilation-Time Tips"
+HREF="sec-compilation-time.html"></HEAD
+><BODY
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Happy User Guide</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="sec-info-files.html"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="sec-compilation-time.html"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="CHAPTER"
+><H1
+><A
+NAME="SEC-TIPS"
+>Chapter 6. Tips</A
+></H1
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+>6.1. <A
+HREF="sec-tips.html#SEC-PERFORMANCE-TIPS"
+>Performance Tips</A
+></DT
+><DT
+>6.2. <A
+HREF="sec-compilation-time.html"
+>Compilation-Time Tips</A
+></DT
+><DT
+>6.3. <A
+HREF="sec-finding-errors.html"
+>Finding Type Errors</A
+></DT
+><DT
+>6.4. <A
+HREF="sec-conflict-tips.html"
+>Conflict Tips</A
+></DT
+></DL
+></DIV
+><P
+>This section contains a lot of accumulated lore about using
+    <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+>.</P
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="SEC-PERFORMANCE-TIPS"
+>6.1. Performance Tips</A
+></H1
+><P
+>How to make your parser go faster:</P
+><P
+></P
+><UL
+><LI
+><P
+> If you are using GHC, generate parsers using the
+          <TT
+CLASS="LITERAL"
+>-g -a -c</TT
+> options, and compile them using GHC with
+          the <TT
+CLASS="LITERAL"
+>-fglasgow-exts</TT
+> option.  This is worth a
+          <I
+CLASS="EMPHASIS"
+>lot</I
+>, in terms of compile-time,
+          execution speed and binary size <A
+NAME="AEN947"
+HREF="#FTN.AEN947"
+>[1]</A
+>.</P
+></LI
+><LI
+><P
+> The lexical analyser is usually the most performance
+          critical part of a parser, so it's worth spending some time
+          optimising this.  Profiling tools are essential here.  In
+          really dire circumstances, resort to some of the hacks that
+          are used in the Glasgow Haskell Compiler's interface-file
+          lexer.</P
+></LI
+><LI
+><P
+> Simplify the grammar as much as possible, as this
+          reduces the number of states and reduction rules that need
+          to be applied.</P
+></LI
+><LI
+><P
+> Use left recursion rather than right recursion
+          wherever possible.  While not strictly a performance issue,
+          this affects the size of the parser stack, which is kept on
+          the heap and thus needs to be garbage collected.</P
+></LI
+></UL
+></DIV
+></DIV
+><H3
+>Notes</H3
+><TABLE
+BORDER="0"
+CLASS="FOOTNOTES"
+WIDTH="100%"
+><TR
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+WIDTH="5%"
+><A
+NAME="FTN.AEN947"
+HREF="sec-tips.html#AEN947"
+>[1]</A
+></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+WIDTH="95%"
+><P
+>omitting the
+          <TT
+CLASS="LITERAL"
+>-a</TT
+> may generate slightly faster parsers,
+          but they will be much bigger.</P
+></TD
+></TR
+></TABLE
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sec-info-files.html"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="happy.html"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sec-compilation-time.html"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Info Files</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Compilation-Time Tips</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,104 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>6.4. Grammar</title><link rel="stylesheet" href="fptools.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.73.2"><link rel="start" href="index.html" title="Happy User Guide"><link rel="up" href="sec-grammar-files.html" title="Chapter 6. Syntax of Grammar Files"><link rel="prev" href="sec-directives.html" title="6.3. Directives"><link rel="next" href="sec-module-trailer.html" title="6.5. Module Trailer"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">6.4. Grammar</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="sec-directives.html">Prev</a> </td><th width="60%" align="center">Chapter 6. Syntax of Grammar Files</th><td width="20%" align="right"> <a accesskey="n" href="sec-module-trailer.html">Next</a></td></tr></table><hr></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="sec-grammar"></a>6.4. Grammar</h2></div></div></div><p>The grammar section comes after the directives, separated
+      from them by a double-percent (<code class="literal">%%</code>) symbol.
+      This section contains a number of
+      <span class="emphasis"><em>productions</em></span>, each of which defines a single
+      non-terminal.  Each production has the following syntax:</p><a class="indexterm" name="id618664"></a><pre class="programlisting">
+&lt;non-terminal&gt; [ :: { &lt;type&gt; } ]
+        :  &lt;id&gt; ... {[%] &lt;expression&gt; }
+      [ |  &lt;id&gt; ... {[%] &lt;expression&gt; }
+        ... ]
+</pre><p>The first line gives the non-terminal to be defined by the
+      production and optionally its type (type signatures for
+      productions are discussed in <a class="xref" href="sec-type-signatures.html" title="2.4. Type Signatures">Section 2.4, &#8220;Type Signatures&#8221;</a>).</p><p>Each production has at least one, and possibly many
+      right-hand sides.  Each right-hand side consists of zero or more
+      symbols (terminals or non-terminals) and a Haskell expression
+      enclosed in braces.</p><p>The expression represents the semantic value of the
+      non-terminal, and may refer to the semantic values of the
+    symbols in the right-hand side using the meta-variables
+      <code class="literal">$1 ... $n</code>.  It is an error to
+      refer to <code class="literal">$i</code> when <code class="literal">i</code>
+      is larger than the number of symbols on the right hand side of
+      the current rule. The symbol <code class="literal">$</code> may be
+      inserted literally in the Haskell expression using the sequence
+      <code class="literal">\$</code> (this isn't necessary inside a
+      string or character literal).</p><p>Additionally, the sequence <code class="literal">$&gt;</code>
+      can be used to represent the value of the rightmost symbol.</p><p>A semantic value of the form <code class="literal">{% ... }</code> is a
+      <span class="emphasis"><em>monadic action</em></span>, and is only valid when the grammar
+      file contains a <code class="literal">%monad</code> directive (<a class="xref" href="sec-directives.html#sec-monad-decl" title="6.3.5. Monad Directive">Section 6.3.5, &#8220;Monad Directive&#8221;</a>).  Monadic actions are discussed in
+      <a class="xref" href="sec-monads.html" title="2.5. Monadic Parsers">Section 2.5, &#8220;Monadic Parsers&#8221;</a>.</p><a class="indexterm" name="id618765"></a><p>Remember that all the expressions for a production must
+      have the same type.</p><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="sec-param-prods"></a>6.4.1. Parameterized Productions</h3></div></div></div>
+        Starting from version 1.17.1, <span class="application">Happy</span> supports
+        <span class="emphasis"><em>parameterized productions</em></span> which provide a
+        convenient notation for capturing recurring patterns in context free
+        grammars. This gives the benefits of something similar to parsing
+        combinators in the context of <span class="application">Happy</span>
+        grammars.
+        <p>This functionality is best illustrated with an example:
+</p><pre class="programlisting">
+opt(p)          : p                   { Just $1 }
+                |                     { Nothing }
+
+rev_list1(p)    : p                   { [$1] }
+                | rev_list1(p) p      { $2 : $1 }
+</pre><p>
+        The first production, <code class="literal">opt</code>, is used for optional
+        components of a grammar.  It is just like <code class="literal">p?</code> in
+        regular expressions or EBNF. The second production,
+        <code class="literal">rev_list1</code>, is for parsing a list of 1 or more
+        occurrences of <code class="literal">p</code>.  Parameterized productions are
+        just like ordinary productions, except that they have parameter in
+        parenthesis after the production name. Multiple parameters should
+        be separated by commas:
+</p><pre class="programlisting">
+fst(p,q)        : p q                 { $1 }
+snd(p,q)        : p q                 { $2 }
+both(p,q)       : p q                 { ($1,$2) }
+</pre><p>
+        </p><p>To use a parameterized production, we have to pass values for the
+        parameters, as if we are calling a function.  The parameters can be
+        either terminals, non-terminals, or other instantiations of
+        parameterized productions.  Here are some examples:
+</p><pre class="programlisting">
+list1(p)        : rev_list1(p)        { reverse $1 }
+list(p)         : list1(p)            { $1 }
+                |                     { [] }
+</pre><p>
+        The first production uses <code class="literal">rev_list</code> to define
+        a production that behaves like <code class="literal">p+</code>, returning
+        a list of elements in the same order as they occurred in the input.
+        The second one, <code class="literal">list</code> is like <code class="literal">p*</code>.
+        </p><p>Parameterized productions are implemented as a prepossessing
+        pass in Happy:  each instantiation of a production turns into a
+        separate non-terminal, but are careful to avoid generating the
+        same rule multiple times, as this would lead to an ambiguous grammar.
+        Consider, for example, the following parameterized rule:
+</p><pre class="programlisting">
+sep1(p,q)       : p list(snd(q,p))    { $1 : $2 }
+</pre><p>
+        The rules that would be generated for <code class="literal">sep1(EXPR,SEP)</code>
+</p><pre class="programlisting">
+sep1(EXPR,SEP)
+  : EXPR list(snd(SEP,EXPR))                { $1 : $2 }
+
+list(snd(SEP,EXPR))
+  : list1(snd(SEP,EXPR))                    { $1 }
+  |                                         { [] }
+
+list1(snd(SEP,EXPR))
+  : rev_list1(snd(SEP,EXPR))                { reverse $1 }
+
+rev_list1(snd(SEP,EXPR))
+  : snd(SEP,EXPR))                          { [$1] }
+  | rev_list1(snd(SEP,EXPR)) snd(SEP,EXPR)  { $2 : $1 }
+
+snd(SEP,EXPR)
+  : SEP EXPR                                { $2 }
+</pre><p>
+        Note that this is just a normal grammar, with slightly strange names
+        for the non-terminals.
+        </p><p>A drawback of the current implementation is that it does not
+        support type signatures for the parameterized productions, that
+        depend on the types of the parameters.  We plan to implement that
+        in the future---the current workaround is to omit the type signatures
+        for such rules.
+        </p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="sec-directives.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="sec-grammar-files.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="sec-module-trailer.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">6.3. Directives </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 6.5. Module Trailer</td></tr></table></div></body></html>

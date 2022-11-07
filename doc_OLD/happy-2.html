@@ -1,0 +1,968 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<TITLE>Happy User Guide: Using Happy</TITLE>
+</HEAD>
+<BODY>
+<A HREF="happy-3.html">Next</A>
+<A HREF="happy-1.html">Previous</A>
+<A HREF="happy.html#toc2">Contents</A>
+<HR>
+<H2><A NAME="sec:using"></A> <A NAME="s2">2. Using Happy</A></H2>
+
+<P>
+<P>Users of Yacc will find Happy quite familiar.  The basic idea is as
+follows:
+<P>
+<UL>
+<LI> Define the grammar you want to parse in a Happy grammar file. 
+</LI>
+<LI> Run the grammar through Happy, to generate a compilable Haskell
+module.
+</LI>
+<LI> Use this module as part of your Haskell program, usually in
+conjunction with a lexical analyser (a function that splits the input
+into ``tokens'', the basic unit of parsing).</LI>
+</UL>
+<P>Let's run through an example.  We'll implement a parser for a simple
+expression syntax, consisting of integers, variables, the operators
+<CODE>+</CODE>, <CODE>-</CODE>, <CODE>*</CODE>, <CODE>/</CODE>, and the form <CODE>let var = exp in
+exp</CODE>.  The grammar file starts off like this:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+{
+module Main where
+}
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>At the top of the file is an optional module header, which is just a
+Haskell module header enclosed in braces.  This code is emitted
+verbatim into the generated module, so you can put any Haskell code
+here at all.  In a grammar file, Haskell code is always contained
+between curly braces to distinguish it from the grammar.
+<P>In this case, the parser will be a standalone program so we'll call
+the module <CODE>Main</CODE>.
+<P>Next comes a couple of declarations:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+%name calc
+%tokentype { Token }
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>The first line declares the name of the parsing function that Happy
+will generate, in this case <CODE>calc</CODE>.  In many cases, this is the
+only symbol you need to export from the module.
+<P>The second line declares the type of tokens that the parser will
+accept.  The parser (i.e. the function <CODE>calc</CODE>) will be of type
+<CODE>[Token] -> T</CODE>, where <CODE>T</CODE> is the return type of the parser,
+determined by the production rules below.
+<P>Now we declare all the possible tokens:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+%token 
+      let             { TokenLet }
+      in              { TokenIn }
+      int             { TokenInt $$ }
+      var             { TokenVar $$ }
+      '='             { TokenEq }
+      '+'             { TokenPlus }
+      '-'             { TokenMinus }
+      '*'             { TokenTimes }
+      '/'             { TokenDiv }
+      '('             { TokenOB }
+      ')'             { TokenCB }
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>The symbols on the left are the tokens as they will be referred to in
+the rest of the grammar, and to the right of each token enclosed in
+braces is a Haskell pattern that matches the token.  The parser will
+expect to receive a stream of tokens, each of which will match one of
+the given patterns (the definition of the <CODE>Token</CODE> datatype is given
+later).
+<P>The <CODE>$$</CODE> symbol is a placeholder that represents the
+<EM>value</EM> of this token.  Normally the value of a token is the token
+itself, but by using the <CODE>$$</CODE> symbol you can specify
+some component of the token object to be the value.
+<P>Like yacc, we include <CODE>%%</CODE> here, for no real reason.
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+%%
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>Now we have the production rules for the grammar.
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+Exp   : let var '=' Exp in Exp  { Let $2 $4 $6 }
+      | Exp1                    { Exp1 $1 }
+
+Exp1  : Exp1 '+' Term           { Plus $1 $3 }
+      | Exp1 '-' Term           { Minus $1 $3 }
+      | Term                    { Term $1 }
+
+Term  : Term '*' Factor         { Times $1 $3 }
+      | Term '/' Factor         { Div $1 $3 }
+      | Factor                  { Factor $1 }
+
+Factor                    
+      : int                     { Int $1 }
+      | var                     { Var $1 }
+      | '(' Exp ')'             { Brack $2 }
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>Each production consists of a <EM>non-terminal</EM> symbol on the left,
+followed by a colon, followed by one or more expansions on the right,
+separated by <CODE>|</CODE>.  Each expansion has some Haskell code associated
+with it, enclosed in braces as usual.  
+<P>The way to think about a parser is with each symbol having a `value':
+we defined the values of the tokens above, and the grammar defines the
+values of non-terminal symbols in terms of sequences of other symbols
+(either tokens or non-terminals).  In a production like this:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+n   : t_1 ... t_n   { E }
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>whenever the parser finds the symbols <CODE>t_1..t_n</CODE> in the token
+stream, it constructs the symbol <CODE>n</CODE> and gives it the value <CODE>E</CODE>,
+which may refer to the values of <CODE>t_1...t_n</CODE> using the symbols
+<CODE>$1...$n</CODE>.
+<P>The parser reduces the input using the rules in the grammar until just
+one symbol remains: the first symbol defined in the grammar (namely
+<CODE>Exp</CODE> in our example).  The value of this symbol is the return
+value from the parser.
+<P>To complete the program, we need some extra code.  The grammar file
+may optionally contain a final code section, enclosed in curly braces.
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+{
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>All parsers must declare the function <CODE>happyError</CODE>, which is called
+when an error is detected.
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+happyError :: [Token] -> a
+happyError _ = error "Parse error"
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P><CODE>happyError</CODE> doesn't have to call <CODE>error</CODE>: it can return a real
+value, which must be the same type as the return value of the parser
+itself.  A convenient way to deal with errors is to use an exception
+monad, which we'll talk about in Section 
+<A HREF="#sec:monads">sec:monads</A>
+.  It's
+also possible to keep track of line numbers in the parser for use in
+error messages, this is described in Section 
+<A HREF="#sec:line-numbers">sec:line-numbers</A>
+.
+<P>Next we can declare the data type that represents the parsed
+expression:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+data Exp  
+      = Let String Exp Exp
+      | Exp1 Exp1
+
+data Exp1 
+      = Plus Exp1 Term 
+      | Minus Exp1 Term 
+      | Term Term
+
+data Term 
+      = Times Term Factor 
+      | Div Term Factor 
+      | Factor Factor
+
+data Factor 
+      = Int Int 
+      | Var String 
+      | Brack Exp
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>And the data structure for the tokens...
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+data Token
+      = TokenLet
+      | TokenIn
+      | TokenInt Int
+      | TokenVar String
+      | TokenEq
+      | TokenPlus
+      | TokenMinus
+      | TokenTimes
+      | TokenDiv
+      | TokenOB
+      | TokenCB
+ deriving Show
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>... and a simple lexer that returns this data structure.
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+lexer :: String -> [Token]
+lexer [] = []
+lexer (c:cs) 
+      | isSpace c = lexer cs
+      | isAlpha c = lexVar (c:cs)
+      | isDigit c = lexNum (c:cs)
+lexer ('=':cs) = TokenEq : lexer cs
+lexer ('+':cs) = TokenPlus : lexer cs
+lexer ('-':cs) = TokenMinus : lexer cs
+lexer ('*':cs) = TokenTimes : lexer cs
+lexer ('/':cs) = TokenDiv : lexer cs
+lexer ('(':cs) = TokenOB : lexer cs
+lexer (')':cs) = TokenCB : lexer cs
+
+lexNum cs = TokenInt (read num) : lexer rest
+      where (num,rest) = span isDigit cs
+
+lexVar cs =
+   case span isAlpha cs of
+      ("let",rest) -> TokenLet : lexer rest
+      ("in",rest)  -> TokenIn : lexer rest
+      (var,rest)   -> TokenVar var : lexer rest
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>And finally a top-level function to take some input, parse it, and
+print out the result.
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+main = getContents >>= print . calc . lexer
+}
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>And that's it! A whole lexer, parser and grammar in a few dozen lines.
+Another good example is Happy's own parser. Several features in Happy
+were developed using this as an example.
+<P>To generate the Haskell module for this parser, type the command
+<CODE>happy example.ly</CODE> (where <CODE>example.ly</CODE> is the name of the
+grammar file).  The Haskell module will be placed in a file named
+<CODE>example.hs</CODE>.  Additionally, invoking the command <CODE>happy
+example.ly -i</CODE> will produce the file <CODE>example.info</CODE> which contains
+detailed information about the parser, including states and reduction
+rules (see Section 
+<A HREF="happy-5.html#sec:info-files">sec:info-files</A>
+).  This can be invaluable
+for debugging parsers, but requires some knowledge of the operation of
+a shift-reduce parser.
+<P>
+<H2><A NAME="sec:other-datatypes"></A> <A NAME="ss2.1">2.1 Returning other datatypes</A>
+</H2>
+
+<P>
+<P>In the above example, we used a data type to represent the syntax
+being parsed.  However, there's no reason why it has to be this way:
+you could calculate the value of the expression on the fly, using
+productions like this:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+Term  : Term '*' Factor         { $1 * $3 }
+      | Term '/' Factor         { $1 / $3 }
+      | Factor                  { $1 }
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>The value of a <CODE>Term</CODE> would be the value of the expression itself,
+and the parser could return an integer.  
+<P>This works for simple expression types, but our grammar includes
+variables and the <CODE>let</CODE> syntax.  How do we know the value of a
+variable while we're parsing it?  We don't, but since the Haskell code
+for a production can be anything at all, we could make it a function
+that takes an environment of variable values, and returns the computed
+value of the expression:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+Exp   : let var '=' Exp in Exp  { \p -> $6 (($2,$4 p):p) }
+      | Exp1                    { $1 }
+
+Exp1  : Exp1 '+' Term           { \p -> $1 p + $3 p }
+      | Exp1 '-' Term           { \p -> $1 p - $3 p }
+      | Term                    { $1 }
+
+Term  : Term '*' Factor         { \p -> $1 p * $3 p }
+      | Term '/' Factor         { \p -> $1 p / $3 p }
+      | Factor                  { $1 }
+
+Factor                    
+      : int                     { \p -> $1 }
+      | var                     { \p -> case lookup $1 p of
+                                            Nothing -> error "no var"
+                                            Just i  -> i }
+      | '(' Exp ')'             { \p -> $2 }
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>The value of each production is a function from an environment
+<EM>p</EM> to a value.  When parsing a <CODE>let</CODE> construct, we extend the
+environment with the new binding to find the value of the body, and
+the rule for <CODE>var</CODE> looks up its value in the environment.  There's
+something you can't do in <CODE>yacc</CODE> :-)
+<P>
+<H2><A NAME="sec:sequences"></A> <A NAME="ss2.2">2.2 Parsing sequences</A>
+</H2>
+
+<P>
+<P>A common feature in grammars is a <EM>sequence</EM> of a particular
+syntactic element.  In EBNF, we'd write something like <CODE>n+</CODE> to
+represent a sequence of one or more <CODE>n</CODE>s, and <CODE>n*</CODE> for zero or
+more.  Happy doesn't support this syntax explicitly, but you can
+define the equivalent sequences using simple productions.
+<P>For example, the grammar for Happy itself contains a rule like this:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+prods : prod                   { [$1] }
+      | prods prod             { $2 : $1 }
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>In other words, a sequence of productions is either a single
+production, or a sequence of productions followed by a single
+production.  This recursive rule defines a sequence of one or more
+productions.
+<P>One thing to note about this rule is that we used <EM>left recursion</EM>
+to define it - we could have written it like this:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+prods : prod                  { [$1] }
+      | prod prods            { $1 : $2 }
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>The only reason we used left recursion is that Happy is more efficient
+at parsing left-recursive rules; they result in a constant stack-space
+parser, whereas right-recursive rules require stack space proportional
+to the length of the list being parsed.  This can be extremely
+important where long sequences are involved, for instance in
+automatically generated output.  For example, the parser in GHC used
+to use right-recursion to parse lists, and as a result it failed to
+parse some Happy-generated modules due to running out of stack space!
+<P>One implication of using left recursion is that the resulting list
+comes out reversed, and you have to reverse it again to get it in the
+original order.  Take a look at the Happy grammar for Haskell for many
+examples of this.
+<P>Parsing sequences of zero or more elements requires a trivial change
+to the above pattern:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+prods : {- empty -}           { [$1] }
+      | prods prod            { $2 : $1 }
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>Yes - empty productions are allowed.  The normal convention is to
+include the comment <CODE>{- empty -}</CODE> to make it more obvious to a
+reader of the code what's going on.
+<P>
+<H3><A NAME="sec:separators"></A> Sequences with separators</H3>
+
+<P>
+<P>A common type of sequence is one with a <EM>separator</EM>: for instance
+function bodies in C consist of statements separated by semicolons.
+To parse this kind of sequence we use a production like this:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+stmts : stmt                   { [$1] }
+      | stmts ';' stmt         { $3 : $1 }
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>If the <CODE>;</CODE> is to be a <EM>terminator</EM> rather than a separator
+(i.e. there should be one following each statement), we can remove the
+semicolon from the above rule and redefine <CODE>stmt</CODE> as
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+stmt : stmt1 ';'              { $1 }
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>where <CODE>stmt1</CODE> is the real definition of statements.
+<P>We might like to allow extra semicolons between statements, to be a
+bit more liberal in what we allow as legal syntax.  We probably just
+want the parser to ignore these extra semicolons, and not generate a
+``null statement'' value or something.  The following rule parses a
+sequence or zero or more statements separated by semicolons, in which
+the statements may be empty:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+stmts : stmts ';' stmt          { $3 : $1 }
+      | stmts ';'               { $1 }
+      | {- empty -}             { [] }
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>Parsing sequences of <EM>one</EM> or more possibly null statements is left
+as an exercise for the reader...
+<P>
+<H2><A NAME="sec:ambiguities"></A> <A NAME="ss2.3">2.3 Ambiguities</A>
+</H2>
+
+<P>
+<P>(section under construction)
+<P>
+<H2><A NAME="sec:type-signatures"></A> <A NAME="ss2.4">2.4 Type Signatures</A>
+</H2>
+
+<P>
+<P>Happy allows you to include type signatures in the grammar file
+itself, to indicate the type of each production.  This has several
+benefits:
+<P>
+<UL>
+<LI> Documentation: including types in the grammar helps to document
+the grammar for someone else (and indeed yourself) reading the code.</LI>
+<LI> Fixing type errors in the generated module can become slightly
+easier if Happy has inserted type signatures for you.  This is a
+slightly dubious benefit, since type errors in the generated module
+are still somewhat difficult to find.</LI>
+<LI> Type errors generally help the Haskell compiler to compile the
+parser faster.  This is important when really large grammar files are
+being used.</LI>
+</UL>
+<P>The syntax for type signatures in the grammar file is as follows:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+stmts   :: { [ Stmt ] }
+stmts   : stmts stmt                { $2 : $1 }
+        | stmt                      { [$1] }
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>In fact, you can leave out the superfluous occurrence of <CODE>stmts</CODE>:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+stmts   :: { [ Stmt ] }
+        : stmts stmt                { $2 : $1 }
+        | stmt                      { [$1] }
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>Note that currently, you have to include type signatures for <EM>all</EM>
+the productions in the grammar to benefit from the second and third
+points above.  This is due to boring technical reasons, but it is
+hoped that this restriction can be removed in the future.
+<P>
+<H2><A NAME="sec:monads"></A> <A NAME="ss2.5">2.5 Monadic Parsers</A>
+</H2>
+
+<P>
+<P>Happy has support for threading a monad through the generated parser.
+This might be useful for several reasons:
+<P>
+<UL>
+<LI> Handling parse errors by using an exception monad (see Section
+<A HREF="#sec:exception">Handling Parse Errors</A>).
+</LI>
+<LI> Keeping track of line numbers in the input file, for example
+for use in error messages (see Section 
+<A HREF="#sec:line-numbers">Line Numbers</A>).
+</LI>
+<LI> Performing IO operations during parsing.
+</LI>
+<LI> Parsing languages with context-dependencies (such as C) require
+some state in the parser.
+</LI>
+</UL>
+<P>Adding monadic support to your parser couldn't be simpler.  Just add
+the following directive to the declaration section of the grammar
+file:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+%monad { &lt;type> } { &lt;then> } { &lt;return> }
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>where <CODE>&lt;type&gt;</CODE> is the type constructor for the monad,
+<CODE>&lt;then&gt;</CODE> is the bind operation of the monad, and
+<CODE>&lt;return&gt;</CODE> is the return operation.
+<P>When this declaration is included in the grammar, Happy makes a couple
+of changes to the generated parser: the types of the main parser
+function and <CODE>happyError</CODE> become <CODE>[Token] -&gt; P a</CODE> where
+<CODE>P</CODE> is the monad type constructor, and <CODE>a</CODE> is the type of the
+top production.  In other words, Happy adds an application of the
+<CODE>&lt;return&gt;</CODE> operation defined in the declaration above, around
+the result of the parser (<CODE>happyError</CODE> is affected because it must
+have the same return type as the parser).  And that's all it does.
+<P>This still isn't very useful: all you can do is return something of
+monadic type from <CODE>happyError</CODE>.  How do you specify that the
+productions can also have type <CODE>P a</CODE>?  Most of the time, you don't
+want a production to have this type: you'd have to write explicit
+<CODE>returnP</CODE>s everywhere.  However, there may be a few rules in a
+grammar that need to get at the monad, so Happy has a special syntax
+for monadic productions:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+n  :  t_1 ... t_n          {% &lt;expr> }
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>The <CODE>%</CODE> in the action indicates that this is a monadic action, with
+type <CODE>P a</CODE>, where <CODE>a</CODE> is the real return type of the
+production.  When Happy reduces one of these rules, it evaluates the
+expression 
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+&lt;expr> `then` \result -> &lt;continue parsing>
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>Happy uses <CODE>result</CODE> as the real semantic value of the production.
+During parsing, several monadic actions might be reduced, resulting in
+a sequence like
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+&lt;expr1> `then` \r1 ->
+&lt;expr2> `then` \r2 ->
+...
+return &lt;expr3>
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>The monadic actions are performed in the order that they are
+<EM>reduced</EM>.  If we consider the parse as a tree, then reductions
+happen in a depth-first left-to-right manner.  The great thing about
+adding a monad to your parser is that it doesn't impose any
+performance overhead for normal reductions - only the monadic ones are
+translated like this.
+<P>Take a look at the Haskell parser for a good illustration of how to
+use a monad in your parser: it contains examples of all the principles
+discussed in this section, namely parse errors, a threaded lexer,
+line/column numbers, and state communication between the parser and
+lexer.
+<P>The following sections consider a couple of uses for monadic parsers,
+and describe how to also thread the monad through the lexical analyser.
+<P>
+<H3><A NAME="sec:exception"></A> Handling Parse Errors</H3>
+
+<P>
+<P>It's not very convenient to just call <CODE>error</CODE> when a parse error is
+detected: in a robust setting, you'd like the program to recover
+gracefully and report a useful error message to the user.  Exceptions
+(of which errors are a special case) are normally implemented in
+Haskell by using an exception monad, something like:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+data E a = Ok a | Failed String
+
+thenE :: E a -> (a -> E b) -> E b
+m `thenE` k = 
+   case m of 
+       Ok a -> k a
+         Failed e -> Failed e
+
+returnE :: a -> E a
+returnE a = Ok a
+
+failE :: String -> E a
+failE err = Failed err
+
+catchE :: E a -> (String -> E a) -> E a
+catchE m k = 
+   case m of
+      Ok a -> OK a
+        Failed e -> k e
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>This monad just uses a string as the error type.  The functions
+<CODE>thenE</CODE> and <CODE>returnE</CODE> are the usual bind and return operations
+of the monad, <CODE>failE</CODE> raises an error, and <CODE>catchE</CODE> is a
+combinator for handling exceptions.
+<P>We can add this monad to the parser with the declaration
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+%monad { E } { thenE } { returnE }
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>Now, without changing the grammar, we can change the definition of
+<CODE>happyError</CODE> and have something sensible happen for a parse error:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+happyError tokens = failE "Parse error"
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>The parser now raises an exception in the monad instead of bombing out
+on a parse error.
+<P>We can also generate errors during parsing.  There are times when it
+is more convenient to parse a more general language than that which is
+actually intended, and check it later.  An example comes from Haskell,
+where the precedence values in infix declarations must be between 0
+and 9:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+prec :: { Int }
+      : int    {% if $1 &lt; 0 || $1 > 9 
+                        then failE "Precedence out of range"
+                        else returnE $1
+                }
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>The monadic action allows the check to be placed in the parser itself,
+where it belongs.
+<P>
+<H3><A NAME="sec:lexers"></A> Threaded Lexers</H3>
+
+<P>
+<P>Happy allows the monad concept to be extended to the lexical analyser,
+too.  This has several useful consequences:
+<P>
+<UL>
+<LI> Lexical errors can be treated in the same way as parse errors,
+using an exception monad.</LI>
+<LI> Information such as the current file and line number can be
+communicated between the lexer and parser.</LI>
+<LI> General state communication between the parser and lexer - for
+example, implementation of the Haskell layout rule requires this kind
+of interaction.</LI>
+<LI> IO operations can be performed in the lexer - this could be
+useful for following import/include declarations for instance.</LI>
+</UL>
+<P>A monadic lexer is requested by adding the following declaration to
+the grammar file:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+%lexer { &lt;lexer> } { &lt;eof> }
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>where <CODE>&lt;lexer&gt;</CODE> is the name of the lexical analyser function,
+and <CODE>&lt;eof&gt;</CODE> is a token that is to be treated as the end of
+file.
+<P>When using a monadic lexer, the parser no longer reads a list of
+tokens.  Instead, it calls the lexical analysis function for each new
+token to be read.  This has the side effect of eliminating the
+intermediate list of tokens, which is a slight performance win.
+<P>The type of the main parser function and <CODE>happyError</CODE> is now just
+<CODE>P a</CODE> - the input is being handled completely within the monad.
+<P>The lexical analysis function must have the following type:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+lexer :: (Token -> P a) -> P a
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>where <CODE>P</CODE> is the monad type constructor declared with <CODE>%monad</CODE>,
+and <CODE>a</CODE> can be replaced by the parser return type if desired.
+<P>You can see from this type that the lexer takes a <EM>continuation</EM> as
+an argument.  The lexer is to find the next token, and pass it to this
+continuation to carry on with the parse.  Obviously, we need to keep
+track of the input in the monad somehow, so that the lexer can do
+something different each time it's called!
+<P>Let's take the exception monad above, and extend it to add the input
+string so that we can use it with a threaded lexer.
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+data ParseResult a = Ok a | Failed String
+type P a = String -> ParseResult a
+
+thenP :: P a -> (a -> P b) -> P b
+m `thenP` k = \s ->
+   case m s of 
+       Ok a -> k a s
+         Failed e -> Failed e
+
+returnP :: a -> P a
+returnP a = \s -> Ok a
+
+failP :: String -> P a
+failP err = \s -> Failed err
+
+catchP :: P a -> (String -> P a) -> P a
+catchP m k = \s ->
+   case m s of
+      Ok a -> OK a
+        Failed e -> k e s
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>Notice that this isn't a real state monad - the input string just gets
+passed around, not returned.  Our lexer will now look something like
+this:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+lexer :: (Token -> P a) -> P a
+lexer cont s = 
+    ... lexical analysis code ...
+    cont token s'
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>the lexer grabs the continuation and the input string, finds the next
+token <CODE>token</CODE>, and passes it together with the remaining input
+string <CODE>s'</CODE> to the continuation.
+<P>We can now indicate lexical errors by ignoring the continuation and
+calling <CODE>failP "error message" s</CODE> within the lexer (don't forget to
+pass the input string to make the types work out).
+<P>This may all seem a bit weird.  Why, you ask, doesn't the lexer just
+have type <CODE>P Token</CODE>?  Well, the decision was taken to use a
+continuation purely for performance reasons.  If the lexer must return
+a token, then it turns out that the input string must be a real state
+object, and the monad has to return it as well as pass it around.  If
+you want a lexer of type <CODE>P Token</CODE>, then just define a wrapper to
+deal with the continuation:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+lexwrap :: (Token -> P a) -> P a
+lexwrap cont = real_lexer `thenP` \token -> cont token
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>
+<H3><A NAME="sec:line-numbers"></A> Line Numbers</H3>
+
+<P>
+<P>Previous versions of Happy had a <CODE>%newline</CODE> directive that enabled
+simple line numbers to be counted by the parser and referenced in the
+actions.  We warned you that this facility may go away and be replaced
+by something more general, well guess what? :-)
+<P>Line numbers can now be dealt with quite straightforwardly using a
+monadic parser/lexer combination.  Ok, we have to extend the monad a
+bit more:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+type LineNumber = Int
+type P a = String -> LineNumber -> ParseResult a
+
+getLineNo :: P LineNumber
+getLineNo = \s l -> Ok l
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>(the rest of the functions in the monad follow by just adding the
+extra line number argument in the same way as the input string).
+Again, the line number is just passed down, not returned: this is OK
+because of the continuation-based lexer that can change the line
+number and pass the new one to the continuation.
+<P>The lexer can now update the line number as follows:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+lexer cont s =
+  case s of
+     '\n':s  ->  \line -> lexer cont s (line + 1)
+     ... rest of lexical analysis ...
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>It's as simple as that.  Take a look at Happy's own parser if you have
+the sources lying around, it uses a monad just like the one above.
+<P>Reporting the line number of a parse error is achieved by changing
+<CODE>happyError</CODE> to look something like this:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+happyError :: P a
+happyError = getLineNo `thenP` \line -> 
+             failP (show line ++ ": parse error")
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>We can also get hold of the line number during parsing, to put it in
+the parsed data structure for future reference.  A good way to do this
+is to have a production in the grammar that returns the current line
+number: 
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+lineno :: { LineNumber }
+        : {- empty -}      {% getLineNo }
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>The semantic value of <CODE>lineno</CODE> is the line number of the last token
+read - this will always be the token directly following the
+<CODE>lineno</CODE> symbol in the grammar, since Happy always keeps one
+lookahead token in reserve.
+<P>
+<H3><A NAME="sec:monad-summary"></A> Summary</H3>
+
+<P>
+<P>The types of various functions related to the parser are dependent on
+what combination of <CODE>%monad</CODE> and <CODE>%lexer</CODE> directives are present
+in the grammar.  For reference, we list those types here.
+<P>
+<DL>
+<DT><B> No <CODE>%monad</CODE> or <CODE>%lexer</CODE>. </B><DD><P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+parse      :: [Token] -> a
+happyError :: [Token] -> a
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>
+<DT><B> with <CODE>%monad</CODE>. </B><DD><P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+parse      :: [Token] -> P a
+happyError :: [Token] -> P a
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>
+<DT><B> with <CODE>%lexer</CODE>. </B><DD><P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+parse      :: T a
+happyError :: T a
+lexer      :: (Token -> T a) -> T a
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+
+where the type constructor <CODE>T</CODE> is whatever you want (usually <CODE>T
+a = String -> a</CODE>.  I'm not sure if this is useful, or even if it works
+properly.
+<P>
+<DT><B> with <CODE>%monad</CODE> and <CODE>%lexer</CODE>. </B><DD><P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+parse      :: P a
+happyError :: P a
+lexer      :: (Token -> P a) -> P a
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>
+</DL>
+<P>
+<H2><A NAME="sec:error"></A> <A NAME="ss2.6">2.6 The Error Token</A>
+</H2>
+
+<P>
+<P>Happy supports a limited form of error recovery, using the special
+symbol <CODE>error</CODE> in a grammar file.  When Happy finds a parse error
+during parsing, it automatically inserts the <CODE>error</CODE> symbol; if
+your grammar deals with <CODE>error</CODE> explicitly, then it can detect the
+error and carry on.
+<P>For example, the Happy grammar for Haskell uses error recovery to
+implement Haskell layout.  The grammar has a rule that looks like
+this:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+close : '}'                  { () }
+      | error                { () }
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>This says that a close brace in a layout-indented context may be
+either a curly brace (inserted by the lexical analyser), or a parse
+error.  
+<P>This rule is used to parse expressions like <CODE>let x = e in e'</CODE>: the
+layout system inserts an open brace before <CODE>x</CODE>, and the occurrence
+of the <CODE>in</CODE> symbol generates a parse error, which is interpreted
+as a close brace by the above rule.
+<P>Note for <CODE>yacc</CODE> users: this form of error recovery is strictly more
+limited than that provided by <CODE>yacc</CODE>.  During a parse error
+condition, <CODE>yacc</CODE> attempts to discard states and tokens in order to
+get back into a state where parsing may continue; Happy doesn't do
+this.  The reason is that normal <CODE>yacc</CODE> error recovery is
+notoriously hard to describe, and the semantics depend heavily on the
+workings of a shift-reduce parser.  Furthermore, different
+implementations of <CODE>yacc</CODE> appear to implement error recovery
+differently.  Happy's limited error recovery on the other hand is
+well-defined, as is just sufficient to implement the Haskell layout
+rule (which is why it was added in the first place).
+<P>
+<HR>
+<A HREF="happy-3.html">Next</A>
+<A HREF="happy-1.html">Previous</A>
+<A HREF="happy.html#toc2">Contents</A>
+</BODY>
+</HTML>

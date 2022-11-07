@@ -1,0 +1,390 @@
+<HTML
+><HEAD
+><TITLE
+>Invoking Happy</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.54"><LINK
+REL="HOME"
+TITLE="Happy User Guide"
+HREF="happy.html"><LINK
+REL="PREVIOUS"
+TITLE="Generating Multiple Parsers From a Single Grammar"
+HREF="sec-multiple-parsers.html"><LINK
+REL="NEXT"
+TITLE="Syntax of Grammar Files"
+HREF="sec-grammar-files.html"></HEAD
+><BODY
+CLASS="CHAPTER"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Happy User Guide</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="sec-multiple-parsers.html"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="sec-grammar-files.html"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="CHAPTER"
+><H1
+><A
+NAME="SEC-INVOKING"
+>Chapter 3. Invoking <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+></A
+></H1
+><P
+>An invocation of <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> has the following syntax:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>happy [ <I
+CLASS="EMPHASIS"
+>options</I
+> ] <I
+CLASS="EMPHASIS"
+>filename</I
+> [ <I
+CLASS="EMPHASIS"
+>options</I
+> ]</PRE
+></TD
+></TR
+></TABLE
+><P
+>All the command line options are optional (!) and may occur
+    either before or after the input file name.</P
+><P
+>There are two types of grammar files,
+    <TT
+CLASS="FILENAME"
+>file.y</TT
+> and <TT
+CLASS="FILENAME"
+>file.ly</TT
+>, with
+    the latter observing the reverse comment (or literate) convention
+    (i.e. each code line must begin with the character
+    <TT
+CLASS="LITERAL"
+>&#62;</TT
+>, lines which don't begin with
+    <TT
+CLASS="LITERAL"
+>&#62;</TT
+> are treated as comments).  The examples
+    distributed with <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> are all of the
+    .ly form.</P
+><P
+>The flags accepted by <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> are as follows:</P
+><P
+></P
+><DIV
+CLASS="VARIABLELIST"
+><DL
+><DT
+><TT
+CLASS="LITERAL"
+>-a | --arrays</TT
+></DT
+><DD
+><P
+> Instructs <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> to generate a parser
+          using an array-based shift reduce parser.  When used in
+          conjunction with <TT
+CLASS="LITERAL"
+>-g</TT
+>, the arrays will be
+          encoded as strings, resulting in faster parsers.  Without
+          <TT
+CLASS="LITERAL"
+>-g</TT
+>, standard Haskell arrays will be
+          used.</P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>-g | --ghc</TT
+></DT
+><DD
+><P
+>Instructs <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> to generate a parser
+	  that uses GHC-specific extensions to obtain faster
+	  code.</P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>-c | --coerce</TT
+></DT
+><DD
+><P
+> Use GHC's <TT
+CLASS="LITERAL"
+>unsafeCoerce#</TT
+> extension to
+          generate smaller faster parsers.  Type-safety isn't
+          compromised.</P
+><P
+>This option may only be used in conjuction with
+          <TT
+CLASS="LITERAL"
+>-g</TT
+>.</P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>-d | --debug</TT
+></DT
+><DD
+><P
+>Generate a parser that will print debugging
+	  information to <TT
+CLASS="LITERAL"
+>stderr</TT
+> at run-time,
+	  including all the shifts, reductions, state transitions and
+	  token inputs performed by the parser.</P
+><P
+>This option can only be used in conjunction with
+	  <TT
+CLASS="LITERAL"
+>-a</TT
+>.</P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>-i[&#60;filename&#62;] |
+	--info[=&#60;filename&#62;]</TT
+></DT
+><DD
+><P
+> Directs <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> to produce an info file
+          containing detailed information about the grammar, parser
+          states, parser actions, and conflicts.  Info files are vital
+          during the debugging of grammars.  The filename argument is
+          optional (note that there's no space between
+          <TT
+CLASS="LITERAL"
+>-i</TT
+> and the filename in the short
+          version), and if omitted the info file will be written to
+          <TT
+CLASS="LITERAL"
+>&#60;file&#62;.info</TT
+> (where <TT
+CLASS="LITERAL"
+>&#60;file&#62;</TT
+>; is
+          the input file name with any extension removed). </P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>-o &#60;filename&#62; |
+	--outfile=&#60;filename&#62;</TT
+></DT
+><DD
+><P
+>Specifies the destination of the generated parser
+          module.  If omitted, the parser will be placed in
+          <TT
+CLASS="LITERAL"
+>&#60;file&#62;.hs</TT
+>, where <TT
+CLASS="LITERAL"
+>&#60;file&#62;</TT
+> is
+          the name of the input file with any extension
+          removed.</P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>-m &#60;name&#62; | --magic-name=&#60;name&#62;</TT
+></DT
+><DD
+><P
+> <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> prefixes all the symbols it uses internally
+          with either <TT
+CLASS="LITERAL"
+>happy</TT
+> or <TT
+CLASS="LITERAL"
+>Happy</TT
+>.  To use a
+          different string, for example if the use of <TT
+CLASS="LITERAL"
+>happy</TT
+>
+          is conflicting with one of your own functions, specify the
+          prefix using the <TT
+CLASS="LITERAL"
+>-m</TT
+> option.</P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>-v | --version</TT
+></DT
+><DD
+><P
+>Print version information on standard output then exit
+	  successfully.</P
+></DD
+><DT
+><TT
+CLASS="LITERAL"
+>-t &#60;directory&#62; | --template
+&#60;directory&#62;</TT
+></DT
+><DD
+><P
+>Instructs <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> to use this directory
+          when looking for template files: these files contain the
+          static code that <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> includes in every
+          generated parser.  You shouldn't need to use this option if
+          <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> is properly configured for your
+          computer.</P
+></DD
+></DL
+></DIV
+><P
+>      Options that take arguments may be given multiple times, and the
+      last occurrence will be the value used, except that for
+      <TT
+CLASS="LITERAL"
+>--target</TT
+>, all the values supplied must be the
+      same.
+    </P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sec-multiple-parsers.html"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="happy.html"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sec-grammar-files.html"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Generating Multiple Parsers From a Single Grammar</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Syntax of Grammar Files</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

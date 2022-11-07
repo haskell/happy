@@ -1,0 +1,197 @@
+<HTML
+><HEAD
+><TITLE
+>Generating Multiple Parsers From a Single Grammar</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.54"><LINK
+REL="HOME"
+TITLE="Happy User Guide"
+HREF="happy.html"><LINK
+REL="UP"
+TITLE="Using Happy"
+HREF="sec-using.html"><LINK
+REL="PREVIOUS"
+TITLE="The Error Token"
+HREF="sec-error.html"><LINK
+REL="NEXT"
+TITLE="Invoking Happy"
+HREF="sec-invoking.html"></HEAD
+><BODY
+CLASS="SECT1"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>Happy User Guide</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="sec-error.html"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 2. Using <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="sec-invoking.html"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="SECT1"
+><H1
+CLASS="SECT1"
+><A
+NAME="SEC-MULTIPLE-PARSERS"
+>2.7. Generating Multiple Parsers From a Single Grammar</A
+></H1
+><P
+>It is often useful to use a single grammar to describe
+      multiple parsers, where each parser has a different top-level
+      non-terminal, but parts of the grammar are shared between
+      parsers.  A classic example of this is an interpreter, which
+      needs to be able to parse both entire files and single
+      expressions: the expression grammar is likely to be identical
+      for the two parsers, so we would like to use a single grammar
+      but have two entry points.</P
+><P
+><SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> lets you do this by
+      allowing multiple <TT
+CLASS="LITERAL"
+>%name</TT
+> directives in the
+      grammar file.  The <TT
+CLASS="LITERAL"
+>%name</TT
+> directive takes an
+      optional second parameter specifying the top-level
+      non-terminal for this parser, so we may specify multiple parsers
+      like so:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><PRE
+CLASS="PROGRAMLISTING"
+>%name parse1 non-terminal1
+%name parse2 non-terminal2</PRE
+></TD
+></TR
+></TABLE
+><P
+><SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+> will generate from this a
+      module which defines two functions <TT
+CLASS="FUNCTION"
+>parse1</TT
+>
+      and <TT
+CLASS="FUNCTION"
+>parse2</TT
+>, which parse the grammars given
+      by <TT
+CLASS="LITERAL"
+>non-terminal1</TT
+> and
+      <TT
+CLASS="LITERAL"
+>non-terminal2</TT
+> respectively.  Each parsing
+      function will of course have a different type, depending on the
+      type of the appropriate non-terminal.</P
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="sec-error.html"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="happy.html"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="sec-invoking.html"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>The Error Token</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="sec-using.html"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Invoking <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+></TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

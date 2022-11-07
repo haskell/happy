@@ -1,0 +1,331 @@
+<HTML
+><HEAD
+><TITLE
+>Happy User Guide</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.44"><LINK
+REL="NEXT"
+TITLE="Introduction"
+HREF="c19.html"></HEAD
+><BODY
+><DIV
+CLASS="BOOK"
+><A
+NAME="AEN1"
+></A
+><DIV
+CLASS="TITLEPAGE"
+><H1
+CLASS="TITLE"
+><A
+NAME="AEN2"
+>Happy User Guide</A
+></H1
+><H3
+CLASS="AUTHOR"
+>Simon Marlow</H3
+><H3
+CLASS="AUTHOR"
+>Andy Gill</H3
+><P
+CLASS="COPYRIGHT"
+>Copyright &copy; 1997-1999 by <SPAN
+CLASS="HOLDER"
+>Simon Marlow</SPAN
+></P
+><DIV
+><DIV
+CLASS="ABSTRACT"
+><P
+></P
+><P
+>This document describes Happy, the Haskell Parser
+	Generator, version 1.6.</P
+><P
+></P
+></DIV
+></DIV
+><HR></DIV
+><DIV
+CLASS="TOC"
+><DL
+><DT
+><B
+>Table of Contents</B
+></DT
+><DT
+>1. <A
+HREF="c19.html"
+>Introduction</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="c19.html#SEC-COMPATIBILITY"
+>Compatibility</A
+></DT
+><DT
+><A
+HREF="sec-reporting-bugs.html"
+>Reporting Bugs</A
+></DT
+><DT
+><A
+HREF="sec-license.html"
+>License</A
+></DT
+><DT
+><A
+HREF="sec-obtaining.html"
+>Obtaining <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+></A
+></DT
+></DL
+></DD
+><DT
+>2. <A
+HREF="sec-using.html"
+>Using <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+></A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="sec-using.html#SEC-OTHER-DATATYPES"
+>Returning other datatypes</A
+></DT
+><DT
+><A
+HREF="sec-sequences.html"
+>Parsing sequences</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="sec-sequences.html#SEC-SEPARATORS"
+>Sequences with separators</A
+></DT
+></DL
+></DD
+><DT
+><A
+HREF="sec-ambiguities.html"
+>Ambiguities</A
+></DT
+><DT
+><A
+HREF="sec-type-signatures.html"
+>Type Signatures</A
+></DT
+><DT
+><A
+HREF="sec-monads.html"
+>Monadic Parsers</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="sec-monads.html#SEC-EXCEPTION"
+>Handling Parse Errors</A
+></DT
+><DT
+><A
+HREF="sec-monads.html#SEC-LEXERS"
+>Threaded Lexers</A
+></DT
+><DT
+><A
+HREF="sec-monads.html#SEC-LINE-NUMBERS"
+>Line Numbers</A
+></DT
+><DT
+><A
+HREF="sec-monads.html#SEC-MONAD-SUMMARY"
+>Summary</A
+></DT
+></DL
+></DD
+><DT
+><A
+HREF="sec-error.html"
+>The Error Token</A
+></DT
+></DL
+></DD
+><DT
+>3. <A
+HREF="sec-invoking.html"
+>Invoking <SPAN
+CLASS="APPLICATION"
+>Happy</SPAN
+></A
+></DT
+><DT
+>4. <A
+HREF="sec-grammar-files.html"
+>Syntax of Grammar Files</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="sec-grammar-files.html#SEC-LEXICAL-RULES"
+>Lexical Rules</A
+></DT
+><DT
+><A
+HREF="sec-module-header.html"
+>Module Header</A
+></DT
+><DT
+><A
+HREF="sec-directives.html"
+>Directives</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="sec-directives.html#SEC-TOKEN-TYPE"
+>Token Type</A
+></DT
+><DT
+><A
+HREF="sec-directives.html#SEC-TOKENS"
+>Tokens</A
+></DT
+><DT
+><A
+HREF="sec-directives.html#SEC-PARSER-NAME"
+>Parser Name</A
+></DT
+><DT
+><A
+HREF="sec-directives.html#SEC-MONAD-DECL"
+>Monad Directive</A
+></DT
+><DT
+><A
+HREF="sec-directives.html#SEC-LEXER-DECL"
+>Lexical Analyser</A
+></DT
+></DL
+></DD
+><DT
+><A
+HREF="sec-grammar.html"
+>Grammar</A
+></DT
+><DT
+><A
+HREF="sec-module-trailer.html"
+>Module Trailer</A
+></DT
+></DL
+></DD
+><DT
+>5. <A
+HREF="sec-info-files.html"
+>Info Files</A
+></DT
+><DT
+>6. <A
+HREF="sec-tips.html"
+>Tips</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="sec-tips.html#SEC-PERFORMANCE-TIPS"
+>Performance Tips</A
+></DT
+><DT
+><A
+HREF="sec-compilation-time.html"
+>Compilation-Time Tips</A
+></DT
+><DT
+><A
+HREF="sec-finding-errors.html"
+>Finding Type Errors</A
+></DT
+><DT
+><A
+HREF="sec-conflict-tips.html"
+>Conflict Tips</A
+></DT
+><DD
+><DL
+><DT
+><A
+HREF="sec-conflict-tips.html#SEC-LALR"
+>LALR(1) parsers</A
+></DT
+></DL
+></DD
+></DL
+></DD
+></DL
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="c19.html"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Introduction</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

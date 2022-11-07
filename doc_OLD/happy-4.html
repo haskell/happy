@@ -1,0 +1,255 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+<TITLE>Happy User Guide: Syntax of Grammar Files</TITLE>
+</HEAD>
+<BODY>
+<A HREF="happy-5.html">Next</A>
+<A HREF="happy-3.html">Previous</A>
+<A HREF="happy.html#toc4">Contents</A>
+<HR>
+<H2><A NAME="sec:grammar-files"></A> <A NAME="s4">4. Syntax of Grammar Files</A></H2>
+
+<P>
+<P>The input to Happy is a text file containing the grammar of the
+language you want to parse, together with some annotations that help
+the parser generator make a legal Haskell module that can be included
+in your program.  This section gives the exact syntax of grammar
+files. 
+<P>The overall format of the grammar file is given below:
+<P>
+<BLOCKQUOTE><CODE>
+ 
+<PRE>
+&lt;optional module header>
+&lt;directives>
+%%
+&lt;grammar>
+&lt;optional module trailer>
+</PRE>
+ 
+</CODE></BLOCKQUOTE>
+<P>If the name of the grammar file ends in <CODE>.ly</CODE>, then it is assumed
+to be a literate script.  All lines except those beginning with a
+<CODE>&gt;</CODE> will be ignored, and the <CODE>&gt;</CODE> will be stripped from the
+beginning of all the code lines.  There must be a blank line between
+each code section (lines beginning with <CODE>&gt;</CODE>) and comment section.
+Grammars not using the literate notation must be in a file with the
+<CODE>.y</CODE> suffix.
+<P>
+<H2><A NAME="sec:lexical-rules"></A> <A NAME="ss4.1">4.1 Lexical Rules</A>
+</H2>
+
+<P>
+<P>Identifiers in Happy grammar files must take the following form (using
+the BNF syntax from the Haskell Report):
+<P>
+<BLOCKQUOTE><CODE>
+<PRE>
+ 
+        id      ::= alpha { idchar }
+                  | ' { any{^'} | \' } '
+                  | " { any{^"} | \" } "
+
+        alpha   ::= A | B | ... | Z
+                  | a | b | ... | z
+
+        idchar  ::= alpha
+                  | 0 | 1 | ... | 9
+                  | _
+</PRE>
+</CODE></BLOCKQUOTE>
+<P>
+<H2><A NAME="sec:module-header"></A> <A NAME="ss4.2">4.2 Module Header</A>
+</H2>
+
+<P>
+<P>This section is optional, but if included takes the following form:
+<P>
+<BLOCKQUOTE><CODE>
+<PRE>
+{  
+&lt;Haskell module header>
+}
+</PRE>
+</CODE></BLOCKQUOTE>
+<P>The Haskell module header contains the module name, exports, and
+imports.  No other code is allowed in the header---this is because Happy
+may need to include its own <CODE>import</CODE> statements directly after the
+user defined header.
+<P>
+<H2><A NAME="sec:directives"></A> <A NAME="ss4.3">4.3 Directives</A>
+</H2>
+
+<P>
+<P>This section contains a number of lines of the form:
+<P>
+<BLOCKQUOTE><CODE>
+<PRE>
+%&lt;directive name> &lt;argument> ...
+</PRE>
+</CODE></BLOCKQUOTE>
+<P>The statements here are all annotations to help Happy generate the
+Haskell code for the grammar.  Some of them are optional, and some of
+them are required.
+<P>
+<H3><A NAME="sec:token-type"></A> Token Type</H3>
+
+<P>
+<P>
+<BLOCKQUOTE><CODE>
+<PRE>
+%tokentype   { &lt;valid Haskell type> }
+</PRE>
+</CODE></BLOCKQUOTE>
+<P>(mandatory) The <CODE>%tokentype</CODE> directive gives the type of the tokens
+passed from the lexical analyser to the parser (in order that Happy
+can supply types for functions and data in the generated parser).
+<P>
+<H3><A NAME="sec:tokens"></A> Tokens</H3>
+
+<P>
+<P>
+<BLOCKQUOTE><CODE>
+<PRE>
+%token &lt;name> { &lt;Haskell pattern> }
+       &lt;name> { &lt;Haskell pattern> }
+       ...
+</PRE>
+</CODE></BLOCKQUOTE>
+<P>(mandatory) The <CODE>%token</CODE> directive is used to tell Happy about all
+the terminal symbols used in the grammar.  Each terminal has a name,
+by which it is referred to in the grammar itself, and a Haskell
+representation enclosed in braces.  Each of the patterns must be of
+the same type, given by the <CODE>%tokentype</CODE> directive.
+<P>The name of each terminal follows the lexical rules for Happy
+identifiers given above.  There are no lexical differences between
+terminals and non-terminals in the grammar, so it is recommended that
+you stick to a convention; for example using upper case letters for
+terminals and lower case for non-terminals, or vice-versa.
+<P>Happy will give you a warning if you try to use the same identifier both
+as a non-terminal and a terminal, or introduce an identifier which is
+declared as neither.
+<P>To save writing lots of projection functions that map tokens to their
+components, you can include <CODE>$$</CODE> in your Haskell
+pattern. For example:
+<P>
+<BLOCKQUOTE><CODE>
+<PRE>
+%token INT { TokenInt $$ }
+       ...
+</PRE>
+</CODE></BLOCKQUOTE>
+<P>This makes the semantic value of <CODE>INT</CODE> refer to the first argument
+of <CODE>TokenInt</CODE> rather than the whole token, eliminating the need for
+any projection function.
+<P>
+<H3><A NAME="sec:parser-name"></A> Parser Name</H3>
+
+<P>
+<P>
+<BLOCKQUOTE><CODE>
+<PRE>
+%name &lt;Haskell identifier>
+</PRE>
+</CODE></BLOCKQUOTE>
+<P>(optional) The <CODE>%name</CODE> directive is followed by a valid Haskell
+identifier, and gives the name of the top-level parsing function in
+the generated parser.  This is the only function that needs to be
+exported from a parser module.
+<P>If the parser name directive is omitted, it defaults to
+<CODE>happyParse</CODE>.
+<P>
+<H3><A NAME="sec:monad-decl"></A> Monad Directive</H3>
+
+<P>
+<P>
+<BLOCKQUOTE><CODE>
+<PRE>
+%monad { &lt;type> } { &lt;then> } { &lt;return> }
+</PRE>
+</CODE></BLOCKQUOTE>
+<P>(optional) The <CODE>%monad</CODE> directive takes three arguments: the type
+constructor of the monad, the <CODE>then</CODE> (or <CODE>bind</CODE>) operation, and
+the <CODE>return</CODE> (or <CODE>unit</CODE>) operation.  The type constructor can be
+any type with kind <CODE>* -> *</CODE>.
+<P>Monad declarations are described in more detail in Section 
+<A HREF="happy-2.html#sec:monads">Monadic Parsers</A>.
+<P>
+<H3><A NAME="sec:lexer-decl"></A> Lexical Analyser</H3>
+
+<P>
+<P>
+<BLOCKQUOTE><CODE>
+<PRE>
+%lexer { &lt;lexer> } { &lt;eof> }
+</PRE>
+</CODE></BLOCKQUOTE>
+<P>(optional) The <CODE>%lexer</CODE> directive takes two arguments:
+<CODE>&lt;lexer&gt;</CODE> is the name of the lexical analyser function, and
+<CODE>&lt;eof&gt;</CODE> is a token that is to be treated as the end of file.
+<P>Lexer declarations are described in more detail in Section 
+<A HREF="happy-2.html#sec:lexers">Threaded Lexers</A>.
+<P>
+<H2><A NAME="sec:grammar"></A> <A NAME="ss4.4">4.4 Grammar</A>
+</H2>
+
+<P>
+<P>The grammar section comes after the directives, separated from them by
+a double-percent (<CODE>%%</CODE>) symbol.  This section contains a number of
+<EM>productions</EM>, each of which defines a single non-terminal.  Each
+production has the following syntax:
+<P>
+<BLOCKQUOTE><CODE>
+<PRE>
+&lt;non-terminal> [ :: { &lt;type> } ]
+        :  &lt;id> ... {[%] &lt;expression> }
+      [ |  &lt;id> ... {[%] &lt;expression> }
+        ... ]
+</PRE>
+</CODE></BLOCKQUOTE>
+<P>The first line gives the non-terminal to be defined by the production
+and optionally its type (type signatures for productions are discussed
+in Section 
+<A HREF="happy-2.html#sec:type-signatures">Type Signatures</A>).
+<P>Each production has at least one, and possibly many right-hand sides.
+Each right-hand side consists of zero or more symbols (terminals or
+non-terminals) and a Haskell expression enclosed in braces.  The
+expression represents the semantic value of the non-terminal, and may
+refer to the semantic values of the symbols in the right-hand side
+using the meta-variables <CODE>$1 ... $n</CODE>.
+<P>Remember that all the expressions for a production must have the same
+type.
+<P>A semantic value of the form <CODE>{% ... }</CODE> is a <EM>monadic action</EM>,
+and is only valid when the grammar file contains a <CODE>%monad</CODE>
+directive (Section 
+<A HREF="#sec:monad-decl">Monad Directive</A>).
+Monadic actions are discussed in Section 
+<A HREF="happy-2.html#sec:monads">Monadic Parsers</A>.
+<P>
+<H2><A NAME="sec:module-trailer"></A> <A NAME="ss4.5">4.5 Module Trailer</A>
+</H2>
+
+<P>
+<P>The module trailer is optional, comes right at the end of the grammar
+file, and takes the same form as the module header:
+<P>
+<BLOCKQUOTE><CODE>
+<PRE>
+{
+&lt;Haskell code>
+}
+</PRE>
+</CODE></BLOCKQUOTE>
+<P>This section is used for placing auxiliary definitions that need to be
+in the same module as the parser.  In small parsers, it often contains a
+hand-written lexical analyser too.  There is no restriction on what can
+be placed in the module trailer, and any code in there is copied
+verbatim into the generated parser file.
+<P>
+<HR>
+<A HREF="happy-5.html">Next</A>
+<A HREF="happy-3.html">Previous</A>
+<A HREF="happy.html#toc4">Contents</A>
+</BODY>
+</HTML>

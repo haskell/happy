@@ -1,0 +1,102 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>2.3. Using Precedences</title><link rel="stylesheet" href="fptools.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.73.2"><link rel="start" href="index.html" title="Happy User Guide"><link rel="up" href="sec-using.html" title="Chapter 2. Using Happy"><link rel="prev" href="sec-sequences.html" title="2.2. Parsing sequences"><link rel="next" href="sec-type-signatures.html" title="2.4. Type Signatures"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">2.3. Using Precedences</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="sec-sequences.html">Prev</a> </td><th width="60%" align="center">Chapter 2. Using <span class="application">Happy</span></th><td width="20%" align="right"> <a accesskey="n" href="sec-type-signatures.html">Next</a></td></tr></table><hr></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="sec-Precedences"></a>2.3. Using Precedences</h2></div></div></div><a class="indexterm" name="id613434"></a><a class="indexterm" name="id613440"></a><p>Going back to our earlier expression-parsing example,
+      wouldn't it be nicer if we didn't have to explicitly separate
+      the expressions into terms and factors, merely to make it
+      clear that <code class="literal">'*'</code> and <code class="literal">'/'</code>
+      operators bind more tightly than <code class="literal">'+'</code> and
+      <code class="literal">'-'</code>?</p><p>We could just change the grammar as follows (making the
+      appropriate changes to the expression datatype too):</p><pre class="programlisting">
+Exp   : let var '=' Exp in Exp  { Let $2 $4 $6 }
+      | Exp '+' Exp             { Plus $1 $3 }
+      | Exp '-' Exp             { Minus $1 $3 }
+      | Exp '*' Exp             { Times $1 $3 }
+      | Exp '/' Exp             { Div $1 $3 }
+      | '(' Exp ')'             { Brack $2 }
+      | int                     { Int $1 }
+      | var                     { Var $1 }
+</pre><p>but now Happy will complain that there are shift/reduce
+      conflicts because the grammar is ambiguous - we haven't
+      specified whether e.g. <code class="literal">1 + 2 * 3</code> is to be
+      parsed as <code class="literal">1 + (2 * 3)</code> or <code class="literal">(1 + 2) *
+      3</code>.  Happy allows these ambiguities to be resolved by
+      specifying the <em class="firstterm">precedences</em> of the
+      operators involved using directives in the
+      header<sup>[<a name="id613509" href="#ftn.id613509" class="footnote">2</a>]</sup>:</p><pre class="programlisting">
+...
+%right in
+%left '+' '-'
+%left '*' '/'
+%%
+...
+</pre><a class="indexterm" name="id613525"></a><a class="indexterm" name="id613536"></a><a class="indexterm" name="id613546"></a><p>The <code class="literal">%left</code> or <code class="literal">%right</code>
+      directive is followed by a list of terminals, and declares all
+      these tokens to be left or right-associative respectively.  The
+      precedence of these tokens with respect to other tokens is
+      established by the order of the <code class="literal">%left</code> and
+      <code class="literal">%right</code> directives: earlier means lower
+      precedence.  A higher precedence causes an operator to bind more
+      tightly; in our example above, because <code class="literal">'*'</code>
+      has a higher precedence than <code class="literal">'+'</code>, the
+      expression <code class="literal">1 + 2 * 3</code> will parse as <code class="literal">1
+      + (2 * 3)</code>.</p><p>What happens when two operators have the same precedence?
+      This is when the <em class="firstterm">associativity</em> comes into
+      play.  Operators specified as left associative will cause
+      expressions like <code class="literal">1 + 2 - 3</code> to parse as
+      <code class="literal">(1 + 2) - 3</code>, whereas right-associative
+      operators would parse as <code class="literal">1 + (2 - 3)</code>.  There
+      is also a <code class="literal">%nonassoc</code> directive which indicates
+      that the specified operators may not be used together.  For
+      example, if we add the comparison operators
+      <code class="literal">'&gt;'</code> and <code class="literal">'&lt;'</code> to our
+      grammar, then we would probably give their precedence as:</p><pre class="programlisting">...
+%right in
+%nonassoc '&gt;' '&lt;'
+%left '+' '-'
+%left '*' '/'
+%%
+...</pre><p>which indicates that <code class="literal">'&gt;'</code> and
+      <code class="literal">'&lt;'</code> bind less tightly than the other
+      operators, and the non-associativity causes expressions such as
+      <code class="literal">1 &gt; 2 &gt; 3</code> to be disallowed.</p><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="how-precedence-works"></a>2.3.1. How precedence works</h3></div></div></div><p>The precedence directives, <code class="literal">%left</code>,
+	<code class="literal">%right</code> and <code class="literal">%nonassoc</code>,
+	assign precedence levels to the tokens in the declaration.  A
+	rule in the grammar may also have a precedence: if the last
+	terminal in the left hand side of the rule has a precedence,
+	then this is the precedence of the whole rule.</p><p>The precedences are used to resolve ambiguities in the
+	grammar.  If there is a shift/reduce conflict, then the
+	precedence of the rule and the lookahead token are examined in
+	order to resolve the conflict:</p><div class="itemizedlist"><ul type="disc"><li><p>If the precedence of the rule is higher, then the
+	    conflict is resolved as a reduce.</p></li><li><p>If the precedence of the lookahead token is higher,
+	    then the conflict is resolved as a shift.</p></li><li><p>If the precedences are equal, then</p><div class="itemizedlist"><ul type="circle"><li><p>If the token is left-associative, then reduce</p></li><li><p>If the token is right-associative, then shift</p></li><li><p>If the token is non-associative, then fail</p></li></ul></div></li><li><p>If either the rule or the token has no precedence,
+	    then the default is to shift (these conflicts are reported
+	    by Happy, whereas ones that are automatically resolved by
+	    the precedence rules are not).</p></li></ul></div></div><div class="sect2" lang="en"><div class="titlepage"><div><div><h3 class="title"><a name="context-precedence"></a>2.3.2. Context-dependent Precedence</h3></div></div></div><p>The precedence of an individual rule can be overriden,
+	using <em class="firstterm">context precedence</em>.  This is
+	useful when, for example, a particular token has a different
+	precedence depending on the context.  A common example is the
+	minus sign: it has high precedence when used as prefix
+	negation, but a lower precedence when used as binary
+	subtraction.</p><p>We can implement this in Happy as follows:</p><pre class="programlisting">%right in
+%nonassoc '&gt;' '&lt;'
+%left '+' '-'
+%left '*' '/'
+%left NEG
+%%
+
+Exp   : let var '=' Exp in Exp  { Let $2 $4 $6 }
+      | Exp '+' Exp             { Plus $1 $3 }
+      | Exp '-' Exp             { Minus $1 $3 }
+      | Exp '*' Exp             { Times $1 $3 }
+      | Exp '/' Exp             { Div $1 $3 }
+      | '(' Exp ')'             { Brack $2 }
+      | '-' Exp %prec NEG       { Negate $2 }
+      | int                     { Int $1 }
+      | var                     { Var $1 }</pre><a class="indexterm" name="id613793"></a><p>We invent a new token <code class="literal">NEG</code> as a
+	placeholder for the precedence of our prefix negation rule.
+	The <code class="literal">NEG</code> token doesn't need to appear in
+	a <code class="literal">%token</code> directive.  The prefix negation
+	rule has a <code class="literal">%prec NEG</code> directive attached,
+	which overrides the default precedence for the rule (which
+	would normally be the precedence of '-') with the precedence
+	of <code class="literal">NEG</code>.</p></div><div class="footnotes"><br><hr width="100" align="left"><div class="footnote"><p><sup>[<a name="ftn.id613509" href="#id613509" class="para">2</a>] </sup>Users of <code class="literal">yacc</code> will find
+      this familiar, Happy's precedence scheme works in exactly the
+      same way.</p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="sec-sequences.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="sec-using.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="sec-type-signatures.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">2.2. Parsing sequences </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> 2.4. Type Signatures</td></tr></table></div></body></html>
