@@ -124,21 +124,29 @@ The main focus of this release was revamping the build system and bootstrapping.
 
 * Fix a bug in error handling when using `%monad` without `%lexer`
 
-## 1.18
+## 1.18.5 --- 17 Jun 2010
+
+## 1.18.4 --- 23 April 2009
+
+## 1.18.2 --- 5 November 2008
+
+## 1.18.1 --- 14 October 2008
+
+## 1.18 --- 13 October 2008
 
 * New feature: EBNF-style paramterized macros, thanks to
   Iavor Diatchki.
 * Works with Cabal 1.2, 1.4 and 1.6
 * A few minor bugfixes
 
-## 1.17
+## 1.17 --- 22 October 2007
 
 * Cabal 1.2 is required
 * Works with upcoming GHC 6.8.1
 * Fix the `parE` bug (poor error message for errors in the grammar)
 * Some performance improvements to Happy itself
 
-## 1.16
+## 1.16 --- 8 January 2007
 
 * Switch to a Cabal build system: you need a recent version of Cabal
   (1.1.6 or later).  If you have GHC 6.4.2, then you need to upgrade
@@ -150,7 +158,7 @@ The main focus of this release was revamping the build system and bootstrapping.
 
 * Added Attribute Grammar support, by Robert Dockins
 
-## 1.15
+## 1.15 --- 14 January 2005
 
 * New `%expect` directive
 * The list of tokens passed to happyError now includes the current
@@ -159,20 +167,20 @@ The main focus of this release was revamping the build system and bootstrapping.
 * Added `%partial` to indicate a parser that can return a result
   before EOF is reached.
 
-## 1.14
+## 1.14 --- 14 April 2004
 
 * New meta-variable `$>` represents the rightmost token.
 
 * Happy's OPTIONS pragma is merged with an existing one in
   the grammar file, if any.
 
-## 1.13
+## 1.13 --- 19 June 2002
 
 * Support for newer versions of GHC (>= 5.04).
 
 * Addition of an experimental flag: `--strict`.
 
-## 1.11
+## 1.11 --- 25 September 2001
 
 * Tokens no longer have a default precedence --- if you 
   want a token to have a precedence, you have to declare it.
