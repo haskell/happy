@@ -2,6 +2,11 @@
 <HTML>
 <HEAD>
    <TITLE>Happy: The Parser Generator for Haskell</TITLE>
+<STYLE>
+  .code-block {
+    padding-left: 1em;
+  }
+</STYLE>
 </HEAD>
 <BODY BGCOLOR="#EEEEEE">
 
@@ -12,9 +17,9 @@
 <H2 ALIGN=CENTER>The Parser Generator for Haskell</H2>
 
 <UL>
-<LI><A HREF="#News">News</A></LI>
-
 <LI><A HREF="#what">What is Happy?</A></LI>
+
+<LI><A HREF="#change-log">Change Log</A></LI>
 
 <LI><A HREF="#download">Download</A></LI>
 
@@ -22,34 +27,13 @@
 
 <LI>Documentation:
  <UL>
-	<LI><A HREF="doc/html/index.html">Online Documentation</A></LI>
+   <LI><A HREF="doc/html/index.html">Online Documentation</A></LI>
 
-	<LI><A HREF="doc/happy-1.18.5-html.tar.gz">Downloadable HTML documentation (.tar.gz)</A></LI>
+   <LI><A HREF="doc/happy-1.18.5-html.tar.gz">Downloadable HTML documentation (.tar.gz)</A></LI>
 
-	<LI>Printable Documentation in <A HREF="doc/happy.pdf">PDF</A> format.</LI>
+   <LI>Printable Documentation in <A HREF="doc/happy.pdf">PDF</A> format.</LI>
   </UL>
 </LI>
-</UL>
-
-<P>
-<HR WIDTH="100%"></P>
-
-<H2><A NAME="News">News</A></H2>
-
-<UL>
-<LI>17 Jun 2010: Happy 1.18.5 released.</LI>
-<LI>23 April 2009: Happy 1.18.4 released.</LI>
-<LI>5 Nov 2008: Happy 1.18.2 released.</LI>
-<LI>14 Oct 2008: Happy 1.18.1 released.</LI>
-<LI>13 Oct 2008: Happy 1.18 released.</LI>
-<LI>22 October 2007: Happy 1.17 released.</LI>
-<LI>8 January 2007: Happy 1.16 released.</LI>
-<LI>14 January 2005: Happy 1.15 released.</LI>
-<LI>14 April 2004: Happy 1.14 released.</LI>
-<LI>19 June 2002: Happy 1.13 released.</LI>
-<LI>28 Sept 2001: Happy 1.11 InstallShield for Windows released.</LI>
-<LI>26 Sept 2001: Bug found in 1.11; packages updated.
-<LI>25 Sept 2001: Happy 1.11 released.    <A HREF="ANNOUNCE">Announcement.</A></LI>
 </UL>
 
 <P>
@@ -76,6 +60,13 @@ library collection distributed with GHC.</P>
 <P>
 <HR WIDTH="100%"></P>
 
+<H2><A NAME="change-log">Change Log</A></H2>
+
+See the <A HREF="https://github.com/haskell/happy/blob/master/ChangeLog.md">Change Log in the source repo</A>.
+
+<P>
+<HR WIDTH="100%"></P>
+
 <H2><A NAME="download">Downloading Happy</A></H2>
 
 <p>Happy is part of
@@ -87,9 +78,9 @@ library collection distributed with GHC.</P>
   the <a href="http://hackage.haskell.org/trac/hackage/wiki/CabalInstall">cabal-install</a>
   tool (which also comes with the Haskell Platform), then you can
   build and install the latest version of Happy with</p>
-<pre>
+<div class="code-block"><code>
   cabal install happy
-</pre>
+</code></div>
 
 <p>To find out what the latest version of Happy is, and to download
   the source separately, go to Happy's <a href="http://hackage.haskell.org/cgi-bin/hackage-scripts/package/happy">HackageDB
@@ -111,10 +102,12 @@ hs-happy</tt>, or install it from the ports tree in
 <H2><a name="devel">Development</a></h2>
 
     <p>Happy is licensed under a <a
-	      href="http://www.haskell.org/happy/doc/html/sec-license.html">BSD-style license</a>.  The current sources are in a <a href="http://darcs.net/">Darcs</a>
-	    repository, to get the latest version say:</p>
+         href="http://www.haskell.org/happy/doc/html/sec-license.html">BSD-style license</a>.  The current sources are in a <a href="http://darcs.net/">Darcs</a>
+       repository, to get the latest version say:</p>
 
-    <pre>&nbsp;&nbsp;&nbsp;darcs get http://darcs.haskell.org/happy/</pre>
+   <div class="code-block"><code>
+     darcs get http://darcs.haskell.org/happy/
+   </code></div>
 
 <p>Feel free to hack on Happy and <tt>darcs send</tt> me your patches.</p>
 
