@@ -9,6 +9,7 @@ Welcome to Happy's documentation!
    :caption: Contents
 
    introduction
+   obtaining
    using
    glr
    attribute-grammars
@@ -16,6 +17,7 @@ Welcome to Happy's documentation!
    syntax
    info-files
    tips
+   contributing
 
 
 

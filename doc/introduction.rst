@@ -1,4 +1,3 @@
-
 .. _sec-introduction:
 
 Introduction
@@ -67,6 +66,11 @@ Any version of GHC >= 6.2 should work.
 
 Remember: parsers produced using Happy should compile without difficulty under any Haskell 98 compiler or interpreter. [1]_
 
+.. [1]
+   With one exception:
+   if you have a production with a polymorphic type signature, then a compiler that supports local universal quantification is required.
+   See :ref:`Type Signatures <sec-type-signatures>`.
+
 .. _sec-reporting-bugs:
 
 Reporting Bugs
@@ -75,7 +79,8 @@ Reporting Bugs
 .. index::
    single: bugs; reporting
 
-Any bugs found in Happy should be reported to me: Simon Marlow marlowsd@gmail.com including all the relevant information:
+Any bugs found in Happy should be reported in the `Happy issue tracker <https://github.com/haskell/happy/issues>`__.
+Please include all the relevant information:
 the compiler used to compile Happy,
 the command-line options used,
 your grammar file or preferably a cut-down example showing the problem,
@@ -122,15 +127,41 @@ If this license doesn't work for you, please get in touch.
    OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
    EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-.. _sec-obtaining:
+Acknowledgements
+----------------
 
-Obtaining Happy
----------------
+Original authors
+~~~~~~~~~~~~~~~~
 
-Happy's web page can be found at http://www.haskell.org/happy/.
-Happy source and binaries can be downloaded from there.
+Happy versions up to 0.9 were written by Andy Gill and Simon Marlow.
 
-.. [1]
-   With one exception:
-   if you have a production with a polymorphic type signature, then a compiler that supports local universal quantification is required.
-   See :ref:`Type Signatures <sec-type-signatures>`.
+Improvements since 0.9 are by Simon Marlow (and various other contributors).
+
+Generalized LR Backend
+^^^^^^^^^^^^^^^^^^^^^^
+
+- Ben Medlock
+
+- Paul Callaghan
+
+Current Maintainers
+~~~~~~~~~~~~~~~~~~~
+
+- Andreas Abel (@andreasabel)
+
+- Vladislav Zavialov (@int-index)
+
+- John Ericson (@Ericson2314)
+
+- Simon Marlow (@simonmar)
+
+Other contributors
+~~~~~~~~~~~~~~~~~~
+
+The data is in the Git history.
+GitHub can render that in `various ways <https://github.com/simonmar/happy/graphs/contributors>`__.
+
+Extra
+~~~~~
+
+A big thanks to Ben Jones for loaning out his copy of the Roger Hargreaves *Mr Happy* book.

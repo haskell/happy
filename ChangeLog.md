@@ -238,6 +238,9 @@ The main focus of this release was revamping the build system and bootstrapping.
 * Happy is about 5 times faster on large examples, due to some
   changes in the LALR(1) algorithms.
 
+As of version 1.5, Happy is capable of parsing full Haskell.
+We have a Haskell parser that uses Happy, which will shortly be part of the library collection distributed with GHC.
+
 ## 1.2
 
 * Supports Haskell 1.4
