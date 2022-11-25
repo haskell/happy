@@ -21,7 +21,7 @@ From `Stackage <https://www.stackage.org/package/happy>`__ via `Stack <https://h
 
    $ stack install happy
 
-Moreover, recent versions of ``cabal`` will automatically install the required version of ``happy`` based on ``build-tools``/``build-tool-depends`` `declarations <http://cabal.readthedocs.io/en/latest/developing-packages.html#pkg-field-build-tool-depends>`__.
+Moreover, ``cabal`` will automatically install the required version of ``happy`` based on ``build-tools``/``build-tool-depends`` `declarations <http://cabal.readthedocs.io/en/latest/developing-packages.html#pkg-field-build-tool-depends>`__.
 
 Operating System way
 --------------------
