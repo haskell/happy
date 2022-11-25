@@ -62,7 +62,7 @@ Compatibility
 
 Happy is written in Glasgow Haskell.
 This means that (for the time being), you need GHC to compile it.
-Any version of GHC >= 6.2 should work.
+Any version of GHC >= 7.0 should work.
 
 Remember: parsers produced using Happy should compile without difficulty under any Haskell 98 compiler or interpreter. [1]_
 
