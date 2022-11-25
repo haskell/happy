@@ -59,5 +59,5 @@ pre-built Happy is *required* to build the full version of Happy, which is the d
 *We're sorry the bootstrap process is a bit tedious right now; we hope to
 improve it in the future. The ideal fix would be to make cabal-installer's
 cycle detector to be less pessimistic, per
-https://github.com/haskell/cabal/issues/7189, so that the build tool dependency
+`<https://github.com/haskell/cabal/issues/7189>`_, so that the build tool dependency
 can be properly expressed and everything works automatically.*
