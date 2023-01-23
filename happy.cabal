@@ -50,11 +50,8 @@ data-files:
         GLR_Lib-ghc-debug
 
 extra-source-files:
-        ANNOUNCE
         CHANGES
         Makefile
-        README.md
-        TODO
         doc/Makefile
         doc/aclocal.m4
         doc/config.mk.in
