@@ -30,7 +30,8 @@ Here is our mid-section datatype
 > import Data.List
 > import Data.Maybe (fromMaybe)
 
-> import Control.Monad.Writer
+> import Control.Monad
+> import Control.Monad.Writer (Writer, mapWriter, runWriter, tell)
 
 > type Name = Int
 
