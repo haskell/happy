@@ -9,7 +9,7 @@
 # If HAPPY has been set outside, e.g. in the environment, we trust this setting.
 # This way, we can pass in the correct Happy executable from a CI environment
 # without danger of it being "fixed" by the logic below.
-# [2021-07-14, PR #196](https://github.com/simonmar/happy/pull/196)
+# [2021-07-14, PR #196](https://github.com/haskell/happy/pull/196)
 #
 ifndef HAPPY
 HAPPY=$(shell which happy)
@@ -22,7 +22,7 @@ endif
 # necessarily be the same GHC used by `cabal` for building `happy`.
 #
 # Again, if HC has been set in the environment (e.g. by the CI), we keep this setting.
-# [2021-07-14, PR #196](https://github.com/simonmar/happy/pull/196)
+# [2021-07-14, PR #196](https://github.com/haskell/happy/pull/196)
 #
 HC ?= ghc
 HC_OPTS=-Wall -Werror
