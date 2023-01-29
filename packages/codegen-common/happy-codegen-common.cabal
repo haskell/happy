@@ -5,7 +5,7 @@ license-file:    LICENSE
 copyright:       (c) Andy Gill, Simon Marlow
 author:          Andy Gill and Simon Marlow
 maintainer:      Simon Marlow <marlowsd@gmail.com>
-bug-reports:     https://github.com/simonmar/happy/issues
+bug-reports:     https://github.com/haskell/happy/issues
 stability:       stable
 homepage:        https://www.haskell.org/happy/
 category:        Development

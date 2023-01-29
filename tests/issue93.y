@@ -1,4 +1,4 @@
--- See <https://github.com/simonmar/happy/issues/93> for more information
+-- See <https://github.com/haskell/happy/issues/93> for more information
 -- This is an example of a grammar that has more than 2^15 entries in `happyTable` (39817).
 {
 import System.Exit

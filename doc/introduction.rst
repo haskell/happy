@@ -159,7 +159,7 @@ Other contributors
 ~~~~~~~~~~~~~~~~~~
 
 The data is in the Git history.
-GitHub can render that in `various ways <https://github.com/simonmar/happy/graphs/contributors>`__.
+GitHub can render that in `various ways <https://github.com/haskell/happy/graphs/contributors>`__.
 
 Extra
 ~~~~~

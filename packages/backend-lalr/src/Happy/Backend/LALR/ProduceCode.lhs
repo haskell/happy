@@ -114,7 +114,7 @@ Produce the complete output file.
 >      where wild_tyvars = unwords (replicate n_missing_types "_")
 >
 >    -- This decides how to include (if at all) a type signature
->    -- See <https://github.com/simonmar/happy/issues/94>
+>    -- See <https://github.com/haskell/happy/issues/94>
 >    filterTypeSig :: (String -> String) -> String -> String
 >    filterTypeSig content | n_missing_types == 0 = content
 >                          | otherwise = ifGeGhc710 content
