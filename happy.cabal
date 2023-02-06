@@ -4,7 +4,7 @@ license: BSD2
 license-file: LICENSE
 copyright: (c) Andy Gill, Simon Marlow
 author: Andy Gill and Simon Marlow
-maintainer: Simon Marlow <marlowsd@gmail.com>
+maintainer: https://github.com/haskell/happy
 bug-reports: https://github.com/haskell/happy/issues
 stability: stable
 homepage: https://www.haskell.org/happy/
@@ -19,6 +19,9 @@ Description:
   grammar.  Happy works in a similar way to the @yacc@ tool for C.
 
 tested-with:
+        GHC == 9.6.0
+        GHC == 9.4.4
+        GHC == 9.2.5
         GHC == 9.2.1
         GHC == 9.0.2
         GHC == 8.10.7
