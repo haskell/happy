@@ -50,7 +50,7 @@ data-files:
         GLR_Lib-ghc-debug
 
 extra-source-files:
-        CHANGES
+        ChangeLog.md
         Makefile
         doc/Makefile
         doc/aclocal.m4
@@ -155,7 +155,7 @@ extra-source-files:
 
 source-repository head
   type:     git
-  location: https://github.com/happy/happy.git
+  location: https://github.com/haskell/happy.git
 
 executable happy
   hs-source-dirs: src
