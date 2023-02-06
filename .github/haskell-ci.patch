@@ -1,6 +1,6 @@
---- workflows/haskell-ci.yml	2022-02-28 01:09:37.000000000 +0100
-+++ workflows/haskell-ci.yml-patched	2022-02-28 01:08:00.000000000 +0100
-@@ -127,12 +127,14 @@
+--- .github/workflows/haskell-ci.yml	2023-02-06 09:35:15.000000000 +0100
++++ .github/workflows/haskell-ci.yml-patched	2023-02-06 09:34:40.000000000 +0100
+@@ -139,12 +139,14 @@
            HCDIR=/opt/$HCKIND/$HCVER
            if [ "${{ matrix.setup-method }}" = ghcup ]; then
              HC=$HOME/.ghcup/bin/$HCKIND-$HCVER
@@ -8,23 +8,23 @@
              echo "HC=$HC" >> "$GITHUB_ENV"
              echo "HCPKG=$HOME/.ghcup/bin/$HCKIND-pkg-$HCVER" >> "$GITHUB_ENV"
              echo "HADDOCK=$HOME/.ghcup/bin/haddock-$HCVER" >> "$GITHUB_ENV"
-             echo "CABAL=$HOME/.ghcup/bin/cabal-3.6.2.0 -vnormal+nowrap" >> "$GITHUB_ENV"
+             echo "CABAL=$HOME/.ghcup/bin/cabal-3.9.0.0 -vnormal+nowrap" >> "$GITHUB_ENV"
            else
              HC=$HCDIR/bin/$HCKIND
 +            echo "$HCDIR/bin" >> "$GITHUB_PATH"
              echo "HC=$HC" >> "$GITHUB_ENV"
              echo "HCPKG=$HCDIR/bin/$HCKIND-pkg" >> "$GITHUB_ENV"
              echo "HADDOCK=$HCDIR/bin/haddock" >> "$GITHUB_ENV"
-@@ -264,7 +266,7 @@
+@@ -291,7 +293,7 @@
            cat cabal.project.local
        - name: dump install plan
          run: |
 -          $CABAL v2-build $ARG_COMPILER $ARG_TESTS $ARG_BENCH --dry-run all
 +          $CABAL v2-build --flags=-bootstrap $ARG_COMPILER $ARG_TESTS $ARG_BENCH --dry-run all
            cabal-plan
-       - name: cache
-         uses: actions/cache@v2
-@@ -274,17 +276,20 @@
+       - name: restore cache
+         uses: actions/cache/restore@v3
+@@ -301,17 +303,20 @@
            restore-keys: ${{ runner.os }}-${{ matrix.compiler }}-
        - name: install dependencies
          run: |
@@ -51,9 +51,12 @@
        - name: cabal check
          run: |
            cd ${PKGDIR_happy_backend_lalr} || false
-@@ -307,4 +312,4 @@
+@@ -334,7 +339,7 @@
        - name: unconstrained build
          run: |
            rm -f cabal.project.local
 -          $CABAL v2-build $ARG_COMPILER --disable-tests --disable-benchmarks all
 +          $CABAL v2-build --flags=-bootstrap $ARG_COMPILER --disable-tests --disable-benchmarks all
+       - name: save cache
+         uses: actions/cache/save@v3
+         if: always()
