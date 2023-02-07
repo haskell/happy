@@ -1,0 +1,105 @@
+# Workflow to build happy (non-bootstrap) and its source distribution
+# Inspired by Haskell CI and Agda's CI
+
+name: Build and make sdist
+
+on:
+  push:
+    branches:
+      - master
+      - ci*
+      - release*
+  pull_request:
+    branches:
+      - master
+      - ci*
+      - release*
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-sdist:
+    name:    Build/sdist ${{ matrix.ghc }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    strategy:
+      matrix:
+        ghc: [9.6.0.20230128, 9.4.4, 9.2.5, 9.0.2, 8.10.7, 8.8.4, 8.6.5, 8.4.4, 8.2.2, 8.0.2]
+      fail-fast: false
+
+    steps:
+    - name: Install distributed happy
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y happy
+
+    - uses: actions/checkout@v3
+
+    - uses: haskell/actions/setup@v2
+      id: setup-haskell
+      with:
+        ghc-version: ${{ matrix.ghc }}
+        ghcup-release-channel: "https://raw.githubusercontent.com/haskell/ghcup-metadata/master/ghcup-prereleases-0.0.7.yaml"
+
+    - name: Environment settings based on the Haskell setup
+      run: |
+        GHC_VER="$(ghc --numeric-version)"
+        CABAL_VER="$(cabal --numeric-version)"
+        echo "GHC_VER   = ${GHC_VER}"
+        echo "CABAL_VER = ${CABAL_VER}"
+        echo "GHC_VER=${GHC_VER}"       >> "${GITHUB_ENV}"
+        echo "CABAL_VER=${CABAL_VER}"   >> "${GITHUB_ENV}"
+        mkdir -p "${HOME}/.cabal/bin"
+        echo "${HOME}/.cabal/bin" >> "${GITHUB_PATH}"
+
+    # From Haskell CI:
+    - name: Install cabal-plan
+      run: |
+        curl -sL https://github.com/haskell-hvr/cabal-plan/releases/download/v0.6.2.0/cabal-plan-0.6.2.0-x86_64-linux.xz > cabal-plan.xz
+        echo 'de73600b1836d3f55e32d80385acc055fd97f60eaa0ab68a755302685f5d81bc  cabal-plan.xz' | sha256sum -c -
+        xz -d cabal-plan.xz
+        chmod a+x cabal-plan
+        mv cabal-plan "${HOME}/.cabal/bin/cabal-plan"
+        cabal-plan --version
+
+    - name: Build plan
+      run: |
+        cabal update
+        cabal build --dry-run
+        cabal-plan
+      # cabal build --dry-run creates dist-newstyle/cache/plan.json
+      # Keep a watch on this `cabal-3.9 build --dry-run` bug:
+      # https://github.com/haskell/cabal/issues/8706
+
+    - name: Cache
+      uses: actions/cache@v3
+      id: cache
+      with:
+        path: ${{ steps.setup-haskell.outputs.cabal-store }}
+
+        # Append the build plan to the cache key so that a new cache gets saved when dependencies update.
+        # `plan.json` is a good cache key because it does not contain time stamps (unlike `cabal.project.freeze`).
+        key:            ${{ runner.os }}-ghc-${{ env.GHC_VER }}-cabal-${{ env.CABAL_VER }}-${{ hashFiles('**/plan.json') }}
+        restore-keys:   ${{ runner.os }}-ghc-${{ env.GHC_VER }}-cabal-${{ env.CABAL_VER }}-
+
+    - name: Install dependencies
+      # Formally skip this when we successfully restored the cache, to shave a few seconds.
+      # Note that the dependencies will anyway be built in the `cabal build` step.
+      # So, strictly speaking, this step is superfluous.
+      # However, we keep it here so that we do not clutter the output of the
+      # `cabal build` step too much in the ordinary case.
+      if:  ${{ !steps.cache.outputs.cache-hit }}
+      run: |
+        cabal build --only-dependencies
+
+    - run: make sdist
+
+    - run: cabal build
+
+    - run: cabal check
+
+    - run: make sdist-test
