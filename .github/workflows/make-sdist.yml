@@ -163,7 +163,7 @@ jobs:
       run: |
         tar xf happy-*.tar.gz
         rm -f  happy-*.tar.gz
-        DIR="$(ls happy-*)"
+        DIR="$(echo happy-*)"
         echo "DIR=${DIR}"
         echo "DIR=${DIR}" >> "${GITHUB_ENV}"
 
