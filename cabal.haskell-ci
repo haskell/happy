@@ -1,0 +1,7 @@
+branches: master ci* release*
+
+-- Non-bootstrapped install needs alex and happy
+apt: happy
+
+-- Specify 'constraint: ... installed' packages
+installed: +all -containers -mtl -transformers
