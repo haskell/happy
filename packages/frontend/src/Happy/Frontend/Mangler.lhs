@@ -20,7 +20,6 @@ This is only supported in the bootstrapped version
 #ifdef HAPPY_BOOTSTRAP
 > import Happy.Frontend.AttrGrammar.Parser
 > import Data.List     ( findIndices, groupBy, intersperse, nub )
-> import Control.Monad ( when )
 #endif
 
 > import Happy.Frontend.ParamRules
@@ -31,6 +30,7 @@ This is only supported in the bootstrapped version
 > import Data.Maybe ( fromMaybe )
 > import Data.Ord
 
+> import Control.Monad
 > import Control.Monad.Writer ( Writer, MonadWriter(..), mapWriter, runWriter )
 
 -----------------------------------------------------------------------------

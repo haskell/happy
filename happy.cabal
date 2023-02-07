@@ -4,7 +4,7 @@ license: BSD2
 license-file: LICENSE
 copyright: (c) Andy Gill, Simon Marlow
 author: Andy Gill and Simon Marlow
-maintainer: Simon Marlow <marlowsd@gmail.com>
+maintainer: https://github.com/haskell/happy
 bug-reports: https://github.com/haskell/happy/issues
 stability: stable
 homepage: https://www.haskell.org/happy/

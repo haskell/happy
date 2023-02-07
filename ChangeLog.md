@@ -35,6 +35,10 @@ The main focus of this release was revamping the build system and bootstrapping.
 * Some imports were tightened down, which may help building with newer versions
   of `base`.
 
+## 1.20.1
+
+* Fix for building with mtl-2.3.1 (GHC 9.6)
+
 ## 1.20.0
 
 * Fix #121: the -i flag produces an .info file even if the `%expect`
@@ -182,7 +186,7 @@ The main focus of this release was revamping the build system and bootstrapping.
 
 ## 1.11 --- 25 September 2001
 
-* Tokens no longer have a default precedence --- if you 
+* Tokens no longer have a default precedence --- if you
   want a token to have a precedence, you have to declare it.
 
 * Bugfix to templates for GHC on 64-bit platforms.
@@ -203,7 +207,7 @@ The main focus of this release was revamping the build system and bootstrapping.
 ## 1.8
 
 * Parser table compression, and more efficient table encoding when used
-  with GHC.  Large grammars can now be compiled in much less time/space
+  with GHC. Large grammars can now be compiled in much less time/space
   than before using GHC.
 
 * Yacc-style operator precedence, thanks to patches from Hermann
@@ -219,8 +223,8 @@ The main focus of this release was revamping the build system and bootstrapping.
 
 * Several bug fixes.
 
-* A new option, `-c`, generates parsers that use GHC's unsafeCoerce#
-  primitive to speed up parsing and cut down the binary size.  The `-c`
+* A new option, `-c`, generates parsers that use GHC's `unsafeCoerce#`
+  primitive to speed up parsing and cut down the binary size. The `-c`
   option can only be used with the -g (GHC extensions) option.
 
 * Parsers generated with the -g option will compile to smaller binaries
@@ -262,7 +266,7 @@ We have a Haskell parser that uses Happy, which will shortly be part of the libr
 * The `%newline` feature is removed, the same effect can be achieved
   using the new monad support.
 
-## 0.9:
+## 0.9
 
 * Happy should be much faster than before.
 
