@@ -215,7 +215,7 @@ jobs:
       - name: make sdist
         working-directory: source
         run: |
-          make sdist
+          make CABAL="${CABAL}" sdist
       - name: unpack
         run: |
           mkdir -p unpacked

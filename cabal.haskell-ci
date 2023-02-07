@@ -1,6 +1,6 @@
 branches: master ci* release*
 
--- Non-bootstrapped install needs alex and happy
+-- Non-bootstrapped install needs happy
 apt: happy
 
 -- Specify 'constraint: ... installed' packages

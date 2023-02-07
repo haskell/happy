@@ -1,11 +1,8 @@
 CABAL = cabal
 
-HAPPY = happy 
+HAPPY = happy
 HAPPY_OPTS = -agc
 HAPPY_VER = `awk '/^version:/ { print $$2 }' happy.cabal`
-
-ALEX = alex
-ALEX_OPTS = -g
 
 SDIST_DIR=dist-newstyle/sdist
 
@@ -29,8 +26,8 @@ sdist ::
 	$(HAPPY) $(HAPPY_OPTS) src/AttrGrammarParser.ly -o src/AttrGrammarParser.hs
 	mv src/Parser.ly src/Parser.ly.boot
 	mv src/AttrGrammarParser.ly src/AttrGrammarParser.ly.boot
-	$(CABAL) v2-run gen-happy-sdist 
-	cabal v2-sdist
+	$(CABAL) v2-run gen-happy-sdist
+	$(CABAL) v2-sdist
 	@if [ ! -f "${SDIST_DIR}/happy-$(HAPPY_VER).tar.gz" ]; then \
 		echo "Error: source tarball not found: dist/happy-$(HAPPY_VER).tar.gz"; \
 		exit 1; \
