@@ -22,7 +22,7 @@ defaults:
 
 jobs:
 
-  ## Step 1: Create and test tarball (bootstrap happy)
+  ## Step 1: Create tarball (bootstrap happy)
   ###########################################################################
 
   build-sdist:
@@ -116,10 +116,10 @@ jobs:
         name: happy-${{ runner.os }}-ghc-${{ env.GHC_VER }}-${{ github.sha }}
         path: ${{ env.TARBALL }}
 
-  ## Step 2: Build from tarball
+  ## Step 2: Build and test from tarball
   ###########################################################################
 
-  install-sdist:
+  test-sdist:
     needs:   build-sdist
     name:    Build from tarball ${{ matrix.ghc }}
     runs-on: ubuntu-latest
@@ -159,13 +159,11 @@ jobs:
       with:
         name: happy-${{ runner.os }}-ghc-${{ env.GHC_VER }}-${{ github.sha }}
 
-    - run: ls -al
-
     - name: Unpack happy
       run: |
         tar xf happy-*.tar.gz
         rm -f  happy-*.tar.gz
-        DIR=happy-*
+        DIR="$(ls happy-*)"
         echo "DIR=${DIR}"
         echo "DIR=${DIR}" >> "${GITHUB_ENV}"
 
