@@ -1,6 +1,6 @@
 CABAL = cabal
 
-HAPPY = happy 
+HAPPY = happy
 HAPPY_OPTS = -agc
 HAPPY_VER = `awk '/^version:/ { print $$2 }' happy.cabal`
 
@@ -8,6 +8,7 @@ ALEX = alex
 ALEX_OPTS = -g
 
 SDIST_DIR=dist-newstyle/sdist
+TARBALL="${SDIST_DIR}/happy-$(HAPPY_VER).tar.gz"
 
 GEN = src/gen/Parser.hs src/gen/AttrGrammarParser.hs
 
@@ -29,10 +30,10 @@ sdist ::
 	$(HAPPY) $(HAPPY_OPTS) src/AttrGrammarParser.ly -o src/AttrGrammarParser.hs
 	mv src/Parser.ly src/Parser.ly.boot
 	mv src/AttrGrammarParser.ly src/AttrGrammarParser.ly.boot
-	$(CABAL) v2-run gen-happy-sdist 
+	$(CABAL) v2-run gen-happy-sdist
 	cabal v2-sdist
-	@if [ ! -f "${SDIST_DIR}/happy-$(HAPPY_VER).tar.gz" ]; then \
-		echo "Error: source tarball not found: dist/happy-$(HAPPY_VER).tar.gz"; \
+	@if [ ! -f "${TARBALL}" ]; then \
+		echo "Error: source tarball not found: ${TARBALL}"; \
 		exit 1; \
 	fi
 	git checkout .
@@ -42,14 +43,18 @@ sdist-test :: sdist sdist-test-only
 	@rm -rf "${SDIST_DIR}/happy-${HAPPY_VER}/"
 
 sdist-test-only ::
-	@if [ ! -f "${SDIST_DIR}/happy-$(HAPPY_VER).tar.gz" ]; then \
-		echo "Error: source tarball not found: ${SDIST_DIR}/happy-$(HAPPY_VER).tar.gz"; \
+	@if [ ! -f "${TARBALL}" ]; then \
+		echo "Error: source tarball not found: ${TARBALL}"; \
 		exit 1; \
 	fi
 	rm -rf "${SDIST_DIR}/happy-$(HAPPY_VER)/"
-	tar -xf "${SDIST_DIR}/happy-$(HAPPY_VER).tar.gz" -C ${SDIST_DIR}/
+	tar -xf "${TARBALL}" -C ${SDIST_DIR}/
 	echo "packages: ." > "${SDIST_DIR}/happy-$(HAPPY_VER)/cabal.project"
 	cd "${SDIST_DIR}/happy-$(HAPPY_VER)/" && cabal v2-test --enable-tests all
 	@echo ""
-	@echo "Success! ${SDIST_DIR}/happy-$(HAPPY_VER).tar.gz is ready for distribution!"
+	@echo "Success! ${TARBALL} is ready for distribution!"
 	@echo ""
+
+# Export name of generated tarball for e.g. use in CI.
+print-tarball:
+	@echo ${TARBALL}
