@@ -26,14 +26,13 @@ jobs:
   ###########################################################################
 
   build-sdist:
-    name:    Build/sdist ${{ matrix.ghc }}
+    name:    Build tarball w/ ${{ matrix.ghc }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
     strategy:
       matrix:
-        ghc: [9.4.4]
-           # [9.6.0.20230128, 9.4.4, 9.2.5, 9.0.2, 8.10.7, 8.8.4, 8.6.5, 8.4.4, 8.2.2, 8.0.2]
+        ghc: [9.6.0.20230128, 9.4.4, 9.2.5, 9.0.2, 8.10.7, 8.8.4, 8.6.5, 8.4.4, 8.2.2, 8.0.2]
       fail-fast: false
 
     steps:
@@ -121,14 +120,13 @@ jobs:
 
   test-sdist:
     needs:   build-sdist
-    name:    Build from tarball ${{ matrix.ghc }}
+    name:    Build from tarball w/ ${{ matrix.ghc }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
     strategy:
       matrix:
-        ghc: [9.4.4]
-           # [9.6.0.20230128, 9.4.4, 9.2.5, 9.0.2, 8.10.7, 8.8.4, 8.6.5, 8.4.4, 8.2.2, 8.0.2]
+        ghc: [9.6.0.20230128, 9.4.4, 9.2.5, 9.0.2, 8.10.7, 8.8.4, 8.6.5, 8.4.4, 8.2.2, 8.0.2]
       fail-fast: false
 
     steps:
