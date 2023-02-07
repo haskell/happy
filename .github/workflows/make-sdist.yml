@@ -89,10 +89,10 @@ jobs:
       run: |
         cabal build --only-dependencies
 
-    # - run: cabal build
-
     - run: make sdist
 
-    - run: make sdist-test
+    - run: cabal build
 
-    # - run: cabal check
+    - run: cabal check
+
+    - run: make sdist-test
