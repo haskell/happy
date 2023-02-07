@@ -21,8 +21,12 @@ defaults:
     shell: bash
 
 jobs:
+
+  ## Step 1: Create tarball (bootstrap happy)
+  ###########################################################################
+
   build-sdist:
-    name:    Build/sdist ${{ matrix.ghc }}
+    name:    Build tarball w/ ${{ matrix.ghc }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
@@ -68,23 +72,22 @@ jobs:
 
     - name: Build plan
       run: |
-        cabal update
         cabal build --dry-run
         cabal-plan
-      # cabal build --dry-run creates dist-newstyle/cache/plan.json
-      # Keep a watch on this `cabal-3.9 build --dry-run` bug:
-      # https://github.com/haskell/cabal/issues/8706
 
     - name: Cache
       uses: actions/cache@v3
       id: cache
       with:
         path: ${{ steps.setup-haskell.outputs.cabal-store }}
-
-        # Append the build plan to the cache key so that a new cache gets saved when dependencies update.
-        # `plan.json` is a good cache key because it does not contain time stamps (unlike `cabal.project.freeze`).
-        key:            ${{ runner.os }}-ghc-${{ env.GHC_VER }}-cabal-${{ env.CABAL_VER }}-${{ hashFiles('**/plan.json') }}
+        key:            ${{ runner.os }}-ghc-${{ env.GHC_VER }}-cabal-${{ env.CABAL_VER }}-${{ github.sha }}
         restore-keys:   ${{ runner.os }}-ghc-${{ env.GHC_VER }}-cabal-${{ env.CABAL_VER }}-
+
+    - name: Name of sdist tarball
+      run: |
+        TARBALL="$(make print-tarball)"
+        echo "TARBALL = ${TARBALL}"
+        echo "TARBALL=${TARBALL}" >> "${GITHUB_ENV}"
 
     - name: Install dependencies
       # Formally skip this when we successfully restored the cache, to shave a few seconds.
@@ -102,4 +105,70 @@ jobs:
 
     - run: cabal check
 
-    - run: make sdist-test
+    # Rather than here, test the tarball on a fresh system!  (Next step.)
+    # - run: make sdist-test-only
+
+    - uses: actions/upload-artifact@v3
+      with:
+        if-no-files-found: error
+        retention-days: 1
+        name: happy-${{ runner.os }}-ghc-${{ env.GHC_VER }}-${{ github.sha }}
+        path: ${{ env.TARBALL }}
+
+  ## Step 2: Build and test from tarball
+  ###########################################################################
+
+  test-sdist:
+    needs:   build-sdist
+    name:    Build from tarball w/ ${{ matrix.ghc }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    strategy:
+      matrix:
+        ghc: [9.6.0.20230128, 9.4.4, 9.2.5, 9.0.2, 8.10.7, 8.8.4, 8.6.5, 8.4.4, 8.2.2, 8.0.2]
+      fail-fast: false
+
+    steps:
+
+    - uses: haskell/actions/setup@v2
+      id: setup-haskell
+      with:
+        ghc-version: ${{ matrix.ghc }}
+        ghcup-release-channel: "https://raw.githubusercontent.com/haskell/ghcup-metadata/master/ghcup-prereleases-0.0.7.yaml"
+
+    - name: Environment settings based on the Haskell setup
+      run: |
+        GHC_VER="$(ghc --numeric-version)"
+        CABAL_VER="$(cabal --numeric-version)"
+        echo "GHC_VER   = ${GHC_VER}"
+        echo "CABAL_VER = ${CABAL_VER}"
+        echo "GHC_VER=${GHC_VER}"       >> "${GITHUB_ENV}"
+        echo "CABAL_VER=${CABAL_VER}"   >> "${GITHUB_ENV}"
+
+    - name: Cache
+      uses: actions/cache/restore@v3
+      id: cache
+      with:
+        path: ${{ steps.setup-haskell.outputs.cabal-store }}
+        key:  ${{ runner.os }}-ghc-${{ env.GHC_VER }}-cabal-${{ env.CABAL_VER }}-${{ github.sha }}
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: happy-${{ runner.os }}-ghc-${{ env.GHC_VER }}-${{ github.sha }}
+
+    - name: Unpack happy
+      run: |
+        tar xf happy-*.tar.gz
+        rm -f  happy-*.tar.gz
+        DIR="$(echo happy-*)"
+        echo "DIR=${DIR}"
+        echo "DIR=${DIR}" >> "${GITHUB_ENV}"
+
+    - name: Build happy
+      run: cabal build --enable-tests
+      working-directory: ${{ env.DIR }}
+
+    - name: Test happy
+      run: cabal test --enable-tests all --test-show-details=direct
+      working-directory: ${{ env.DIR }}
