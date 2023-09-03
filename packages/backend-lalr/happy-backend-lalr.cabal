@@ -49,11 +49,14 @@ library
                        Happy.Backend.LALR.ProduceCode
   build-depends:       base < 5,
                        array,
+                       mtl > 2,
+                       containers,
                        happy-codegen-common == 1.21.0,
                        happy-grammar == 1.21.0,
-                       happy-tabular == 1.21.0
+                       happy-tabular == 1.21.0,
+                       happy-code-combinators == 1.21.0
 
   default-language:    Haskell98
-  default-extensions:  CPP, MagicHash, FlexibleContexts
+  default-extensions:  CPP, MagicHash, FlexibleContexts, OverloadedStrings
   ghc-options:         -Wall
   other-modules:       Paths_happy_backend_lalr

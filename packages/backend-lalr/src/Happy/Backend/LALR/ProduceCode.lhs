@@ -25,6 +25,9 @@ The code generator.
 > import Data.Array.MArray         ( MArray(..), freeze, readArray, writeArray )
 > import Data.Array.IArray         ( Array, IArray(..), (!), array, assocs, elems )
 
+> import Happy.Backend.CodeCombinators
+> import Happy.Backend.CodeCombinators.Syntax
+
 %-----------------------------------------------------------------------------
 Produce the complete output file.
 
@@ -581,27 +584,117 @@ machinery to discard states in the parser...
 >    produceActionTable TargetArrayBased
 >       = produceActionArray
 >       . produceReduceArray
->       . str "happy_n_terms = " . shows n_terminals . str " :: Prelude.Int\n"
->       . str "happy_n_nonterms = " . shows n_nonterminals . str " :: Prelude.Int\n\n"
->
+>       . renderDocDecs [
+>             fullFunD "happy_n_terms" intT
+>               [clause [] (intE n_terminals) []]
+>           , fullFunD "happy_n_nonterms_name" intT
+>               [clause [] (intE n_nonterminals) []]
+>         ]
+>       . nl
+
 >    produceExpListPerState
->       = produceExpListArray
->       . str "{-# NOINLINE happyExpListPerState #-}\n"
->       . str "happyExpListPerState st =\n"
->       . str "    token_strs_expected\n"
->       . str "  where token_strs = " . str (show $ elems token_names') . str "\n"
->       . str "        bit_start = st Prelude.* " . str (show nr_tokens) . str "\n"
->       . str "        bit_end = (st Prelude.+ 1) Prelude.* " . str (show nr_tokens) . str "\n"
->       . str "        read_bit = readArrayBit happyExpList\n"
->       . str "        bits = Prelude.map read_bit [bit_start..bit_end Prelude.- 1]\n"
->       . str "        bits_indexed = Prelude.zip bits [0.."
->                                        . str (show (nr_tokens - 1)) . str "]\n"
->       . str "        token_strs_expected = Prelude.concatMap f bits_indexed\n"
->       . str "        f (Prelude.False, _) = []\n"
->       . str "        f (Prelude.True, nr) = [token_strs Prelude.!! nr]\n"
->       . str "\n"
+>       =
+>         produceExpListArray
+>       . renderDocDecs [[noInlinePragmaD happy_exp_list_per_state_name, happy_exp_list_per_state_dec]]
+>       . nl
 >       where (first_token, last_token) = bounds token_names'
 >             nr_tokens = last_token - first_token + 1
+>
+>          --happyExpListPerState st = token_strs_expected
+>             happy_exp_list_per_state_name = "happyExpListPerState"
+>             happy_exp_list_per_state_dec =
+>               funD happy_exp_list_per_state_name [
+>                 clause [st_pat] (varE token_strs_expected_name) [
+>                   token_strs_dec,
+>                   bit_start_dec,
+>                   bit_end_dec,
+>                   read_bit_dec,
+>                   bits_dec,
+>                   bits_indexed_dec,
+>                   f_dec,
+>                   token_strs_expected_dec
+>                 ]
+>               ]
+>
+>             st_name = "st"
+>             st_var = varE st_name
+>             st_pat = varP st_name
+>
+>           --token_strs = elems token_names'
+>             token_strs_name = "token_strs"
+>             token_strs_dec = funD token_strs_name [clause [] token_strs_exp []]
+>                 where token_strs_exp = listE [stringE str_elem | str_elem <- elems token_names']
+>
+>           --bit_start = st Prelude.* nr_tokens
+>             bit_start_name = "bit_start"
+>             bit_start_dec = funD bit_start_name [clause [] bit_start_exp []]
+>                 where bit_start_exp = appManyArgsE mulE [st_var, intE nr_tokens]
+>
+>           --bit_end = (st Prelude.+ 1) Prelude.* nr_tokens
+>             bit_end_name = "bit_end"
+>             bit_end_dec = funD bit_end_name [clause [] bit_end_exp []]
+>                 where bit_end_exp = appManyArgsE mulE [appManyArgsE addE [st_var, intE 1], intE nr_tokens]
+>
+>           --read_bit = readArrayBit happyExpList
+>             read_bit_name = "read_bit"
+>             read_bit_dec = funD read_bit_name [clause [] read_bit_exp []]
+>                 where read_bit_exp = appE (varE "readArrayBit") (varE "happyExpList")
+>
+>           --bits = Prelude.map read_bit [bit_start..bit_end Prelude.- 1]
+>             bits_name = "bits"
+>             bits_dec = funD bits_name [clause [] bits_exp []]
+>                 where bits_exp =
+>                         appManyArgsE
+>                           (varE "Prelude.map")
+>                           [
+>                               varE read_bit_name
+>                             , arithSeqE $
+>                                 FromToR
+>                                   (varE bit_start_name)
+>                                   (appManyArgsE subE [varE bit_end_name, intE 1])
+>                           ]
+>
+>           --bits_indexed = Prelude.zip bits [0... nr_tokens - 1]
+>             bits_indexed_name = "bits_indexed"
+>             bits_indexed_dec = funD bits_indexed_name [clause [] bits_indexed_exp []]
+>                 where bits_indexed_exp =
+>                         appManyArgsE
+>                           (varE "Prelude.zip")
+>                           [
+>                               varE bits_name
+>                             , arithSeqE $
+>                                 FromToR
+>                                   (intE 0)
+>                                   (intE $ nr_tokens - 1)
+>                           ]
+>
+>           --f (Prelude.False, _) = []\n"
+>           --f (Prelude.True, nr) = [token_strs Prelude.!! nr]\n
+>             f_name = "f"
+>             f_dec  = funD f_name [clause1, clause2]
+>                 where clause1 = clause [tupP [falseP, wildP]] emptyListE []
+>                       clause2 = clause [tupP [trueP, varP nr]] exp2 []
+>                       nr = "nr"
+>                       exp2 =
+>                         listE [
+>                           appManyArgsE
+>                             (varE "(Prelude.!!)")
+>                             [
+>                                 varE token_strs_name
+>                               , varE nr
+>                             ]
+>                         ]
+>
+>           --token_strs_expected = Prelude.concatMap f token_strs_name = "token_strs"
+>             token_strs_expected_name = "token_strs_expected"
+>             token_strs_expected_dec = funD token_strs_expected_name [clause [] token_strs_expected_exp []]
+>                 where token_strs_expected_exp =
+>                         appManyArgsE
+>                           (varE "Prelude.concatMap")
+>                           [
+>                               varE f_name
+>                             , varE bits_indexed_name
+>                           ]
 >
 >    produceStateFunction goto' (state, acts)
 >       = foldr (.) id (map produceActions assocs_acts)
@@ -726,16 +819,36 @@ action array indexed by (terminal * last_state) + state
 
 >    produceExpListArray
 >       | ghc
->           = str "happyExpList :: HappyAddr\n"
->           . str "happyExpList = HappyA# \"" --"
->           . str (hexChars explist)
->           . str "\"#\n\n" --"
+>           =
+>           -- happyExpList :: HappyAddr
+>           -- happyExpList = HappyA# "hexCharsE explist"#
+>           let happy_exp_list_exp =
+>                 appE (conE "HappyA#") (hexCharsE explist)
+>               happy_exp_list_dec =
+>                 fullFunD "happyExpList" (conT "HappyAddr")
+>                   [(clause [] happy_exp_list_exp [])]
+>           in
+>           renderDocDecs [happy_exp_list_dec]
 >       | otherwise
->           = str "happyExpList :: Happy_Data_Array.Array Prelude.Int Prelude.Int\n"
->           . str "happyExpList = Happy_Data_Array.listArray (0,"
->               . shows table_size . str ") (["
->           . interleave' "," (map shows explist)
->           . str "\n\t])\n\n"
+>           =
+>           -- happyExpList :: Happy_Data_Array.Array Prelude.Int Prelude.Int
+>           -- happyExpList = Happy_Data_Array.listArray (0, table_size) [explist]
+>           let happy_exp_list_type =
+>                 appManyArgsT
+>                   (conT "Happy_Data_Array.Array")
+>                   [intT, intT]
+>               happy_exp_list_exp =
+>                 appManyArgsE
+>                   (varE "Happy_Data_Array.listArray")
+>                   [
+>                       tupE [intE 0, intE table_size]
+>                     , listE $ intE <$> explist
+>                   ]
+>               happy_exp_list_dec =
+>                 fullFunD "happyExpList" happy_exp_list_type
+>                   [(clause [] happy_exp_list_exp [])]
+>           in
+>           renderDocDecs [happy_exp_list_dec]
 
 >    (_, last_state) = bounds action
 >    n_states = last_state + 1

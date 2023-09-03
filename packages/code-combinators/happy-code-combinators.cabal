@@ -1,0 +1,88 @@
+name:            happy-code-combinators
+version:         1.21.0
+license:         BSD2
+license-file:    LICENSE
+copyright:       (c) Andy Gill, Simon Marlow
+author:          Artem Zakharenko
+maintainer:      Artem Zakharenko <zakhart1234567890@gmail.com>
+bug-reports:     https://github.com/simonmar/happy/issues
+stability:       not-stable
+homepage:        https://www.haskell.org/happy/
+category:        Development
+cabal-version:   >= 1.10
+build-type:      Simple
+synopsis:        Code combinators for simple code generation
+
+Description:
+  Happy is a parser generator for Haskell.
+  Happy-Backend-CodeCombinators allows to generate code
+  in both abstract and text represantation.
+
+
+tested-with:
+        GHC == 9.2.1
+        GHC == 9.0.2
+        GHC == 8.10.7
+        GHC == 8.8.4
+        GHC == 8.6.5
+        GHC == 8.4.4
+        GHC == 8.2.2
+        GHC == 8.0.2
+        GHC == 7.10.3
+        GHC == 7.8.4
+        GHC == 7.6.3
+        GHC == 7.4.2
+        GHC == 7.0.4
+
+library
+  hs-source-dirs:      src
+
+  exposed-modules:     Happy.Backend.CodeCombinators,
+                       Happy.Backend.CodeCombinators.Abstract,
+                       Happy.Backend.CodeCombinators.Syntax
+
+  build-depends:       array,
+                       base < 5,
+                       containers,
+                       mtl,
+                       pretty,
+                       template-haskell
+
+  default-language:    Haskell98
+  default-extensions:  CPP,
+                       FlexibleContexts,
+                       InstanceSigs,
+                       KindSignatures,
+                       MagicHash,
+                       OverloadedStrings,
+                       TypeFamilyDependencies
+
+  ghc-options:         -Wall -Wno-orphans
+
+
+test-suite test
+  type: exitcode-stdio-1.0
+  main-is: Test.hs
+  other-modules:
+      Test.CodeCombinators.Common
+    , Test.CodeCombinators.GenExp
+    , Test.CodeCombinators.GenDec
+    , Test.CodeCombinators.GenPat
+    , Test.CodeCombinators.GenType
+
+  hs-source-dirs:
+      test
+
+  default-extensions:
+      OverloadedStrings
+    , TemplateHaskell
+
+  ghc-options: -Wall
+  build-depends:
+      base < 5
+    , happy-code-combinators
+    , haskell-src-meta
+    , hedgehog
+    , template-haskell
+
+  default-language: Haskell98
