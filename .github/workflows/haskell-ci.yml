@@ -8,9 +8,9 @@
 #
 # For more information, see https://github.com/haskell-CI/haskell-ci
 #
-# version: 0.15.20230203
+# version: 0.17.20230929
 #
-# REGENDATA ("0.15.20230203",["github","cabal.project","--config","cabal.haskell-ci","--project"])
+# REGENDATA ("0.17.20230929",["github","cabal.project","--config","cabal.haskell-ci","--project"])
 #
 name: Haskell-CI
 on:
@@ -28,11 +28,16 @@ jobs:
     strategy:
       matrix:
         include:
-          - compiler: ghc-9.6.0.20230128
+          - compiler: ghc-9.8.0.20230929
             compilerKind: ghc
-            compilerVersion: 9.6.0.20230128
+            compilerVersion: 9.8.0.20230929
             setup-method: ghcup
             allow-failure: true
+          - compiler: ghc-9.6.3
+            compilerKind: ghc
+            compilerVersion: 9.6.3
+            setup-method: ghcup
+            allow-failure: false
           - compiler: ghc-9.4.4
             compilerKind: ghc
             compilerVersion: 9.4.4
@@ -111,20 +116,20 @@ jobs:
           apt-get install -y --no-install-recommends gnupg ca-certificates dirmngr curl git software-properties-common libtinfo5
           if [ "${{ matrix.setup-method }}" = ghcup ]; then
             mkdir -p "$HOME/.ghcup/bin"
-            curl -sL https://downloads.haskell.org/ghcup/0.1.18.0/x86_64-linux-ghcup-0.1.18.0 > "$HOME/.ghcup/bin/ghcup"
+            curl -sL https://downloads.haskell.org/ghcup/0.1.19.5/x86_64-linux-ghcup-0.1.19.5 > "$HOME/.ghcup/bin/ghcup"
             chmod a+x "$HOME/.ghcup/bin/ghcup"
             "$HOME/.ghcup/bin/ghcup" config add-release-channel https://raw.githubusercontent.com/haskell/ghcup-metadata/master/ghcup-prereleases-0.0.7.yaml;
             "$HOME/.ghcup/bin/ghcup" install ghc "$HCVER" || (cat "$HOME"/.ghcup/logs/*.* && false)
-            "$HOME/.ghcup/bin/ghcup" install cabal 3.9.0.0 || (cat "$HOME"/.ghcup/logs/*.* && false)
+            "$HOME/.ghcup/bin/ghcup" install cabal 3.10.1.0 || (cat "$HOME"/.ghcup/logs/*.* && false)
           else
             apt-add-repository -y 'ppa:hvr/ghc'
             apt-get update
             apt-get install -y "$HCNAME"
             mkdir -p "$HOME/.ghcup/bin"
-            curl -sL https://downloads.haskell.org/ghcup/0.1.18.0/x86_64-linux-ghcup-0.1.18.0 > "$HOME/.ghcup/bin/ghcup"
+            curl -sL https://downloads.haskell.org/ghcup/0.1.19.5/x86_64-linux-ghcup-0.1.19.5 > "$HOME/.ghcup/bin/ghcup"
             chmod a+x "$HOME/.ghcup/bin/ghcup"
             "$HOME/.ghcup/bin/ghcup" config add-release-channel https://raw.githubusercontent.com/haskell/ghcup-metadata/master/ghcup-prereleases-0.0.7.yaml;
-            "$HOME/.ghcup/bin/ghcup" install cabal 3.9.0.0 || (cat "$HOME"/.ghcup/logs/*.* && false)
+            "$HOME/.ghcup/bin/ghcup" install cabal 3.10.1.0 || (cat "$HOME"/.ghcup/logs/*.* && false)
           fi
         env:
           HCKIND: ${{ matrix.compilerKind }}
@@ -138,26 +143,28 @@ jobs:
           echo "CABAL_CONFIG=$HOME/.cabal/config" >> "$GITHUB_ENV"
           HCDIR=/opt/$HCKIND/$HCVER
           if [ "${{ matrix.setup-method }}" = ghcup ]; then
-            HC=$HOME/.ghcup/bin/$HCKIND-$HCVER
+            HC=$("$HOME/.ghcup/bin/ghcup" whereis ghc "$HCVER")
             echo "$HOME/.ghcup/bin" >> "$GITHUB_PATH"
+            HCPKG=$(echo "$HC" | sed 's#ghc$#ghc-pkg#')
+            HADDOCK=$(echo "$HC" | sed 's#ghc$#haddock#')
             echo "HC=$HC" >> "$GITHUB_ENV"
-            echo "HCPKG=$HOME/.ghcup/bin/$HCKIND-pkg-$HCVER" >> "$GITHUB_ENV"
-            echo "HADDOCK=$HOME/.ghcup/bin/haddock-$HCVER" >> "$GITHUB_ENV"
-            echo "CABAL=$HOME/.ghcup/bin/cabal-3.9.0.0 -vnormal+nowrap" >> "$GITHUB_ENV"
+            echo "HCPKG=$HCPKG" >> "$GITHUB_ENV"
+            echo "HADDOCK=$HADDOCK" >> "$GITHUB_ENV"
+            echo "CABAL=$HOME/.ghcup/bin/cabal-3.10.1.0 -vnormal+nowrap" >> "$GITHUB_ENV"
           else
             HC=$HCDIR/bin/$HCKIND
             echo "$HCDIR/bin" >> "$GITHUB_PATH"
             echo "HC=$HC" >> "$GITHUB_ENV"
             echo "HCPKG=$HCDIR/bin/$HCKIND-pkg" >> "$GITHUB_ENV"
             echo "HADDOCK=$HCDIR/bin/haddock" >> "$GITHUB_ENV"
-            echo "CABAL=$HOME/.ghcup/bin/cabal-3.9.0.0 -vnormal+nowrap" >> "$GITHUB_ENV"
+            echo "CABAL=$HOME/.ghcup/bin/cabal-3.10.1.0 -vnormal+nowrap" >> "$GITHUB_ENV"
           fi
 
           HCNUMVER=$(${HC} --numeric-version|perl -ne '/^(\d+)\.(\d+)\.(\d+)(\.(\d+))?$/; print(10000 * $1 + 100 * $2 + ($3 == 0 ? $5 != 1 : $3))')
           echo "HCNUMVER=$HCNUMVER" >> "$GITHUB_ENV"
           echo "ARG_TESTS=--enable-tests" >> "$GITHUB_ENV"
           echo "ARG_BENCH=--enable-benchmarks" >> "$GITHUB_ENV"
-          if [ $((HCNUMVER >= 90600)) -ne 0 ] ; then echo "HEADHACKAGE=true" >> "$GITHUB_ENV" ; else echo "HEADHACKAGE=false" >> "$GITHUB_ENV" ; fi
+          if [ $((HCNUMVER >= 90800)) -ne 0 ] ; then echo "HEADHACKAGE=true" >> "$GITHUB_ENV" ; else echo "HEADHACKAGE=false" >> "$GITHUB_ENV" ; fi
           echo "ARG_COMPILER=--$HCKIND --with-compiler=$HC" >> "$GITHUB_ENV"
           echo "GHCJSARITH=0" >> "$GITHUB_ENV"
         env:
@@ -214,8 +221,8 @@ jobs:
       - name: install cabal-plan
         run: |
           mkdir -p $HOME/.cabal/bin
-          curl -sL https://github.com/haskell-hvr/cabal-plan/releases/download/v0.6.2.0/cabal-plan-0.6.2.0-x86_64-linux.xz > cabal-plan.xz
-          echo 'de73600b1836d3f55e32d80385acc055fd97f60eaa0ab68a755302685f5d81bc  cabal-plan.xz' | sha256sum -c -
+          curl -sL https://github.com/haskell-hvr/cabal-plan/releases/download/v0.7.3.0/cabal-plan-0.7.3.0-x86_64-linux.xz > cabal-plan.xz
+          echo 'f62ccb2971567a5f638f2005ad3173dba14693a45154c1508645c52289714cb2  cabal-plan.xz' | sha256sum -c -
           xz -d < cabal-plan.xz > $HOME/.cabal/bin/cabal-plan
           rm -f cabal-plan.xz
           chmod a+x $HOME/.cabal/bin/cabal-plan
@@ -227,12 +234,12 @@ jobs:
       - name: initial cabal.project for sdist
         run: |
           touch cabal.project
-          echo "packages: $GITHUB_WORKSPACE/source/packages/backend-lalr" >> cabal.project
-          echo "packages: $GITHUB_WORKSPACE/source/packages/grammar" >> cabal.project
-          echo "packages: $GITHUB_WORKSPACE/source/packages/backend-glr" >> cabal.project
           echo "packages: $GITHUB_WORKSPACE/source/packages/frontend" >> cabal.project
+          echo "packages: $GITHUB_WORKSPACE/source/packages/backend-glr" >> cabal.project
           echo "packages: $GITHUB_WORKSPACE/source/packages/tabular" >> cabal.project
           echo "packages: $GITHUB_WORKSPACE/source/packages/codegen-common" >> cabal.project
+          echo "packages: $GITHUB_WORKSPACE/source/packages/backend-lalr" >> cabal.project
+          echo "packages: $GITHUB_WORKSPACE/source/packages/grammar" >> cabal.project
           echo "packages: $GITHUB_WORKSPACE/source/." >> cabal.project
           cat cabal.project
       - name: sdist
@@ -245,41 +252,41 @@ jobs:
           find sdist -maxdepth 1 -type f -name '*.tar.gz' -exec tar -C $GITHUB_WORKSPACE/unpacked -xzvf {} \;
       - name: generate cabal.project
         run: |
-          PKGDIR_happy_backend_lalr="$(find "$GITHUB_WORKSPACE/unpacked" -maxdepth 1 -type d -regex '.*/happy-backend-lalr-[0-9.]*')"
-          echo "PKGDIR_happy_backend_lalr=${PKGDIR_happy_backend_lalr}" >> "$GITHUB_ENV"
-          PKGDIR_happy_grammar="$(find "$GITHUB_WORKSPACE/unpacked" -maxdepth 1 -type d -regex '.*/happy-grammar-[0-9.]*')"
-          echo "PKGDIR_happy_grammar=${PKGDIR_happy_grammar}" >> "$GITHUB_ENV"
-          PKGDIR_happy_backend_glr="$(find "$GITHUB_WORKSPACE/unpacked" -maxdepth 1 -type d -regex '.*/happy-backend-glr-[0-9.]*')"
-          echo "PKGDIR_happy_backend_glr=${PKGDIR_happy_backend_glr}" >> "$GITHUB_ENV"
           PKGDIR_happy_frontend="$(find "$GITHUB_WORKSPACE/unpacked" -maxdepth 1 -type d -regex '.*/happy-frontend-[0-9.]*')"
           echo "PKGDIR_happy_frontend=${PKGDIR_happy_frontend}" >> "$GITHUB_ENV"
+          PKGDIR_happy_backend_glr="$(find "$GITHUB_WORKSPACE/unpacked" -maxdepth 1 -type d -regex '.*/happy-backend-glr-[0-9.]*')"
+          echo "PKGDIR_happy_backend_glr=${PKGDIR_happy_backend_glr}" >> "$GITHUB_ENV"
           PKGDIR_happy_tabular="$(find "$GITHUB_WORKSPACE/unpacked" -maxdepth 1 -type d -regex '.*/happy-tabular-[0-9.]*')"
           echo "PKGDIR_happy_tabular=${PKGDIR_happy_tabular}" >> "$GITHUB_ENV"
           PKGDIR_happy_codegen_common="$(find "$GITHUB_WORKSPACE/unpacked" -maxdepth 1 -type d -regex '.*/happy-codegen-common-[0-9.]*')"
           echo "PKGDIR_happy_codegen_common=${PKGDIR_happy_codegen_common}" >> "$GITHUB_ENV"
+          PKGDIR_happy_backend_lalr="$(find "$GITHUB_WORKSPACE/unpacked" -maxdepth 1 -type d -regex '.*/happy-backend-lalr-[0-9.]*')"
+          echo "PKGDIR_happy_backend_lalr=${PKGDIR_happy_backend_lalr}" >> "$GITHUB_ENV"
+          PKGDIR_happy_grammar="$(find "$GITHUB_WORKSPACE/unpacked" -maxdepth 1 -type d -regex '.*/happy-grammar-[0-9.]*')"
+          echo "PKGDIR_happy_grammar=${PKGDIR_happy_grammar}" >> "$GITHUB_ENV"
           PKGDIR_happy="$(find "$GITHUB_WORKSPACE/unpacked" -maxdepth 1 -type d -regex '.*/happy-[0-9.]*')"
           echo "PKGDIR_happy=${PKGDIR_happy}" >> "$GITHUB_ENV"
           rm -f cabal.project cabal.project.local
           touch cabal.project
           touch cabal.project.local
-          echo "packages: ${PKGDIR_happy_backend_lalr}" >> cabal.project
-          echo "packages: ${PKGDIR_happy_grammar}" >> cabal.project
-          echo "packages: ${PKGDIR_happy_backend_glr}" >> cabal.project
           echo "packages: ${PKGDIR_happy_frontend}" >> cabal.project
+          echo "packages: ${PKGDIR_happy_backend_glr}" >> cabal.project
           echo "packages: ${PKGDIR_happy_tabular}" >> cabal.project
           echo "packages: ${PKGDIR_happy_codegen_common}" >> cabal.project
+          echo "packages: ${PKGDIR_happy_backend_lalr}" >> cabal.project
+          echo "packages: ${PKGDIR_happy_grammar}" >> cabal.project
           echo "packages: ${PKGDIR_happy}" >> cabal.project
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package happy-backend-lalr" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package happy-grammar" >> cabal.project ; fi
+          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package happy-frontend" >> cabal.project ; fi
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package happy-backend-glr" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package happy-frontend" >> cabal.project ; fi
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package happy-tabular" >> cabal.project ; fi
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package happy-codegen-common" >> cabal.project ; fi
+          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
+          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package happy-backend-lalr" >> cabal.project ; fi
+          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
+          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package happy-grammar" >> cabal.project ; fi
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package happy" >> cabal.project ; fi
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
@@ -319,17 +326,17 @@ jobs:
           $CABAL v2-test --flags=-bootstrap $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --test-show-details=direct
       - name: cabal check
         run: |
-          cd ${PKGDIR_happy_backend_lalr} || false
-          ${CABAL} -vnormal check
-          cd ${PKGDIR_happy_grammar} || false
+          cd ${PKGDIR_happy_frontend} || false
           ${CABAL} -vnormal check
           cd ${PKGDIR_happy_backend_glr} || false
-          ${CABAL} -vnormal check
-          cd ${PKGDIR_happy_frontend} || false
           ${CABAL} -vnormal check
           cd ${PKGDIR_happy_tabular} || false
           ${CABAL} -vnormal check
           cd ${PKGDIR_happy_codegen_common} || false
+          ${CABAL} -vnormal check
+          cd ${PKGDIR_happy_backend_lalr} || false
+          ${CABAL} -vnormal check
+          cd ${PKGDIR_happy_grammar} || false
           ${CABAL} -vnormal check
           cd ${PKGDIR_happy} || false
           ${CABAL} -vnormal check
