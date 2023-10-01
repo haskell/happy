@@ -1,6 +1,6 @@
 # Revision history for Happy
 
-## Unreleased
+## 2.0
 
 The main focus of this release was modularizing Happy.
 
@@ -11,6 +11,9 @@ The main focus of this release was modularizing Happy.
   - `happy-frontend`
   - `happy-grammar`
   - `happy-tabular`
+
+* Partially revert the new bootstrapping system of 1.21.0 to mitigate
+  build issues.
 
 ## 1.21.0
 
