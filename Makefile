@@ -2,9 +2,6 @@ CABAL = cabal
 
 HAPPY_VER = `awk '/^version:/ { print $$2 }' happy.cabal`
 
-ALEX = alex
-ALEX_OPTS = -g
-
 SDIST_DIR=dist-newstyle/sdist
 
 sdist ::
