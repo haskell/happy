@@ -1,5 +1,5 @@
 name:            happy-tabular
-version:         1.21.0
+version:         2.0
 license:         BSD2
 license-file:    LICENSE
 copyright:       (c) Andy Gill, Simon Marlow
@@ -47,7 +47,7 @@ library
   build-depends:       base < 5,
                        array,
                        containers >= 0.4.2,
-                       happy-grammar == 1.21.0
+                       happy-grammar == 2.0
 
   default-language:    Haskell98
   default-extensions:  CPP, MagicHash, FlexibleContexts, NamedFieldPuns

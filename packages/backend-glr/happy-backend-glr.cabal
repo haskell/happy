@@ -1,5 +1,5 @@
 name:            happy-backend-glr
-version:         1.21.0
+version:         2.0
 license:         BSD2
 license-file:    LICENSE
 copyright:       (c) Andy Gill, Simon Marlow
@@ -49,9 +49,9 @@ library
                        Happy.Backend.GLR.ProduceCode
   build-depends:       base < 5,
                        array,
-                       happy-codegen-common == 1.21.0,
-                       happy-grammar == 1.21.0,
-                       happy-tabular == 1.21.0
+                       happy-codegen-common == 2.0,
+                       happy-grammar == 2.0,
+                       happy-tabular == 2.0
 
   default-language:    Haskell98
   default-extensions:  CPP, MagicHash, FlexibleContexts

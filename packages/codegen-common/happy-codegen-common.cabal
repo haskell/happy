@@ -1,5 +1,5 @@
 name:            happy-codegen-common
-version:         1.21.0
+version:         2.0
 license:         BSD2
 license-file:    LICENSE
 copyright:       (c) Andy Gill, Simon Marlow
