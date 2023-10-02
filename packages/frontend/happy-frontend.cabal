@@ -39,7 +39,9 @@ tested-with:
         GHC == 7.0.4
 
 flag bootstrap
-  description: Optimize the implementation of happy using a pre-built happy
+  description:
+    Optimize the implementation of happy using a pre-built happy,
+    and add support for attribute grammars.
   manual: True
   default: True
 
@@ -64,7 +66,7 @@ library
   other-modules:
         Happy.Frontend.ParseMonad
         Happy.Frontend.ParseMonad.Class
-        Happy.Frontend.AttrGrammar
+        Happy.Frontend.Mangler.Monad
         Happy.Frontend.Parser
         Happy.Frontend.Lexer
         Happy.Frontend.ParamRules
@@ -79,7 +81,9 @@ library
     other-modules:
       Happy.Frontend.ParseMonad.Bootstrapped
       Happy.Frontend.Parser.Bootstrapped
+      Happy.Frontend.AttrGrammar
       Happy.Frontend.AttrGrammar.Parser
+      Happy.Frontend.AttrGrammar.Mangler
   else
     other-modules:
       Happy.Frontend.ParseMonad.Oracle
