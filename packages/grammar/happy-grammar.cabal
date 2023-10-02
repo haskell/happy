@@ -19,7 +19,8 @@ Description:
   which represents a grammar as can be parsed and processed by happy.
 
 tested-with:
-        GHC == 9.6.0
+        GHC == 9.8.1
+        GHC == 9.6.3
         GHC == 9.4.4
         GHC == 9.2.5
         GHC == 9.0.2

@@ -1,21 +1,22 @@
---- .github/workflows/haskell-ci.yml	2023-02-06 09:35:15.000000000 +0100
-+++ .github/workflows/haskell-ci.yml-patched	2023-02-06 09:34:40.000000000 +0100
-@@ -139,12 +139,14 @@
+--- .github/workflows/haskell-ci.yml	2023-10-01 14:22:56.830944330 -0400
++++ .github/workflows/haskell-ci.yml-patched	2023-10-01 14:22:50.497720853 -0400
+@@ -144,6 +144,7 @@
            HCDIR=/opt/$HCKIND/$HCVER
            if [ "${{ matrix.setup-method }}" = ghcup ]; then
-             HC=$HOME/.ghcup/bin/$HCKIND-$HCVER
+             HC=$("$HOME/.ghcup/bin/ghcup" whereis ghc "$HCVER")
 +            echo "$HOME/.ghcup/bin" >> "$GITHUB_PATH"
+             HCPKG=$(echo "$HC" | sed 's#ghc$#ghc-pkg#')
+             HADDOCK=$(echo "$HC" | sed 's#ghc$#haddock#')
              echo "HC=$HC" >> "$GITHUB_ENV"
-             echo "HCPKG=$HOME/.ghcup/bin/$HCKIND-pkg-$HCVER" >> "$GITHUB_ENV"
-             echo "HADDOCK=$HOME/.ghcup/bin/haddock-$HCVER" >> "$GITHUB_ENV"
-             echo "CABAL=$HOME/.ghcup/bin/cabal-3.9.0.0 -vnormal+nowrap" >> "$GITHUB_ENV"
+@@ -152,6 +153,7 @@
+             echo "CABAL=$HOME/.ghcup/bin/cabal-3.10.1.0 -vnormal+nowrap" >> "$GITHUB_ENV"
            else
              HC=$HCDIR/bin/$HCKIND
 +            echo "$HCDIR/bin" >> "$GITHUB_PATH"
              echo "HC=$HC" >> "$GITHUB_ENV"
              echo "HCPKG=$HCDIR/bin/$HCKIND-pkg" >> "$GITHUB_ENV"
              echo "HADDOCK=$HCDIR/bin/haddock" >> "$GITHUB_ENV"
-@@ -291,7 +293,7 @@
+@@ -298,7 +300,7 @@
            cat cabal.project.local
        - name: dump install plan
          run: |
@@ -24,7 +25,7 @@
            cabal-plan
        - name: restore cache
          uses: actions/cache/restore@v3
-@@ -301,17 +303,20 @@
+@@ -308,17 +310,20 @@
            restore-keys: ${{ runner.os }}-${{ matrix.compiler }}-
        - name: install dependencies
          run: |
@@ -50,8 +51,8 @@
 +          $CABAL v2-test --flags=-bootstrap $ARG_COMPILER $ARG_TESTS $ARG_BENCH all --test-show-details=direct
        - name: cabal check
          run: |
-           cd ${PKGDIR_happy_backend_lalr} || false
-@@ -334,7 +339,7 @@
+           cd ${PKGDIR_happy_frontend} || false
+@@ -341,7 +346,7 @@
        - name: unconstrained build
          run: |
            rm -f cabal.project.local
