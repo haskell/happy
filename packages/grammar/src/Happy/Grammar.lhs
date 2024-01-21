@@ -11,7 +11,8 @@ The Grammar data type.
 >       Priority(..),
 >       Assoc(..),
 >
->       errorName, errorTok, startName, dummyName, firstStartTok, dummyTok,
+>       errorName, errorTok, catchName, catchTok,
+>       startName, dummyName, firstStartTok, dummyTok,
 >       eofName, epsilonTok,
 >
 >       mapDollarDollar
@@ -111,15 +112,17 @@ In normal and GHC-based parsers, these numbers are also used in the
 generated grammar itself, except that the error token is mapped to -1.
 For array-based parsers, see the note in Tabular/LALR.lhs.
 
-> startName, eofName, errorName, dummyName :: String
+> startName, eofName, errorName, catchName, dummyName :: String
 > startName = "%start" -- with a suffix, like %start_1, %start_2 etc.
 > eofName   = "%eof"
 > errorName = "error"
+> catchName = "catch"
 > dummyName = "%dummy"  -- shouldn't occur in the grammar anywhere
 
-> firstStartTok, dummyTok, errorTok, epsilonTok :: Name
-> firstStartTok   = 3
-> dummyTok        = 2
+> firstStartTok, dummyTok, errorTok, catchTok, epsilonTok :: Name
+> firstStartTok   = 4
+> dummyTok        = 3
+> catchTok        = 2
 > errorTok        = 1
 > epsilonTok      = 0
 

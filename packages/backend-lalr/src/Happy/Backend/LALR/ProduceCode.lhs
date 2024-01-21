@@ -1187,10 +1187,11 @@ See notes under "Action Tables" above for some subtleties in this function.
 >                            f (t, LR'Shift _ _ ) = [t - fst token_names_bound]
 >                            f (_, _) = []
 >
->        -- adjust terminals by -(fst_term+1), so they start at 1 (error is 0).
+>        -- adjust terminals by -(fst_term+2), so they start at 2 (error is 0, catch is 1).
 >        --  (see ARRAY_NOTES)
 >        adjust token | token == errorTok = 0
->                     | otherwise         = token - fst_term + 1
+>                     | token == catchTok = 1
+>                     | otherwise         = token - fst_term + 2
 >
 >        mkActVals assocs' default_act =
 >                [ (adjust token, actionVal act)
