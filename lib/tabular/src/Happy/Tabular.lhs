@@ -64,7 +64,7 @@ Find unused rules and tokens
 >       start_rules      = [ 0 .. (length starts' - 1) ]
 >       used_rules       = start_rules ++
 >                          nub [ r | (_,a) <- actions, r <- extract_reductions a ]
->       used_tokens      = errorTok : eof :
+>       used_tokens      = errorTok : catchTok : eof :
 >                              nub [ t | (t,a) <- actions, is_shift a ]
 >       n_prods          = length productions'
 >       unused_terminals = filter (`notElem` used_tokens) terms

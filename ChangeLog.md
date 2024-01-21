@@ -3,6 +3,8 @@
 ## 2.1
 
 * Added `--numeric-version` CLI flag.
+* Documented and implemented the new feature "Resumptive parsing with ``catch``"
+* Documented (and reimplemented) the "Reporting expected tokens" feature
 
 ## 2.0.2
 

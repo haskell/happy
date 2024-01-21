@@ -69,7 +69,7 @@ source-repository head
 
 common common-stanza
   default-language:    Haskell98
-  default-extensions:  CPP, MagicHash, FlexibleContexts, NamedFieldPuns
+  default-extensions:  CPP, MagicHash, FlexibleContexts, NamedFieldPuns, PatternGuards
   ghc-options: -Wall -Wno-incomplete-uni-patterns
 
 library grammar
