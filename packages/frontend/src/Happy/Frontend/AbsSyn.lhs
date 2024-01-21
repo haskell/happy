@@ -11,7 +11,7 @@ Here is the abstract syntax of the language we parse.
 >       AbsSyn(..), Directive(..),
 >       getTokenType, getTokenSpec, getParserNames, getLexer,
 >       getImportedIdentity, getMonad, getError,
->       getPrios, getPrioNames, getExpect, getErrorHandlerType,
+>       getPrios, getPrioNames, getExpect, getErrorHandlerType, getErrorResumptive,
 >       getAttributes, getAttributetype,
 >       Rule(..), Prod(..), Term(..), Prec(..)
 >  ) where
@@ -66,7 +66,6 @@ generate some error messages.
 >       | TokenSpec     [(a,String)]            -- %token
 >       | TokenName     String (Maybe String) Bool -- %name/%partial (True <=> %partial)
 >       | TokenLexer    String String           -- %lexer
->       | TokenErrorHandlerType String          -- %errorhandlertype
 >       | TokenImportedIdentity                                 -- %importedidentity
 >       | TokenMonad    String String String String -- %monad
 >       | TokenNonassoc [String]                -- %nonassoc
@@ -74,6 +73,8 @@ generate some error messages.
 >       | TokenLeft     [String]                -- %left
 >       | TokenExpect   Int                     -- %expect
 >       | TokenError    String                  -- %error
+>       | TokenErrorHandlerType String          -- %errorhandlertype
+>       | TokenErrorResumptive                  -- %resumptive
 >       | TokenAttributetype String             -- %attributetype
 >       | TokenAttribute String String          -- %attribute
 >   deriving Show
@@ -150,6 +151,9 @@ generate some error messages.
 >                        _ -> error "unsupported %errorhandlertype value"
 >               []  -> ErrorHandlerTypeDefault
 >               _   -> error "multiple errorhandlertype directives"
+
+> getErrorResumptive :: [Directive t] -> Bool
+> getErrorResumptive ds = not (null [ () | TokenErrorResumptive <- ds ])
 
 > getAttributes :: [Directive t] -> [(String, String)]
 > getAttributes ds

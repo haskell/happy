@@ -69,6 +69,7 @@ This bit is a real mess, mainly because of the error message support.
 >       starts'     = case getParserNames dirs of
 >                       [] -> [TokenName "happyParse" Nothing False]
 >                       ns -> ns
+>       error_resumptive' = getErrorResumptive dirs
 >
 >       start_strs  = [ startName++'_':p  | (TokenName p _ _) <- starts' ]
 
@@ -87,7 +88,7 @@ Build up a mapping from name values to strings.
 >             case lookupName str' of
 >                [a]   -> return a
 >                []    -> do addErr ("unknown identifier '" ++ str' ++ "'")
->                            return errorTok
+>                            return errorTok -- SG: What a confusing use of errorTok.. Use dummyTok?
 >                (a:_) -> do addErr ("multiple use of '" ++ str' ++ "'")
 >                            return a
 
@@ -249,6 +250,7 @@ Get the token specs in terms of Names.
 >               lexer             = getLexer dirs,
 >               error_handler     = getError dirs,
 >               error_sig         = getErrorHandlerType dirs,
+>               error_resumptive  = error_resumptive',
 >               token_type        = getTokenType dirs,
 >               expect            = getExpect dirs
 >       })

@@ -46,9 +46,9 @@ data Token
 	| TokenTest
     deriving (Eq,Show)
 
-handleErrorExpList :: ([Token], [String]) -> ParseM a
-handleErrorExpList ([], _) = throwError $ ParseError Nothing
-handleErrorExpList (ts, explist) = throwError $ ParseError $ Just $ (head ts, explist)
+handleErrorExpList :: [Token] -> [String] -> ParseM a
+handleErrorExpList [] _ = throwError $ ParseError Nothing
+handleErrorExpList ts explist = throwError $ ParseError $ Just $ (head ts, explist)
 
 lexer :: String -> [Token]
 lexer [] = []

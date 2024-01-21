@@ -21,5 +21,11 @@ The CommonOptions data type.
 >               expect            :: Maybe Int,
 >               lexer             :: Maybe (String,String),
 >               error_handler     :: Maybe String,
->               error_sig         :: ErrorHandlerType
+>               error_sig         :: ErrorHandlerType,
+>                 -- ^ ErrorHandlerTypExpList: error handler expects a
+>                 --   `[String]` as first arg with the pretty-printed expected
+>                 --   tokens
+>               error_resumptive  :: Bool
+>                 -- ^ `True` => The error handler expects a `resume`
+>                 -- continuation as last argument.
 >       }

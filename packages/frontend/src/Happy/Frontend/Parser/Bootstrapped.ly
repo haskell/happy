@@ -34,6 +34,7 @@ The parser.
 >       spec_expect     { TokenKW      TokSpecId_Expect }
 >       spec_error      { TokenKW      TokSpecId_Error }
 >       spec_errorhandlertype   { TokenKW      TokSpecId_ErrorHandlerType }
+>       spec_errorresumptive { TokenKW      TokSpecId_ErrorResumptive }
 >       spec_attribute  { TokenKW      TokSpecId_Attribute }
 >       spec_attributetype      { TokenKW      TokSpecId_Attributetype }
 >       code            { TokenInfo $$ TokCodeQuote }
@@ -104,11 +105,11 @@ The parser.
 >       | spec_shift                    { PrecShift }
 >       |                               { PrecNone }
 
-> tokInfos :: { [Directive String] } 
+> tokInfos :: { [Directive String] }
 >       : tokInfos tokInfo              { $2 : $1 }
 >       | tokInfo                       { [$1] }
 
-> tokInfo :: { Directive String } 
+> tokInfo :: { Directive String }
 >       : spec_tokentype code           { TokenType $2 }
 >       | spec_token tokenSpecs         { TokenSpec $2 }
 >       | spec_name id optStart         { TokenName $2 $3 False }
@@ -124,7 +125,8 @@ The parser.
 >       | spec_left ids                 { TokenLeft $2 }
 >       | spec_expect int               { TokenExpect $2 }
 >       | spec_error code               { TokenError $2 }
->       | spec_errorhandlertype id              { TokenErrorHandlerType $2 }
+>       | spec_errorhandlertype id      { TokenErrorHandlerType $2 }
+>       | spec_errorresumptive          { TokenErrorResumptive }
 >       | spec_attributetype code       { TokenAttributetype $2 }
 >       | spec_attribute id code        { TokenAttribute $2 $3 }
 

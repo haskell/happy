@@ -63,6 +63,7 @@ Produce the complete output file.
 >               , token_type = token_type'
 >               , error_handler = error_handler'
 >               , error_sig = error_sig'
+>               , error_resumptive = error_resumptive'
 >               })
 >               action goto lang_exts module_header module_trailer
 >               target coerce ghc strict
@@ -99,8 +100,9 @@ Produce the complete output file.
 >                 | otherwise = str "Prelude.Int"
 >
 >    -- Parsing monad and its constraints
->    pty = str monad_tycon
->    pcont = str monad_context
+>    pty = str monad_tycon                     -- str "P"
+>    ptyAt a = brack' (pty . str " " . a)      -- \(str "a") -> str "(P a)"
+>    pcont = str monad_context                 -- str "Read a", some constraint for "P" to be a monad
 >
 >    -- If GHC is enabled, wrap the content in a CPP ifdef that includes the
 >    -- content and tests whether the GHC version is >= 7.10.3
@@ -242,13 +244,13 @@ based parsers -- types aren't as important there).
 >     . interleave' ",\n "
 >             [ mkActionName i | (i,_action') <- zip [ 0 :: Int .. ]
 >                                                    (assocs action) ]
->     . str " :: " . str monad_context . str " => "
+>     . str " :: " . pcont . str " => "
 >     . intMaybeHash . str " -> " . happyReductionValue . str "\n\n"
 >     . interleave' ",\n "
 >             [ mkReduceFun i |
 >                     (i,_action) <- zip [ n_starts :: Int .. ]
 >                                        (drop n_starts prods) ]
->     . str " :: " . str monad_context . str " => "
+>     . str " :: " . pcont . str " => "
 >     . happyReductionValue . str "\n\n"
 
 >     | otherwise = id
@@ -381,7 +383,7 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >                                 . str " -> " . intMaybeHash
 >                                 . str " -> Happy_IntList -> HappyStk "
 >                                 . happyAbsSyn . str " -> "
->                                 . pty . str " " . happyAbsSyn . str "\n"
+>                                 . ptyAt happyAbsSyn . str "\n"
 >                               | otherwise -> id in
 >                       filterTypeSig tysig . mkReduceFun i . str " = "
 >                       . str s . strspace . lt' . strspace . showInt adjusted_nt
@@ -441,10 +443,10 @@ The token conversion function.
 >       . str "let cont i = " . doAction . str " sts stk tks in\n\t"
 >       . str "case tk of {\n\t"
 >       . interleave ";\n\t" (map doToken token_rep)
->       . str "_ -> happyError' ((tk:tks), [])\n\t"
+>       . str "_ -> happyError' (tk:tks) [] noResumption_\n\t"
 >       . str "}\n\n"
->       . str "happyError_ explist " . eofTok . str " tk tks = happyError' (tks, explist)\n"
->       . str "happyError_ explist _ tk tks = happyError' ((tk:tks), explist)\n";
+>       . str "happyError_ explist " . eofTok . str " tk resume tks = happyError' tks explist resume\n"
+>       . str "happyError_ explist _ tk resume tks = happyError' (tk:tks) explist resume\n";
 >             -- when the token is EOF, tk == _|_ (notHappyAtAll)
 >             -- so we must not pass it to happyError'
 
@@ -456,15 +458,15 @@ The token conversion function.
 >               . str "                   -> Happy_GHC_Exts.Int#\n"
 >               . str "                   -> " . token . str "\n"
 >               . str "                   -> HappyState " . token . str " (t -> "
->               . pty . str " a)\n"
+>               . ptyAt (str "a") . str ")\n"
 >               . str "                   -> [HappyState " . token . str " (t -> "
->               . pty . str " a)]\n"
+>               . ptyAt (str "a") . str ")]\n"
 >               . str "                   -> t\n"
->               . str "                   -> " . pty . str " a)\n"
+>               . str "                   -> " . ptyAt (str "a") . str ")\n"
 >               . str "                 -> [HappyState " . token . str " (t -> "
->               . pty . str " a)]\n"
+>               . ptyAt (str "a") . str ")]\n"
 >               . str "                 -> t\n"
->               . str "                 -> " . pty . str " a\n"
+>               . str "                 -> " . ptyAt (str "a") . str "\n"
 >          _ -> id
 >       . str "happyNewToken action sts stk\n\t= "
 >       . str lexer''
@@ -476,10 +478,10 @@ The token conversion function.
 >       . str (eof' ++ " -> ")
 >       . eofAction "tk" . str ";\n\t"
 >       . interleave ";\n\t" (map doToken token_rep)
->       . str "_ -> happyError' (tk, [])\n\t"
+>       . str "_ -> happyError' tk [] noResumption_\n\t"
 >       . str "})\n\n"
->       . str "happyError_ explist " . eofTok . str " tk = happyError' (tk, explist)\n"
->       . str "happyError_ explist _ tk = happyError' (tk, explist)\n";
+>       . str "happyError_ explist " . eofTok . str " tk resume = happyError' tk explist resume\n"
+>       . str "happyError_ explist _ tk resume = happyError' tk explist resume\n";
 >             -- superfluous pattern match needed to force happyError_ to
 >             -- have the correct type.
 >       }
@@ -703,7 +705,7 @@ action array indexed by (terminal * last_state) + state
 >               . shows n_states . str ") (["
 >           . interleave' "," (map shows goto_offs)
 >           . str "\n\t])\n\n"
->           
+>
 >           . str "happyAdjustOffset :: Prelude.Int -> Prelude.Int\n"
 >           . str "happyAdjustOffset = Prelude.id\n\n"
 >
@@ -839,27 +841,30 @@ MonadStuff:
 
 
 >    produceMonadStuff =
->            str "happyThen :: " . pcont . str " => " . pty
->          . str " a -> (a -> "  . pty
->          . str " b) -> " . pty . str " b\n"
+>            str "happyThen :: " . pcont . str " => " . ptyAt (str "a")
+>          . str " -> (a -> " . ptyAt (str "b")
+>          . str ") -> " . ptyAt (str "b") . str "\n"
 >          . str "happyThen = " . brack monad_then . nl
->          . str "happyReturn :: " . pcont . str " => a -> " . pty . str " a\n"
+>          . str "happyReturn :: " . pcont . str " => a -> " . ptyAt (str "a") . str "\n"
 >          . str "happyReturn = " . brack monad_return . nl
 >          . case lexer' of
 >               Nothing ->
 >                  str "happyThen1 m k tks = (" . str monad_then
 >                . str ") m (\\a -> k a tks)\n"
->                . str "happyReturn1 :: " . pcont . str " => a -> b -> " . pty . str " a\n"
+>                . str "happyReturn1 :: " . pcont . str " => a -> b -> " . ptyAt (str "a") . str "\n"
 >                . str "happyReturn1 = \\a tks -> " . brack monad_return
 >                . str " a\n"
->                . str "happyError' :: " . str monad_context . str " => (["
->                . token
->                . str "], [Prelude.String]) -> "
->                . str monad_tycon
->                . str " a\n"
->                . str "happyError' = "
->                . str (if use_monad then "" else "HappyIdentity Prelude.. ")
->                . errorHandler . str "\n"
+>                . str "happyError' :: " . pcont . str " => "
+>                . str "[" . token . str "] -> "
+>                . str "[Prelude.String] -> "
+>                . ptyAt (str "(Maybe a)") . str " -> "
+>                . ptyAt (str "a")
+>                . str "\n"
+>                . str "happyError' = " . errorHandler . str "\n"
+>                . str "noResumption_ :: " . pcont . str " => "
+>                . ptyAt (str "(Maybe a)")
+>                . str "\n"
+>                . str "noResumption_ = " . noResumption . str "\n"
 >               _ ->
 >                let
 >                  happyParseSig
@@ -872,7 +877,7 @@ MonadStuff:
 >                    | target == TargetArrayBased =
 >                      str "happyNewToken :: " . pcont . str " => " . intMaybeHash
 >                      . str " -> Happy_IntList -> HappyStk " . happyAbsSyn
->                      . str " -> " . pty . str " " . happyAbsSyn . str"\n"
+>                      . str " -> " . ptyAt happyAbsSyn . str"\n"
 >                      . str "\n"
 >                    | otherwise = id
 >                  doActionSig
@@ -880,7 +885,7 @@ MonadStuff:
 >                      str "happyDoAction :: " . pcont . str " => " . intMaybeHash
 >                      . str " -> " . str token_type' . str " -> " . intMaybeHash
 >                      . str " -> Happy_IntList -> HappyStk " . happyAbsSyn
->                      . str " -> " . pty . str " " . happyAbsSyn . str "\n"
+>                      . str " -> " . ptyAt happyAbsSyn . str "\n"
 >                      . str "\n"
 >                    | otherwise = id
 >                  reduceArrSig
@@ -889,7 +894,7 @@ MonadStuff:
 >                      . str " => Happy_Data_Array.Array Prelude.Int (" . intMaybeHash
 >                      . str " -> " . str token_type' . str " -> " . intMaybeHash
 >                      . str " -> Happy_IntList -> HappyStk " . happyAbsSyn
->                      . str " -> " . pty . str " " . happyAbsSyn . str ")\n"
+>                      . str " -> " . ptyAt happyAbsSyn . str ")\n"
 >                      . str "\n"
 >                    | otherwise = id in
 >                  filterTypeSig (happyParseSig . newTokenSig . doActionSig . reduceArrSig)
@@ -897,15 +902,19 @@ MonadStuff:
 >                . str " a -> (a -> "  . pty
 >                . str " b) -> " . pty . str " b\n"
 >                . str "happyThen1 = happyThen\n"
->                . str "happyReturn1 :: " . pcont . str " => a -> " . pty . str " a\n"
+>                . str "happyReturn1 :: " . pcont . str " => a -> " . ptyAt (str "a") . str "\n"
 >                . str "happyReturn1 = happyReturn\n"
->                . str "happyError' :: " . str monad_context . str " => ("
->                                        . token . str ", [Prelude.String]) -> "
->                . str monad_tycon
->                . str " a\n"
->                . str "happyError' tk = "
->                . str (if use_monad then "" else "HappyIdentity ")
->                . errorHandler . str " tk\n"
+>                . str "happyError' :: " . pcont . str " => "
+>                . token . str " -> "
+>                . str "[Prelude.String] -> "
+>                . ptyAt (str "(Maybe a)") . str " -> "
+>                . ptyAt (str "a")
+>                . str "\n"
+>                . str "happyError' = " . errorHandler . str "\n"
+>                . str "noResumption_ :: " . pcont . str " => "
+>                . ptyAt (str "(Maybe a)")
+>                . str "\n"
+>                . str "noResumption_ = " . noResumption . str "\n"
 
 An error handler specified with %error is passed the current token
 when used with %lexer, but happyError (the old way but kept for
@@ -913,13 +922,19 @@ compatibility) is not passed the current token. Also, the %errorhandlertype
 directive determines the API of the provided function.
 
 >    errorHandler =
->       case error_handler' of
->               Just h  -> case error_sig' of
->                              ErrorHandlerTypeExpList -> str h
->                              ErrorHandlerTypeDefault -> str "(\\(tokens, _) -> " . str h . str " tokens)"
->               Nothing -> case lexer' of
->                               Nothing -> str "(\\(tokens, _) -> happyError tokens)"
->                               Just _  -> str "(\\(tokens, explist) -> happyError)"
+>       str "(\\tokens explist resume -> " .
+>       (if use_monad then str ""
+>                     else str "HappyIdentity Prelude.$ ") .
+>       str (case error_handler' of Just h -> h; Nothing -> "happyError") . str " " .
+>       str (case (error_handler', lexer') of (Nothing, Just _) -> ""
+>                                             _                 -> "tokens ") .
+>       (case error_sig' of ErrorHandlerTypeExpList -> str "explist "
+>                           ErrorHandlerTypeDefault -> str "") .
+>       (if error_resumptive' then str "resume "
+>                             else str "") .
+>       str ")"
+>    noResumption = if use_monad then brack monad_return . str " Nothing"
+>                                else str "HappyIdentity Nothing"
 
 >    reduceArrElem n
 >      = str "\t(" . shows n . str " , "

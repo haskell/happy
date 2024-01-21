@@ -183,6 +183,11 @@ happyShift new_state ERROR_TOK tk st sts stk@(x `HappyStk` _) =
      let i = GET_ERROR_TOKEN(x) in
 --     trace "shifting the error token" $
      DO_ACTION(new_state,i,tk,CONS(st,sts),stk)
+     -- TODO: When `i` would enter error recovery again, we should instead
+     -- discard input until the lookahead is acceptable. Perhaps this is
+     -- simplest to implement in CodeGen for productions using `error`;
+     -- there we know the context and can implement local shift+discard actions.
+     -- still need to remember parser-defined error site, though.
 
 happyShift new_state i tk st sts stk =
      happyNewToken new_state CONS(st,sts) (MK_TOKEN(tk)`HappyStk`stk)
@@ -191,8 +196,14 @@ happyShift new_state i tk st sts stk =
 
 happySpecReduce_0 i fn ERROR_TOK tk st sts stk
      = happyFail [] ERROR_TOK tk st sts stk
+        -- SG: I'm very doubtful that passing [] ("no token expected here")
+        --     as the first arg to happyFail here and in the following calls is
+        --     correct. I'm not going to touch it for a lack of understanding
+        --     and concerns of of backward compatibility, but
+        --       `happyExpListPerState (IBOX(st) :: Prelude.Int)`
+        --     seems like a good candidate.
 happySpecReduce_0 nt fn j tk st@(HAPPYSTATE(action)) sts stk
-     = GOTO(action) nt j tk st CONS(st,sts) (fn `HappyStk` stk)
+     = happySeq fn (GOTO(action) nt j tk st CONS(st,sts) (fn `HappyStk` stk))
 
 happySpecReduce_1 i fn ERROR_TOK tk st sts stk
      = happyFail [] ERROR_TOK tk st sts stk
@@ -266,20 +277,35 @@ happyGoto action j tk st = action j j tk (HappyState action)
 #endif
 
 -----------------------------------------------------------------------------
--- Error recovery (ERROR_TOK is the error token)
+-- Error recovery
+--
+-- When there is no applicable action for the current lookahead token `tk`,
+-- happy enters error recovery mode. It works in 2 phases:
+--
+--  1. Fixup: Try to see if there is an action for the error token (`errorTok`,
+--     which is ERROR_TOK). If there is, do *not* emit an error and pretend
+--     instead that an `errorTok` was inserted.
+--     When there is no `errorTok` action, call `happyErro` and enter error
+--     resumption mode.
+--  2. Error resumption mode: After `happyError` was called TODO: happyError is fatal.
+--     Perhaps we should introduce a new `happyAddError`?
+--     Current plan: New %resumptive declaration for specifying the two funs,
+--     mutually exclusive with %error.
+--
+--     This is what usually is associated with `error`
+--     in `bison` or `menhir`. Since `error` is used for the Fixup mechanism (1)
+--     above, we call the corresponding token `catch`.
+--     In particular, `catch` will never *omit* calls to `happyFail`.
 
--- parse error if we are in recovery and we fail again
+-- parse error if we are in recovery and reached the end of the state stack
 happyFail explist ERROR_TOK tk old_st _ stk@(x `HappyStk` _) =
      let i = GET_ERROR_TOKEN(x) in
 --      trace "failing" $
-        happyError_ explist i tk
+        happyError_ explist i tk noResumption_
 
-{-  We don't need state discarding for our restricted implementation of
-    "error".  In fact, it can cause some bogus parses, so I've disabled it
-    for now --SDM
-
+{-
 -- discard a state
-happyFail  ERROR_TOK tk old_st CONS(HAPPYSTATE(action),sts)
+happyFail explist ERROR_TOK tk old_st CONS(HAPPYSTATE(action),sts)
                                                 (saved_tok `HappyStk` _ `HappyStk` stk) =
 --      trace ("discarding state, depth " ++ show (length stk))  $
         DO_ACTION(action,ERROR_TOK,tk,sts,(saved_tok`HappyStk`stk))
@@ -287,10 +313,11 @@ happyFail  ERROR_TOK tk old_st CONS(HAPPYSTATE(action),sts)
 
 -- Enter error recovery: generate an error token,
 --                       save the old token and carry on.
+--                       When a `happyShift` accepts, we will pop off the error
+--                       token to resume parsing with the current lookahead `i`.
 happyFail explist i tk HAPPYSTATE(action) sts stk =
 --      trace "entering error recovery" $
         DO_ACTION(action,ERROR_TOK,tk,sts, MK_ERROR_TOKEN(i) `HappyStk` stk)
-
 -- Internal happy errors:
 
 notHappyAtAll :: a
