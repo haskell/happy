@@ -86,12 +86,15 @@ optTokInfoP = withToken match where
   match (TokenKW TokSpecId_Expect) =
     Consume `andThenJust`
     pure TokenExpect <*> numP
-  match (TokenKW TokSpecId_Error) =
-    Consume `andThenJust`
-    pure TokenError <*> codeP
   match (TokenKW TokSpecId_ErrorHandlerType) =
     Consume `andThenJust`
     pure TokenErrorHandlerType <*> idtP
+  match (TokenKW TokSpecId_ErrorResumptive) =
+    Consume `andThenJust`
+    pure TokenErrorResumptive
+  match (TokenKW TokSpecId_Error) =
+    Consume `andThenJust`
+    pure TokenError <*> codeP
   match (TokenKW TokSpecId_Attributetype) =
     Consume `andThenJust`
     pure TokenAttributetype <*> codeP
