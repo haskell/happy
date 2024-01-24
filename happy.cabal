@@ -161,6 +161,7 @@ test-suite tests
   main-is: test.hs
   -- This line is important as it ensures that the local `exe:happy` component declared above is built before the test-suite component is invoked, as well as making sure that `happy` is made available on $PATH and `$happy_datadir` is set accordingly before invoking `test.hs`
   build-tools: happy
+  ghc-options: -threaded
 
   build-depends: base, process
   default-language: Haskell98
