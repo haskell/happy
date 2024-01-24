@@ -4,6 +4,9 @@ dist-newstyle
 cabal-dev
 .cabal-sandbox
 cabal.sandbox.config
+cabal.project.local
 .*.swp
 .*.swo
 /.vscode/
+packages/frontend/src/Happy/Frontend/Parser/Bootstrapped.hs
+packages/frontend/src/Happy/Frontend/AttrGrammar/Parser.hs
