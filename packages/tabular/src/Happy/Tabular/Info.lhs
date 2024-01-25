@@ -22,7 +22,7 @@ Produce a file of parser information, useful for debugging the parser.
 >       -> Grammar
 >       -> ActionTable
 >       -> GotoTable
->       -> [(Int,String)]
+>       -> [(Name,String)]
 >       -> Array Int (Int,Int)
 >       -> String
 >       -> [Int]                        -- unused rules

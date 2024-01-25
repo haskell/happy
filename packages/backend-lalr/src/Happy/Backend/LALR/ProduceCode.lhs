@@ -367,8 +367,8 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 
 >               -- adjust the nonterminal number for the array-based parser
 >               -- so that nonterminals start at zero.
->               adjusted_nt | target == TargetArrayBased = nt - first_nonterm'
->                           | otherwise                  = nt
+>               adjusted_nt | target == TargetArrayBased = getName nt - getName first_nonterm'
+>                           | otherwise                  = getName nt
 >
 >               mkReductionHdr lt' s =
 >                       let tysig = case lexer' of
@@ -510,7 +510,7 @@ the left hand side of '@'.
 >                                  Nothing -> xs
 >                                  Just fn -> fn "happy_dollar_dollar"
 
->    mkHappyTerminalVar :: Int -> Int -> String -> String
+>    mkHappyTerminalVar :: Int -> Name -> String -> String
 >    mkHappyTerminalVar i t =
 >     case tok_str_fn of
 >       Nothing -> pat
@@ -523,8 +523,8 @@ the left hand side of '@'.
 
 >    tokIndex
 >       = case target of
->               TargetHaskell    -> id
->               TargetArrayBased -> \i -> i - n_nonterminals - n_starts - 2
+>               TargetHaskell    -> getName
+>               TargetArrayBased -> \i -> getName i - n_nonterminals - n_starts - 2
 >                       -- tokens adjusted to start at zero, see ARRAY_NOTES
 
 %-----------------------------------------------------------------------------
@@ -601,7 +601,7 @@ machinery to discard states in the parser...
 >       . str "        f (Prelude.True, nr) = [token_strs Prelude.!! nr]\n"
 >       . str "\n"
 >       where (first_token, last_token) = bounds token_names'
->             nr_tokens = last_token - first_token + 1
+>             nr_tokens = getName last_token - getName first_token + 1
 >
 >    produceStateFunction goto' (state, acts)
 >       = foldr (.) id (map produceActions assocs_acts)
@@ -784,7 +784,7 @@ Note, this *could* introduce lack of polymophism,
 for types that have alphas in them. Maybe we should
 outlaw them inside { }
 
->    nt_types_index :: Array Int Int
+>    nt_types_index :: Array Name Name
 >    nt_types_index = array (bounds nt_types)
 >                       [ (a, fn a b) | (a, b) <- assocs nt_types ]
 >     where
@@ -931,7 +931,7 @@ directive determines the API of the provided function.
 >       = interleave "\n\n" (map produceEntry (zip starts' [0..]))
 >       . if null attributes' then id else produceAttrEntries starts'
 
->    produceEntry :: ((String, t0, Int, t1), Int) -> String -> String
+>    produceEntry :: ((String, t0, Name, t1), Int) -> String -> String
 >    produceEntry ((name, _start_nonterm, accept_nonterm, _partial), no)
 >       = (if null attributes' then str name else str "do_" . str name)
 >       . maybe_tks
@@ -1113,7 +1113,7 @@ See notes under "Action Tables" above for some subtleties in this function.
 
 
 > mkTables
->        :: ActionTable -> GotoTable -> Name -> Int -> Int -> Int -> Int -> (Int, Int) ->
+>        :: ActionTable -> GotoTable -> Name -> Name -> Int -> Int -> Int -> (Name, Name) ->
 >        ( [Int]         -- happyActOffsets
 >        , [Int]         -- happyGotoOffsets
 >        , [Int]         -- happyTable
@@ -1168,14 +1168,16 @@ See notes under "Action Tables" above for some subtleties in this function.
 >        explist_actions = [ (state, concatMap f $ assocs acts)
 >                          | (state, acts) <- assocs action ]
 >                          where
->                            f (t, LR'Shift _ _ ) = [t - fst token_names_bound]
+>                            f (t, LR'Shift _ _ ) = [getName t - getName (fst token_names_bound)]
 >                            f (_, _) = []
 >
 >        -- adjust terminals by -(fst_term+1), so they start at 1 (error is 0).
 >        --  (see ARRAY_NOTES)
+>        adjust :: Name -> Int
 >        adjust token | token == errorTok = 0
->                     | otherwise         = token - fst_term + 1
+>                     | otherwise         = getName token - getName fst_term + 1
 >
+>        mkActVals :: [(Name, LRAction)] -> LRAction -> [(Int, Int)]
 >        mkActVals assocs' default_act =
 >                [ (adjust token, actionVal act)
 >                | (token, act) <- assocs'
@@ -1196,7 +1198,7 @@ See notes under "Action Tables" above for some subtleties in this function.
 >        -- adjust nonterminals by -first_nonterm', so they start at zero
 >        --  (see ARRAY_NOTES)
 >        mkGotoVals assocs' =
->                [ (token - first_nonterm', i) | (token, Goto i) <- assocs' ]
+>                [ (getName token - getName first_nonterm', i) | (token, Goto i) <- assocs' ]
 >
 >        sorted_actions = sortBy (flip cmp_state) (actions ++ gotos)
 >        cmp_state (_,_,_,width1,tally1,_) (_,_,_,width2,tally2,_)
@@ -1216,7 +1218,7 @@ See notes under "Action Tables" above for some subtleties in this function.
 > genTables
 >        :: Int                         -- number of actions
 >        -> Int                         -- maximum token no.
->        -> (Int, Int)                  -- token names bounds
+>        -> (Name, Name)                -- token names bounds
 >        -> [TableEntry]                -- entries for the table
 >        -> [(Int, [Int])]              -- expected tokens lists
 >        -> ST s ( UArray Int Int       -- table
@@ -1251,7 +1253,7 @@ See notes under "Action Tables" above for some subtleties in this function.
 >        n_states = n_actions - 1
 >        mAX_TABLE_SIZE = n_states * (max_token + 1)
 >        (first_token, last') = token_names_bound
->        n_token_names = last' - first_token + 1
+>        n_token_names = getName last' - getName first_token + 1
 
 
 > genTables'
@@ -1366,7 +1368,7 @@ slot is free or not.
 >    writeArray check (off+t) t
 >    addState off table check state
 
-> notFail :: (Int, LRAction) -> Bool
+> notFail :: (Name, LRAction) -> Bool
 > notFail (_, LR'Fail) = False
 > notFail _           = True
 
@@ -1379,33 +1381,36 @@ slot is free or not.
 -----------------------------------------------------------------------------
 -- Misc.
 
+> showsName :: Name -> ShowS
+> showsName = shows . getName
+
 > comment :: String
 > comment =
 >         "-- parser produced by Happy Version " ++ showVersion version ++ "\n\n"
 
-> mkAbsSynCon :: Array Int Int -> Int -> String -> String
-> mkAbsSynCon fx t      = str "HappyAbsSyn"   . shows (fx ! t)
+> mkAbsSynCon :: Array Name Name -> Name -> String -> String
+> mkAbsSynCon fx t      = str "HappyAbsSyn"   . showsName (fx ! t)
 
 > mkHappyVar, mkReduceFun, mkDummyVar :: Int -> String -> String
 > mkHappyVar n          = str "happy_var_"    . shows n
 > mkReduceFun n         = str "happyReduce_"  . shows n
 > mkDummyVar n          = str "happy_x_"      . shows n
 
-> mkHappyWrap :: Int -> String -> String
-> mkHappyWrap n = str "HappyWrap" . shows n
+> mkHappyWrap :: Name -> String -> String
+> mkHappyWrap n = str "HappyWrap" . showsName n
 
-> mkHappyWrapCon :: Maybe a -> Int -> (String -> String) -> String -> String
+> mkHappyWrapCon :: Maybe a -> Name -> (String -> String) -> String -> String
 > mkHappyWrapCon Nothing  _ s = s
 > mkHappyWrapCon (Just _) n s = brack' (mkHappyWrap n . strspace . s)
 
-> mkHappyIn, mkHappyOut :: Int -> String -> String
-> mkHappyIn n           = str "happyIn"  . shows n
-> mkHappyOut n          = str "happyOut" . shows n
+> mkHappyIn, mkHappyOut :: Name -> String -> String
+> mkHappyIn n           = str "happyIn"  . showsName n
+> mkHappyOut n          = str "happyOut" . showsName n
 
-> typeParam, typeParamOut :: Int -> Maybe String -> ShowS
-> typeParam n Nothing   = char 't' . shows n
+> typeParam, typeParamOut :: Name -> Maybe String -> ShowS
+> typeParam n Nothing   = char 't' . showsName n
 > typeParam _ (Just ty) = brack ty
-> typeParamOut n Nothing  = char 't' . shows n
+> typeParamOut n Nothing  = char 't' . showsName n
 > typeParamOut n (Just _) = mkHappyWrap n
 
 > specReduceFun :: Int -> Bool

@@ -5,7 +5,7 @@ The Grammar data type.
 -----------------------------------------------------------------------------
 
 > module Happy.Grammar (
->       Name,
+>       Name (..),
 >
 >       Production(..), Grammar(..),
 >       Priority(..),
@@ -19,7 +19,10 @@ The Grammar data type.
 
 > import Data.Array
 > import Data.Char (isAlphaNum)
-> type Name = Int
+> newtype Name
+>       = MkName { getName :: Int }
+>       deriving ( Read, Show
+>                , Eq, Ord, Ix)
 
 > data Production
 >       = Production Name [Name] (String,[Int]) Priority
@@ -34,8 +37,8 @@ The Grammar data type.
 >               terminals         :: [Name],
 >               non_terminals     :: [Name],
 >               starts            :: [(String,Name,Name,Bool)],
->               types             :: Array Int (Maybe String),
->               token_names       :: Array Int String,
+>               types             :: Array Name (Maybe String),
+>               token_names       :: Array Name String,
 >               first_nonterm     :: Name,
 >               first_term        :: Name,
 >               eof_term          :: Name,
@@ -118,10 +121,10 @@ For array-based parsers, see the note in Tabular/LALR.lhs.
 > dummyName = "%dummy"  -- shouldn't occur in the grammar anywhere
 
 > firstStartTok, dummyTok, errorTok, epsilonTok :: Name
-> firstStartTok   = 3
-> dummyTok        = 2
-> errorTok        = 1
-> epsilonTok      = 0
+> firstStartTok   = MkName 3
+> dummyTok        = MkName 2
+> errorTok        = MkName 1
+> epsilonTok      = MkName 0
 
 -----------------------------------------------------------------------------
 Replace $$ with an arbitrary string, being careful to avoid ".." and '.'.
