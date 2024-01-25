@@ -202,7 +202,7 @@ Extract the string that comes before the module declaration...
 >     . table_text
 
 >   lib_content lib_text
->    = let (pre,_drop_me : post) = break (== "fakeimport DATA") $ lines lib_text
+>    = let (pre,post) = break (== "fakeimport DATA") $ lines lib_text
 >      in
 >      unlines [ "{-# LANGUAGE CPP #-}"
 >              , unlines
@@ -222,7 +222,7 @@ Extract the string that comes before the module declaration...
 >              , start ++ " = glr_parse "
 >              , "use_filtering = " ++ show use_filtering
 >              , "top_symbol = " ++ prefix ++ start_prod
->              , unlines post
+>              , unlines (drop 1 post)
 >              ]
 >   start_prod = token_names g ! (let (_,_,i,_) = head $ starts g in i)
 >   use_filtering = case options of (_, UseFiltering,_) -> True
