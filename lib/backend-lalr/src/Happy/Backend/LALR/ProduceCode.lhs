@@ -4,6 +4,7 @@ The code generator.
 (c) 1993-2001 Andy Gill, Simon Marlow
 -----------------------------------------------------------------------------
 
+> {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 > module Happy.Backend.LALR.ProduceCode (produceParser) where
 
 > import Paths_happy_lib  ( version )
