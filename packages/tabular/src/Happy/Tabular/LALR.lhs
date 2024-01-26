@@ -5,6 +5,8 @@ Generation of LALR parsing tables.
 (c) 1997-2001 Simon Marlow
 -----------------------------------------------------------------------------
 
+> {-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
+>
 > module Happy.Tabular.LALR
 >       (genActionTable, genGotoTable, genLR0items, precalcClosure0,
 >        propLookaheads, calcLookaheads, mergeLookaheadInfo, countConflicts,
