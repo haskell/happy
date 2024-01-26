@@ -123,16 +123,16 @@ happyDoAction i tk st =
 {-# INLINE happyNextAction #-}
 happyNextAction i st = case happyIndexActionTable i st of
   Just (IBOX(act)) -> act
-  Nothing          -> indexShortOffAddr happyDefActions st
+  Nothing          -> indexOffAddr happyDefActions st
 
 {-# INLINE happyIndexActionTable #-}
 happyIndexActionTable i st
-  | GTE(off,ILIT(0)), EQ(indexShortOffAddr happyCheck off, i)
-  = Prelude.Just (IBOX(indexShortOffAddr happyTable off))
+  | GTE(off,ILIT(0)), EQ(indexOffAddr happyCheck off, i)
+  = Prelude.Just (IBOX(indexOffAddr happyTable off))
   | otherwise
   = Prelude.Nothing
   where
-    off = PLUS(happyAdjustOffset (indexShortOffAddr happyActOffsets st), i)
+    off = PLUS(indexOffAddr happyActOffsets st, i)
 
 data HappyAction
   = HappyFail
@@ -150,22 +150,17 @@ happyDecodeAction action
   = HappyShift MINUS(action,ILIT(1))
 
 {-# INLINE happyIndexGotoTable #-}
-happyIndexGotoTable nt st = indexShortOffAddr happyTable off
+happyIndexGotoTable nt st = indexOffAddr happyTable off
   where
-    off = PLUS(happyAdjustOffset (indexShortOffAddr happyGotoOffsets st), nt)
+    off = PLUS(indexOffAddr happyGotoOffsets st, nt)
 
 #endif /* HAPPY_ARRAY */
 
 #ifdef HAPPY_GHC
-indexShortOffAddr (HappyA# arr) off =
-        Happy_GHC_Exts.narrow16Int# i
-  where
-        i = Happy_GHC_Exts.word2Int# (Happy_GHC_Exts.or# (Happy_GHC_Exts.uncheckedShiftL# high 8#) low)
-        high = Happy_GHC_Exts.int2Word# (Happy_GHC_Exts.ord# (Happy_GHC_Exts.indexCharOffAddr# arr (off' Happy_GHC_Exts.+# 1#)))
-        low  = Happy_GHC_Exts.int2Word# (Happy_GHC_Exts.ord# (Happy_GHC_Exts.indexCharOffAddr# arr off'))
-        off' = off Happy_GHC_Exts.*# 2#
+indexOffAddr (HappyA# arr) off =
+  Happy_GHC_Exts.int32ToInt# (Happy_GHC_Exts.indexInt32OffAddr# arr off)
 #else
-indexShortOffAddr arr off = arr Happy_Data_Array.! off
+indexOffAddr arr off = arr Happy_Data_Array.! off
 #endif
 
 {-# INLINE happyLt #-}
@@ -173,11 +168,11 @@ happyLt x y = LT(x,y)
 
 #ifdef HAPPY_GHC
 readArrayBit arr bit =
-    Bits.testBit IBOX(indexShortOffAddr arr ((unbox_int bit) `Happy_GHC_Exts.iShiftRA#` 4#)) (bit `Prelude.mod` 16)
+    Bits.testBit IBOX(indexOffAddr arr ((unbox_int bit) `Happy_GHC_Exts.iShiftRA#` 5#)) (bit `Prelude.mod` 32)
   where unbox_int (Happy_GHC_Exts.I# x) = x
 #else
 readArrayBit arr bit =
-    Bits.testBit IBOX(indexShortOffAddr arr (bit `Prelude.div` 16)) (bit `Prelude.mod` 16)
+    Bits.testBit IBOX(indexOffAddr arr (bit `Prelude.div` 16)) (bit `Prelude.mod` 16)
 #endif
 
 #ifdef HAPPY_GHC

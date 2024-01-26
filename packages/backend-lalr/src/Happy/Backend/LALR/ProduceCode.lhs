@@ -20,12 +20,13 @@ The code generator.
 
 > import Control.Monad             ( forM_ )
 > import Control.Monad.ST          ( ST, runST )
-> import Data.Bits                 ( setBit )
+> import Data.Word
+> import Data.Int
+> import Data.Bits
 > import Data.Array.ST             ( STUArray )
 > import Data.Array.Unboxed        ( UArray )
 > import Data.Array.MArray         ( MArray(..), freeze, readArray, writeArray )
 > import Data.Array.IArray         ( Array, IArray(..), (!), array, assocs, elems )
-> import Debug.Trace
 
 %-----------------------------------------------------------------------------
 Produce the complete output file.
@@ -548,10 +549,17 @@ Action Tables.
 Here we do a bit of trickery and replace the normal default action
 (failure) for each state with at least one reduction action.  For each
 such state, we pick one reduction action to be the default action.
-This should make the code smaller without affecting the speed.  It
-changes the sematics for errors, however; errors could be detected in
-a different state now (but they'll still be detected at the same point
-in the token stream).
+This should make the code smaller without affecting the speed.
+It changes the sematics for errors, however; errors could be detected in a
+different state now (but they'll still be detected at the same point in the
+token stream).
+
+SG: For a data point, in issue93 the happyTable triples in size when we always
+pick failure as the default reduction.
+Presumably that is because there are quite a few reduction states, in which the
+only non-default transition is a reduction.
+Our scheme above ensures that these states don't occupy space in the main
+happyTable at all; they just get an entry in the happyDefActions.
 
 Further notes on default cases:
 
@@ -664,36 +672,27 @@ action array indexed by (terminal * last_state) + state
 >       | ghc
 >           = str "happyActOffsets :: HappyAddr\n"
 >           . str "happyActOffsets = HappyA# \"" --"
->           . str (checkedHexChars min_off act_offs)
+>           . hexChars act_offs
 >           . str "\"#\n\n" --"
 >
 >           . str "happyGotoOffsets :: HappyAddr\n"
 >           . str "happyGotoOffsets = HappyA# \"" --"
->           . str (checkedHexChars min_off goto_offs)
+>           . hexChars goto_offs
 >           . str "\"#\n\n"  --"
->
->           . str "happyAdjustOffset :: Happy_GHC_Exts.Int# -> Happy_GHC_Exts.Int#\n"
->           . str "happyAdjustOffset off = "
->           . (if length table < 32768
->                then str "off"
->                else str "if happyLt off (" . shows min_off . str "# :: Happy_GHC_Exts.Int#)"
->                   . str " then off Happy_GHC_Exts.+# 65536#"
->                   . str " else off")
->           . str "\n\n"  --"
 >
 >           . str "happyDefActions :: HappyAddr\n"
 >           . str "happyDefActions = HappyA# \"" --"
->           . str (hexChars defaults)
+>           . hexChars defaults
 >           . str "\"#\n\n" --"
 >
 >           . str "happyCheck :: HappyAddr\n"
 >           . str "happyCheck = HappyA# \"" --"
->           . str (hexChars check)
+>           . hexChars check
 >           . str "\"#\n\n" --"
 >
 >           . str "happyTable :: HappyAddr\n"
 >           . str "happyTable = HappyA# \"" --"
->           . str (hexChars table)
+>           . hexChars table
 >           . str "\"#\n\n" --"
 
 >       | otherwise
@@ -708,9 +707,6 @@ action array indexed by (terminal * last_state) + state
 >               . shows n_states . str ") (["
 >           . interleave' "," (map shows goto_offs)
 >           . str "\n\t])\n\n"
->
->           . str "happyAdjustOffset :: Prelude.Int -> Prelude.Int\n"
->           . str "happyAdjustOffset = Prelude.id\n\n"
 >
 >           . str "happyDefActions :: Happy_Data_Array.Array Prelude.Int Prelude.Int\n"
 >           . str "happyDefActions = Happy_Data_Array.listArray (0,"
@@ -734,7 +730,7 @@ action array indexed by (terminal * last_state) + state
 >       | ghc
 >           = str "happyExpToks :: HappyAddr\n"
 >           . str "happyExpToks = HappyA# \"" --"
->           . str (hexChars explist)
+>           . hexChars explist
 >           . str "\"#\n\n" --"
 >       | otherwise
 >           = str "happyExpToks :: Happy_Data_Array.Array Prelude.Int Prelude.Int\n"
@@ -748,7 +744,7 @@ action array indexed by (terminal * last_state) + state
 >    n_terminals = length terms
 >    n_nonterminals = length nonterms - n_starts -- lose %starts
 >
->    (act_offs,goto_offs,table,defaults,check,explist,min_off)
+>    (act_offs,goto_offs,table,defaults,check,explist)
 >       = mkTables action goto first_nonterm' fst_term
 >               n_terminals n_nonterminals n_starts (bounds token_names')
 >
@@ -1063,8 +1059,6 @@ See notes under "Action Tables" above for some subtleties in this function.
 > getDefault actions =
 >   -- pick out the action for the error token, if any
 >   case [ act | (e, act) <- actions, e == errorTok ] of
->       _ -> LR'Fail
->
 >
 >       -- use error reduction as the default action, if there is one.
 >       act@(LR'Reduce _ _) : _                 -> act
@@ -1075,9 +1069,9 @@ See notes under "Action Tables" above for some subtleties in this function.
 >       (act : _) | act /= LR'Fail -> LR'Fail
 >
 >       -- no error actions, pick a reduce to be the default.
->       _      -> case reduces of
->                     [] -> LR'Fail
->                     (act:_) -> act    -- pick the first one we see for now
+>       _ -> case reduces of
+>         [] -> LR'Fail
+>         (act:_) -> act    -- pick the first one we see for now
 >
 >   where reduces
 >           =  [ act | (_, act@(LR'Reduce _ _)) <- actions ]
@@ -1100,7 +1094,6 @@ See notes under "Action Tables" above for some subtleties in this function.
 
 -- happyCheck
 --      Indicates whether we should use the default action for state
-
 
 -- the table is laid out such that the action for a given state & token
 -- can be found by:
@@ -1128,6 +1121,10 @@ See notes under "Action Tables" above for some subtleties in this function.
 -- try to fit the actions into the check table, using the ordering
 -- from above.
 
+SG: If you want to know more about similar compression schemes, consult
+      Storing a Sparse Table (https://dl.acm.org/doi/10.1145/359168.359175)
+One can think of the mapping @\(state,token) -> (offs ! state)+token@ as a hash
+and @check@ as the way to detect "collisions" (i.e., default entries).
 
 > mkTables
 >        :: ActionTable -> GotoTable -> Name -> Int -> Int -> Int -> Int -> (Int, Int) ->
@@ -1137,7 +1134,6 @@ See notes under "Action Tables" above for some subtleties in this function.
 >        , [Int]         -- happyDefAction
 >        , [Int]         -- happyCheck
 >        , [Int]         -- happyExpToks
->        , Int           -- happyMinOffset
 >        )
 >
 > mkTables action goto first_nonterm' fst_term
@@ -1150,11 +1146,10 @@ See notes under "Action Tables" above for some subtleties in this function.
 >    , def_actions
 >    , take max_off (elems check)
 >    , elems explist
->    , min_off
 >    )
 >  where
 >
->        (table,check,act_offs,goto_offs,explist,min_off,max_off)
+>        (table,check,act_offs,goto_offs,explist,max_off)
 >                = runST (genTables (length actions)
 >                         max_token token_names_bound
 >                         sorted_actions explist_actions)
@@ -1242,7 +1237,6 @@ See notes under "Action Tables" above for some subtleties in this function.
 >                , UArray Int Int       -- action offsets
 >                , UArray Int Int       -- goto offsets
 >                , UArray Int Int       -- expected tokens list
->                , Int                  -- lowest offset in table
 >                , Int                  -- highest offset in table
 >                )
 >
@@ -1255,7 +1249,7 @@ See notes under "Action Tables" above for some subtleties in this function.
 >   off_arr    <- newArray (-max_token, mAX_TABLE_SIZE) 0
 >   exp_array  <- newArray (0, (n_actions * n_token_names + 15) `div` 16) 0
 >
->   (min_off,max_off) <- genTables' table check act_offs goto_offs off_arr exp_array entries
+>   max_off    <- genTables' table check act_offs goto_offs off_arr exp_array entries
 >                          explist max_token n_token_names
 >
 >   table'     <- freeze table
@@ -1263,7 +1257,7 @@ See notes under "Action Tables" above for some subtleties in this function.
 >   act_offs'  <- freeze act_offs
 >   goto_offs' <- freeze goto_offs
 >   exp_array' <- freeze exp_array
->   return (table',check',act_offs',goto_offs',exp_array',min_off,max_off+1)
+>   return (table',check',act_offs',goto_offs',exp_array',max_off+1)
 
 >   where
 >        n_states = n_actions - 1
@@ -1283,19 +1277,19 @@ See notes under "Action Tables" above for some subtleties in this function.
 >        -> [(Int, [Int])]              -- expected tokens lists
 >        -> Int                         -- maximum token no.
 >        -> Int                         -- number of token names
->        -> ST s (Int,Int)              -- lowest and highest offsets in table
+>        -> ST s Int                    -- highest offsets in table
 >
 > genTables' table check act_offs goto_offs off_arr exp_array entries
 >            explist max_token n_token_names
->       = fill_exp_array >> fit_all entries 0 0 1
+>       = fill_exp_array >> fit_all entries 0 1
 >   where
 >
->        fit_all [] min_off max_off _ = return (min_off, max_off)
->        fit_all (s:ss) min_off max_off fst_zero = do
->          (off, new_min_off, new_max_off, new_fst_zero) <- fit s min_off max_off fst_zero
+>        fit_all [] max_off _ = return max_off
+>        fit_all (s:ss) max_off fst_zero = do
+>          (off, new_max_off, new_fst_zero) <- fit s max_off fst_zero
 >          ss' <- same_states s ss off
 >          writeArray off_arr off 1
->          fit_all ss' new_min_off new_max_off new_fst_zero
+>          fit_all ss' new_max_off new_fst_zero
 >
 >        fill_exp_array =
 >          forM_ explist $ \(state, tokens) ->
@@ -1321,19 +1315,16 @@ See notes under "Action Tables" above for some subtleties in this function.
 >        -- fit a vector into the table.  Return the offset of the vector,
 >        -- the maximum offset used in the table, and the offset of the first
 >        -- entry in the table (used to speed up the lookups a bit).
->        fit (_,_,_,_,_,[]) min_off max_off fst_zero = return (0,min_off,max_off,fst_zero)
+>        fit (_,_,_,_,_,[]) max_off fst_zero = return (0,max_off,fst_zero)
 >
 >        fit (act_or_goto, state_no, _deflt, _, _, state@((t,_):_))
->           min_off max_off fst_zero = do
+>           max_off fst_zero = do
 >                -- start at offset 1 in the table: all the empty states
 >                -- (states with just a default reduction) are mapped to
 >                -- offset zero.
 >          off <- findFreeOffset (-t+fst_zero) check off_arr state
->          let new_min_off | furthest_left  < min_off = furthest_left
->                          | otherwise                = min_off
->              new_max_off | furthest_right > max_off = furthest_right
+>          let new_max_off | furthest_right > max_off = furthest_right
 >                          | otherwise                = max_off
->              furthest_left  = off
 >              furthest_right = off + max_token
 >
 >          -- trace ("fit: state " ++ show state_no ++ ", off " ++ show off ++ ", elems " ++ show state) $ do
@@ -1341,7 +1332,7 @@ See notes under "Action Tables" above for some subtleties in this function.
 >          writeArray (which_off act_or_goto) state_no off
 >          addState off table check state
 >          new_fst_zero <- findFstFreeSlot check fst_zero
->          return (off, new_min_off, new_max_off, new_fst_zero)
+>          return (off, new_max_off, new_fst_zero)
 
 When looking for a free offset in the table, we use the 'check' table
 rather than the main table.  The check table starts off with (-1) in
@@ -1459,28 +1450,28 @@ slot is free or not.
 -- Convert an integer to a 16-bit number encoded in \xNN\xNN format suitable
 -- for placing in a string.
 
-> hexChars :: [Int] -> String
-> hexChars = concatMap hexChar
+> hexChars :: [Int] -> String -> String
+> hexChars is s = foldr (hexChar . toInt32) s is
 
-> hexChar :: Int -> String
-> hexChar i | i < 0 = hexChar (i + 65536)
-> hexChar i =  toHex (i `mod` 256) ++ toHex (i `div` 256)
+The following definition of @hexChar@ is endian-ness preserving.
+Should endianness differ between the architecture running happy and the one
+running the compiled parser, the order of [0,1,2,3] must be reversed.
 
-> toHex :: Int -> String
-> toHex i = ['\\','x', hexDig (i `div` 16), hexDig (i `mod` 16)]
+> hexChar :: Int32 -> String -> String
+> hexChar i s = foldr (toHex . byte i) s [0,1,2,3]
 
-> hexDig :: Int -> Char
-> hexDig i | i <= 9    = chr (i + ord '0')
->          | otherwise = chr (i - 10 + ord 'a')
+> byte :: Int32 -> Int -> Word8
+> byte n i = fromIntegral (0xFF .&. unsafeShiftR n (i*8))
 
-This guards against integers that are so large as to (when converted using
-'hexChar') wrap around the maximum value of 16-bit numbers and then end up
-larger than an expected minimum value.
+> toHex :: Word8 -> String -> String
+> toHex i s = '\\':'x':hexDig (0xF .&. unsafeShiftR i 4):hexDig (0xF .&. i):s
 
-> checkedHexChars :: Int -> [Int] -> String
-> checkedHexChars minValue = concatMap hexChar'
->   where hexChar' i | checkHexChar minValue i = hexChar i
->                    | otherwise = error "grammar does not fit in 16-bit representation that is used with '--ghc' " ++ show i
+> hexDig :: Word8 -> Char
+> hexDig i | i <= 9    = chr (fromIntegral i + ord '0')
+>          | otherwise = chr (fromIntegral i - 10 + ord 'a')
 
-> checkHexChar :: Int -> Int -> Bool
-> checkHexChar minValue i = i <= 32767 || i - 65536 < minValue
+> toInt32 :: Int -> Int32
+> toInt32 i
+>   | i == fromIntegral i32 = i32
+>   | otherwise = error ("offset was too large for Int32: " ++ show i)
+>   where i32 = fromIntegral i
