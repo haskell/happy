@@ -10,7 +10,8 @@ import Data.Char
 import System.Exit
 }
 
-%name parseStmts
+%name parseStmts Stmts
+%name parseExp Exp
 %tokentype { Token }
 %errorresumptive          -- the entire point of this test
 %errorhandlertype explist -- as in monaderror-explist.y
@@ -29,7 +30,6 @@ Stmts : {- empty -}           { [] }
       | Stmt                  { [$1] }
       | Stmts ';' Stmt        { $1 ++ [$3] }
       | catch ';' Stmt %shift { [$3] } -- Could insert error AST token here in place of $1
-      | catch                 { [] }   -- Catch-all at the end
 
 Stmt : Exp { ExpStmt $1 }
 
@@ -98,17 +98,22 @@ main = do
   test "1+1;1" $ \(_,mb_ast) -> mb_ast == Just [ExpStmt (One `Plus` One), ExpStmt One]
   test "1++1;1" $ \(errs,_) -> errs == [ParseError ["'1'"]]
   test "1++1;+" $ \(errs,_) -> errs == [ParseError ["'1'"], ParseError ["'1'"]]
-  test "11;1" $ \(errs,_) -> errs == [ParseError []]
-    -- urgh, `Exp -> '1' .` is purely a reduction action.
-    -- We must walk the stack to get better messages
-  test "11;++" $ \(errs,_) -> errs == [ParseError [], ParseError ["'1'"]]
-    -- urgh, `Exp -> '1' .` is purely a reduction action.
-    -- We must walk the stack to get better messages
+  test "11;1" $ \(errs,_) -> errs == [ParseError ["';'"]]
+  test "11;++" $ \(errs,_) -> errs == [ParseError ["';'"], ParseError ["'1'"]]
+  test "11;1++" $ \(errs,_) -> errs == [ParseError ["';'"], ParseError ["'1'"]]
+  testExp "11" $ \(errs,_) -> errs == [ParseError ["'+'"]]
   where
     test inp p = do
       putStrLn $ "testing " ++ inp
       let tokens = lexer inp
       let res = runValidate $ parseStmts tokens
+      when (not (p res)) $ do
+        print res
+        exitWith (ExitFailure 1)
+    testExp inp p = do
+      putStrLn $ "testing Exp " ++ inp
+      let tokens = lexer inp
+      let res = runValidate $ parseExp tokens
       when (not (p res)) $ do
         print res
         exitWith (ExitFailure 1)

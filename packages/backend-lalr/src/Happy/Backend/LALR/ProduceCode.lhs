@@ -604,24 +604,16 @@ machinery to discard states in the parser...
 >    produceActionTable TargetArrayBased
 >       = produceActionArray
 >       . produceReduceArray
+>       . produceRuleArray
 >       . str "happy_n_terms = " . shows n_terminals . str " :: Prelude.Int\n"
 >       . str "happy_n_nonterms = " . shows n_nonterminals . str " :: Prelude.Int\n\n"
+>       . str "happy_n_starts = " . shows n_starts . str " :: Prelude.Int\n\n"
 >
 >    produceExpToksPerState
 >       = produceExpToksArray
->       . str "{-# NOINLINE happyExpListPerState #-}\n"
->       . str "happyExpListPerState st =\n"
->       . str "    token_strs_expected\n"
->       . str "  where token_strs = " . shows (elems token_names') . str "\n"
->       . str "        bit_start = st Prelude.* " . shows nr_tokens . str "\n"
->       . str "        bit_end = (st Prelude.+ 1) Prelude.* " . shows nr_tokens . str "\n"
->       . str "        read_bit = readArrayBit happyExpToks\n"
->       . str "        bits = Prelude.map read_bit [bit_start..bit_end Prelude.- 1]\n"
->       . str "        bits_indexed = Prelude.zip bits [0.."
->                                        . shows (nr_tokens - 1) . str "]\n"
->       . str "        token_strs_expected = Prelude.concatMap f bits_indexed\n"
->       . str "        f (Prelude.False, _) = []\n"
->       . str "        f (Prelude.True, nr) = [token_strs Prelude.!! nr]\n"
+>       . str "{-# NOINLINE happyTokenStrings #-}\n"
+>       . str "happyTokenStrings = " . shows (drop (fst_term - 1) (elems token_names')) . str "\n"
+>                                            -- fst_term - 1: fst_term includes eofToken, but that is last in the list.
 >       . str "\n"
 >       where (first_token, last_token) = bounds token_names'
 >             nr_tokens = last_token - first_token + 1
@@ -635,7 +627,7 @@ machinery to discard states in the parser...
 >       . (if ghc
 >              then str " x = happyTcHack x "
 >              else str " _ = ")
->       . mkAction (showInt state) default_act
+>       . mkAction default_act
 >       . str "\n\n"
 >
 >       where gotos = goto' ! state
@@ -649,7 +641,7 @@ machinery to discard states in the parser...
 >
 >             producePossiblyFailingAction t action'
 >               = actionFunction t
->               . mkAction (showInt state) action'
+>               . mkAction action'
 >               . str "\n"
 >
 >             produceGotos (t, Goto i)
@@ -750,8 +742,8 @@ action array indexed by (terminal * last_state) + state
 >
 >    table_size = length table - 1
 >
->    produceReduceArray
->       = {- str "happyReduceArr :: Array Int a\n" -}
+>    produceReduceArray -- rule number to (non-terminal number, rule length)
+>       = {- str "happyReduceArr :: Happy_Data_Array.Array Prelude.Int (Prelude.Int,Prelude.Int)\n" -}
 >         str "happyReduceArr = Happy_Data_Array.array ("
 >               . shows (n_starts :: Int) -- omit the %start reductions
 >               . str ", "
@@ -759,6 +751,24 @@ action array indexed by (terminal * last_state) + state
 >               . str ") [\n"
 >       . interleave' ",\n" (map reduceArrElem [n_starts..n_rules])
 >       . str "\n\t]\n\n"
+>
+>    produceRuleArray
+>       | ghc
+>       = str "happyRuleArr :: HappyAddr\n"
+>       . str "happyRuleArr = HappyA# \"" -- "
+>       . hexChars (concatMap (\(nt,len) -> [nt,len]) ruleArrElems)
+>       . str "\"#\n\n" --"
+>       | otherwise
+>       = str "happyRuleArr :: Happy_Data_Array.Array Int (Int,Int)\n"
+>       . str "happyRuleArr = Happy_Data_Array.array ("
+>               . shows (n_starts :: Int) -- omit the %start reductions
+>               . str ", "
+>               . shows n_rules
+>               . str ") [\n"
+>       . interleave' ",\n" (zipWith showRuleArrElem [n_starts..n_rules] ruleArrElems)
+>       . str "\n\t]\n\n"
+>
+>    ruleArrElems = map (\(Production nt toks _code _prio) -> (nt-first_nonterm',length toks)) (drop n_starts prods)
 
 >    n_rules = length prods - 1 :: Int
 
@@ -922,9 +932,9 @@ directive determines the API of the provided function.
 >       str "(\\tokens explist resume -> " .
 >       (if use_monad then str ""
 >                     else str "HappyIdentity Prelude.$ ") .
->       str (case error_handler' of Just h -> h; Nothing -> "happyError") . str " " .
->       str (case (error_handler', lexer') of (Nothing, Just _) -> ""
->                                             _                 -> "tokens ") .
+>       (case error_handler' of Just h -> brack h . str " "; Nothing -> str "happyError ") .
+>       (case (error_handler', lexer') of (Nothing, Just _) -> id
+>                                         _                 -> str "tokens ") .
 >       (case error_sig' of ErrorHandlerTypeExpList -> str "explist "
 >                           ErrorHandlerTypeDefault -> str "") .
 >       (if error_resumptive' then str "resume "
@@ -934,6 +944,10 @@ directive determines the API of the provided function.
 >    reduceArrElem n
 >      = str "\t(" . shows n . str " , "
 >      . str "happyReduce_" . shows n . char ')'
+>
+>    showRuleArrElem r (nt, len)
+>      = str "\t(" . shows r . str " , ("
+>      . shows nt . str "," . shows len . str ") )"
 
 -----------------------------------------------------------------------------
 -- Produce the parser entry and exit points
@@ -1042,13 +1056,13 @@ vars used in this piece of code.
 > actionVal LR'Fail             = 0
 > actionVal LR'MustFail         = 0
 
-> mkAction :: (String -> String) -> LRAction -> String -> String
-> mkAction _          (LR'Shift i _)       = str "happyShift " . mkActionName i
-> mkAction _          LR'Accept            = str "happyAccept"
-> mkAction show_state LR'Fail              = str "happyFail " . show_state
-> mkAction show_state LR'MustFail          = str "happyFail " . show_state
-> mkAction _          (LR'Reduce i _)      = str "happyReduce_" . shows i
-> mkAction show_state (LR'Multiple _ a)    = mkAction show_state a
+> mkAction :: LRAction -> String -> String
+> mkAction (LR'Shift i _)       = str "happyShift " . mkActionName i
+> mkAction LR'Accept            = str "happyAccept"
+> mkAction LR'Fail              = str "happyFail"
+> mkAction LR'MustFail          = str "happyFail"
+> mkAction (LR'Reduce i _)      = str "happyReduce_" . shows i
+> mkAction (LR'Multiple _ a)    = mkAction a
 
 > mkActionName :: Int -> String -> String
 > mkActionName i                = str "action_" . shows i
