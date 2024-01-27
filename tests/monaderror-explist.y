@@ -14,8 +14,8 @@ import Data.List (isPrefixOf)
 
 %name parseFoo
 %tokentype { Token }
-%errorhandlertype explist
 %error { handleErrorExpList }
+%error.expected
 
 %monad { ParseM } { (>>=) } { return }
 

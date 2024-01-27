@@ -151,7 +151,7 @@ executable happy
                  happy-backend-glr == 2.0
 
   default-language: Haskell98
-  default-extensions: CPP, MagicHash, FlexibleContexts, NamedFieldPuns
+  default-extensions: CPP, MagicHash, FlexibleContexts, NamedFieldPuns, PatternGuards
   ghc-options: -Wall
   other-modules:
         Paths_happy

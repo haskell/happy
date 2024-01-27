@@ -13,9 +13,8 @@ import System.Exit
 %name parseStmts Stmts
 %name parseExp Exp
 %tokentype { Token }
-%errorresumptive          -- the entire point of this test
-%errorhandlertype explist -- as in monaderror-explist.y
-%error { handleError }
+%error { \_ -> abort } { reportError } -- the entire point of this test
+%error.expected                        -- as in monaderror-explist.y
 
 %monad { ParseM } { (>>=) } { return }
 
@@ -76,13 +75,10 @@ instance Show ParseError where
 recordParseError :: [String] -> ParseM ()
 recordParseError expected = recordError [ParseError expected]
 
-handleError :: [Token] -> [String] -> ([Token] -> ParseM (Maybe a)) -> ParseM a
-handleError ts expected resume = do
+reportError :: [Token] -> [String] -> ([Token] -> ParseM a) -> ParseM a
+reportError ts expected resume = do
   recordParseError expected
-  mb_ast <- resume ts
-  case mb_ast of
-    Just ast -> return ast
-    Nothing  -> abort -- abort after parsing with no AST when resumption is impossible
+  resume ts
 
 lexer :: String -> [Token]
 lexer [] = []

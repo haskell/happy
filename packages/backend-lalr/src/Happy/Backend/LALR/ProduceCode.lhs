@@ -64,8 +64,7 @@ Produce the complete output file.
 >               , monad = (use_monad,monad_context,monad_tycon,monad_then,monad_return)
 >               , token_type = token_type'
 >               , error_handler = error_handler'
->               , error_sig = error_sig'
->               , error_resumptive = error_resumptive'
+>               , error_expected = error_expected'
 >               })
 >               action goto lang_exts module_header module_trailer
 >               target coerce ghc strict
@@ -452,10 +451,10 @@ The token conversion function.
 >       . str "happyNewToken action sts stk = happyLex (\\tk -> " . eofAction . str ") ("
 >             . str "\\i tk -> " . doAction . str " sts stk)\n"
 >       . str "\n"
->       . str "happyError_ " . eofTok . str " tk explist resume tks = happyError' tks explist resume\n"
->       . str "happyError_ _ tk explist resume tks = happyError' (tk:tks) explist resume\n"
+>       . str "happyReport " . eofTok . str " tk explist resume tks = happyReport' tks explist resume\n"
+>       . str "happyReport _ tk explist resume tks = happyReport' (tk:tks) explist resume\n"
 >             -- when the token is EOF, tk == _|_ (notHappyAtAll)
->             -- so we must not pass it to happyError'
+>             -- so we must not pass it to happyReport'
 >       . str "\n";
 
 >       Just (lexer'',eof') ->
@@ -493,9 +492,9 @@ The token conversion function.
 >       . str "happyNewToken action sts stk = happyLex (\\tk -> " . eofAction . str ") ("
 >             . str "\\i tk -> " . doAction . str " sts stk)\n"
 >       . str "\n"
->       . str "happyError_ " . eofTok . str " = happyError'\n"
->       . str "happyError_ _ = happyError'\n"
->             -- superfluous pattern match needed to force happyError_ to
+>       . str "happyReport " . eofTok . str " = happyReport'\n"
+>       . str "happyReport _ = happyReport'\n"
+>             -- superfluous pattern match needed to force happyReport to
 >             -- have the correct type.
 >       . str "\n";
 >       }
@@ -615,10 +614,6 @@ machinery to discard states in the parser...
 >       . str "happyTokenStrings = " . shows (drop (fst_term - 1) (elems token_names')) . str "\n"
 >                                            -- fst_term - 1: fst_term includes eofToken, but that is last in the list.
 >       . str "\n"
->       where (first_token, last_token) = bounds token_names'
->             nr_tokens = last_token - first_token + 1
->               -- NB: This number includes non-terminals as well as special
->               -- terminals (`error`,`%dummy`,...). Hence the need to adjust.
 >
 >    produceStateFunction goto' (state, acts)
 >       = foldr (.) id (map produceActions assocs_acts)
@@ -742,9 +737,8 @@ action array indexed by (terminal * last_state) + state
 >
 >    table_size = length table - 1
 >
->    produceReduceArray -- rule number to (non-terminal number, rule length)
->       = {- str "happyReduceArr :: Happy_Data_Array.Array Prelude.Int (Prelude.Int,Prelude.Int)\n" -}
->         str "happyReduceArr = Happy_Data_Array.array ("
+>    produceReduceArray
+>       = str "happyReduceArr = Happy_Data_Array.array ("
 >               . shows (n_starts :: Int) -- omit the %start reductions
 >               . str ", "
 >               . shows n_rules
@@ -752,7 +746,7 @@ action array indexed by (terminal * last_state) + state
 >       . interleave' ",\n" (map reduceArrElem [n_starts..n_rules])
 >       . str "\n\t]\n\n"
 >
->    produceRuleArray
+>    produceRuleArray -- rule number to (non-terminal number, rule length)
 >       | ghc
 >       = str "happyRuleArr :: HappyAddr\n"
 >       . str "happyRuleArr = HappyA# \"" -- "
@@ -867,14 +861,21 @@ MonadStuff:
 >                . str "happyReturn1 :: " . pcont . str " => a -> b -> " . ptyAt (str "a") . str "\n"
 >                . str "happyReturn1 = \\a tks -> " . brack monad_return
 >                . str " a\n"
->                . str "happyError' :: " . pcont . str " => "
+>                . str "happyReport' :: " . pcont . str " => "
 >                . str "[" . token . str "] -> "
 >                . str "[Prelude.String] -> ("
 >                . str "[" . token . str "] -> "
->                . ptyAt (str "(Maybe a)") . str ") -> "
+>                . ptyAt (str "a") . str ") -> "
 >                . ptyAt (str "a")
 >                . str "\n"
->                . str "happyError' = " . errorHandler . str "\n"
+>                . str "happyReport' = " . callReportError . str "\n"
+>                . str "\n"
+>                . str "happyAbort :: " . pcont . str " => "
+>                . str "[" . token . str "] -> "
+>                . ptyAt (str "a")
+>                . str "\n"
+>                . str "happyAbort = " . str abort_handler . str "\n"
+>                . str "\n"
 >               _ ->
 >                let
 >                  happyParseSig
@@ -915,31 +916,49 @@ MonadStuff:
 >                . str "happyFmap1 f m = happyThen m (\\a -> happyReturn (f a))\n"
 >                . str "happyReturn1 :: " . pcont . str " => a -> " . ptyAt (str "a") . str "\n"
 >                . str "happyReturn1 = happyReturn\n"
->                . str "happyError' :: " . pcont . str " => "
+>                . str "happyReport' :: " . pcont . str " => "
 >                . token . str " -> "
 >                . str "[Prelude.String] -> "
->                . ptyAt (str "(Maybe a)") . str " -> "
+>                . ptyAt (str "a") . str " -> "
 >                . ptyAt (str "a")
 >                . str "\n"
->                . str "happyError' = " . errorHandler . str "\n"
+>                . str "happyReport' = " . callReportError . str "\n"
+>                . str "\n"
+>                . str "happyAbort :: " . pcont . str " => "
+>                . ptyAt (str "a")
+>                . str "\n"
+>                . str "happyAbort = " . str abort_handler . str "\n"
+>                . str "\n"
 
+The error handler takes up to three arguments.
 An error handler specified with %error is passed the current token
-when used with %lexer, but happyError (the old way but kept for
-compatibility) is not passed the current token. Also, the %errorhandlertype
-directive determines the API of the provided function.
+when used with %lexer as the first argument, but happyError (the old way but kept for
+compatibility) is not passed the current token.
+Furthermore, the second argument is the list of expected tokens
+in the presence of the %error.expected directive.
+The last argument is the "resumption", a continuation that tries to find
+an item on the stack taking a @catch@ terminal where parsing may resume,
+in the presence of the two-argument form of the %error directive.
 
->    errorHandler =
->       str "(\\tokens explist resume -> " .
+>    callReportError = -- this one wraps around report_error_handler to expose a unified interface
+>       str "(\\tokens expected resume -> " .
 >       (if use_monad then str ""
 >                     else str "HappyIdentity Prelude.$ ") .
->       (case error_handler' of Just h -> brack h . str " "; Nothing -> str "happyError ") .
->       (case (error_handler', lexer') of (Nothing, Just _) -> id
->                                         _                 -> str "tokens ") .
->       (case error_sig' of ErrorHandlerTypeExpList -> str "explist "
->                           ErrorHandlerTypeDefault -> str "") .
->       (if error_resumptive' then str "resume "
->                             else str "") .
+>       report_error_handler .
+>       (case (error_handler', lexer') of (DefaultErrorHandler, Just _) -> id
+>                                         _                             -> str " tokens") .
+>       (if error_expected' then str " expected"
+>                           else id) .
+>       (case error_handler' of ResumptiveErrorHandler{} -> str " resume"
+>                               _                        -> id) .
 >       str ")"
+>    report_error_handler = case error_handler' of
+>       DefaultErrorHandler                  -> str "happyError"
+>       CustomErrorHandler h                 -> brack h
+>       ResumptiveErrorHandler _abort report -> brack report
+>    abort_handler = case error_handler' of
+>       ResumptiveErrorHandler abort _report -> abort
+>       _                                    -> "error \"Called abort handler in non-resumptive parser\""
 
 >    reduceArrElem n
 >      = str "\t(" . shows n . str " , "

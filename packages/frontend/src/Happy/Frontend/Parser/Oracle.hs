@@ -86,15 +86,17 @@ optTokInfoP = withToken match where
   match (TokenKW TokSpecId_Expect) =
     Consume `andThenJust`
     pure TokenExpect <*> numP
-  match (TokenKW TokSpecId_ErrorHandlerType) =
+  match (TokenKW TokSpecId_ErrorExpected) =
     Consume `andThenJust`
-    pure TokenErrorHandlerType <*> idtP
-  match (TokenKW TokSpecId_ErrorResumptive) =
-    Consume `andThenJust`
-    pure TokenErrorResumptive
+    pure TokenErrorExpected
   match (TokenKW TokSpecId_Error) =
-    Consume `andThenJust`
-    pure TokenError <*> codeP
+    Consume `andThenJust` do
+      codes <- manyP optCodeP
+      case codes of
+        [c1]             -> return $ TokenError c1 Nothing
+        [c1, c2]         -> return $ TokenError c1 (Just c2)
+        [] -> parseError "Expected a code block"
+        _  -> parseError "Too many code blocks"
   match (TokenKW TokSpecId_Attributetype) =
     Consume `andThenJust`
     pure TokenAttributetype <*> codeP

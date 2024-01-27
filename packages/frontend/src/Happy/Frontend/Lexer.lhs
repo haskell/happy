@@ -47,8 +47,7 @@ The lexer.
 >       | TokSpecId_Shift       -- %shift
 >       | TokSpecId_Expect      -- %expect
 >       | TokSpecId_Error       -- %error
->       | TokSpecId_ErrorHandlerType -- %errorhandlertype
->       | TokSpecId_ErrorResumptive  -- %errorresumptive
+>       | TokSpecId_ErrorExpected -- %error.expected
 >       | TokSpecId_Attributetype -- %attributetype
 >       | TokSpecId_Attribute   -- %attribute
 >       | TokCodeQuote          -- stuff inside { .. }
@@ -130,10 +129,8 @@ followed by a special identifier.
 >               cont (TokenKW TokSpecId_Shift) rest
 >       'e':'x':'p':'e':'c':'t':rest | end_of_id rest ->
 >               cont (TokenKW TokSpecId_Expect) rest
->       'e':'r':'r':'o':'r':'h':'a':'n':'d':'l':'e':'r':'t':'y':'p':'e':rest | end_of_id rest ->
->               cont (TokenKW TokSpecId_ErrorHandlerType) rest
->       'e':'r':'r':'o':'r':'r':'e':'s':'u':'m':'p':'t':'i':'v':'e':rest | end_of_id rest ->
->               cont (TokenKW TokSpecId_ErrorResumptive) rest
+>       'e':'r':'r':'o':'r':'.':'e':'x':'p':'e':'c':'t':'e':'d':rest | end_of_id rest ->
+>               cont (TokenKW TokSpecId_ErrorExpected) rest
 >       'e':'r':'r':'o':'r':rest | end_of_id rest ->
 >               cont (TokenKW TokSpecId_Error) rest
 >       'a':'t':'t':'r':'i':'b':'u':'t':'e':'t':'y':'p':'e':rest | end_of_id rest ->

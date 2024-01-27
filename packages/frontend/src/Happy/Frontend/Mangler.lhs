@@ -69,7 +69,8 @@ This bit is a real mess, mainly because of the error message support.
 >       starts'     = case getParserNames dirs of
 >                       [] -> [TokenName "happyParse" Nothing False]
 >                       ns -> ns
->       error_resumptive' = getErrorResumptive dirs
+>       error_resumptive | ResumptiveErrorHandler{} <- getError dirs = True
+>                        | otherwise                                 = False
 >
 >       start_strs  = [ startName++'_':p  | (TokenName p _ _) <- starts' ]
 
@@ -84,7 +85,7 @@ Build up a mapping from name values to strings.
 
 >       lookupName :: String -> [Name]
 >       lookupName n = [ t | (t,r) <- name_env, r == n
->                          , t /= catchTok || error_resumptive' ]
+>                          , t /= catchTok || error_resumptive ]
 >                            -- hide catchName unless %errorresumptive is active
 >                            -- issue93.y uses catch as a nonterminal, we should not steal it
 
@@ -253,8 +254,7 @@ Get the token specs in terms of Names.
 >               monad             = getMonad dirs,
 >               lexer             = getLexer dirs,
 >               error_handler     = getError dirs,
->               error_sig         = getErrorHandlerType dirs,
->               error_resumptive  = error_resumptive',
+>               error_expected    = getErrorHandlerExpectedList dirs,
 >               token_type        = getTokenType dirs,
 >               expect            = getExpect dirs
 >       })

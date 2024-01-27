@@ -83,7 +83,7 @@ happyTrace string expr = Happy_System_IO_Unsafe.unsafePerformIO $ do
 #endif
 
 infixr 9 `HappyStk`
-data HappyStk a = HappyStk a (HappyStk a)
+data HappyStk a = HappyStk !a (HappyStk a)
 
 -----------------------------------------------------------------------------
 -- starting the parse
@@ -326,9 +326,9 @@ happyFixupFailed tk st sts (x `HappyStk` stk) =
   let i = GET_ERROR_TOKEN(x) in
   DEBUG_TRACE("`error` fixup failed.\n")
 #if defined(HAPPY_ARRAY)
-  happyError_ i tk (map happyTokenToString (happyExpectedTokens st sts)) (happyResume i tk st sts stk)
+  happyReport i tk (map happyTokenToString (happyExpectedTokens st sts)) (happyResume i tk st sts stk)
 #else
-  happyError_ i tk [] (happyReturn1 Nothing)
+  happyReport i tk [] happyAbort
 #endif
 
 happyFail ERROR_TOK = happyFixupFailed
@@ -344,19 +344,18 @@ happyResume i tk st sts stk = pop_items st sts stk
       | DEBUG_TRACE("can't shift catch in " ++ show IBOX(st) ++ ", ") True
       , IBOX(n_starts) <- happy_n_starts, LT(st, n_starts)
       = DEBUG_TRACE("because it is a start state. no resumption.\n")
-        happyReturn1 Nothing
+        happyAbort
       | CONS(st1,sts1) <- sts, _ `HappyStk` stk1 <- stk
       = DEBUG_TRACE("discarding.\n")
         pop_items st1 sts1 stk1
     discard_input_until_exp i tk st sts stk
       | ultimately_fails i st sts
       = DEBUG_TRACE("discard token in state " ++ show IBOX(st) ++ ": " ++ show IBOX(i) ++ "\n")
-        happyLex (\_eof_tk -> happyReturn1 Nothing)
+        happyLex (\_eof_tk -> happyAbort)
                  (\i tk -> discard_input_until_exp i tk st sts stk) -- not eof
       | otherwise
       = DEBUG_TRACE("found expected token in state " ++ show IBOX(st) ++ ": " ++ show IBOX(i) ++ "\n")
-        happyFmap1 (\a -> a `happySeq` Just a)
-                   (DO_ACTION(st,i,tk,sts,stk))
+        DO_ACTION(st,i,tk,sts,stk)
     ultimately_fails i st sts =
       DEBUG_TRACE("trying token " ++ show IBOX(i) ++ " in state " ++ show IBOX(st) ++ ": ")
       case happyDecodeAction (happyNextAction i st) of

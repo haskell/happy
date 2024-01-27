@@ -10,13 +10,13 @@ Here is the abstract syntax of the language we parse.
 >       BookendedAbsSyn(..),
 >       AbsSyn(..), Directive(..),
 >       getTokenType, getTokenSpec, getParserNames, getLexer,
->       getImportedIdentity, getMonad, getError,
->       getPrios, getPrioNames, getExpect, getErrorHandlerType, getErrorResumptive,
+>       getImportedIdentity, getMonad, ErrorHandlerInfo(..), getError,
+>       getPrios, getPrioNames, getExpect, getErrorHandlerExpectedList,
 >       getAttributes, getAttributetype,
 >       Rule(..), Prod(..), Term(..), Prec(..)
 >  ) where
 
-> import Happy.CodeGen.Common.Options (ErrorHandlerType(..))
+> import Happy.CodeGen.Common.Options (ErrorHandlerInfo(..))
 
 > data BookendedAbsSyn
 >     = BookendedAbsSyn
@@ -72,12 +72,11 @@ generate some error messages.
 >       | TokenRight    [String]                -- %right
 >       | TokenLeft     [String]                -- %left
 >       | TokenExpect   Int                     -- %expect
->       | TokenError    String                  -- %error
->       | TokenErrorHandlerType String          -- %errorhandlertype
->       | TokenErrorResumptive                  -- %resumptive
+>       | TokenError    String (Maybe String)   -- %error
+>       | TokenErrorExpected                    -- %error.expected
 >       | TokenAttributetype String             -- %attributetype
 >       | TokenAttribute String String          -- %attribute
->   deriving Show
+>   deriving (Eq, Show)
 
 > getTokenType :: [Directive t] -> String
 > getTokenType ds
@@ -135,25 +134,17 @@ generate some error messages.
 >                 []  -> Nothing
 >                 _   -> error "multiple expect directives"
 
-> getError :: [Directive t] -> Maybe String
+> getError :: [Directive t] -> ErrorHandlerInfo
 > getError ds
->       = case [ a | (TokenError a) <- ds ] of
->               [t] -> Just t
->               []  -> Nothing
+>       = case [ (a, mb_b) | (TokenError a mb_b) <- ds ] of
+>               []                        -> DefaultErrorHandler
+>               [(a,Nothing)]             -> CustomErrorHandler a
+>               [(abort,Just addMessage)] -> ResumptiveErrorHandler abort addMessage
 >               _   -> error "multiple error directives"
 
-> getErrorHandlerType :: [Directive t] -> ErrorHandlerType
-> getErrorHandlerType ds
->       = case [ a | (TokenErrorHandlerType a) <- ds ] of
->               [t] -> case t of
->                        "explist" -> ErrorHandlerTypeExpList
->                        "default" -> ErrorHandlerTypeDefault
->                        _ -> error "unsupported %errorhandlertype value"
->               []  -> ErrorHandlerTypeDefault
->               _   -> error "multiple errorhandlertype directives"
-
-> getErrorResumptive :: [Directive t] -> Bool
-> getErrorResumptive ds = not (null [ () | TokenErrorResumptive <- ds ])
+> getErrorHandlerExpectedList :: Eq t => [Directive t] -> Bool
+> getErrorHandlerExpectedList ds
+>       = TokenErrorExpected `elem` ds
 
 > getAttributes :: [Directive t] -> [(String, String)]
 > getAttributes ds
