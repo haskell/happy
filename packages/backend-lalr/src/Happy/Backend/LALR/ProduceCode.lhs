@@ -16,9 +16,8 @@ The code generator.
 
 > import Data.Maybe                ( isJust, isNothing, fromMaybe )
 > import Data.Char                 ( ord, chr )
-> import Data.List                 ( sortBy )
+> import Data.List                 ( sortBy, nub )
 
-> import Control.Monad             ( forM_ )
 > import Control.Monad.ST          ( ST, runST )
 > import Data.Word
 > import Data.Int
@@ -75,7 +74,7 @@ Produce the complete output file.
 >               -- don't screw up any OPTIONS pragmas in the header.
 >       . produceAbsSynDecl . nl
 >       . produceTypes
->       . produceExpToksPerState
+>       . produceTokToStringList
 >       . produceActionTable target
 >       . produceReductions
 >       . produceTokenConverter . nl
@@ -604,13 +603,13 @@ machinery to discard states in the parser...
 >       = produceActionArray
 >       . produceReduceArray
 >       . produceRuleArray
+>       . produceCatchStates
 >       . str "happy_n_terms = " . shows n_terminals . str " :: Prelude.Int\n"
 >       . str "happy_n_nonterms = " . shows n_nonterminals . str " :: Prelude.Int\n\n"
 >       . str "happy_n_starts = " . shows n_starts . str " :: Prelude.Int\n\n"
 >
->    produceExpToksPerState
->       = produceExpToksArray
->       . str "{-# NOINLINE happyTokenStrings #-}\n"
+>    produceTokToStringList
+>       = str "{-# NOINLINE happyTokenStrings #-}\n"
 >       . str "happyTokenStrings = " . shows (drop (fst_term - 1) (elems token_names')) . str "\n"
 >                                            -- fst_term - 1: fst_term includes eofToken, but that is last in the list.
 >       . str "\n"
@@ -713,25 +712,12 @@ action array indexed by (terminal * last_state) + state
 >           . interleave' "," (map shows table)
 >           . str "\n\t])\n\n"
 
->    produceExpToksArray
->       | ghc
->           = str "happyExpToks :: HappyAddr\n"
->           . str "happyExpToks = HappyA# \"" --"
->           . hexChars explist
->           . str "\"#\n\n" --"
->       | otherwise
->           = str "happyExpToks :: Happy_Data_Array.Array Prelude.Int Prelude.Int\n"
->           . str "happyExpToks = Happy_Data_Array.listArray (0,"
->               . shows table_size . str ") (["
->           . interleave' "," (map shows explist)
->           . str "\n\t])\n\n"
-
 >    (_, last_state) = bounds action
 >    n_states = last_state + 1
 >    n_terminals = length terms
 >    n_nonterminals = length nonterms - n_starts -- lose %starts
 >
->    (act_offs,goto_offs,table,defaults,check,explist)
+>    (act_offs,goto_offs,table,defaults,check,catch_states)
 >       = mkTables action goto first_nonterm' fst_term
 >               n_terminals n_nonterminals n_starts (bounds token_names')
 >
@@ -763,8 +749,12 @@ action array indexed by (terminal * last_state) + state
 >       . str "\n\t]\n\n"
 >
 >    ruleArrElems = map (\(Production nt toks _code _prio) -> (nt-first_nonterm',length toks)) (drop n_starts prods)
-
+>
 >    n_rules = length prods - 1 :: Int
+>
+>    produceCatchStates
+>       = str "happyCatchStates :: [Int]\n"
+>       . str "happyCatchStates = " . shows catch_states . str "\n\n"
 
 >    showInt i | ghc       = shows i . showChar '#'
 >              | otherwise = shows i
@@ -1166,7 +1156,7 @@ and @check@ as the way to detect "collisions" (i.e., default entries).
 >        , [Int]         -- happyTable
 >        , [Int]         -- happyDefAction
 >        , [Int]         -- happyCheck
->        , [Int]         -- happyExpToks
+>        , [Int]         -- happyCatchStates
 >        )
 >
 > mkTables action goto first_nonterm' fst_term
@@ -1178,14 +1168,14 @@ and @check@ as the way to detect "collisions" (i.e., default entries).
 >    , take max_off (elems table)
 >    , def_actions
 >    , take max_off (elems check)
->    , elems explist
+>    , shifted_catch_states
 >    )
 >  where
 >
->        (table,check,act_offs,goto_offs,explist,max_off)
+>        (table,check,act_offs,goto_offs,max_off)
 >                = runST (genTables (length actions)
 >                         max_token token_names_bound
->                         sorted_actions explist_actions)
+>                         sorted_actions)
 >
 >        -- the maximum token number used in the parser
 >        max_token = max n_terminals (n_starts+n_nonterminals) - 1
@@ -1209,12 +1199,11 @@ and @check@ as the way to detect "collisions" (i.e., default entries).
 >                      acts'' = mkActVals acts' default_act
 >                ]
 >
->        explist_actions :: [(Int, [Int])]
->        explist_actions = [ (state, concatMap f $ assocs acts)
->                          | (state, acts) <- assocs action ]
->                          where
->                            f (t, LR'Shift _ _ ) = [t - fst token_names_bound]
->                            f (_, _) = []
+>        shifted_catch_states :: [Int]
+>        shifted_catch_states = -- collect the states in which we have just shifted a catchTok
+>          nub [ to_state | (_from_state, acts) <- assocs action
+>                         , let (_err:catch:_) = assocs acts
+>                         , (_tok, LR'Shift to_state _) <- return catch ]
 >
 >        -- adjust terminals by -(fst_term+2), so they start at 2 (error is 0, catch is 1).
 >        --  (see ARRAY_NOTES)
@@ -1264,33 +1253,29 @@ and @check@ as the way to detect "collisions" (i.e., default entries).
 >        -> Int                         -- maximum token no.
 >        -> (Int, Int)                  -- token names bounds
 >        -> [TableEntry]                -- entries for the table
->        -> [(Int, [Int])]              -- expected tokens lists
 >        -> ST s ( UArray Int Int       -- table
 >                , UArray Int Int       -- check
 >                , UArray Int Int       -- action offsets
 >                , UArray Int Int       -- goto offsets
->                , UArray Int Int       -- expected tokens list
 >                , Int                  -- highest offset in table
 >                )
 >
-> genTables n_actions max_token token_names_bound entries explist = do
+> genTables n_actions max_token token_names_bound entries = do
 >
 >   table      <- newArray (0, mAX_TABLE_SIZE) 0
 >   check      <- newArray (0, mAX_TABLE_SIZE) (-1)
 >   act_offs   <- newArray (0, n_actions) 0
 >   goto_offs  <- newArray (0, n_actions) 0
 >   off_arr    <- newArray (-max_token, mAX_TABLE_SIZE) 0
->   exp_array  <- newArray (0, (n_actions * n_token_names + 15) `div` 16) 0
 >
->   max_off    <- genTables' table check act_offs goto_offs off_arr exp_array entries
->                          explist max_token n_token_names
+>   max_off    <- genTables' table check act_offs goto_offs off_arr entries
+>                          max_token n_token_names
 >
 >   table'     <- freeze table
 >   check'     <- freeze check
 >   act_offs'  <- freeze act_offs
 >   goto_offs' <- freeze goto_offs
->   exp_array' <- freeze exp_array
->   return (table',check',act_offs',goto_offs',exp_array',max_off+1)
+>   return (table',check',act_offs',goto_offs',max_off+1)
 
 >   where
 >        n_states = n_actions - 1
@@ -1305,16 +1290,14 @@ and @check@ as the way to detect "collisions" (i.e., default entries).
 >        -> STUArray s Int Int          -- action offsets
 >        -> STUArray s Int Int          -- goto offsets
 >        -> STUArray s Int Int          -- offset array
->        -> STUArray s Int Int          -- expected token list
 >        -> [TableEntry]                -- entries for the table
->        -> [(Int, [Int])]              -- expected tokens lists
 >        -> Int                         -- maximum token no.
 >        -> Int                         -- number of token names
 >        -> ST s Int                    -- highest offsets in table
 >
-> genTables' table check act_offs goto_offs off_arr exp_array entries
->            explist max_token n_token_names
->       = fill_exp_array >> fit_all entries 0 1
+> genTables' table check act_offs goto_offs off_arr entries
+>            max_token n_token_names
+>       = fit_all entries 0 1
 >   where
 >
 >        fit_all [] max_off _ = return max_off
@@ -1323,15 +1306,6 @@ and @check@ as the way to detect "collisions" (i.e., default entries).
 >          ss' <- same_states s ss off
 >          writeArray off_arr off 1
 >          fit_all ss' new_max_off new_fst_zero
->
->        fill_exp_array =
->          forM_ explist $ \(state, tokens) ->
->            forM_ tokens $ \token -> do
->              let bit_nr = state * n_token_names + token
->              let word_nr = bit_nr `div` 16
->              let word_offset = bit_nr `mod` 16
->              x <- readArray exp_array word_nr
->              writeArray exp_array word_nr (setBit x word_offset)
 >
 >        -- try to merge identical states.  We only try the next state(s)
 >        -- in the list, but the list is kind-of sorted so we shouldn't

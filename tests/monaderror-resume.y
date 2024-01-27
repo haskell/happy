@@ -93,10 +93,10 @@ main :: IO ()
 main = do
   test "1+1;1" $ \(_,mb_ast) -> mb_ast == Just [ExpStmt (One `Plus` One), ExpStmt One]
   test "1++1;1" $ \(errs,_) -> errs == [ParseError ["'1'"]]
-  test "1++1;+" $ \(errs,_) -> errs == [ParseError ["'1'"], ParseError ["'1'"]]
+  test "1++1;1;+" $ \(errs,_) -> errs == [ParseError ["'1'"], ParseError ["'1'"]]
   test "11;1" $ \(errs,_) -> errs == [ParseError ["';'"]]
-  test "11;++" $ \(errs,_) -> errs == [ParseError ["';'"], ParseError ["'1'"]]
-  test "11;1++" $ \(errs,_) -> errs == [ParseError ["';'"], ParseError ["'1'"]]
+  test "11;1;++" $ \(errs,_) -> errs == [ParseError ["';'"], ParseError ["'1'"]]
+  test "11;1;1++" $ \(errs,_) -> errs == [ParseError ["';'"], ParseError ["'1'"]]
   testExp "11" $ \(errs,_) -> errs == [ParseError ["'+'"]]
   where
     test inp p = do

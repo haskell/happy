@@ -326,7 +326,19 @@ happyFixupFailed tk st sts (x `HappyStk` stk) =
   let i = GET_ERROR_TOKEN(x) in
   DEBUG_TRACE("`error` fixup failed.\n")
 #if defined(HAPPY_ARRAY)
-  happyReport i tk (map happyTokenToString (happyExpectedTokens st sts)) (happyResume i tk st sts stk)
+  let resume   = happyResume i tk st sts stk
+      expected = map happyTokenToString (happyExpectedTokens st sts) in
+  if happyAlreadyInResumption st sts
+    then resume
+    else happyReport i tk expected resume
+
+happyAlreadyInResumption st sts
+  | IBOX(n_starts) <- happy_n_starts, LT(st, n_starts)
+  = False -- end of the stack
+  | IBOX(st) `elem` happyCatchStates
+  = True
+  | CONS(st1,sts1) <- sts
+  = happyAlreadyInResumption st1 sts1
 #else
   happyReport i tk [] happyAbort
 #endif
