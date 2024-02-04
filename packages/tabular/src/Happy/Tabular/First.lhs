@@ -49,7 +49,7 @@ This will never terminate.
 > getNext fst_term prodNo prodsOfName env =
 >               [ (nm, next nm) | (nm,_) <- env ]
 >    where
->       fn t | t == errorTok || t >= fst_term = Set.singleton t
+>       fn t | t == errorTok || t == catchTok || t >= fst_term = Set.singleton t
 >       fn x = maybe (error "attempted FIRST(e) :-(") id (lookup x env)
 
 >       next :: Name -> NameSet

@@ -61,7 +61,7 @@ library
                        happy-grammar == 2.0
 
   default-language:    Haskell98
-  default-extensions:  CPP, MagicHash, FlexibleContexts
+  default-extensions:  CPP, MagicHash, FlexibleContexts, PatternGuards
   ghc-options: -Wall
   other-modules:
         Happy.Frontend.ParseMonad

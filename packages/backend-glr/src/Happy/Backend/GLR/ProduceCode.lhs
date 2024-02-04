@@ -307,6 +307,8 @@ It also shares identical reduction values as CAFs
 >   mkLine state (symInt,action)
 >    | symInt == errorTok       -- skip error productions
 >    = ""                       -- NB see ProduceCode's handling of these
+>    | symInt == catchTok       -- skip error productions
+>    = ""                       -- NB see ProduceCode's handling of these
 >    | otherwise
 >    = case action of
 >       LR'Fail     -> ""
