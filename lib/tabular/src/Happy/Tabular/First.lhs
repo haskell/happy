@@ -9,6 +9,7 @@ Implementation of FIRST
 > import Happy.Tabular.NameSet ( NameSet )
 > import qualified Happy.Tabular.NameSet as Set
 > import Happy.Grammar
+> import Data.Maybe (fromMaybe)
 
 \subsection{Utilities}
 
@@ -20,15 +21,13 @@ Implementation of FIRST
 >           | otherwise = h
 
 @mkClosure@ makes a closure, when given a comparison and iteration loop.
+It's a fixed point computation, we keep applying the function over the
+input until it does not change.
 Be careful, because if the functional always makes the object different,
 This will never terminate.
 
 > mkClosure :: (a -> a -> Bool) -> (a -> a) -> a -> a
-> mkClosure eq f = match . iterate f
->   where
->       match (a:b:_) | a `eq` b = a
->       match (_:c)              = match c
->       match [] = error "Can't happen: match []"
+> mkClosure eq f = until (\x -> eq x (f x)) f
 
 \subsection{Implementation of FIRST}
 
@@ -38,23 +37,25 @@ This will never terminate.
 >                  , lookupProdsOfName = prodsOfName
 >                  , non_terminals = nts
 >                  })
->       = joinSymSets (\ h -> maybe (Set.singleton h) id (lookup h env) )
+>       = joinSymSets (\h -> fromMaybe (Set.singleton h) (lookup h env))
 >   where
->       env = mkClosure (==) (getNext fst_term prodNo prodsOfName)
->               [ (name,Set.empty) | name <- nts ]
+>       env = mkClosure (==) (updateFirstSets fst_term prodNo prodsOfName) [(name,Set.empty) | name <- nts]
 
-> getNext :: Name -> (a -> Production e) -> (Name -> [a])
->         -> [(Name, NameSet)] -> [(Name, NameSet)]
-> getNext fst_term prodNo prodsOfName env =
->               [ (nm, next nm) | (nm,_) <- env ]
+> updateFirstSets :: Name -> (a -> Production e) -> (Name -> [a]) -> [(Name, NameSet)]
+>                 -> [(Name, NameSet)]
+> updateFirstSets fst_term prodNo prodsOfName env = [ (nm, nextFstSet nm)
+>                                                   | (nm,_) <- env ]
 >    where
->       fn t | t == errorTok || t == catchTok || t >= fst_term = Set.singleton t
->       fn x = maybe (error "attempted FIRST(e) :-(") id (lookup x env)
+>       terminalP :: Name -> Bool
+>       terminalP s = s >= fst_term
 
->       next :: Name -> NameSet
->       next t | t >= fst_term = Set.singleton t
->       next n = Set.unions
->                       [ joinSymSets fn lhs
->                       | rl <- prodsOfName n
->                       , let Production _ lhs _ _ = prodNo rl ]
+>       currFstSet :: Name -> NameSet
+>       currFstSet s | s == errorTok || s == catchTok || terminalP s = Set.singleton s
+>                    | otherwise = maybe (error "attempted FIRST(e) :-(")
+>                                    id (lookup s env)
 
+>       nextFstSet :: Name -> NameSet
+>       nextFstSet s | terminalP s = Set.singleton s
+>                    | otherwise   = Set.unions [ joinSymSets currFstSet rhs
+>                                               | rl <- prodsOfName s
+>                                               , let Production _ rhs _ _ = prodNo rl ]
