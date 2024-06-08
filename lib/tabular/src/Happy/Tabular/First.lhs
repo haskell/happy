@@ -9,7 +9,7 @@ Implementation of FIRST
 > import Happy.Tabular.NameSet ( NameSet )
 > import qualified Happy.Tabular.NameSet as Set
 > import Happy.Grammar
-> import Data.Maybe (fromMaybe)
+> import Data.Maybe (fromMaybe, fromJust)
 
 \subsection{Utilities}
 
@@ -59,3 +59,23 @@ This will never terminate.
 >                    | otherwise   = Set.unions [ joinSymSets currFstSet rhs
 >                                               | rl <- prodsOfName s
 >                                               , let Production _ rhs _ _ = prodNo rl ]
+
+
+> mkFirst' :: Grammar e -> [Name] -> NameSet
+> mkFirst' (Grammar { first_term = fst_term
+>                   , lookupProdNo = prodNo
+>                   , lookupProdsOfName = prodsOfName
+>                   , non_terminals = nts
+>                   })
+>       = joinSymSets (\h -> fromMaybe (Set.singleton h) (lookup h env))
+>   where
+>       terminalP s = s >= fst_term
+>       env = mkClosure (==) (\f -> map (first f) f) [(name,Set.empty) | name <- nts]
+>       first :: [(Name, NameSet)] -> (Name, NameSet) -> (Name, NameSet)
+>       first currFstSets (symbol, _) =
+>                        (symbol , Set.unions [ joinSymSets currFstSet rhs
+>                                   | rl <- prodsOfName symbol
+>                                   , let Production _ rhs _ _ = prodNo rl ])
+>            where
+>              currFstSet s | terminalP s = Set.singleton s
+>                           | otherwise   = fromJust $ lookup s currFstSets
