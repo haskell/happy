@@ -38,25 +38,13 @@
 
 data Happy_IntList = HappyCons FAST_INT Happy_IntList
 
-#if defined(HAPPY_ARRAY)
-#  define CONS(h,t) (HappyCons (h) (t))
-#else
-#  define CONS(h,t) ((h):(t))
-#endif
+#define CONS(h,t) (HappyCons (h) (t))
 
-#if defined(HAPPY_ARRAY)
-#  define ERROR_TOK ILIT(0)
-#  define DO_ACTION(state,i,tk,sts,stk) happyDoAction i tk state sts (stk)
-#  define HAPPYSTATE(i) (i)
-#  define GOTO(action) happyGoto
-#  define IF_ARRAYS(x) (x)
-#else
-#  define ERROR_TOK ILIT(1)
-#  define DO_ACTION(state,i,tk,sts,stk) state i i tk HAPPYSTATE(state) sts (stk)
-#  define HAPPYSTATE(i) (HappyState (i))
-#  define GOTO(action) action
-#  define IF_ARRAYS(x)
-#endif
+#define ERROR_TOK ILIT(0)
+#define DO_ACTION(state,i,tk,sts,stk) happyDoAction i tk state sts (stk)
+#define HAPPYSTATE(i) (i)
+#define GOTO(action) happyGoto
+#define IF_ARRAYS(x) (x)
 
 #if defined(HAPPY_COERCE)
 #  if !defined(HAPPY_GHC)
@@ -102,8 +90,6 @@ happyAccept j tk st sts (HappyStk ans _) =
 -----------------------------------------------------------------------------
 -- Arrays only: do the next action
 
-#if defined(HAPPY_ARRAY)
-
 happyDoAction i tk st
         = DEBUG_TRACE("state: " ++ show IBOX(st) ++
                       ",\ttoken: " ++ show IBOX(i) ++
@@ -131,8 +117,6 @@ happyDoAction i tk st
           | check     = indexShortOffAddr happyTable off_i
           | Prelude.otherwise = indexShortOffAddr happyDefActions st
 
-#endif /* HAPPY_ARRAY */
-
 #ifdef HAPPY_GHC
 indexShortOffAddr (HappyA# arr) off =
         Happy_GHC_Exts.narrow16Int# i
@@ -159,21 +143,6 @@ readArrayBit arr bit =
 
 #ifdef HAPPY_GHC
 data HappyAddr = HappyA# Happy_GHC_Exts.Addr#
-#endif
-
------------------------------------------------------------------------------
--- HappyState data type (not arrays)
-
-#if !defined(HAPPY_ARRAY)
-
-newtype HappyState b c = HappyState
-        (FAST_INT ->                    -- token number
-         FAST_INT ->                    -- token number (yes, again)
-         b ->                           -- token semantic value
-         HappyState b c ->              -- current state
-         [HappyState b c] ->            -- state stack
-         c)
-
 #endif
 
 -----------------------------------------------------------------------------
@@ -234,14 +203,9 @@ happyMonad2Reduce k nt fn j tk st sts stk =
       case happyDrop k CONS(st,sts) of
         sts1@(CONS(st1@HAPPYSTATE(action),_)) ->
          let drop_stk = happyDropStk k stk
-#if defined(HAPPY_ARRAY)
              off = happyAdjustOffset (indexShortOffAddr happyGotoOffsets st1)
              off_i = PLUS(off, nt)
              new_state = indexShortOffAddr happyTable off_i
-#else
-             _ = nt :: FAST_INT
-             new_state = action
-#endif
           in
           happyThen1 (fn stk tk) (\r -> happyNewToken new_state sts1 (r `HappyStk` drop_stk))
 
@@ -254,16 +218,12 @@ happyDropStk n (x `HappyStk` xs) = happyDropStk MINUS(n,(ILIT(1)::FAST_INT)) xs
 -----------------------------------------------------------------------------
 -- Moving to a new state after a reduction
 
-#if defined(HAPPY_ARRAY)
 happyGoto nt j tk st =
    DEBUG_TRACE(", goto state " ++ show IBOX(new_state) ++ "\n")
    happyDoAction j tk new_state
    where off = happyAdjustOffset (indexShortOffAddr happyGotoOffsets st)
          off_i = PLUS(off, nt)
          new_state = indexShortOffAddr happyTable off_i
-#else
-happyGoto action j tk st = action j j tk (HappyState action)
-#endif
 
 -----------------------------------------------------------------------------
 -- Error recovery (ERROR_TOK is the error token)
@@ -299,11 +259,9 @@ notHappyAtAll = Prelude.error "Internal Happy error\n"
 -----------------------------------------------------------------------------
 -- Hack to get the typechecker to accept our action functions
 
-#if defined(HAPPY_GHC)
 happyTcHack :: Happy_GHC_Exts.Int# -> a -> a
 happyTcHack x y = y
 {-# INLINE happyTcHack #-}
-#endif
 
 -----------------------------------------------------------------------------
 -- Seq-ing.  If the --strict flag is given, then Happy emits
@@ -320,14 +278,13 @@ happyDontSeq a b = b
 -- of deciding to inline happyGoto everywhere, which increases the size of
 -- the generated parser quite a bit.
 
-#if defined(HAPPY_ARRAY)
 {-# NOINLINE happyDoAction #-}
 {-# NOINLINE happyTable #-}
 {-# NOINLINE happyCheck #-}
 {-# NOINLINE happyActOffsets #-}
 {-# NOINLINE happyGotoOffsets #-}
 {-# NOINLINE happyDefActions #-}
-#endif
+
 {-# NOINLINE happyShift #-}
 {-# NOINLINE happySpecReduce_0 #-}
 {-# NOINLINE happySpecReduce_1 #-}

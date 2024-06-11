@@ -41,12 +41,11 @@ langExtsToInject ghc
   | ghc = ["MagicHash", "BangPatterns", "TypeSynonymInstances", "FlexibleInstances"]
   | otherwise = []
 
-defines :: Bool -> Bool -> Bool -> Bool -> String
-defines debug array ghc coerce = unlines [ "#define " ++ d ++ " 1" | d <- vars_to_define ]
+defines :: Bool -> Bool -> Bool -> String
+defines debug ghc coerce = unlines [ "#define " ++ d ++ " 1" | d <- vars_to_define ]
   where
   vars_to_define = concat
     [ [ "HAPPY_DEBUG"  | debug ]
-    , [ "HAPPY_ARRAY"  | array ]
     , [ "HAPPY_GHC"    | ghc ]
     , [ "HAPPY_COERCE" | coerce ]
     ]
