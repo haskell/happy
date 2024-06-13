@@ -1,8 +1,30 @@
-module Happy.Frontend.ParseMonad (module X) where
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
--- We use the bootstrapped version if it is available
-#ifdef HAPPY_BOOTSTRAP
-import Happy.Frontend.ParseMonad.Bootstrapped as X
+#if __GLASGOW_HASKELL__ >= 800
+{-# OPTIONS_GHC -Wno-orphans #-}
 #else
-import Happy.Frontend.ParseMonad.Oracle as X
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 #endif
+
+module Happy.Frontend.ParseMonad where
+
+import Control.Monad.Reader
+import Happy.Frontend.ParseMonad.Class
+
+type P = ReaderT (String, Int) ParseResult
+
+mkP :: (String -> Int -> ParseResult a) -> P a
+mkP = ReaderT . uncurry
+
+runP :: P a -> String -> Int -> ParseResult a
+runP f s l = runReaderT f (s, l)
+
+instance ParseMonad P where
+  failP mkStr = ReaderT (\(_, l) -> Left $ mkStr l)
+  lineP = asks snd
+  runFromStartP m s l = runP m s l
+
+lexTokenP :: HasLexer token => (token -> P r) -> P r
+lexTokenP k = ReaderT $ uncurry $ lexToken (\t -> runP $ k t)

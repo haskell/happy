@@ -41,11 +41,8 @@ TESTS = Test.ly TestMulti.ly TestPrecedence.ly bug001.ly \
 	issue91.y issue93.y issue94.y issue95.y \
 	test_rules.y monaderror.y monaderror-explist.y \
 	typeclass_monad001.y typeclass_monad002.ly typeclass_monad_lexer.y \
-	rank2.y shift01.y
-
-ifdef HAPPY_BOOTSTRAP
-TESTS += AttrGrammar001.y AttrGrammar002.y
-endif
+	rank2.y shift01.y \
+	AttrGrammar001.y AttrGrammar002.y
 
 ERROR_TESTS = error001.y
 

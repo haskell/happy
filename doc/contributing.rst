@@ -30,34 +30,24 @@ Repo Layout
 Build Instructions
 ------------------
 
-Happy is normal Cabal-packaged Haskell executable, except for the fact that a
-pre-built Happy is *required* to build the full version of Happy, which is the default.
-
-- If you *do* have an existing Happy executable on the PATH or in the default
-  installation location (`~/.cabal/bin` for example), do regular
-
-  ::
+Happy is mostly a normal Cabal-packaged Haskell executable::
 
     $ cabal build
 
-  like with any other project.
+The only wrinkle is that developing Happy's own parser (i.e. the frontend
+component that parses ``.y`` files) requires an existing Happy executable on
+the PATH.
 
-- If you do *not* have an existing Happy executable, instead do
+Do *not* modify these files by hand::
 
-  ::
+    packages/frontend/src/Happy/Frontend/Parser.hs
+    packages/frontend/src/Happy/Frontend/AttrGrammar/Parser.hs
 
-    $ cabal build -f -bootstrap
+Instead, edit these files::
 
-- If you install that minimial, non-bootstrapped happy
+    packages/frontend/boot-src/Parser.ly
+    packages/frontend/boot-src/AttrGrammarParser.ly
 
-  ::
+and regenerate the ``.hs``-files with::
 
-    $ cabal install -f -bootstrap
-
-  you can then build normally (with the bootstrap flag enabled).
-
-*We're sorry the bootstrap process is a bit tedious right now; we hope to
-improve it in the future. The ideal fix would be to make cabal-installer's
-cycle detector to be less pessimistic, per
-`<https://github.com/haskell/cabal/issues/7189>`_, so that the build tool dependency
-can be properly expressed and everything works automatically.*
+    $ packages/frontend/bootstrap.sh

@@ -38,13 +38,6 @@ tested-with:
         GHC == 7.4.2
         GHC == 7.0.4
 
-flag bootstrap
-  description:
-    Optimize the implementation of happy using a pre-built happy,
-    and add support for attribute grammars.
-  manual: True
-  default: True
-
 library
   hs-source-dirs:      src
   exposed-modules:     Happy.Frontend,
@@ -70,21 +63,6 @@ library
         Happy.Frontend.Parser
         Happy.Frontend.Lexer
         Happy.Frontend.ParamRules
-
-
-  if flag(bootstrap)
-    -- TODO put this back when Cabal can use it's qualified goals to better
-    -- understand bootstrapping, see
-    -- https://github.com/haskell/cabal/issues/7189
-    --build-tools: happy
-    cpp-options: -DHAPPY_BOOTSTRAP
-    other-modules:
-      Happy.Frontend.ParseMonad.Bootstrapped
-      Happy.Frontend.Parser.Bootstrapped
-      Happy.Frontend.AttrGrammar
-      Happy.Frontend.AttrGrammar.Parser
-      Happy.Frontend.AttrGrammar.Mangler
-  else
-    other-modules:
-      Happy.Frontend.ParseMonad.Oracle
-      Happy.Frontend.Parser.Oracle
+        Happy.Frontend.AttrGrammar
+        Happy.Frontend.AttrGrammar.Parser
+        Happy.Frontend.AttrGrammar.Mangler
