@@ -12,11 +12,7 @@ Mangler converts AbsSyn to Grammar
 > import Happy.Grammar
 > import Happy.Frontend.AbsSyn
 > import Happy.Frontend.Mangler.Monad
-
-This is only supported in the bootstrapped version
-#ifdef HAPPY_BOOTSTRAP
 > import Happy.Frontend.AttrGrammar.Mangler
-#endif
 
 > import Happy.Frontend.ParamRules
 
@@ -291,14 +287,7 @@ So is this.
 
 > checkCode :: Int -> [Name] -> [Name] -> String -> [(String,String)] -> M (String,[Int])
 > checkCode arity _   _             code []    = doCheckCode arity code
-
-#ifdef HAPPY_BOOTSTRAP
 > checkCode arity lhs nonterm_names code attrs = rewriteAttributeGrammar arity lhs nonterm_names code attrs
-#else
-> checkCode arity _   _             code (_:_) = do
->   addErr "Attribute grammars are not supported in non-bootstrapped build"
->   doCheckCode arity code
-#endif
 
 -----------------------------------------------------------------------------
 -- Check for every $i that i is <= the arity of the rule.

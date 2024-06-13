@@ -12,8 +12,7 @@ The main focus of this release was modularizing Happy.
   - `happy-grammar`
   - `happy-tabular`
 
-* Partially revert the new bootstrapping system of 1.21.0 to mitigate
-  build issues.
+* Revert the new bootstrapping system of 1.21.0 to mitigate build issues.
 
 ## 1.21.0
 
