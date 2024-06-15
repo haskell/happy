@@ -27,7 +27,7 @@ endif
 HC ?= ghc
 HC_OPTS=-Wall -Werror
 
-.PRECIOUS: %.n.hs %.g.hs %.o %.exe %.bin
+.PRECIOUS: %.n.hs %.o %.exe %.bin
 
 ifeq "$(TARGETPLATFORM)" "i386-unknown-mingw32"
 HS_PROG_EXT = .exe
@@ -53,24 +53,18 @@ TEST_HAPPY_OPTS = --strict
 %.n.hs : %.ly
 	$(HAPPY) $(TEST_HAPPY_OPTS) $< -o $@
 
-%.g.hs : %.ly
-	$(HAPPY) $(TEST_HAPPY_OPTS) -g $< -o $@
-
-%.gc.hs : %.ly
-	$(HAPPY) $(TEST_HAPPY_OPTS) -gc $< -o $@
+%.c.hs : %.ly
+	$(HAPPY) $(TEST_HAPPY_OPTS) -c $< -o $@
 
 %.n.hs : %.y
 	$(HAPPY) $(TEST_HAPPY_OPTS) $< -o $@
 
-%.g.hs : %.y
-	$(HAPPY) $(TEST_HAPPY_OPTS) -g $< -o $@
+%.c.hs : %.y
+	$(HAPPY) $(TEST_HAPPY_OPTS) -c $< -o $@
 
-%.gc.hs : %.y
-	$(HAPPY) $(TEST_HAPPY_OPTS) -gc $< -o $@
+CLEAN_FILES += *.n.hs *.c.hs *.info *.hi *.bin *.exe *.o *.run.stdout *.run.stderr
 
-CLEAN_FILES += *.n.hs *.g.hs *.gc.hs *.info *.hi *.bin *.exe *.o *.run.stdout *.run.stderr
-
-ALL_TEST_HS = $(shell echo $(TESTS) | sed -e 's/\([^\. ]*\)\.\(l\)\{0,1\}y/\1.n.hs \1.g.hs \1.gc.hs/g')
+ALL_TEST_HS = $(shell echo $(TESTS) | sed -e 's/\([^\. ]*\)\.\(l\)\{0,1\}y/\1.n.hs \1.c.hs/g')
 
 ALL_TESTS = $(patsubst %.hs, %.run, $(ALL_TEST_HS))
 
@@ -101,11 +95,7 @@ check-todo::
 	$(HC) Test.hs -o happy_test
 	./happy_test
 	-rm -f ./happy_test
-	$(HAPPY) $(TEST_HAPPY_OPTS) -gd Test.ly
-	$(HC) Test.hs -o happy_test
-	./happy_test
-	-rm -f ./happy_test
-	$(HAPPY) $(TEST_HAPPY_OPTS) -gcd Test.ly
+	$(HAPPY) $(TEST_HAPPY_OPTS) -cd Test.ly
 	$(HC) Test.hs -o happy_test
 	./happy_test
 	-rm -f ./happy_test

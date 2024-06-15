@@ -1,40 +1,27 @@
 -- $Id: GenericTemplate.hs,v 1.26 2005/01/14 14:47:22 simonmar Exp $
 
-#ifdef HAPPY_GHC
-#  if !defined(__GLASGOW_HASKELL__)
-#    error `HAPPY_GHC` is defined but this code isn't being built with GHC.
-#  endif
-#  define ILIT(n) n#
-#  define IBOX(n) (Happy_GHC_Exts.I# (n))
-#  define FAST_INT Happy_GHC_Exts.Int#
--- Do not remove this comment. Required to fix CPP parsing when using GCC and a clang-compiled alex.
-#  if __GLASGOW_HASKELL__ > 706
-#    define LT(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.<# m)) :: Prelude.Bool)
-#    define GTE(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.>=# m)) :: Prelude.Bool)
-#    define EQ(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.==# m)) :: Prelude.Bool)
-#  else
-#    define LT(n,m) (n Happy_GHC_Exts.<# m)
-#    define GTE(n,m) (n Happy_GHC_Exts.>=# m)
-#    define EQ(n,m) (n Happy_GHC_Exts.==# m)
-#  endif
-#  define PLUS(n,m) (n Happy_GHC_Exts.+# m)
-#  define MINUS(n,m) (n Happy_GHC_Exts.-# m)
-#  define TIMES(n,m) (n Happy_GHC_Exts.*# m)
-#  define NEGATE(n) (Happy_GHC_Exts.negateInt# (n))
-#  define IF_GHC(x) (x)
-#else
-#  define ILIT(n) (n)
-#  define IBOX(n) (n)
-#  define FAST_INT Prelude.Int
-#  define LT(n,m) (n Prelude.< m)
-#  define GTE(n,m) (n Prelude.>= m)
-#  define EQ(n,m) (n Prelude.== m)
-#  define PLUS(n,m) (n Prelude.+ m)
-#  define MINUS(n,m) (n Prelude.- m)
-#  define TIMES(n,m) (n Prelude.* m)
-#  define NEGATE(n) (Prelude.negate (n))
-#  define IF_GHC(x)
+#if !defined(__GLASGOW_HASKELL__)
+#  error This code isn't being built with GHC.
 #endif
+#define ILIT(n) n#
+#define IBOX(n) (Happy_GHC_Exts.I# (n))
+#define FAST_INT Happy_GHC_Exts.Int#
+-- Do not remove this comment. Required to fix CPP parsing when using GCC and a clang-compiled alex.
+#if __GLASGOW_HASKELL__ > 706
+#  define LT(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.<# m)) :: Prelude.Bool)
+#  define GTE(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.>=# m)) :: Prelude.Bool)
+#  define EQ(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.==# m)) :: Prelude.Bool)
+#else
+#  define LT(n,m) (n Happy_GHC_Exts.<# m)
+#  define GTE(n,m) (n Happy_GHC_Exts.>=# m)
+#  define EQ(n,m) (n Happy_GHC_Exts.==# m)
+#endif
+#define PLUS(n,m) (n Happy_GHC_Exts.+# m)
+#define MINUS(n,m) (n Happy_GHC_Exts.-# m)
+#define TIMES(n,m) (n Happy_GHC_Exts.*# m)
+#define NEGATE(n) (Happy_GHC_Exts.negateInt# (n))
+#define IF_GHC(x) (x)
+
 
 data Happy_IntList = HappyCons FAST_INT Happy_IntList
 
@@ -47,9 +34,6 @@ data Happy_IntList = HappyCons FAST_INT Happy_IntList
 #define IF_ARRAYS(x) (x)
 
 #if defined(HAPPY_COERCE)
-#  if !defined(HAPPY_GHC)
-#    error `HAPPY_COERCE` requires `HAPPY_GHC`
-#  endif
 #  define GET_ERROR_TOKEN(x)  (case Happy_GHC_Exts.unsafeCoerce# x of { IBOX(i) -> i })
 #  define MK_ERROR_TOKEN(i)   (Happy_GHC_Exts.unsafeCoerce# IBOX(i))
 #  define MK_TOKEN(x)         (happyInTok (x))
@@ -117,7 +101,6 @@ happyDoAction i tk st
           | check     = indexShortOffAddr happyTable off_i
           | Prelude.otherwise = indexShortOffAddr happyDefActions st
 
-#ifdef HAPPY_GHC
 indexShortOffAddr (HappyA# arr) off =
         Happy_GHC_Exts.narrow16Int# i
   where
@@ -125,25 +108,15 @@ indexShortOffAddr (HappyA# arr) off =
         high = Happy_GHC_Exts.int2Word# (Happy_GHC_Exts.ord# (Happy_GHC_Exts.indexCharOffAddr# arr (off' Happy_GHC_Exts.+# 1#)))
         low  = Happy_GHC_Exts.int2Word# (Happy_GHC_Exts.ord# (Happy_GHC_Exts.indexCharOffAddr# arr off'))
         off' = off Happy_GHC_Exts.*# 2#
-#else
-indexShortOffAddr arr off = arr Happy_Data_Array.! off
-#endif
 
 {-# INLINE happyLt #-}
 happyLt x y = LT(x,y)
 
-#ifdef HAPPY_GHC
 readArrayBit arr bit =
     Bits.testBit IBOX(indexShortOffAddr arr ((unbox_int bit) `Happy_GHC_Exts.iShiftRA#` 4#)) (bit `Prelude.mod` 16)
   where unbox_int (Happy_GHC_Exts.I# x) = x
-#else
-readArrayBit arr bit =
-    Bits.testBit IBOX(indexShortOffAddr arr (bit `Prelude.div` 16)) (bit `Prelude.mod` 16)
-#endif
 
-#ifdef HAPPY_GHC
 data HappyAddr = HappyA# Happy_GHC_Exts.Addr#
-#endif
 
 -----------------------------------------------------------------------------
 -- Shifting a token
