@@ -18,11 +18,9 @@ magicFilter magicName = case magicName of
         filter_output [] = []
       in filter_output
 
-importsToInject :: Bool -> Bool -> String
-importsToInject ghc debug = concat ["\n", import_array, import_bits, glaexts_import, debug_imports, applicative_imports]
+importsToInject :: Bool -> String
+importsToInject debug = concat ["\n", import_array, import_bits, import_glaexts, debug_imports, applicative_imports]
     where
-      glaexts_import | ghc       = import_glaexts
-                     | otherwise = ""
       debug_imports  | debug     = import_debug
                      | otherwise = ""
       applicative_imports        = import_applicative
@@ -36,16 +34,13 @@ importsToInject ghc debug = concat ["\n", import_array, import_bits, glaexts_imp
       import_applicative = "import Control.Applicative(Applicative(..))\n" ++
                            "import Control.Monad (ap)\n"
 
-langExtsToInject :: Bool -> [String]
-langExtsToInject ghc
-  | ghc = ["MagicHash", "BangPatterns", "TypeSynonymInstances", "FlexibleInstances"]
-  | otherwise = []
+langExtsToInject :: [String]
+langExtsToInject = ["MagicHash", "BangPatterns", "TypeSynonymInstances", "FlexibleInstances"]
 
-defines :: Bool -> Bool -> Bool -> String
-defines debug ghc coerce = unlines [ "#define " ++ d ++ " 1" | d <- vars_to_define ]
+defines :: Bool -> Bool -> String
+defines debug coerce = unlines [ "#define " ++ d ++ " 1" | d <- vars_to_define ]
   where
   vars_to_define = concat
     [ [ "HAPPY_DEBUG"  | debug ]
-    , [ "HAPPY_GHC"    | ghc ]
     , [ "HAPPY_COERCE" | coerce ]
     ]

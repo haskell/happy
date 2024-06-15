@@ -173,7 +173,6 @@ of code we should generate, and where it should go:
 >       outfilename <- getOutputFileName fl_name cli
 >       opt_coerce  <- getCoerce cli
 >       opt_strict  <- getStrict cli
->       opt_ghc     <- getGhc cli
 >       opt_debug   <- getDebug cli
 
 Add any special options or imports required by the parsing machinery.
@@ -181,7 +180,7 @@ Add any special options or imports required by the parsing machinery.
 >       let
 >           header = Just $
 >             (case hd of Just s -> s; Nothing -> "")
->             ++ importsToInject opt_ghc opt_debug
+>             ++ importsToInject opt_debug
 
 >       if OptGLR `elem` cli
 
@@ -198,14 +197,12 @@ Branch off to GLR parser production
 >             filtering
 >               | OptGLR_Filter `elem` cli = UseFiltering
 >               | otherwise                = NoFiltering
->             ghc_exts
->               | OptGhcTarget `elem` cli  = UseGhcExts
->                                              (importsToInject opt_ghc opt_debug)
+>             ghc_exts                     = UseGhcExts
+>                                              (importsToInject opt_debug)
 
 Unlike below, don't always pass CPP, because only one of the files needs it.
 
->                                              (langExtsToInject opt_ghc)
->               | otherwise                = NoGhcExts
+>                                              (langExtsToInject)
 >           template' <- getTemplate glrBackendDataDir cli
 >           let basename  = takeWhile (/='.') outfilename
 >           let tbls  = (action,goto)
@@ -259,14 +256,13 @@ and generate the code.
 
 CPP is needed in all cases with unified template
 
->                           ("CPP" : langExtsToInject opt_ghc)
+>                           ("CPP" : langExtsToInject)
 >                           header
 >                           tl
 >                           opt_coerce
->                           opt_ghc
 >                           opt_strict
 
->               defines' = defines opt_debug opt_ghc opt_coerce
+>               defines' = defines opt_debug opt_coerce
 
 >           (if outfilename == "-" then putStr else writeFile outfilename)
 >                   (magicFilter magic_name (outfile ++ defines' ++ templ))
@@ -414,16 +410,7 @@ Extract various command-line options.
 >               f:fs       -> return (Just (map toLower (last (f:fs))))
 
 > getCoerce :: [CLIFlags] -> IO Bool
-> getCoerce cli
->       = if OptUseCoercions `elem` cli
->            then if OptGhcTarget `elem` cli
->                       then return True
->                       else dieHappy ("-c/--coerce may only be used " ++
->                                      "in conjunction with -g/--ghc\n")
->            else return False
-
-> getGhc :: [CLIFlags] -> IO Bool
-> getGhc cli = return (OptGhcTarget `elem` cli)
+> getCoerce cli = return (OptUseCoercions `elem` cli)
 
 > getStrict :: [CLIFlags] -> IO Bool
 > getStrict cli = return (OptStrict `elem` cli)

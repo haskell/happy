@@ -35,7 +35,6 @@ Produce the complete output file.
 >               -> Maybe String                 -- module header
 >               -> Maybe String                 -- module trailer
 >               -> Bool                         -- use coercions
->               -> Bool                         -- use ghc extensions
 >               -> Bool                         -- strict parser
 >               -> String
 
@@ -62,7 +61,7 @@ Produce the complete output file.
 >               , error_sig = error_sig'
 >               })
 >               action goto lang_exts module_header module_trailer
->               coerce ghc strict
+>               coerce strict
 >     = ( top_opts
 >       . maybestr module_header . nl
 >       . str comment
@@ -90,10 +89,9 @@ Produce the complete output file.
 >       -- #ifdefs.  For now I'm just disabling all of them.
 >
 >    partTySigs_opts = ifGeGhc710 (str "{-# LANGUAGE PartialTypeSignatures #-}" . nl)
->
->    intMaybeHash | ghc       = str "Happy_GHC_Exts.Int#"
->                 | otherwise = str "Prelude.Int"
->
+
+>    intMaybeHash    = str "Happy_GHC_Exts.Int#"
+
 >    -- Parsing monad and its constraints
 >    pty = str monad_tycon
 >    pcont = str monad_context
@@ -101,11 +99,10 @@ Produce the complete output file.
 >    -- If GHC is enabled, wrap the content in a CPP ifdef that includes the
 >    -- content and tests whether the GHC version is >= 7.10.3
 >    ifGeGhc710 :: (String -> String) -> String -> String
->    ifGeGhc710 content | ghc = str "#if __GLASGOW_HASKELL__ >= 710" . nl
->                             . content
->                             . str "#endif" . nl
->                       | otherwise = id
->
+>    ifGeGhc710 content  = str "#if __GLASGOW_HASKELL__ >= 710" . nl
+>                        . content
+>                        . str "#endif" . nl
+
 >    n_missing_types = length (filter isNothing (elems nt_types))
 >    happyAbsSyn = str "(HappyAbsSyn " . str wild_tyvars . str ")"
 >      where wild_tyvars = unwords (replicate n_missing_types "_")
@@ -505,7 +502,6 @@ machinery to discard states in the parser...
 action array indexed by (terminal * last_state) + state
 
 >    produceActionArray
->       | ghc
 >           = str "happyActOffsets :: HappyAddr\n"
 >           . str "happyActOffsets = HappyA# \"" --"
 >           . str (checkedHexChars min_off act_offs)
@@ -540,63 +536,19 @@ action array indexed by (terminal * last_state) + state
 >           . str (hexChars table)
 >           . str "\"#\n\n" --"
 
->       | otherwise
->           = str "happyActOffsets :: Happy_Data_Array.Array Prelude.Int Prelude.Int\n"
->           . str "happyActOffsets = Happy_Data_Array.listArray (0,"
->               . shows n_states . str ") (["
->           . interleave' "," (map shows act_offs)
->           . str "\n\t])\n\n"
->
->           . str "happyGotoOffsets :: Happy_Data_Array.Array Prelude.Int Prelude.Int\n"
->           . str "happyGotoOffsets = Happy_Data_Array.listArray (0,"
->               . shows n_states . str ") (["
->           . interleave' "," (map shows goto_offs)
->           . str "\n\t])\n\n"
->           
->           . str "happyAdjustOffset :: Prelude.Int -> Prelude.Int\n"
->           . str "happyAdjustOffset = Prelude.id\n\n"
->
->           . str "happyDefActions :: Happy_Data_Array.Array Prelude.Int Prelude.Int\n"
->           . str "happyDefActions = Happy_Data_Array.listArray (0,"
->               . shows n_states . str ") (["
->           . interleave' "," (map shows defaults)
->           . str "\n\t])\n\n"
->
->           . str "happyCheck :: Happy_Data_Array.Array Prelude.Int Prelude.Int\n"
->           . str "happyCheck = Happy_Data_Array.listArray (0,"
->               . shows table_size . str ") (["
->           . interleave' "," (map shows check)
->           . str "\n\t])\n\n"
->
->           . str "happyTable :: Happy_Data_Array.Array Prelude.Int Prelude.Int\n"
->           . str "happyTable = Happy_Data_Array.listArray (0,"
->               . shows table_size . str ") (["
->           . interleave' "," (map shows table)
->           . str "\n\t])\n\n"
 
 >    produceExpListArray
->       | ghc
 >           = str "happyExpList :: HappyAddr\n"
 >           . str "happyExpList = HappyA# \"" --"
 >           . str (hexChars explist)
 >           . str "\"#\n\n" --"
->       | otherwise
->           = str "happyExpList :: Happy_Data_Array.Array Prelude.Int Prelude.Int\n"
->           . str "happyExpList = Happy_Data_Array.listArray (0,"
->               . shows table_size . str ") (["
->           . interleave' "," (map shows explist)
->           . str "\n\t])\n\n"
 
->    (_, last_state) = bounds action
->    n_states = last_state + 1
 >    n_terminals = length terms
 >    n_nonterminals = length nonterms - n_starts -- lose %starts
 >
 >    (act_offs,goto_offs,table,defaults,check,explist,min_off)
 >       = mkTables action goto first_nonterm' fst_term
 >               n_terminals n_nonterminals n_starts (bounds token_names')
->
->    table_size = length table - 1
 >
 >    produceReduceArray
 >       = {- str "happyReduceArr :: Array Int a\n" -}
@@ -610,8 +562,7 @@ action array indexed by (terminal * last_state) + state
 
 >    n_rules = length prods - 1 :: Int
 
->    showInt i | ghc       = shows i . showChar '#'
->              | otherwise = shows i
+>    showInt i = shows i . showChar '#'
 
 This lets examples like:
 
@@ -781,7 +732,7 @@ directive determines the API of the provided function.
 >       . str unmonad
 >       . str "happySomeParser where\n"
 >       . str " happySomeParser = happyThen (happyParse "
->       . (if ghc then shows no . str "#" else shows no)
+>       . shows no . str "#"
 >       . maybe_tks
 >       . str ") "
 >       . brack' (if coerce
