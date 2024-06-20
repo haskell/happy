@@ -65,34 +65,51 @@ happyAccept j tk st sts (HappyStk ans _) =
 -----------------------------------------------------------------------------
 -- Arrays only: do the next action
 
-happyDoAction i tk st
-        = DEBUG_TRACE("state: " ++ show (Happy_GHC_Exts.I# st) ++
-                      ",\ttoken: " ++ show (Happy_GHC_Exts.I# i) ++
-                      ",\taction: ")
-          case action of
-                0#                        -> DEBUG_TRACE("fail.\n")
-                                                  happyFail (happyExpListPerState ((Happy_GHC_Exts.I# st) :: Prelude.Int)) i tk st
-                -1#                       -> DEBUG_TRACE("accept.\n")
-                                                  happyAccept i tk st
-                n | LT(n,(0# :: Happy_Int)) -> DEBUG_TRACE("reduce (rule " ++ show rule
-                                                               ++ ")")
-                                                   (happyReduceArr Happy_Data_Array.! rule) i tk st
-                  where
-                    rule = Happy_GHC_Exts.I# (NEGATE(PLUS(n,(1# :: Happy_Int))))
+happyDoAction i tk st =
+  DEBUG_TRACE("state: " ++ show (Happy_GHC_Exts.I# st) ++
+              ",\ttoken: " ++ show (Happy_GHC_Exts.I# i) ++
+              ",\taction: ")
+  case happyDecodeAction (happyNextAction i st) of
+    HappyFail             -> DEBUG_TRACE("failing.\n")
+                             happyFail (happyExpListPerState (Happy_GHC_Exts.I# st)) i tk st
+    HappyAccept           -> DEBUG_TRACE("accept.\n")
+                             happyAccept i tk st
+    HappyReduce rule      -> DEBUG_TRACE("reduce (rule " ++ show (Happy_GHC_Exts.I# rule) ++ ")")
+                             (happyReduceArr Happy_Data_Array.! (Happy_GHC_Exts.I# rule)) i tk st
+    HappyShift  new_state -> DEBUG_TRACE("shift, enter state " ++ show (Happy_GHC_Exts.I# new_state) ++ "\n")
+                             happyShift new_state i tk st
 
-                n                         -> DEBUG_TRACE("shift, enter state "
-                                                         ++ show (Happy_GHC_Exts.I# new_state)
-                                                         ++ "\n")
-                                               happyShift new_state i tk st
-                  where new_state = MINUS(n,(1# :: Happy_Int))
-   where off    = happyAdjustOffset (indexShortOffAddr happyActOffsets st)
-         off_i  = PLUS(off, i)
-         check  = if GTE(off_i,(0# :: Happy_Int))
-                  then EQ(indexShortOffAddr happyCheck off_i, i)
-                  else Prelude.False
-         action
-          | check     = indexShortOffAddr happyTable off_i
-          | Prelude.otherwise = indexShortOffAddr happyDefActions st
+{-# INLINE happyNextAction #-}
+happyNextAction i st = case happyIndexActionTable i st of
+  Just (Happy_GHC_Exts.I# act) -> act
+  Nothing                      -> indexShortOffAddr happyDefActions st
+
+{-# INLINE happyIndexActionTable #-}
+happyIndexActionTable i st
+  | GTE(off, 0#), EQ(indexShortOffAddr happyCheck off, i)
+  = Prelude.Just (Happy_GHC_Exts.I# (indexShortOffAddr happyTable off))
+  | otherwise
+  = Prelude.Nothing
+  where
+    off = PLUS(happyAdjustOffset (indexShortOffAddr happyActOffsets st), i)
+
+data HappyAction
+  = HappyFail
+  | HappyAccept
+  | HappyReduce Happy_Int -- rule number
+  | HappyShift Happy_Int  -- new state
+
+{-# INLINE happyDecodeAction #-}
+happyDecodeAction :: Happy_Int -> HappyAction
+happyDecodeAction  0#                        = HappyFail
+happyDecodeAction -1#                        = HappyAccept
+happyDecodeAction action | LT(action, 0#)    = HappyReduce NEGATE(PLUS(action, 1#))
+                         | otherwise         = HappyShift MINUS(action, 1#)
+
+{-# INLINE happyIndexGotoTable #-}
+happyIndexGotoTable nt st = indexShortOffAddr happyTable off
+  where
+    off = PLUS(happyAdjustOffset (indexShortOffAddr happyGotoOffsets st), nt)
 
 indexShortOffAddr (HappyA# arr) off =
         Happy_GHC_Exts.narrow16Int# i
@@ -194,9 +211,7 @@ happyDropStk n  (x `HappyStk` xs) = happyDropStk MINUS(n,(1#::Happy_Int)) xs
 happyGoto nt j tk st =
    DEBUG_TRACE(", goto state " ++ show (Happy_GHC_Exts.I# new_state) ++ "\n")
    happyDoAction j tk new_state
-   where off       = happyAdjustOffset (indexShortOffAddr happyGotoOffsets st)
-         off_i     = PLUS(off, nt)
-         new_state = indexShortOffAddr happyTable off_i
+  where new_state = happyIndexGotoTable nt st
 
 -----------------------------------------------------------------------------
 -- Error recovery (ERROR_TOK is the error token)
