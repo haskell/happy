@@ -46,7 +46,6 @@ library
   hs-source-dirs:      src
 
   exposed-modules:     Happy.Backend.LALR,
-                       Happy.Backend.LALR.Target,
                        Happy.Backend.LALR.ProduceCode
   build-depends:       base < 5,
                        array,

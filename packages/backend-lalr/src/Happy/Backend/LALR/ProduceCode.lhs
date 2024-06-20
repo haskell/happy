@@ -10,10 +10,9 @@ The code generator.
 > import Data.Version              ( showVersion )
 > import Happy.CodeGen.Common.Options
 > import Happy.Grammar
-> import Happy.Backend.LALR.Target ( Target(..) )
 > import Happy.Tabular.LALR
 
-> import Data.Maybe                ( isJust, isNothing, fromMaybe )
+> import Data.Maybe                ( isNothing, fromMaybe )
 > import Data.Char                 ( ord, chr )
 > import Data.List                 ( sortBy )
 
@@ -35,7 +34,6 @@ Produce the complete output file.
 >               -> [String]                     -- language extensions
 >               -> Maybe String                 -- module header
 >               -> Maybe String                 -- module trailer
->               -> Target                       -- type of code required
 >               -> Bool                         -- use coercions
 >               -> Bool                         -- use ghc extensions
 >               -> Bool                         -- strict parser
@@ -64,16 +62,15 @@ Produce the complete output file.
 >               , error_sig = error_sig'
 >               })
 >               action goto lang_exts module_header module_trailer
->               target coerce ghc strict
+>               coerce ghc strict
 >     = ( top_opts
 >       . maybestr module_header . nl
 >       . str comment
 >               -- comment goes *after* the module header, so that we
 >               -- don't screw up any OPTIONS pragmas in the header.
 >       . produceAbsSynDecl . nl
->       . produceTypes
 >       . produceExpListPerState
->       . produceActionTable target
+>       . produceActionTable
 >       . produceReductions
 >       . produceTokenConverter . nl
 >       . produceIdentityStuff
@@ -224,72 +221,6 @@ example where this matters.
 >           str_tyvars = str (unwords all_tyvars)
 
 %-----------------------------------------------------------------------------
-Type declarations of the form:
-
-type HappyReduction a b = ....
-action_0, action_1 :: Int -> HappyReduction a b
-reduction_1, ...   :: HappyReduction a b
-
-These are only generated if types for *all* rules are given (and not for array
-based parsers -- types aren't as important there).
-
->    produceTypes
->     | target == TargetArrayBased = id
-
->     | all isJust (elems nt_types) =
->       happyReductionDefinition . str "\n\n"
->     . interleave' ",\n "
->             [ mkActionName i | (i,_action') <- zip [ 0 :: Int .. ]
->                                                    (assocs action) ]
->     . str " :: " . str monad_context . str " => "
->     . intMaybeHash . str " -> " . happyReductionValue . str "\n\n"
->     . interleave' ",\n "
->             [ mkReduceFun i |
->                     (i,_action) <- zip [ n_starts :: Int .. ]
->                                        (drop n_starts prods) ]
->     . str " :: " . str monad_context . str " => "
->     . happyReductionValue . str "\n\n"
-
->     | otherwise = id
-
->       where tokens =
->               case lexer' of
->                       Nothing -> char '[' . token . str "] -> "
->                       Just _ -> id
->             happyReductionDefinition =
->                      str "{- to allow type-synonyms as our monads (likely\n"
->                    . str " - with explicitly-specified bind and return)\n"
->                    . str " - in Haskell98, it seems that with\n"
->                    . str " - /type M a = .../, then /(HappyReduction M)/\n"
->                    . str " - is not allowed.  But Happy is a\n"
->                    . str " - code-generator that can just substitute it.\n"
->                    . str "type HappyReduction m = "
->                    . happyReduction (str "m")
->                    . str "\n-}"
->             happyReductionValue =
->                      str "({-"
->                    . str "HappyReduction "
->                    . brack monad_tycon
->                    . str " = -}"
->                    . happyReduction (brack monad_tycon)
->                    . str ")"
->             happyReduction m =
->                      str "\n\t   "
->                    . intMaybeHash
->                    . str " \n\t-> " . token
->                    . str "\n\t-> HappyState "
->                    . token
->                    . str " (HappyStk HappyAbsSyn -> " . tokens . result
->                    . str ")\n\t"
->                    . str "-> [HappyState "
->                    . token
->                    . str " (HappyStk HappyAbsSyn -> " . tokens . result
->                    . str ")] \n\t-> HappyStk HappyAbsSyn \n\t-> "
->                    . tokens
->                    . result
->                 where result = m . str " HappyAbsSyn"
-
-%-----------------------------------------------------------------------------
 Next, the reduction functions.   Each one has the following form:
 
 happyReduce_n_m = happyReduce n m reduction where {
@@ -367,22 +298,19 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 
 >               -- adjust the nonterminal number for the array-based parser
 >               -- so that nonterminals start at zero.
->               adjusted_nt | target == TargetArrayBased = nt - first_nonterm'
->                           | otherwise                  = nt
->
+>               adjusted_nt = nt - first_nonterm'
+
 >               mkReductionHdr lt' s =
 >                       let tysig = case lexer' of
 >                             Nothing -> id
->                             _ | target == TargetArrayBased ->
->                                 mkReduceFun i . str " :: " . pcont
->                                 . str " => " . intMaybeHash
->                                 . str " -> " . str token_type'
->                                 . str " -> " . intMaybeHash
->                                 . str " -> Happy_IntList -> HappyStk "
->                                 . happyAbsSyn . str " -> "
->                                 . pty . str " " . happyAbsSyn . str "\n"
->                               | otherwise -> id in
->                       filterTypeSig tysig . mkReduceFun i . str " = "
+>                             _       -> mkReduceFun i . str " :: " . pcont
+>                                      . str " => " . intMaybeHash
+>                                      . str " -> " . str token_type'
+>                                      . str " -> " . intMaybeHash
+>                                      . str " -> Happy_IntList -> HappyStk "
+>                                      . happyAbsSyn . str " -> "
+>                                      . pty . str " " . happyAbsSyn . str "\n"
+>                       in filterTypeSig tysig . mkReduceFun i . str " = "
 >                       . str s . strspace . lt' . strspace . showInt adjusted_nt
 >                       . strspace . reductionFun . nl
 >                       . reductionFun . strspace
@@ -448,24 +376,7 @@ The token conversion function.
 >             -- so we must not pass it to happyError'
 
 >       Just (lexer'',eof') ->
->       case (target, ghc) of
->          (TargetHaskell, True) ->
->                 str "happyNewToken :: " . pcont . str " => "
->               . str "(Happy_GHC_Exts.Int#\n"
->               . str "                   -> Happy_GHC_Exts.Int#\n"
->               . str "                   -> " . token . str "\n"
->               . str "                   -> HappyState " . token . str " (t -> "
->               . pty . str " a)\n"
->               . str "                   -> [HappyState " . token . str " (t -> "
->               . pty . str " a)]\n"
->               . str "                   -> t\n"
->               . str "                   -> " . pty . str " a)\n"
->               . str "                 -> [HappyState " . token . str " (t -> "
->               . pty . str " a)]\n"
->               . str "                 -> t\n"
->               . str "                 -> " . pty . str " a\n"
->          _ -> id
->       . str "happyNewToken action sts stk\n\t= "
+>         str "happyNewToken action sts stk\n\t= "
 >       . str lexer''
 >       . str "(\\tk -> "
 >       . str "\n\tlet cont i = "
@@ -485,19 +396,13 @@ The token conversion function.
 
 >       where
 
->         eofAction tk =
->           (case target of
->               TargetArrayBased ->
->                 str "happyDoAction " . eofTok . strspace . str tk . str " action"
->               _ ->  str "action "     . eofTok . strspace . eofTok
->                   . strspace . str tk . str " (HappyState action)")
->            . str " sts stk"
+>         eofAction tk = str "happyDoAction "
+>                      . eofTok . strspace . str tk
+>                      . str " action" . str " sts stk"
 >         eofTok = showInt (tokIndex eof)
->
->         doAction = case target of
->           TargetArrayBased -> str "happyDoAction i tk action"
->           _   -> str "action i i tk (HappyState action)"
->
+
+>         doAction = str "happyDoAction i tk action"
+
 >         doToken (i,tok)
 >               = str (removeDollarDollar tok)
 >               . str " -> cont "
@@ -521,10 +426,7 @@ the left hand side of '@'.
 >                     Just str' -> mapDollarDollar str'
 >         pat = mkHappyVar i
 
->    tokIndex
->       = case target of
->               TargetHaskell    -> id
->               TargetArrayBased -> \i -> i - n_nonterminals - n_starts - 2
+>    tokIndex i = i - n_nonterminals - n_starts - 2
 >                       -- tokens adjusted to start at zero, see ARRAY_NOTES
 
 %-----------------------------------------------------------------------------
@@ -575,15 +477,12 @@ straight back to a state where the error token can be shifted, or if
 none exists, we'll get a parse error.  In theory, we won't need the
 machinery to discard states in the parser...
 
->    produceActionTable TargetHaskell
->       = foldr (.) id (map (produceStateFunction goto) (assocs action))
->
->    produceActionTable TargetArrayBased
+>    produceActionTable
 >       = produceActionArray
 >       . produceReduceArray
 >       . str "happy_n_terms = " . shows n_terminals . str " :: Prelude.Int\n"
 >       . str "happy_n_nonterms = " . shows n_nonterminals . str " :: Prelude.Int\n\n"
->
+
 >    produceExpListPerState
 >       = produceExpListArray
 >       . str "{-# NOINLINE happyExpListPerState #-}\n"
@@ -602,55 +501,6 @@ machinery to discard states in the parser...
 >       . str "\n"
 >       where (first_token, last_token) = bounds token_names'
 >             nr_tokens = last_token - first_token + 1
->
->    produceStateFunction goto' (state, acts)
->       = foldr (.) id (map produceActions assocs_acts)
->       . foldr (.) id (map produceGotos   (assocs gotos))
->       . mkActionName state
->       . (if ghc
->              then str " x = happyTcHack x "
->              else str " _ = ")
->       . mkAction default_act
->       . (case default_act of
->            LR'Fail -> callHappyExpListPerState
->            LR'MustFail -> callHappyExpListPerState
->            _ -> str "")
->       . str "\n\n"
->
->       where gotos = goto' ! state
->
->             callHappyExpListPerState = str " (happyExpListPerState "
->                                      . str (show state) . str ")"
->
->             produceActions (_, LR'Fail{-'-}) = id
->             produceActions (t, action'@(LR'Reduce{-'-} _ _))
->                | action' == default_act = id
->                | otherwise = producePossiblyFailingAction t action'
->             produceActions (t, action')
->               = producePossiblyFailingAction t action'
->
->             producePossiblyFailingAction t action'
->               = actionFunction t
->               . mkAction action'
->               . (case action' of
->                   LR'Fail -> str " []"
->                   LR'MustFail -> str " []"
->                   _ -> str "")
->               . str "\n"
->
->             produceGotos (t, Goto i)
->               = actionFunction t
->               . str "happyGoto " . mkActionName i . str "\n"
->             produceGotos (_, NoGoto) = id
->
->             actionFunction t
->               = mkActionName state . strspace
->               . ('(' :) . showInt t
->               . str ") = "
->
->             default_act = getDefault assocs_acts
->
->             assocs_acts = assocs acts
 
 action array indexed by (terminal * last_state) + state
 
@@ -861,37 +711,29 @@ MonadStuff:
 >                . errorHandler . str "\n"
 >               _ ->
 >                let
->                  happyParseSig
->                    | target == TargetArrayBased =
->                      str "happyParse :: " . pcont . str " => " . intMaybeHash
+>                  happyParseSig =
+>                        str "happyParse :: " . pcont . str " => " . intMaybeHash
 >                      . str " -> " . pty . str " " . happyAbsSyn . str "\n"
 >                      . str "\n"
->                    | otherwise = id
->                  newTokenSig
->                    | target == TargetArrayBased =
->                      str "happyNewToken :: " . pcont . str " => " . intMaybeHash
+>                  newTokenSig =
+>                        str "happyNewToken :: " . pcont . str " => " . intMaybeHash
 >                      . str " -> Happy_IntList -> HappyStk " . happyAbsSyn
 >                      . str " -> " . pty . str " " . happyAbsSyn . str"\n"
 >                      . str "\n"
->                    | otherwise = id
->                  doActionSig
->                    | target == TargetArrayBased =
->                      str "happyDoAction :: " . pcont . str " => " . intMaybeHash
+>                  doActionSig =
+>                        str "happyDoAction :: " . pcont . str " => " . intMaybeHash
 >                      . str " -> " . str token_type' . str " -> " . intMaybeHash
 >                      . str " -> Happy_IntList -> HappyStk " . happyAbsSyn
 >                      . str " -> " . pty . str " " . happyAbsSyn . str "\n"
 >                      . str "\n"
->                    | otherwise = id
->                  reduceArrSig
->                    | target == TargetArrayBased =
->                      str "happyReduceArr :: " . pcont
+>                  reduceArrSig =
+>                        str "happyReduceArr :: " . pcont
 >                      . str " => Happy_Data_Array.Array Prelude.Int (" . intMaybeHash
 >                      . str " -> " . str token_type' . str " -> " . intMaybeHash
 >                      . str " -> Happy_IntList -> HappyStk " . happyAbsSyn
 >                      . str " -> " . pty . str " " . happyAbsSyn . str ")\n"
 >                      . str "\n"
->                    | otherwise = id in
->                  filterTypeSig (happyParseSig . newTokenSig . doActionSig . reduceArrSig)
+>                  in filterTypeSig (happyParseSig . newTokenSig . doActionSig . reduceArrSig)
 >                . str "happyThen1 :: " . pcont . str " => " . pty
 >                . str " a -> (a -> "  . pty
 >                . str " b) -> " . pty . str " b\n"
@@ -939,11 +781,7 @@ directive determines the API of the provided function.
 >       . str unmonad
 >       . str "happySomeParser where\n"
 >       . str " happySomeParser = happyThen (happyParse "
->       . case target of
->            TargetHaskell -> str "action_" . shows no
->            TargetArrayBased
->                | ghc       -> shows no . str "#"
->                | otherwise -> shows no
+>       . (if ghc then shows no . str "#" else shows no)
 >       . maybe_tks
 >       . str ") "
 >       . brack' (if coerce
@@ -1030,17 +868,6 @@ vars used in this piece of code.
 > actionVal (LR'Multiple _ a)   = actionVal a
 > actionVal LR'Fail             = 0
 > actionVal LR'MustFail         = 0
-
-> mkAction :: LRAction -> String -> String
-> mkAction (LR'Shift i _)       = str "happyShift " . mkActionName i
-> mkAction LR'Accept            = str "happyAccept"
-> mkAction LR'Fail              = str "happyFail"
-> mkAction LR'MustFail          = str "happyFail"
-> mkAction (LR'Reduce i _)      = str "happyReduce_" . shows i
-> mkAction (LR'Multiple _ a)    = mkAction a
-
-> mkActionName :: Int -> String -> String
-> mkActionName i                = str "action_" . shows i
 
 See notes under "Action Tables" above for some subtleties in this function.
 
