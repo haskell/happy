@@ -259,9 +259,11 @@ notHappyAtAll = Prelude.error "Internal Happy error\n"
 -----------------------------------------------------------------------------
 -- Hack to get the typechecker to accept our action functions
 
+#if defined(HAPPY_GHC)
 happyTcHack :: Happy_GHC_Exts.Int# -> a -> a
 happyTcHack x y = y
 {-# INLINE happyTcHack #-}
+#endif
 
 -----------------------------------------------------------------------------
 -- Seq-ing.  If the --strict flag is given, then Happy emits
