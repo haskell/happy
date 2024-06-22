@@ -4,6 +4,9 @@
 #  error This code isn't being built with GHC.
 #endif
 
+-- Get WORDS_BIGENDIAN (if defined)
+#include "MachDeps.h"
+
 -- Do not remove this comment. Required to fix CPP parsing when using GCC and a clang-compiled alex.
 #if __GLASGOW_HASKELL__ > 706
 #  define LT(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.<# m)) :: Prelude.Bool)
@@ -82,16 +85,16 @@ happyDoAction i tk st =
 {-# INLINE happyNextAction #-}
 happyNextAction i st = case happyIndexActionTable i st of
   Just (Happy_GHC_Exts.I# act) -> act
-  Nothing                      -> indexShortOffAddr happyDefActions st
+  Nothing                      -> happyIndexOffAddr happyDefActions st
 
 {-# INLINE happyIndexActionTable #-}
 happyIndexActionTable i st
-  | GTE(off, 0#), EQ(indexShortOffAddr happyCheck off, i)
-  = Prelude.Just (Happy_GHC_Exts.I# (indexShortOffAddr happyTable off))
+  | GTE(off, 0#), EQ(happyIndexOffAddr happyCheck off, i)
+  = Prelude.Just (Happy_GHC_Exts.I# (happyIndexOffAddr happyTable off))
   | otherwise
   = Prelude.Nothing
   where
-    off = PLUS(happyAdjustOffset (indexShortOffAddr happyActOffsets st), i)
+    off = PLUS(happyIndexOffAddr happyActOffsets st, i)
 
 data HappyAction
   = HappyFail
@@ -107,24 +110,30 @@ happyDecodeAction action | LT(action, 0#)    = HappyReduce NEGATE(PLUS(action, 1
                          | otherwise         = HappyShift MINUS(action, 1#)
 
 {-# INLINE happyIndexGotoTable #-}
-happyIndexGotoTable nt st = indexShortOffAddr happyTable off
+happyIndexGotoTable nt st = happyIndexOffAddr happyTable off
   where
-    off = PLUS(happyAdjustOffset (indexShortOffAddr happyGotoOffsets st), nt)
+    off = PLUS(happyIndexOffAddr happyGotoOffsets st, nt)
 
-indexShortOffAddr (HappyA# arr) off =
-        Happy_GHC_Exts.narrow16Int# i
-  where
-        i = Happy_GHC_Exts.word2Int# (Happy_GHC_Exts.or# (Happy_GHC_Exts.uncheckedShiftL# high 8#) low)
-        high = Happy_GHC_Exts.int2Word# (Happy_GHC_Exts.ord# (Happy_GHC_Exts.indexCharOffAddr# arr (off' Happy_GHC_Exts.+# 1#)))
-        low  = Happy_GHC_Exts.int2Word# (Happy_GHC_Exts.ord# (Happy_GHC_Exts.indexCharOffAddr# arr off'))
-        off' = off Happy_GHC_Exts.*# 2#
+{-# INLINE happyIndexOffAddr #-}
+happyIndexOffAddr :: HappyAddr -> Happy_Int -> Happy_Int
+happyIndexOffAddr (HappyA# arr) off =
+#if __GLASGOW_HASKELL__ >= 901
+  Happy_GHC_Exts.int32ToInt# -- qualified import because it doesn't exist on older GHC's
+#endif
+#ifdef WORDS_BIGENDIAN
+  -- The CI of `alex` tests this code path
+  (Happy_GHC_Exts.word32ToInt32# (Happy_GHC_Exts.wordToWord32# (Happy_GHC_Exts.byteSwap32# (Happy_GHC_Exts.word32ToWord# (Happy_GHC_Exts.int32ToWord32#
+#endif
+  (Happy_GHC_Exts.indexInt32OffAddr# arr off)
+#ifdef WORDS_BIGENDIAN
+  )))))
+#endif
 
 {-# INLINE happyLt #-}
 happyLt x y = LT(x,y)
 
 readArrayBit arr bit =
-    Bits.testBit (Happy_GHC_Exts.I# (indexShortOffAddr arr ((unbox_int bit) `Happy_GHC_Exts.iShiftRA#` 4#)))
-                 (bit `Prelude.mod` 16)
+    Bits.testBit (Happy_GHC_Exts.I# (happyIndexOffAddr arr ((unbox_int bit) `Happy_GHC_Exts.iShiftRA#` 5#))) (bit `Prelude.mod` 32)
   where unbox_int (Happy_GHC_Exts.I# x) = x
 
 data HappyAddr = HappyA# Happy_GHC_Exts.Addr#
@@ -192,9 +201,9 @@ happyMonad2Reduce k nt fn j tk st sts stk =
       case happyDrop k (HappyCons st sts) of
         sts1@(HappyCons st1 _) ->
           let drop_stk = happyDropStk k stk
-              off = happyAdjustOffset (indexShortOffAddr happyGotoOffsets st1)
+              off = happyAdjustOffset (happyIndexOffAddr happyGotoOffsets st1)
               off_i = PLUS(off, nt)
-              new_state = indexShortOffAddr happyTable off_i
+              new_state = happyIndexOffAddr happyTable off_i
           in
             happyThen1 (fn stk tk)
                        (\r -> happyNewToken new_state sts1 (r `HappyStk` drop_stk))
