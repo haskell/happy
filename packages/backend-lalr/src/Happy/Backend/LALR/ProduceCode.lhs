@@ -18,7 +18,9 @@ The code generator.
 
 > import Control.Monad             ( forM_ )
 > import Control.Monad.ST          ( ST, runST )
-> import Data.Bits                 ( setBit )
+> import Data.Word
+> import Data.Int
+> import Data.Bits
 > import Data.Array.ST             ( STUArray )
 > import Data.Array.Unboxed        ( UArray )
 > import Data.Array.MArray         ( MArray(..), freeze, readArray, writeArray )
@@ -486,8 +488,8 @@ machinery to discard states in the parser...
 >       . str "happyExpListPerState st =\n"
 >       . str "    token_strs_expected\n"
 >       . str "  where token_strs = " . str (show $ elems token_names') . str "\n"
->       . str "        bit_start = st Prelude.* " . str (show nr_tokens) . str "\n"
->       . str "        bit_end = (st Prelude.+ 1) Prelude.* " . str (show nr_tokens) . str "\n"
+>       . str "        bit_start = st               Prelude.* " . str (show nr_tokens) . str "\n"
+>       . str "        bit_end   = (st Prelude.+ 1) Prelude.* " . str (show nr_tokens) . str "\n"
 >       . str "        read_bit = readArrayBit happyExpList\n"
 >       . str "        bits = Prelude.map read_bit [bit_start..bit_end Prelude.- 1]\n"
 >       . str "        bits_indexed = Prelude.zip bits [0.."
@@ -504,12 +506,12 @@ action array indexed by (terminal * last_state) + state
 >    produceActionArray
 >           = str "happyActOffsets :: HappyAddr\n"
 >           . str "happyActOffsets = HappyA# \"" --"
->           . str (checkedHexChars min_off act_offs)
+>           . hexChars act_offs
 >           . str "\"#\n\n" --"
 >
 >           . str "happyGotoOffsets :: HappyAddr\n"
 >           . str "happyGotoOffsets = HappyA# \"" --"
->           . str (checkedHexChars min_off goto_offs)
+>           . hexChars goto_offs
 >           . str "\"#\n\n"  --"
 >
 >           . str "happyAdjustOffset :: Happy_GHC_Exts.Int# -> Happy_GHC_Exts.Int#\n"
@@ -523,24 +525,24 @@ action array indexed by (terminal * last_state) + state
 >
 >           . str "happyDefActions :: HappyAddr\n"
 >           . str "happyDefActions = HappyA# \"" --"
->           . str (hexChars defaults)
+>           . hexChars defaults
 >           . str "\"#\n\n" --"
 >
 >           . str "happyCheck :: HappyAddr\n"
 >           . str "happyCheck = HappyA# \"" --"
->           . str (hexChars check)
+>           . hexChars check
 >           . str "\"#\n\n" --"
 >
 >           . str "happyTable :: HappyAddr\n"
 >           . str "happyTable = HappyA# \"" --"
->           . str (hexChars table)
+>           . hexChars table
 >           . str "\"#\n\n" --"
 
 
 >    produceExpListArray
 >           = str "happyExpList :: HappyAddr\n"
 >           . str "happyExpList = HappyA# \"" --"
->           . str (hexChars explist)
+>           . hexCharsForBits explist
 >           . str "\"#\n\n" --"
 
 >    n_terminals = length terms
@@ -1013,7 +1015,7 @@ See notes under "Action Tables" above for some subtleties in this function.
 >   act_offs   <- newArray (0, n_actions) 0
 >   goto_offs  <- newArray (0, n_actions) 0
 >   off_arr    <- newArray (-max_token, mAX_TABLE_SIZE) 0
->   exp_array  <- newArray (0, (n_actions * n_token_names + 15) `div` 16) 0
+>   exp_array  <- newArray (0, (n_actions * n_token_names + 31) `div` 32) 0 -- 32 bits per entry
 >
 >   (min_off,max_off) <- genTables' table check act_offs goto_offs off_arr exp_array entries
 >                          explist max_token n_token_names
@@ -1061,8 +1063,8 @@ See notes under "Action Tables" above for some subtleties in this function.
 >          forM_ explist $ \(state, tokens) ->
 >            forM_ tokens $ \token -> do
 >              let bit_nr = state * n_token_names + token
->              let word_nr = bit_nr `div` 16
->              let word_offset = bit_nr `mod` 16
+>              let word_nr = bit_nr `div` 32
+>              let word_offset = bit_nr `mod` 32
 >              x <- readArray exp_array word_nr
 >              writeArray exp_array word_nr (setBit x word_offset)
 >
@@ -1216,31 +1218,39 @@ slot is free or not.
 > brack' s = char '(' . s . char ')'
 
 -----------------------------------------------------------------------------
--- Convert an integer to a 16-bit number encoded in \xNN\xNN format suitable
--- for placing in a string.
+-- Convert an integer to a 32-bit number encoded in little-endian
+-- \xNN\xNN\xNN\xNN format suitable for placing in a string.
 
-> hexChars :: [Int] -> String
-> hexChars = concatMap hexChar
+> hexChars :: [Int] -> String -> String
+> hexChars is s = foldr (hexChar . toInt32) s is
 
-> hexChar :: Int -> String
-> hexChar i | i < 0 = hexChar (i + 65536)
-> hexChar i =  toHex (i `mod` 256) ++ toHex (i `div` 256)
+The following function is used for generating happyExpList, which is an array of
+bits encoded as [Int] for legacy reasons; we don't want to check for overflow
+here.
 
-> toHex :: Int -> String
-> toHex i = ['\\','x', hexDig (i `div` 16), hexDig (i `mod` 16)]
+> hexCharsForBits :: [Int] -> String -> String
+> hexCharsForBits is s = foldr (hexChar . fromIntegral) s is
 
-> hexDig :: Int -> Char
-> hexDig i | i <= 9    = chr (i + ord '0')
->          | otherwise = chr (i - 10 + ord 'a')
+The following definition of @hexChar@ chooses a little endian encoding for `Int32` .
+Ergo, the compiled parser must use the same endianness when decoding array entries.
+On big endian architectures, this means users will have to compile with `WORDS_BIGENDIAN`,
+which is defined in the GHC provided C header `MachDeps.h`.
 
-This guards against integers that are so large as to (when converted using
-'hexChar') wrap around the maximum value of 16-bit numbers and then end up
-larger than an expected minimum value.
+> hexChar :: Int32 -> String -> String
+> hexChar i s = foldr (toHex . byte i) s [0,1,2,3]
 
-> checkedHexChars :: Int -> [Int] -> String
-> checkedHexChars minValue = concatMap hexChar'
->   where hexChar' i | checkHexChar minValue i = hexChar i
->                    | otherwise = error "grammar does not fit in 16-bit representation that is used with '--ghc'"
+> byte :: Int32 -> Int -> Word8
+> byte n i = fromIntegral (0xFF .&. shiftR n (i*8))
 
-> checkHexChar :: Int -> Int -> Bool
-> checkHexChar minValue i = i <= 32767 || i - 65536 < minValue
+> toHex :: Word8 -> String -> String
+> toHex i s = '\\':'x':hexDig (0xF .&. shiftR i 4):hexDig (0xF .&. i):s
+
+> hexDig :: Word8 -> Char
+> hexDig i | i <= 9    = chr (fromIntegral i + ord '0')
+>          | otherwise = chr (fromIntegral i - 10 + ord 'a')
+
+> toInt32 :: Int -> Int32
+> toInt32 i
+>   | i == fromIntegral i32 = i32
+>   | otherwise = error ("offset was too large for Int32: " ++ show i)
+>   where i32 = fromIntegral i
