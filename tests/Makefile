@@ -53,18 +53,12 @@ TEST_HAPPY_OPTS = --strict
 %.n.hs : %.ly
 	$(HAPPY) $(TEST_HAPPY_OPTS) $< -o $@
 
-%.c.hs : %.ly
-	$(HAPPY) $(TEST_HAPPY_OPTS) -c $< -o $@
-
 %.n.hs : %.y
 	$(HAPPY) $(TEST_HAPPY_OPTS) $< -o $@
 
-%.c.hs : %.y
-	$(HAPPY) $(TEST_HAPPY_OPTS) -c $< -o $@
-
 CLEAN_FILES += *.n.hs *.c.hs *.info *.hi *.bin *.exe *.o *.run.stdout *.run.stderr
 
-ALL_TEST_HS = $(shell echo $(TESTS) | sed -e 's/\([^\. ]*\)\.\(l\)\{0,1\}y/\1.n.hs \1.c.hs/g')
+ALL_TEST_HS = $(shell echo $(TESTS) | sed -e 's/\([^\. ]*\)\.\(l\)\{0,1\}y/\1.n.hs /g')
 
 ALL_TESTS = $(patsubst %.hs, %.run, $(ALL_TEST_HS))
 

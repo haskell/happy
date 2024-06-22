@@ -19,8 +19,8 @@
 #define TIMES(n,m) (n Happy_GHC_Exts.*# m)
 #define NEGATE(n) (Happy_GHC_Exts.negateInt# (n))
 
-type FastInt = Happy_GHC_Exts.Int#
-data Happy_IntList = HappyCons FastInt Happy_IntList
+type Happy_Int = Happy_GHC_Exts.Int#
+data Happy_IntList = HappyCons Happy_Int Happy_IntList
 
 #define ERROR_TOK 0#
 
@@ -74,20 +74,20 @@ happyDoAction i tk st
                                                   happyFail (happyExpListPerState ((Happy_GHC_Exts.I# st) :: Prelude.Int)) i tk st
                 -1#                       -> DEBUG_TRACE("accept.\n")
                                                   happyAccept i tk st
-                n | LT(n,(0# :: FastInt)) -> DEBUG_TRACE("reduce (rule " ++ show rule
+                n | LT(n,(0# :: Happy_Int)) -> DEBUG_TRACE("reduce (rule " ++ show rule
                                                                ++ ")")
                                                    (happyReduceArr Happy_Data_Array.! rule) i tk st
                   where
-                    rule = Happy_GHC_Exts.I# (NEGATE(PLUS(n,(1# :: FastInt))))
+                    rule = Happy_GHC_Exts.I# (NEGATE(PLUS(n,(1# :: Happy_Int))))
 
                 n                         -> DEBUG_TRACE("shift, enter state "
                                                          ++ show (Happy_GHC_Exts.I# new_state)
                                                          ++ "\n")
                                                happyShift new_state i tk st
-                  where new_state = MINUS(n,(1# :: FastInt))
+                  where new_state = MINUS(n,(1# :: Happy_Int))
    where off    = happyAdjustOffset (indexShortOffAddr happyActOffsets st)
          off_i  = PLUS(off, i)
-         check  = if GTE(off_i,(0# :: FastInt))
+         check  = if GTE(off_i,(0# :: Happy_Int))
                   then EQ(indexShortOffAddr happyCheck off_i, i)
                   else Prelude.False
          action
@@ -155,7 +155,7 @@ happySpecReduce_3 nt fn j tk _
 happyReduce k i fn ERROR_TOK tk st sts stk
      = happyFail [] ERROR_TOK tk st sts stk
 happyReduce k nt fn j tk st sts stk
-     = case happyDrop MINUS(k,(1# :: FastInt)) sts of
+     = case happyDrop MINUS(k,(1# :: Happy_Int)) sts of
          sts1@(HappyCons st1 _) ->
                 let r = fn stk in -- it doesn't hurt to always seq here...
                 happyDoSeq r (happyGoto nt j tk st1 sts1 r)
@@ -183,10 +183,10 @@ happyMonad2Reduce k nt fn j tk st sts stk =
                        (\r -> happyNewToken new_state sts1 (r `HappyStk` drop_stk))
 
 happyDrop 0# l               = l
-happyDrop n  (HappyCons _ t) = happyDrop MINUS(n,(1# :: FastInt)) t
+happyDrop n  (HappyCons _ t) = happyDrop MINUS(n,(1# :: Happy_Int)) t
 
 happyDropStk 0# l                 = l
-happyDropStk n  (x `HappyStk` xs) = happyDropStk MINUS(n,(1#::FastInt)) xs
+happyDropStk n  (x `HappyStk` xs) = happyDropStk MINUS(n,(1#::Happy_Int)) xs
 
 -----------------------------------------------------------------------------
 -- Moving to a new state after a reduction
@@ -232,7 +232,7 @@ notHappyAtAll = Prelude.error "Internal Happy error\n"
 -----------------------------------------------------------------------------
 -- Hack to get the typechecker to accept our action functions
 
-happyTcHack :: FastInt -> a -> a
+happyTcHack :: Happy_Int -> a -> a
 happyTcHack x y = y
 {-# INLINE happyTcHack #-}
 
