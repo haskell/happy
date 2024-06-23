@@ -25,9 +25,9 @@ endif
 # [2021-07-14, PR #196](https://github.com/haskell/happy/pull/196)
 #
 HC ?= ghc
-HC_OPTS=-Wall -Werror
+HC_OPTS=-package array -Wall -Werror
 
-.PRECIOUS: %.n.hs %.o %.exe %.bin
+.PRECIOUS: %.n.hs %.c.hs %.o %.exe %.bin
 
 ifeq "$(TARGETPLATFORM)" "i386-unknown-mingw32"
 HS_PROG_EXT = .exe
@@ -50,15 +50,21 @@ ERROR_TESTS = error001.y
 #TEST_HAPPY_OPTS = --strict --template=..
 TEST_HAPPY_OPTS = --strict
 
-%.n.hs : %.ly
-	$(HAPPY) $(TEST_HAPPY_OPTS) $< -o $@
-
 %.n.hs : %.y
 	$(HAPPY) $(TEST_HAPPY_OPTS) $< -o $@
 
+%.n.hs : %.ly
+	$(HAPPY) $(TEST_HAPPY_OPTS) -c $< -o $@
+
+%.c.hs : %.y
+	$(HAPPY) $(TEST_HAPPY_OPTS) $< -o $@
+
+%.c.hs : %.ly
+	$(HAPPY) $(TEST_HAPPY_OPTS) -c $< -o $@
+
 CLEAN_FILES += *.n.hs *.c.hs *.info *.hi *.bin *.exe *.o *.run.stdout *.run.stderr
 
-ALL_TEST_HS = $(shell echo $(TESTS) | sed -e 's/\([^\. ]*\)\.\(l\)\{0,1\}y/\1.n.hs /g')
+ALL_TEST_HS = $(shell echo $(TESTS) | sed -e 's/\([^\. ]*\)\.\(l\)\{0,1\}y/\1.n.hs \1.c.hs/g')
 
 ALL_TESTS = $(patsubst %.hs, %.run, $(ALL_TEST_HS))
 
