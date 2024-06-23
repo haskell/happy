@@ -153,7 +153,7 @@ executable happy
 
   default-language: Haskell98
   default-extensions: CPP, MagicHash, FlexibleContexts, NamedFieldPuns
-  ghc-options: -Wall
+  ghc-options: -Wall -Wno-incomplete-uni-patterns
   other-modules:
         Paths_happy
 
