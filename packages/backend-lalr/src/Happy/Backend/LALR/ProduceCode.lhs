@@ -14,7 +14,7 @@ The code generator.
 
 > import Data.Maybe                ( isNothing, fromMaybe )
 > import Data.Char                 ( ord, chr )
-> import Data.List                 ( sortBy )
+> import Data.List                 ( nub, sortBy )
 
 > import Control.Monad             ( forM_ )
 > import Control.Monad.ST          ( ST, runST )
@@ -25,8 +25,9 @@ The code generator.
 > import Data.Array.Unboxed        ( UArray )
 > import Data.Array.MArray         ( MArray(..), freeze, readArray, writeArray )
 > import Data.Array.IArray         ( Array, IArray(..), (!), array, assocs, elems )
+> import Debug.Trace
 
-%-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------
 Produce the complete output file.
 
 > produceParser :: Grammar                      -- grammar info
@@ -60,7 +61,7 @@ Produce the complete output file.
 >               , monad = (use_monad,monad_context,monad_tycon,monad_then,monad_return)
 >               , token_type = token_type'
 >               , error_handler = error_handler'
->               , error_sig = error_sig'
+>               , error_expected = error_expected'
 >               })
 >               action goto lang_exts module_header module_trailer
 >               coerce strict
@@ -70,7 +71,7 @@ Produce the complete output file.
 >               -- comment goes *after* the module header, so that we
 >               -- don't screw up any OPTIONS pragmas in the header.
 >       . produceAbsSynDecl . nl
->       . produceExpListPerState
+>       . produceTokToStringList
 >       . produceActionTable
 >       . produceReductions
 >       . produceTokenConverter . nl
@@ -84,20 +85,21 @@ Produce the complete output file.
 >  where
 >    n_starts = length starts'
 >    token = brack token_type'
->
+
 >    nowarn_opts = str "{-# OPTIONS_GHC -w #-}" . nl
 >       -- XXX Happy-generated code is full of warnings.  Some are easy to
 >       -- fix, others not so easy, and others would require GHC version
 >       -- #ifdefs.  For now I'm just disabling all of them.
->
+
 >    partTySigs_opts = ifGeGhc710 (str "{-# LANGUAGE PartialTypeSignatures #-}" . nl)
 
 >    intMaybeHash    = str "Happy_GHC_Exts.Int#"
 
 >    -- Parsing monad and its constraints
->    pty = str monad_tycon
->    pcont = str monad_context
->
+>    pty = str monad_tycon                     -- str "P"
+>    ptyAt a = brack' (pty . str " " . a)      -- \(str "a") -> str "(P a)"
+>    pcont = str monad_context                 -- str "Read a", some constraint for "P" to be a monad
+
 >    -- If GHC is enabled, wrap the content in a CPP ifdef that includes the
 >    -- content and tests whether the GHC version is >= 7.10.3
 >    ifGeGhc710 :: (String -> String) -> String -> String
@@ -108,13 +110,13 @@ Produce the complete output file.
 >    n_missing_types = length (filter isNothing (elems nt_types))
 >    happyAbsSyn = str "(HappyAbsSyn " . str wild_tyvars . str ")"
 >      where wild_tyvars = unwords (replicate n_missing_types "_")
->
+
 >    -- This decides how to include (if at all) a type signature
 >    -- See <https://github.com/haskell/happy/issues/94>
 >    filterTypeSig :: (String -> String) -> String -> String
 >    filterTypeSig content | n_missing_types == 0 = content
 >                          | otherwise = ifGeGhc710 content
->
+
 >    top_opts =
 >        nowarn_opts
 >      . (str $ unlines
@@ -152,7 +154,7 @@ If we're using coercions, we need to generate the injections etc.
 >       = let
 >             happy_item = str "HappyAbsSyn " . str_tyvars
 >             bhappy_item = brack' happy_item
->
+
 >             inject n ty
 >               = (case ty of
 >                   Nothing -> id
@@ -163,7 +165,7 @@ If we're using coercions, we need to generate the injections etc.
 >               . mkHappyWrapCon ty n (str "x")
 >               . nl
 >               . str "{-# INLINE " . mkHappyIn n . str " #-}"
->
+
 >             extract n ty
 >               = mkHappyOut n . str " :: " . bhappy_item
 >               . str " -> " . typeParamOut n ty . char '\n'
@@ -308,18 +310,18 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >                                      . str " -> " . intMaybeHash
 >                                      . str " -> Happy_IntList -> HappyStk "
 >                                      . happyAbsSyn . str " -> "
->                                      . pty . str " " . happyAbsSyn . str "\n"
+>                                      . ptyAt happyAbsSyn . str "\n"
 >                       in filterTypeSig tysig . mkReduceFun i . str " = "
 >                       . str s . strspace . lt' . strspace . showInt adjusted_nt
 >                       . strspace . reductionFun . nl
 >                       . reductionFun . strspace
->
+
 >               reductionFun = str "happyReduction_" . shows i
->
+
 >               tokPatterns
 >                | coerce = reverse (map mkDummyVar [1 .. length toks])
 >                | otherwise = reverse (zipWith tokPattern [1..] toks)
->
+
 >               tokPattern n _ | n `notElem` vars_used = char '_'
 >               tokPattern n t | t >= firstStartTok && t < fst_term
 >                       = if coerce
@@ -333,21 +335,21 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >                               else str "(HappyTerminal "
 >                                  . mkHappyTerminalVar n t
 >                                  . char ')'
->
+
 >               tokLets code''
 >                  | coerce && not (null cases)
 >                       = interleave "\n\t" cases
 >                       . code'' . str (replicate (length cases) '}')
 >                  | otherwise = code''
->
+
 >               cases = [ str "case " . extract t . strspace . mkDummyVar n
 >                       . str " of { " . tokPattern n t . str " -> "
 >                       | (n,t) <- zip [1..] toks,
 >                         n `elem` vars_used ]
->
+
 >               extract t | t >= firstStartTok && t < fst_term = mkHappyOut t
 >                         | otherwise                     = str "happyOutTok"
->
+
 >               lt = length toks
 
 >               this_absSynCon | coerce    = mkHappyIn nt
@@ -358,54 +360,60 @@ The token conversion function.
 
 >    produceTokenConverter
 >       = case lexer' of {
->
+
 >       Nothing ->
->         str "happyNewToken action sts stk [] =\n\t"
->       . eofAction "notHappyAtAll"
->       . str " []\n\n"
->       . str "happyNewToken action sts stk (tk:tks) =\n\t"
->       . str "let cont i = " . doAction . str " sts stk tks in\n\t"
->       . str "case tk of {\n\t"
+>         str "happyTerminalToTok term = case term of {\n\t"
 >       . interleave ";\n\t" (map doToken token_rep)
->       . str "_ -> happyError' ((tk:tks), [])\n\t"
->       . str "}\n\n"
->       . str "happyError_ explist " . eofTok . str " tk tks = happyError' (tks, explist)\n"
->       . str "happyError_ explist _ tk tks = happyError' ((tk:tks), explist)\n";
+>       . str "_ -> error \"Encountered a token that was not declared to happy\"\n\t}\n"
+>       . str "{-# NOINLINE happyTerminalToTok #-}\n"
+>       . str "\n"
+>       . str "happyEofTok = " . shows (tokIndex eof) . str "\n"
+>       . str "\n"
+>       . str "happyLex kend  _kmore []       = kend notHappyAtAll []\n"
+>       . str "happyLex _kend kmore  (tk:tks) = kmore (happyTerminalToTok tk) tk tks\n"
+>       . str "{-# INLINE happyLex #-}\n"
+>       . str "\n"
+>       . str "happyNewToken action sts stk = happyLex (\\tk -> " . eofAction . str ") ("
+>       . str "\\i tk -> " . doAction . str " sts stk)\n"
+>       . str "\n"
+>       . str "happyReport " . eofTok . str " tk explist resume tks = happyReport' tks explist resume\n"
+>       . str "happyReport _ tk explist resume tks = happyReport' (tk:tks) explist resume\n\n";
 >             -- when the token is EOF, tk == _|_ (notHappyAtAll)
 >             -- so we must not pass it to happyError'
 
 >       Just (lexer'',eof') ->
->         str "happyNewToken action sts stk\n\t= "
->       . str lexer''
->       . str "(\\tk -> "
->       . str "\n\tlet cont i = "
->       . doAction
->       . str " sts stk in\n\t"
->       . str "case tk of {\n\t"
->       . str (eof' ++ " -> ")
->       . eofAction "tk" . str ";\n\t"
+>         str "happyTerminalToTok term = case term of {\n\t"
+>       . str eof' . str " -> " . eofTok . str ";\n\t"
 >       . interleave ";\n\t" (map doToken token_rep)
->       . str "_ -> happyError' (tk, [])\n\t"
->       . str "})\n\n"
->       . str "happyError_ explist " . eofTok . str " tk = happyError' (tk, explist)\n"
->       . str "happyError_ explist _ tk = happyError' (tk, explist)\n";
->             -- superfluous pattern match needed to force happyError_ to
+>       . str "_ -> error \"Encountered a token that was not declared to happy\"\n\t}\n"
+>       . str "{-# NOINLINE happyTerminalToTok #-}\n"
+>       . str "\n"
+>       . str "happyEofTok = " . shows (tokIndex eof) . str "\n"
+>       . str "\n"
+>       . str "happyLex kend kmore = " . str lexer'' . str " (\\tk -> case tk of {\n\t"
+>       . str eof' . str " -> kend tk;\n\t"
+>       . str "_ -> kmore (happyTerminalToTok tk) tk })\n"
+>       . str "{-# INLINE happyLex #-}\n"
+>       . str "\n"
+>       . str "happyNewToken action sts stk = happyLex (\\tk -> " . eofAction . str ") ("
+>       . str "\\i tk -> " . doAction . str " sts stk)\n"
+>       . str "\n"
+>       . str "happyReport " . eofTok . str " = happyReport'\n"
+>       . str "happyReport _ = happyReport'\n\n"
+>             -- superfluous pattern match needed to force happyReport to
 >             -- have the correct type.
 >       }
 
 >       where
-
->         eofAction tk = str "happyDoAction "
->                      . eofTok . strspace . str tk
->                      . str " action" . str " sts stk"
+>         eofAction = str "happyDoAction "
+>                   . eofTok . strspace . str "tk action" . str " sts stk"
 >         eofTok = showInt (tokIndex eof)
 
 >         doAction = str "happyDoAction i tk action"
 
->         doToken (i,tok)
->               = str (removeDollarDollar tok)
->               . str " -> cont "
->               . showInt (tokIndex i)
+>         doToken (i,tok) = str (removeDollarDollar tok)
+>                         . str " -> "
+>                         . showInt (tokIndex i)
 
 Use a variable rather than '_' to replace '$$', so we can use it on
 the left hand side of '@'.
@@ -425,7 +433,7 @@ the left hand side of '@'.
 >                     Just str' -> mapDollarDollar str'
 >         pat = mkHappyVar i
 
->    tokIndex i = i - n_nonterminals - n_starts - 2
+>    tokIndex i = i - fst_term + 2
 >                       -- tokens adjusted to start at zero, see ARRAY_NOTES
 
 %-----------------------------------------------------------------------------
@@ -434,10 +442,17 @@ Action Tables.
 Here we do a bit of trickery and replace the normal default action
 (failure) for each state with at least one reduction action.  For each
 such state, we pick one reduction action to be the default action.
-This should make the code smaller without affecting the speed.  It
-changes the sematics for errors, however; errors could be detected in
-a different state now (but they'll still be detected at the same point
-in the token stream).
+This should make the code smaller without affecting the speed.
+It changes the sematics for errors, however; errors could be detected in a
+different state now (but they'll still be detected at the same point in the
+token stream).
+
+SG: For a data point, in issue93 the happyTable triples in size when we always
+pick failure as the default reduction.
+Presumably that is because there are quite a few reduction states, in which the
+only non-default transition is a reduction.
+Our scheme above ensures that these states don't occupy space in the main
+happyTable at all; they just get an entry in the happyDefActions.
 
 Further notes on default cases:
 
@@ -479,27 +494,17 @@ machinery to discard states in the parser...
 >    produceActionTable
 >       = produceActionArray
 >       . produceReduceArray
+>       . produceRuleArray
+>       . produceCatchStates
 >       . str "happy_n_terms = " . shows n_terminals . str " :: Prelude.Int\n"
 >       . str "happy_n_nonterms = " . shows n_nonterminals . str " :: Prelude.Int\n\n"
+>       . str "happy_n_starts = " . shows n_starts . str " :: Prelude.Int\n\n"
 
->    produceExpListPerState
->       = produceExpListArray
->       . str "{-# NOINLINE happyExpListPerState #-}\n"
->       . str "happyExpListPerState st =\n"
->       . str "    token_strs_expected\n"
->       . str "  where token_strs = " . str (show $ elems token_names') . str "\n"
->       . str "        bit_start = st               Prelude.* " . str (show nr_tokens) . str "\n"
->       . str "        bit_end   = (st Prelude.+ 1) Prelude.* " . str (show nr_tokens) . str "\n"
->       . str "        read_bit = readArrayBit happyExpList\n"
->       . str "        bits = Prelude.map read_bit [bit_start..bit_end Prelude.- 1]\n"
->       . str "        bits_indexed = Prelude.zip bits [0.."
->                                        . str (show (nr_tokens - 1)) . str "]\n"
->       . str "        token_strs_expected = Prelude.concatMap f bits_indexed\n"
->       . str "        f (Prelude.False, _) = []\n"
->       . str "        f (Prelude.True, nr) = [token_strs Prelude.!! nr]\n"
->       . str "\n"
->       where (first_token, last_token) = bounds token_names'
->             nr_tokens = last_token - first_token + 1
+>    produceTokToStringList
+>       = str "{-# NOINLINE happyTokenStrings #-}\n"
+>       . str "happyTokenStrings = " . shows (drop (fst_term - 1) (elems token_names')) . str "\n"
+>                                            -- fst_term - 1: fst_term includes eofToken, but that is last in the list.
+
 
 action array indexed by (terminal * last_state) + state
 
@@ -508,61 +513,56 @@ action array indexed by (terminal * last_state) + state
 >           . str "happyActOffsets = HappyA# \"" --"
 >           . hexChars act_offs
 >           . str "\"#\n\n" --"
->
 >           . str "happyGotoOffsets :: HappyAddr\n"
 >           . str "happyGotoOffsets = HappyA# \"" --"
 >           . hexChars goto_offs
 >           . str "\"#\n\n"  --"
->
->           . str "happyAdjustOffset :: Happy_GHC_Exts.Int# -> Happy_GHC_Exts.Int#\n"
->           . str "happyAdjustOffset off = "
->           . (if length table < 32768
->                then str "off"
->                else str "if happyLt off (" . shows min_off . str "# :: Happy_GHC_Exts.Int#)"
->                   . str " then off Happy_GHC_Exts.+# 65536#"
->                   . str " else off")
->           . str "\n\n"  --"
->
+
 >           . str "happyDefActions :: HappyAddr\n"
 >           . str "happyDefActions = HappyA# \"" --"
 >           . hexChars defaults
 >           . str "\"#\n\n" --"
->
+
 >           . str "happyCheck :: HappyAddr\n"
 >           . str "happyCheck = HappyA# \"" --"
 >           . hexChars check
 >           . str "\"#\n\n" --"
->
+
 >           . str "happyTable :: HappyAddr\n"
 >           . str "happyTable = HappyA# \"" --"
 >           . hexChars table
 >           . str "\"#\n\n" --"
 
-
->    produceExpListArray
->           = str "happyExpList :: HappyAddr\n"
->           . str "happyExpList = HappyA# \"" --"
->           . hexCharsForBits explist
->           . str "\"#\n\n" --"
-
 >    n_terminals = length terms
 >    n_nonterminals = length nonterms - n_starts -- lose %starts
->
->    (act_offs,goto_offs,table,defaults,check,explist,min_off)
+
+>    (act_offs,goto_offs,table,defaults,check,catch_states)
 >       = mkTables action goto first_nonterm' fst_term
 >               n_terminals n_nonterminals n_starts (bounds token_names')
->
+>    table_size = length table - 1
+
 >    produceReduceArray
->       = {- str "happyReduceArr :: Array Int a\n" -}
->         str "happyReduceArr = Happy_Data_Array.array ("
->               . shows (n_starts :: Int) -- omit the %start reductions
->               . str ", "
->               . shows n_rules
->               . str ") [\n"
+>       = str "happyReduceArr = Happy_Data_Array.array ("
+>              . shows (n_starts :: Int) -- omit the %start reductions
+>              . str ", "
+>              . shows n_rules
+>              . str ") [\n"
 >       . interleave' ",\n" (map reduceArrElem [n_starts..n_rules])
 >       . str "\n\t]\n\n"
 
+>    produceRuleArray -- rule number to (non-terminal number, rule length)
+>       = str "happyRuleArr :: HappyAddr\n"
+>       . str "happyRuleArr = HappyA# \"" -- "
+>       . hexChars (concatMap (\(nt,len) -> [nt,len]) ruleArrElems)
+>       . str "\"#\n\n" --"
+>
+>    ruleArrElems = map (\(Production nt toks _code _prio) -> (nt-first_nonterm',length toks)) (drop n_starts prods)
+>
 >    n_rules = length prods - 1 :: Int
+>
+>    produceCatchStates
+>       = str "happyCatchStates :: [Int]\n"
+>       . str "happyCatchStates = " . shows catch_states . str "\n\n"
 
 >    showInt i = shows i . showChar '#'
 
@@ -623,6 +623,7 @@ MonadStuff:
         happyThen    :: () => HappyIdentity a -> (a -> HappyIdentity b) -> HappyIdentity b
         happyReturn  :: () => a -> HappyIdentity a
         happyThen1   m k tks = happyThen m (\a -> k a tks)
+        happyFmap1   f m tks = happyThen (m tks) (\a -> happyReturn (f a))
         happyReturn1 = \a tks -> happyReturn a
 
   - with %monad:
@@ -630,6 +631,7 @@ MonadStuff:
         happyThen    :: CONTEXT => P a -> (a -> P b) -> P b
         happyReturn  :: CONTEXT => a -> P a
         happyThen1   m k tks = happyThen m (\a -> k a tks)
+        happyFmap1   f m tks = happyThen (m tks) (\a -> happyReturn (f a))
         happyReturn1 = \a tks -> happyReturn a
 
   - with %monad & %lexer:
@@ -637,31 +639,39 @@ MonadStuff:
         happyThen    :: CONTEXT => P a -> (a -> P b) -> P b
         happyReturn  :: CONTEXT => a -> P a
         happyThen1   = happyThen
+        happyFmap1 f m = happyThen m (\a -> happyReturn (f a))
         happyReturn1 = happyReturn
 
 
 >    produceMonadStuff =
->            str "happyThen :: " . pcont . str " => " . pty
->          . str " a -> (a -> "  . pty
->          . str " b) -> " . pty . str " b\n"
+>            str "happyThen :: " . pcont . str " => " . ptyAt (str "a")
+>          . str " -> (a -> " . ptyAt (str "b")
+>          . str ") -> " . ptyAt (str "b") . str "\n"
 >          . str "happyThen = " . brack monad_then . nl
->          . str "happyReturn :: " . pcont . str " => a -> " . pty . str " a\n"
+>          . str "happyReturn :: " . pcont . str " => a -> " . ptyAt (str "a") . str "\n"
 >          . str "happyReturn = " . brack monad_return . nl
 >          . case lexer' of
 >               Nothing ->
 >                  str "happyThen1 m k tks = (" . str monad_then
 >                . str ") m (\\a -> k a tks)\n"
->                . str "happyReturn1 :: " . pcont . str " => a -> b -> " . pty . str " a\n"
+>                . str "happyFmap1 f m tks = happyThen (m tks) (\\a -> happyReturn (f a))\n"
+>                . str "happyReturn1 :: " . pcont . str " => a -> b -> " . ptyAt (str "a") . str "\n"
 >                . str "happyReturn1 = \\a tks -> " . brack monad_return
 >                . str " a\n"
->                . str "happyError' :: " . str monad_context . str " => (["
->                . token
->                . str "], [Prelude.String]) -> "
->                . str monad_tycon
->                . str " a\n"
->                . str "happyError' = "
->                . str (if use_monad then "" else "HappyIdentity Prelude.. ")
->                . errorHandler . str "\n"
+>                . str "happyReport' :: " . pcont . str " => "
+>                . str "[" . token . str "] -> "
+>                . str "[Prelude.String] -> ("
+>                . str "[" . token . str "] -> "
+>                . ptyAt (str "a") . str ") -> "
+>                . ptyAt (str "a")
+>                . str "\n"
+>                . str "happyReport' = " . callReportError . str "\n"
+>                . str "\n"
+>                . str "happyAbort :: " . pcont . str " => "
+>                . str "[" . token . str "] -> "
+>                . ptyAt (str "a")
+>                . str "\n"
+>                . str "happyAbort = " . str abort_handler . str "\n"
 >               _ ->
 >                let
 >                  happyParseSig =
@@ -671,53 +681,80 @@ MonadStuff:
 >                  newTokenSig =
 >                        str "happyNewToken :: " . pcont . str " => " . intMaybeHash
 >                      . str " -> Happy_IntList -> HappyStk " . happyAbsSyn
->                      . str " -> " . pty . str " " . happyAbsSyn . str"\n"
+>                      . str " -> " . ptyAt happyAbsSyn . str"\n"
 >                      . str "\n"
 >                  doActionSig =
 >                        str "happyDoAction :: " . pcont . str " => " . intMaybeHash
 >                      . str " -> " . str token_type' . str " -> " . intMaybeHash
 >                      . str " -> Happy_IntList -> HappyStk " . happyAbsSyn
->                      . str " -> " . pty . str " " . happyAbsSyn . str "\n"
+>                      . str " -> " . ptyAt happyAbsSyn . str "\n"
 >                      . str "\n"
 >                  reduceArrSig =
 >                        str "happyReduceArr :: " . pcont
 >                      . str " => Happy_Data_Array.Array Prelude.Int (" . intMaybeHash
 >                      . str " -> " . str token_type' . str " -> " . intMaybeHash
 >                      . str " -> Happy_IntList -> HappyStk " . happyAbsSyn
->                      . str " -> " . pty . str " " . happyAbsSyn . str ")\n"
+>                      . str " -> " . ptyAt happyAbsSyn . str ")\n"
 >                      . str "\n"
 >                  in filterTypeSig (happyParseSig . newTokenSig . doActionSig . reduceArrSig)
 >                . str "happyThen1 :: " . pcont . str " => " . pty
 >                . str " a -> (a -> "  . pty
 >                . str " b) -> " . pty . str " b\n"
 >                . str "happyThen1 = happyThen\n"
->                . str "happyReturn1 :: " . pcont . str " => a -> " . pty . str " a\n"
+>                . str "happyFmap1 f m = happyThen m (\\a -> happyReturn (f a))\n"
+>                . str "happyReturn1 :: " . pcont . str " => a -> " . ptyAt (str "a") . str "\n"
 >                . str "happyReturn1 = happyReturn\n"
->                . str "happyError' :: " . str monad_context . str " => ("
->                                        . token . str ", [Prelude.String]) -> "
->                . str monad_tycon
->                . str " a\n"
->                . str "happyError' tk = "
->                . str (if use_monad then "" else "HappyIdentity ")
->                . errorHandler . str " tk\n"
+>                . str "happyReport' :: " . pcont . str " => "
+>                . token . str " -> "
+>                . str "[Prelude.String] -> "
+>                . ptyAt (str "a") . str " -> "
+>                . ptyAt (str "a")
+>                . str "\n"
+>                . str "happyReport' = " . callReportError . str "\n"
+>                . str "\n"
+>                . str "happyAbort :: " . pcont . str " => "
+>                . ptyAt (str "a")
+>                . str "\n"
+>                . str "happyAbort = " . str abort_handler . str "\n"
+>                . str "\n"
 
+The error handler takes up to three arguments.
 An error handler specified with %error is passed the current token
-when used with %lexer, but happyError (the old way but kept for
-compatibility) is not passed the current token. Also, the %errorhandlertype
-directive determines the API of the provided function.
+when used with %lexer as the first argument, but happyError (the old way but kept for
+compatibility) is not passed the current token.
+Furthermore, the second argument is the list of expected tokens
+in the presence of the %error.expected directive.
+The last argument is the "resumption", a continuation that tries to find
+an item on the stack taking a @catch@ terminal where parsing may resume,
+in the presence of the two-argument form of the %error directive.
 
->    errorHandler =
->       case error_handler' of
->               Just h  -> case error_sig' of
->                              ErrorHandlerTypeExpList -> str h
->                              ErrorHandlerTypeDefault -> str "(\\(tokens, _) -> " . str h . str " tokens)"
->               Nothing -> case lexer' of
->                               Nothing -> str "(\\(tokens, _) -> happyError tokens)"
->                               Just _  -> str "(\\(tokens, explist) -> happyError)"
+>    callReportError = -- this one wraps around report_error_handler to expose a unified interface
+>       str "(\\tokens expected resume -> " .
+>       (if use_monad then str ""
+>                     else str "HappyIdentity Prelude.$ ") .
+>       report_error_handler .
+>       (case (error_handler', lexer') of (DefaultErrorHandler, Just _) -> id
+>                                         _                             -> str " tokens") .
+>       (if error_expected' then str " expected"
+>                           else id) .
+>       (case error_handler' of ResumptiveErrorHandler{} -> str " resume"
+>                               _                        -> id) .
+>       str ")"
+>    report_error_handler = case error_handler' of
+>       DefaultErrorHandler                  -> str "happyError"
+>       CustomErrorHandler h                 -> brack h
+>       ResumptiveErrorHandler _abort report -> brack report
+>    abort_handler = case error_handler' of
+>       ResumptiveErrorHandler abort _report -> abort
+>       _                                    -> "error \"Called abort handler in non-resumptive parser\""
 
 >    reduceArrElem n
 >      = str "\t(" . shows n . str " , "
 >      . str "happyReduce_" . shows n . char ')'
+>
+>    showRuleArrElem r (nt, len)
+>      = str "\t(" . shows r . str " , ("
+>      . shows nt . str "," . shows len . str ") )"
 
 -----------------------------------------------------------------------------
 -- Produce the parser entry and exit points
@@ -758,9 +795,9 @@ directive determines the API of the provided function.
 >             (True,Nothing) -> \(name,_,_,_) -> monadAE name
 >             (False,Just _) -> error "attribute grammars not supported for non-monadic parsers with %lexer"
 >             (False,Nothing)-> \(name,_,_,_) -> regularAE name
->
+
 >       defaultAttr = fst (head attributes')
->
+
 >       monadAndLexerAE name
 >         = str name . str " = "
 >         . str "do { "
@@ -828,20 +865,20 @@ See notes under "Action Tables" above for some subtleties in this function.
 > getDefault actions =
 >   -- pick out the action for the error token, if any
 >   case [ act | (e, act) <- actions, e == errorTok ] of
->
+
 >       -- use error reduction as the default action, if there is one.
 >       act@(LR'Reduce _ _) : _                 -> act
 >       act@(LR'Multiple _ (LR'Reduce _ _)) : _ -> act
->
+
 >       -- if the error token is shifted or otherwise, don't generate
 >       --  a default action.  This is *important*!
 >       (act : _) | act /= LR'Fail -> LR'Fail
->
+
 >       -- no error actions, pick a reduce to be the default.
 >       _      -> case reduces of
 >                     [] -> LR'Fail
 >                     (act:_) -> act    -- pick the first one we see for now
->
+
 >   where reduces
 >           =  [ act | (_, act@(LR'Reduce _ _)) <- actions ]
 >           ++ [ act | (_, LR'Multiple _ act@(LR'Reduce _ _)) <- actions ]
@@ -891,6 +928,10 @@ See notes under "Action Tables" above for some subtleties in this function.
 -- try to fit the actions into the check table, using the ordering
 -- from above.
 
+SG: If you want to know more about similar compression schemes, consult
+      Storing a Sparse Table (https://dl.acm.org/doi/10.1145/359168.359175)
+One can think of the mapping @\(state,token) -> (offs ! state)+token@ as a hash
+and @check@ as the way to detect "collisions" (i.e., default entries).
 
 > mkTables
 >        :: ActionTable -> GotoTable -> Name -> Int -> Int -> Int -> Int -> (Int, Int) ->
@@ -899,34 +940,31 @@ See notes under "Action Tables" above for some subtleties in this function.
 >        , [Int]         -- happyTable
 >        , [Int]         -- happyDefAction
 >        , [Int]         -- happyCheck
->        , [Int]         -- happyExpList
->        , Int           -- happyMinOffset
+>        , [Int]         -- happyCatchStates
 >        )
->
+
 > mkTables action goto first_nonterm' fst_term
 >               n_terminals n_nonterminals n_starts
 >               token_names_bound
->
+
 >  = ( elems act_offs
 >    , elems goto_offs
 >    , take max_off (elems table)
 >    , def_actions
 >    , take max_off (elems check)
->    , elems explist
->    , min_off
+>    , shifted_catch_states
 >    )
 >  where
->
->        (table,check,act_offs,goto_offs,explist,min_off,max_off)
+>        (table,check,act_offs,goto_offs,max_off)
 >                = runST (genTables (length actions)
 >                         max_token token_names_bound
->                         sorted_actions explist_actions)
+>                         sorted_actions)
 >
 >        -- the maximum token number used in the parser
 >        max_token = max n_terminals (n_starts+n_nonterminals) - 1
->
+
 >        def_actions = map (\(_,_,def,_,_,_) -> def) actions
->
+
 >        actions :: [TableEntry]
 >        actions =
 >                [ (ActionEntry,
@@ -937,30 +975,31 @@ See notes under "Action Tables" above for some subtleties in this function.
 >                   length acts'',
 >                   acts'')
 >                | (state, acts) <- assocs action,
->                  let (err:_dummy:vec) = assocs acts
+>                  let (err:catch:_dummy:vec) = assocs acts
 >                      vec' = drop (n_starts+n_nonterminals) vec
->                      acts' = filter notFail (err:vec')
+>                      acts' = filter notFail (err:catch:vec')
 >                      default_act = getDefault acts'
 >                      acts'' = mkActVals acts' default_act
 >                ]
 >
->        explist_actions :: [(Int, [Int])]
->        explist_actions = [ (state, concatMap f $ assocs acts)
->                          | (state, acts) <- assocs action ]
->                          where
->                            f (t, LR'Shift _ _ ) = [t - fst token_names_bound]
->                            f (_, _) = []
+>        shifted_catch_states :: [Int]
+>        shifted_catch_states = -- collect the states in which we have just shifted a catchTok
+>          nub [ to_state | (_from_state, acts) <- assocs action
+>                         , let (_err:catch:_) = assocs acts
+>                         , (_tok, LR'Shift to_state _) <- return catch ]
 >
->        -- adjust terminals by -(fst_term+1), so they start at 1 (error is 0).
+
+>        -- adjust terminals by -(fst_term+2), so they start at 2 (error is 0, catch is 1).
 >        --  (see ARRAY_NOTES)
 >        adjust token | token == errorTok = 0
->                     | otherwise         = token - fst_term + 1
->
+>                     | token == catchTok = 1
+>                     | otherwise         = token - fst_term + 2
+
 >        mkActVals assocs' default_act =
 >                [ (adjust token, actionVal act)
 >                | (token, act) <- assocs'
 >                , act /= default_act ]
->
+
 >        gotos :: [TableEntry]
 >        gotos = [ (GotoEntry,
 >                   state, 0,
@@ -972,12 +1011,12 @@ See notes under "Action Tables" above for some subtleties in this function.
 >                | (state, goto_arr) <- assocs goto,
 >                let goto_vals = mkGotoVals (assocs goto_arr)
 >                ]
->
+
 >        -- adjust nonterminals by -first_nonterm', so they start at zero
 >        --  (see ARRAY_NOTES)
 >        mkGotoVals assocs' =
 >                [ (token - first_nonterm', i) | (token, Goto i) <- assocs' ]
->
+
 >        sorted_actions = sortBy (flip cmp_state) (actions ++ gotos)
 >        cmp_state (_,_,_,width1,tally1,_) (_,_,_,width2,tally2,_)
 >                | width1 < width2  = LT
@@ -998,34 +1037,29 @@ See notes under "Action Tables" above for some subtleties in this function.
 >        -> Int                         -- maximum token no.
 >        -> (Int, Int)                  -- token names bounds
 >        -> [TableEntry]                -- entries for the table
->        -> [(Int, [Int])]              -- expected tokens lists
 >        -> ST s ( UArray Int Int       -- table
 >                , UArray Int Int       -- check
 >                , UArray Int Int       -- action offsets
 >                , UArray Int Int       -- goto offsets
->                , UArray Int Int       -- expected tokens list
->                , Int                  -- lowest offset in table
 >                , Int                  -- highest offset in table
 >                )
->
-> genTables n_actions max_token token_names_bound entries explist = do
->
+
+> genTables n_actions max_token token_names_bound entries = do
+
 >   table      <- newArray (0, mAX_TABLE_SIZE) 0
 >   check      <- newArray (0, mAX_TABLE_SIZE) (-1)
 >   act_offs   <- newArray (0, n_actions) 0
 >   goto_offs  <- newArray (0, n_actions) 0
 >   off_arr    <- newArray (-max_token, mAX_TABLE_SIZE) 0
->   exp_array  <- newArray (0, (n_actions * n_token_names + 31) `div` 32) 0 -- 32 bits per entry
 >
->   (min_off,max_off) <- genTables' table check act_offs goto_offs off_arr exp_array entries
->                          explist max_token n_token_names
+>   max_off    <- genTables' table check act_offs goto_offs off_arr entries
+>                            max_token n_token_names
 >
 >   table'     <- freeze table
 >   check'     <- freeze check
 >   act_offs'  <- freeze act_offs
 >   goto_offs' <- freeze goto_offs
->   exp_array' <- freeze exp_array
->   return (table',check',act_offs',goto_offs',exp_array',min_off,max_off+1)
+>   return (table',check',act_offs',goto_offs',max_off+1)
 
 >   where
 >        n_states = n_actions - 1
@@ -1040,34 +1074,23 @@ See notes under "Action Tables" above for some subtleties in this function.
 >        -> STUArray s Int Int          -- action offsets
 >        -> STUArray s Int Int          -- goto offsets
 >        -> STUArray s Int Int          -- offset array
->        -> STUArray s Int Int          -- expected token list
 >        -> [TableEntry]                -- entries for the table
->        -> [(Int, [Int])]              -- expected tokens lists
 >        -> Int                         -- maximum token no.
 >        -> Int                         -- number of token names
->        -> ST s (Int,Int)              -- lowest and highest offsets in table
+>        -> ST s Int                    -- highest offsets in table
 >
-> genTables' table check act_offs goto_offs off_arr exp_array entries
->            explist max_token n_token_names
->       = fill_exp_array >> fit_all entries 0 0 1
+> genTables' table check act_offs goto_offs off_arr entries
+>            max_token n_token_names
+>       = fit_all entries 0 1
 >   where
 >
->        fit_all [] min_off max_off _ = return (min_off, max_off)
->        fit_all (s:ss) min_off max_off fst_zero = do
->          (off, new_min_off, new_max_off, new_fst_zero) <- fit s min_off max_off fst_zero
+>        fit_all [] max_off _ = return max_off
+>        fit_all (s:ss) max_off fst_zero = do
+>          (off, new_max_off, new_fst_zero) <- fit s max_off fst_zero
 >          ss' <- same_states s ss off
 >          writeArray off_arr off 1
->          fit_all ss' new_min_off new_max_off new_fst_zero
->
->        fill_exp_array =
->          forM_ explist $ \(state, tokens) ->
->            forM_ tokens $ \token -> do
->              let bit_nr = state * n_token_names + token
->              let word_nr = bit_nr `div` 32
->              let word_offset = bit_nr `mod` 32
->              x <- readArray exp_array word_nr
->              writeArray exp_array word_nr (setBit x word_offset)
->
+>          fit_all ss' new_max_off new_fst_zero
+
 >        -- try to merge identical states.  We only try the next state(s)
 >        -- in the list, but the list is kind-of sorted so we shouldn't
 >        -- miss too many.
@@ -1076,34 +1099,31 @@ See notes under "Action Tables" above for some subtleties in this function.
 >          | acts == acts' = do writeArray (which_off e) no off
 >                               same_states s ss' off
 >          | otherwise = return ss
->
+
 >        which_off ActionEntry = act_offs
 >        which_off GotoEntry   = goto_offs
->
+
 >        -- fit a vector into the table.  Return the offset of the vector,
 >        -- the maximum offset used in the table, and the offset of the first
 >        -- entry in the table (used to speed up the lookups a bit).
->        fit (_,_,_,_,_,[]) min_off max_off fst_zero = return (0,min_off,max_off,fst_zero)
->
+>        fit (_,_,_,_,_,[]) max_off fst_zero = return (0,max_off,fst_zero)
+
 >        fit (act_or_goto, state_no, _deflt, _, _, state@((t,_):_))
->           min_off max_off fst_zero = do
+>           max_off fst_zero = do
 >                -- start at offset 1 in the table: all the empty states
 >                -- (states with just a default reduction) are mapped to
 >                -- offset zero.
 >          off <- findFreeOffset (-t+fst_zero) check off_arr state
->          let new_min_off | furthest_left  < min_off = furthest_left
->                          | otherwise                = min_off
->              new_max_off | furthest_right > max_off = furthest_right
+>          let new_max_off | furthest_right > max_off = furthest_right
 >                          | otherwise                = max_off
->              furthest_left  = off
 >              furthest_right = off + max_token
->
+
 >          -- trace ("fit: state " ++ show state_no ++ ", off " ++ show off ++ ", elems " ++ show state) $ do
->
+
 >          writeArray (which_off act_or_goto) state_no off
 >          addState off table check state
 >          new_fst_zero <- findFstFreeSlot check fst_zero
->          return (off, new_min_off, new_max_off, new_fst_zero)
+>          return (off, new_max_off, new_fst_zero)
 
 When looking for a free offset in the table, we use the 'check' table
 rather than the main table.  The check table starts off with (-1) in
@@ -1119,11 +1139,11 @@ slot is free or not.
 > findFreeOffset off table off_arr state = do
 >     -- offset 0 isn't allowed
 >   if off == 0 then try_next else do
->
+
 >     -- don't use an offset we've used before
 >   b <- readArray off_arr off
 >   if b /= 0 then try_next else do
->
+
 >     -- check whether the actions for this state fit in the table
 >   ok <- fits off state table
 >   if not ok then try_next else return off

@@ -5,13 +5,20 @@ The CommonOptions data type.
 -----------------------------------------------------------------------------
 
 > module Happy.CodeGen.Common.Options (
->       ErrorHandlerType(..),
->       CommonOptions(..)
+>       ErrorHandlerInfo(..), CommonOptions(..)
 >       ) where
 
-> data ErrorHandlerType
->   = ErrorHandlerTypeDefault
->   | ErrorHandlerTypeExpList
+> data ErrorHandlerInfo
+>   = DefaultErrorHandler
+>   -- ^ Default handler `happyError`.
+>   | CustomErrorHandler String
+>   -- ^ Call this handler on error.
+>   | ResumptiveErrorHandler String {- abort -} String {- addMessage -}
+>   -- ^ `ResumptiveErrorHandler abort reportError`:
+>   --   Calls non-fatal `reportError ... resume` with resumption `resume` to
+>   --   get more errors, ultimately failing with `abort` when parse can't be
+>   --   resumed.
+>
 
 > data CommonOptions
 >       = CommonOptions {
@@ -20,6 +27,8 @@ The CommonOptions data type.
 >               monad             :: (Bool,String,String,String,String),
 >               expect            :: Maybe Int,
 >               lexer             :: Maybe (String,String),
->               error_handler     :: Maybe String,
->               error_sig         :: ErrorHandlerType
+>               error_handler     :: ErrorHandlerInfo,
+>               error_expected    :: Bool
+>                 -- ^ Error handler expects a `[String]` as arg after current
+>                 -- token carrying the pretty-printed expected tokens.
 >       }
