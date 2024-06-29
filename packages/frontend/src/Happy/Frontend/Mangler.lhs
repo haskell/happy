@@ -12,7 +12,11 @@ Mangler converts AbsSyn to Grammar
 > import Happy.Grammar
 > import Happy.Frontend.AbsSyn
 > import Happy.Frontend.Mangler.Monad
+
+This is only supported in the bootstrapped version
+#ifdef HAPPY_BOOTSTRAP
 > import Happy.Frontend.AttrGrammar.Mangler
+#endif
 
 > import Happy.Frontend.ParamRules
 
@@ -65,25 +69,32 @@ This bit is a real mess, mainly because of the error message support.
 >       starts'     = case getParserNames dirs of
 >                       [] -> [TokenName "happyParse" Nothing False]
 >                       ns -> ns
+>       error_resumptive | ResumptiveErrorHandler{} <- getError dirs = True
+>                        | otherwise                                 = False
 >
+
 >       start_strs  = [ startName++'_':p  | (TokenName p _ _) <- starts' ]
 
 Build up a mapping from name values to strings.
 
 >       name_env = (errorTok, errorName) :
+>                  (catchTok, catchName) :
 >                  (dummyTok, dummyName) :
 >                  zip start_names    start_strs ++
 >                  zip nonterm_names  nonterm_strs ++
 >                  zip terminal_names terminal_strs
 
 >       lookupName :: String -> [Name]
->       lookupName n = [ t | (t,r) <- name_env, r == n ]
+>       lookupName n = [ t | (t,r) <- name_env, r == n
+>                          , t /= catchTok || error_resumptive ]
+>                            -- hide catchName unless %errorresumptive is active
+>                            -- issue93.y uses catch as a nonterminal, we should not steal it
 
 >       mapToName str' =
 >             case lookupName str' of
 >                [a]   -> return a
 >                []    -> do addErr ("unknown identifier '" ++ str' ++ "'")
->                            return errorTok
+>                            return errorTok -- SG: What a confusing use of errorTok.. Use dummyTok?
 >                (a:_) -> do addErr ("multiple use of '" ++ str' ++ "'")
 >                            return a
 
@@ -106,7 +117,7 @@ Start symbols...
 Deal with priorities...
 
 >       priodir = zip [1..] (getPrios dirs)
->
+
 >       mkPrio :: Int -> Directive a -> Priority
 >       mkPrio i (TokenNonassoc _) = Prio None i
 >       mkPrio i (TokenRight _) = Prio RightAssoc i
@@ -129,13 +140,13 @@ Translate the rules from string to name-based.
 >       convNT (Rule1 nt prods ty)
 >         = do nt' <- mapToName nt
 >              return (nt', prods, ty)
->
+
 >       attrs = getAttributes dirs
 >       attrType = fromMaybe "HappyAttrs" (getAttributetype dirs)
->
+
 >       transRule (nt, prods, _ty)
 >         = mapM (finishRule nt) prods
->
+
 >       finishRule :: Name -> Prod1 -> Writer [ErrMsg] Production
 >       finishRule nt (Prod1 lhs code line prec)
 >         = mapWriter (\(a,e) -> (a, map (addLine line) e)) $ do
@@ -145,7 +156,7 @@ Translate the rules from string to name-based.
 >               Left s  -> do addErr ("Undeclared precedence token: " ++ s)
 >                             return (Production nt lhs' code' No)
 >               Right p -> return (Production nt lhs' code' p)
->
+
 >       mkPrec :: [Name] -> Prec -> Either String Priority
 >       mkPrec lhs PrecNone =
 >         case filter (flip elem terminal_names) lhs of
@@ -157,9 +168,9 @@ Translate the rules from string to name-based.
 >         case lookup s prioByString of
 >                           Nothing -> Left s
 >                           Just p -> Right p
->
+
 >       mkPrec _ PrecShift = Right PrioLowest
->
+
 >   -- in
 
 >   rules1 <- mapM convNT rules
@@ -168,7 +179,7 @@ Translate the rules from string to name-based.
 >   let
 >       type_env = [(nt, t) | Rule1 nt _ (Just (t,[])) <- rules] ++
 >                  [(nt, getTokenType dirs) | nt <- terminal_strs] -- XXX: Doesn't handle $$ type!
->
+
 >       fixType (ty,s) = go "" ty
 >         where go acc [] = return (reverse acc)
 >               go acc (c:r) | isLower c = -- look for a run of alphanumerics starting with a lower case letter
@@ -182,14 +193,14 @@ Translate the rules from string to name-based.
 >                                            go1 (c:cs)
 >                                          Just t -> go1 $ "(" ++ t ++ ")"
 >                            | otherwise = go (c:acc) r
->
+
 >       convType (nm, t)
 >         = do t' <- fixType t
 >              return (nm, t')
->
+
 >   -- in
 >   tys <- mapM convType [ (nm, t) | (nm, _, Just t) <- rules1 ]
->
+
 
 >   let
 >       type_array :: Array Int (Maybe String)
@@ -215,7 +226,7 @@ Get the token specs in terms of Names.
 >      lookup_prods :: Name -> [Int]
 >      lookup_prods x | x >= firstStartTok && x < first_t = arr ! x
 >      lookup_prods _ = error "lookup_prods"
->
+
 >      productions' = start_prods ++ concat rules2
 >      prod_array  = listArray (0,length productions' - 1) productions'
 >   -- in
@@ -225,7 +236,7 @@ Get the token specs in terms of Names.
 >               lookupProdNo      = (prod_array !),
 >               lookupProdsOfName = lookup_prods,
 >               token_specs       = tokspec,
->               terminals         = errorTok : terminal_names,
+>               terminals         = errorTok : catchTok : terminal_names,
 >               non_terminals     = start_names ++ nonterm_names,
 >                                       -- INCLUDES the %start tokens
 >               starts            = zip4 parser_names start_names start_toks
@@ -244,7 +255,7 @@ Get the token specs in terms of Names.
 >               monad             = getMonad dirs,
 >               lexer             = getLexer dirs,
 >               error_handler     = getError dirs,
->               error_sig         = getErrorHandlerType dirs,
+>               error_expected    = getErrorHandlerExpectedList dirs,
 >               token_type        = getTokenType dirs,
 >               expect            = getExpect dirs
 >       })
@@ -258,7 +269,7 @@ Gofer-like stuff:
 >       combine [] = []
 >       combine ((a,b):(c,d):r) | a == c = combine ((a,b++d) : r)
 >       combine (a:r) = a : combine r
->
+
 
 For combining actions with possible error messages.
 
@@ -287,7 +298,13 @@ So is this.
 
 > checkCode :: Int -> [Name] -> [Name] -> String -> [(String,String)] -> M (String,[Int])
 > checkCode arity _   _             code []    = doCheckCode arity code
+#ifdef HAPPY_BOOTSTRAP
 > checkCode arity lhs nonterm_names code attrs = rewriteAttributeGrammar arity lhs nonterm_names code attrs
+#else
+> checkCode arity _   _             code (_:_) = do
+>   addErr "Attribute grammars are not supported in non-bootstrapped build"
+>   doCheckCode arity code
+#endif
 
 -----------------------------------------------------------------------------
 -- Check for every $i that i is <= the arity of the rule.
@@ -300,7 +317,7 @@ So is this.
 >   where go code acc used =
 >           case code of
 >               [] -> return (reverse acc, used)
->
+
 >               '"'  :r    -> case reads code :: [(String,String)] of
 >                                []       -> go r ('"':acc) used
 >                                (s,r'):_ -> go r' (reverse (show s) ++ acc) used
@@ -309,13 +326,13 @@ So is this.
 >                                []       -> go r  ('\'':acc) used
 >                                (c,r'):_ -> go r' (reverse (show c) ++ acc) used
 >               '\\':'$':r -> go r ('$':acc) used
->
+
 >               '$':'>':r -- the "rightmost token"
 >                       | arity == 0 -> do addErr "$> in empty rule"
 >                                          go r acc used
 >                       | otherwise  -> go r (reverse (mkHappyVar arity) ++ acc)
 >                                        (arity : used)
->
+
 >               '$':r@(i:_) | isDigit i ->
 >                       case reads r :: [(Int,String)] of
 >                         (j,r'):_ ->

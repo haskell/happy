@@ -19,14 +19,16 @@ magicFilter magicName = case magicName of
       in filter_output
 
 importsToInject :: Bool -> String
-importsToInject debug = concat ["\n", import_array, import_bits, import_glaexts, debug_imports, applicative_imports]
+importsToInject debug = concat ["\n", import_array, import_list, import_bits, import_glaexts, debug_imports, applicative_imports]
     where
       debug_imports  | debug     = import_debug
                      | otherwise = ""
       applicative_imports        = import_applicative
 
       import_glaexts     = "import qualified GHC.Exts as Happy_GHC_Exts\n"
+      import_ghcstack    = "import qualified GHC.Stack as Happy_GHC_Stack\n"
       import_array       = "import qualified Data.Array as Happy_Data_Array\n"
+      import_list        = "import qualified Data.List as Happy_Data_List\n"
       import_bits        = "import qualified Data.Bits as Bits\n"
       import_debug       = "import qualified System.IO as Happy_System_IO\n" ++
                            "import qualified System.IO.Unsafe as Happy_System_IO_Unsafe\n" ++

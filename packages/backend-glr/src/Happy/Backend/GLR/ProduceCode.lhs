@@ -94,7 +94,7 @@ the driver and data strs (large template).
 >        -> CommonOptions -- Happy.CodeGen.Common.Options
 >        -> (String       -- data
 >           ,String)      -- parser
->
+
 > produceGLRParser (base, lib) basename tables start header trailer (debug,options) g common_options
 >  = ( content base $ ""
 >    , lib_content lib
@@ -103,7 +103,7 @@ the driver and data strs (large template).
 >   (imps, lang_exts) = case ghcExts_opt of
 >     UseGhcExts is os -> (is, os)
 >     _                -> ("", [])
->
+
 >   defines = concat
 >      [ [ "HAPPY_DEBUG" | debug ]
 >      , [ "HAPPY_GHC"   | UseGhcExts _ _ <- return ghcExts_opt ]
@@ -251,7 +251,7 @@ Formats the tables as code.
 >        -> GhcExts             -- Use unboxed values?
 >        -> Grammar             -- Happy Grammar
 >        -> ShowS
->
+
 > mkTbls (action,goto) sem_info exts g
 >  = let gsMap = mkGSymMap g
 >        semfn_map = mk_semfn_map sem_info
@@ -303,9 +303,11 @@ It also shares identical reduction values as CAFs
 >   errorLine = name ++ " _ _ = Error"
 >   mkState (i,arr)
 >    = filter (/="") $ map (mkLine i) (assocs arr)
->
+
 >   mkLine state (symInt,action)
 >    | symInt == errorTok       -- skip error productions
+>    = ""                       -- NB see ProduceCode's handling of these
+>    | symInt == catchTok       -- skip error productions
 >    = ""                       -- NB see ProduceCode's handling of these
 >    | otherwise
 >    = case action of
@@ -356,10 +358,10 @@ Do the same with the Happy goto table.
 >   name    = "goto"
 >   errorLine = "goto _ _ = " ++ show_st exts (negate 1)
 >   mkLines = map mkState (assocs goTbl)
->
+
 >   mkState (i,arr)
 >    = unlines $ filter (/="") $ map (mkLine i) (assocs arr)
->
+
 >   mkLine state (ntInt,goto)
 >    = case goto of
 >       NoGoto  -> ""
