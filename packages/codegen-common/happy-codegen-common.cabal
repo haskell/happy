@@ -19,8 +19,9 @@ Description:
   which represents a directives as can be parsed and processed by happy.
 
 tested-with:
-        GHC == 9.8.1
-        GHC == 9.6.3
+        GHC == 9.10.1
+        GHC == 9.8.2
+        GHC == 9.6.5
         GHC == 9.4.8
         GHC == 9.2.8
         GHC == 9.0.2
@@ -30,18 +31,18 @@ tested-with:
         GHC == 8.4.4
         GHC == 8.2.2
         GHC == 8.0.2
-        GHC == 7.10.3
-        GHC == 7.8.4
-        GHC == 7.6.3
-        GHC == 7.4.2
-        GHC == 7.0.4
+--        GHC == 7.10.3
+--        GHC == 7.8.4
+--        GHC == 7.6.3
+--        GHC == 7.4.2
+--        GHC == 7.0.4
 
 library
   hs-source-dirs:      src
 
   exposed-modules:     Happy.CodeGen.Common.Options
   build-depends:       base < 5,
-                       array
+                       array < 0.6
 
   default-language:    Haskell98
   default-extensions:  CPP, MagicHash, FlexibleContexts
