@@ -30,3 +30,10 @@ deLitify = deLit where
     deLit2 ('\n':r)     = '\n' : deLit r
     deLit2 (_:r)        = deLit2 r
     deLit2 []           = []
+-- Iff happy is built with bootstrapping, attribute grammars are supported
+supportsParsingAttributeGrammars :: Bool
+#ifdef HAPPY_BOOTSTRAP
+supportsParsingAttributeGrammars = True
+#else
+supportsParsingAttributeGrammars = False
+#endif

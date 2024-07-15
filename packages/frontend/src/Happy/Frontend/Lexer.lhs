@@ -37,7 +37,6 @@ The lexer.
 >       | TokSpecId_Token       -- %token
 >       | TokSpecId_Name        -- %name
 >       | TokSpecId_Partial     -- %partial
->       | TokSpecId_ErrorHandlerType    -- %errorhandlertype
 >       | TokSpecId_Lexer       -- %lexer
 >       | TokSpecId_ImportedIdentity -- %importedidentity
 >       | TokSpecId_Monad       -- %monad
@@ -48,6 +47,7 @@ The lexer.
 >       | TokSpecId_Shift       -- %shift
 >       | TokSpecId_Expect      -- %expect
 >       | TokSpecId_Error       -- %error
+>       | TokSpecId_ErrorExpected -- %error.expected
 >       | TokSpecId_Attributetype -- %attributetype
 >       | TokSpecId_Attribute   -- %attribute
 >       | TokCodeQuote          -- stuff inside { .. }
@@ -103,42 +103,45 @@ followed by a special identifier.
 > lexPercent :: (Token -> Pfunc a) -> [Char] -> Int -> ParseResult a
 > lexPercent cont s = case s of
 >       '%':rest -> cont (TokenKW TokDoublePercent) rest
->       't':'o':'k':'e':'n':'t':'y':'p':'e':rest ->
+>       't':'o':'k':'e':'n':'t':'y':'p':'e':rest | end_of_id rest ->
 >               cont (TokenKW TokSpecId_TokenType) rest
->       't':'o':'k':'e':'n':rest ->
+>       't':'o':'k':'e':'n':rest | end_of_id rest ->
 >               cont (TokenKW TokSpecId_Token) rest
->       'n':'a':'m':'e':rest ->
+>       'n':'a':'m':'e':rest | end_of_id rest ->
 >               cont (TokenKW TokSpecId_Name) rest
->       'p':'a':'r':'t':'i':'a':'l':rest ->
+>       'p':'a':'r':'t':'i':'a':'l':rest | end_of_id rest ->
 >               cont (TokenKW TokSpecId_Partial) rest
->       'i':'m':'p':'o':'r':'t':'e':'d':'i':'d':'e':'n':'t':'i':'t':'y':rest ->
+>       'i':'m':'p':'o':'r':'t':'e':'d':'i':'d':'e':'n':'t':'i':'t':'y':rest | end_of_id rest ->
 >               cont (TokenKW TokSpecId_ImportedIdentity) rest
->       'm':'o':'n':'a':'d':rest ->
+>       'm':'o':'n':'a':'d':rest | end_of_id rest ->
 >               cont (TokenKW TokSpecId_Monad) rest
->       'l':'e':'x':'e':'r':rest ->
+>       'l':'e':'x':'e':'r':rest | end_of_id rest ->
 >               cont (TokenKW TokSpecId_Lexer) rest
->       'n':'o':'n':'a':'s':'s':'o':'c':rest ->
+>       'n':'o':'n':'a':'s':'s':'o':'c':rest | end_of_id rest ->
 >               cont (TokenKW TokSpecId_Nonassoc) rest
->       'l':'e':'f':'t':rest ->
+>       'l':'e':'f':'t':rest | end_of_id rest ->
 >               cont (TokenKW TokSpecId_Left) rest
->       'r':'i':'g':'h':'t':rest ->
+>       'r':'i':'g':'h':'t':rest | end_of_id rest ->
 >               cont (TokenKW TokSpecId_Right) rest
->       'p':'r':'e':'c':rest ->
+>       'p':'r':'e':'c':rest | end_of_id rest ->
 >               cont (TokenKW TokSpecId_Prec) rest
->       's':'h':'i':'f':'t':rest ->
+>       's':'h':'i':'f':'t':rest | end_of_id rest ->
 >               cont (TokenKW TokSpecId_Shift) rest
->       'e':'x':'p':'e':'c':'t':rest ->
+>       'e':'x':'p':'e':'c':'t':rest | end_of_id rest ->
 >               cont (TokenKW TokSpecId_Expect) rest
->       'e':'r':'r':'o':'r':'h':'a':'n':'d':'l':'e':'r':'t':'y':'p':'e':rest ->
->               cont (TokenKW TokSpecId_ErrorHandlerType) rest
->       'e':'r':'r':'o':'r':rest ->
+>       'e':'r':'r':'o':'r':'.':'e':'x':'p':'e':'c':'t':'e':'d':rest | end_of_id rest ->
+>               cont (TokenKW TokSpecId_ErrorExpected) rest
+>       'e':'r':'r':'o':'r':rest | end_of_id rest ->
 >               cont (TokenKW TokSpecId_Error) rest
->       'a':'t':'t':'r':'i':'b':'u':'t':'e':'t':'y':'p':'e':rest ->
+>       'a':'t':'t':'r':'i':'b':'u':'t':'e':'t':'y':'p':'e':rest | end_of_id rest ->
 >               cont (TokenKW TokSpecId_Attributetype) rest
->       'a':'t':'t':'r':'i':'b':'u':'t':'e':rest ->
+>       'a':'t':'t':'r':'i':'b':'u':'t':'e':rest | end_of_id rest ->
 >               cont (TokenKW TokSpecId_Attribute) rest
 >       _ -> lexError ("unrecognised directive: %" ++
 >                               takeWhile (not.isSpace) s) s
+>    where
+>       end_of_id (c:_) = not (isAlphaNum c)
+>       end_of_id []    = True
 
 > lexColon :: (Token -> Pfunc a) -> [Char] -> Int -> ParseResult a
 > lexColon cont (':':rest) = cont (TokenKW TokDoubleColon) rest
@@ -177,24 +180,24 @@ here is a bit tricky, but should work in most cases.
 >             -> ParseResult b
 > lexReadCode s n c = case s of
 >       '\n':r -> \cont l ->  lexReadCode r n ('\n':c) cont (l+1)
->
+
 >       '{' :r -> lexReadCode r (n+1) ('{':c)
->
+
 >       '}' :r
 >               | n == 0    -> \cont -> cont (TokenInfo (
 >                               cleanupCode (reverse c)) TokCodeQuote) r
 >               | otherwise -> lexReadCode r (n-1) ('}':c)
->
+
 >       '"'{-"-}:r -> lexReadString r (\ str r' ->
 >                     lexReadCode r' n ('"' : (reverse str) ++ '"' : c))
->
+
 >       a: '\'':r | isAlphaNum a -> lexReadCode r n ('\'':a:c)
->
+
 >       '\'' :r -> lexReadSingleChar r (\ str r' ->
 >                  lexReadCode r' n ((reverse str) ++ '\'' : c))
->
+
 >       ch:r -> lexReadCode r n (ch:c)
->
+
 >       [] -> \_cont -> lexError "No closing '}' in code segment" []
 
 ----------------------------------------------------------------------------
