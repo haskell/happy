@@ -1,5 +1,15 @@
+# NOTE: This assumes that a working `ghc` is on $PATH; this may not
+# necessarily be the same GHC used by `cabal` for building `happy`.
+#
+# Again, if HC has been set in the environment (e.g. by the CI), we keep this setting.
+# [2021-07-14, PR #196](https://github.com/haskell/happy/pull/196)
+#
+HC ?= ghc
+HC_OPTS=-package array -Wall -Werror
+
 # NOTE: `cabal test` will take care to build the local `happy`
 # executable and place it into $PATH for us to pick up.
+# (This is ensured by setting build-tool-depends.)
 #
 # If it doesn't look like the alex binary in $PATH comes from the
 # build tree, then we'll fall back to pointing to
@@ -11,21 +21,7 @@
 # without danger of it being "fixed" by the logic below.
 # [2021-07-14, PR #196](https://github.com/haskell/happy/pull/196)
 #
-ifndef HAPPY
-HAPPY=$(shell which happy)
-ifeq "$(filter $(dir $(shell pwd))%,$(HAPPY))" ""
-HAPPY=../dist/build/happy/happy
-endif
-endif
-
-# NOTE: This assumes that a working `ghc` is on $PATH; this may not
-# necessarily be the same GHC used by `cabal` for building `happy`.
-#
-# Again, if HC has been set in the environment (e.g. by the CI), we keep this setting.
-# [2021-07-14, PR #196](https://github.com/haskell/happy/pull/196)
-#
-HC ?= ghc
-HC_OPTS=-package array -Wall -Werror
+HAPPY ?= happy
 
 .PRECIOUS: %.n.hs %.c.hs %.o %.exe %.bin
 
@@ -78,6 +74,10 @@ HC_OPTS += -fforce-recomp
 	@echo "--> Checking $<..."
 	./$<
 
+path.run : # simply a test to output the path of the built happy executable, useful in CI
+	@echo "--> Printing happy path..."
+	which $(HAPPY)
+
 check.%.y : %.y
 	@echo "--> Checking $<..."
 	$(HAPPY) $(TEST_HAPPY_OPTS) $< 1>$*.run.stdout 2>$*.run.stderr || true
@@ -88,7 +88,7 @@ check.%.y : %.y
 %$(HS_PROG_EXT) : %.hs
 	$(HC) $(HC_OPTS) $($*_LD_OPTS) $< -o $@
 
-all :: $(CHECK_ERROR_TESTS) $(ALL_TESTS)
+all :: path.run $(CHECK_ERROR_TESTS) $(ALL_TESTS)
 
 check-todo::
 	$(HAPPY) $(TEST_HAPPY_OPTS) -d Test.ly
@@ -100,7 +100,7 @@ check-todo::
 	./happy_test
 	-rm -f ./happy_test
 
-.PHONY: clean
+.PHONY: clean all check-todo path.run
 
 clean:
 	$(RM) $(CLEAN_FILES)
