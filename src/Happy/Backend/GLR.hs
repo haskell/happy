@@ -1,6 +1,6 @@
 module Happy.Backend.GLR where
 
-import Paths_happy_backend_glr
+import Paths_happy
 
 glrBackendDataDir :: IO String
 glrBackendDataDir = getDataDir

@@ -132,27 +132,71 @@ extra-source-files:
         tests/rank2.y
         tests/shift01.y
 
+data-dir: data
+
+data-files:
+        GLR_Base.hs
+        GLR_Lib.hs
+        HappyTemplate.hs
+
 source-repository head
   type:     git
   location: https://github.com/haskell/happy.git
 
-executable happy
+library
   hs-source-dirs: src
+
+  exposed-modules:
+        Happy.Grammar
+        Happy.Frontend,
+        Happy.Frontend.AbsSyn,
+        Happy.Frontend.Mangler,
+        Happy.Frontend.PrettyGrammar
+        Happy.Tabular,
+        Happy.Tabular.First,
+        Happy.Tabular.Info,
+        Happy.Tabular.LALR,
+        Happy.Tabular.NameSet
+        Happy.Backend.LALR,
+        Happy.Backend.LALR.ProduceCode
+        Happy.Backend.GLR,
+        Happy.Backend.GLR.ProduceCode
+  build-depends:
+        base >= 4.9 && < 5,
+        array,
+        containers >= 0.4.2,
+        transformers >= 0.5.6.2,
+        mtl >= 2.2.2
+
+  default-language:    Haskell98
+  default-extensions:  CPP, MagicHash, FlexibleContexts, NamedFieldPuns
+  ghc-options: -Wall -Wno-incomplete-uni-patterns
+  other-modules:
+        Happy.Frontend.ParseMonad
+        Happy.Frontend.ParseMonad.Class
+        Happy.Frontend.Mangler.Monad
+        Happy.Frontend.Parser
+        Happy.Frontend.Lexer
+        Happy.Frontend.ParamRules
+        Happy.Frontend.AttrGrammar
+        Happy.Frontend.AttrGrammar.Parser
+        Happy.Frontend.AttrGrammar.Mangler
+        Paths_happy
+
+executable happy
+  hs-source-dirs: app
   main-is: Main.lhs
 
-  build-depends: base >= 4.9 && < 5,
-                 array,
-                 containers >= 0.4.2,
-                 mtl >= 2.2.1,
-                 happy-grammar == 2.0,
-                 happy-tabular == 2.0,
-                 happy-frontend == 2.0,
-                 happy-backend-lalr == 2.0,
-                 happy-backend-glr == 2.0
+  build-depends:
+        base >= 4.9 && < 5,
+        array,
+        containers >= 0.4.2,
+        mtl >= 2.2.1,
+        happy
 
   default-language: Haskell98
   default-extensions: CPP, MagicHash, FlexibleContexts, NamedFieldPuns
-  ghc-options: -Wall -Wno-incomplete-uni-patterns
+  ghc-options: -Wall
   other-modules:
         Paths_happy
 
