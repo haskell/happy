@@ -169,7 +169,7 @@ happyReduction_5 happy_x_3
 	 =  case happyOutTok happy_x_1 of { happy_var_1 -> 
 	case happyOut7 happy_x_3 of { (HappyWrap7 happy_var_3) -> 
 	happyIn6
-		 (SelfAssign (selfRefVal happy_var_1) happy_var_3
+		 (SelfAssign $ MkAgSelfAssign (selfRefVal happy_var_1) happy_var_3
 	)}}
 
 happyReduce_6 :: () => Happy_GHC_Exts.Int# -> AgToken -> Happy_GHC_Exts.Int# -> Happy_IntList -> HappyStk (HappyAbsSyn ) -> P (HappyAbsSyn )
@@ -180,7 +180,7 @@ happyReduction_6 happy_x_3
 	 =  case happyOutTok happy_x_1 of { happy_var_1 -> 
 	case happyOut7 happy_x_3 of { (HappyWrap7 happy_var_3) -> 
 	happyIn6
-		 (SubAssign (subRefVal happy_var_1) happy_var_3
+		 (SubAssign $ MkAgSubAssign (subRefVal happy_var_1) happy_var_3
 	)}}
 
 happyReduce_7 :: () => Happy_GHC_Exts.Int# -> AgToken -> Happy_GHC_Exts.Int# -> Happy_IntList -> HappyStk (HappyAbsSyn ) -> P (HappyAbsSyn )
@@ -200,7 +200,7 @@ happyReduction_8 happy_x_2
 	happy_x_1
 	 =  case happyOut7 happy_x_2 of { (HappyWrap7 happy_var_2) -> 
 	happyIn6
-		 (Conditional happy_var_2
+		 (Conditional $ MkAgConditional happy_var_2
 	)}
 
 happyReduce_9 :: () => Happy_GHC_Exts.Int# -> AgToken -> Happy_GHC_Exts.Int# -> Happy_IntList -> HappyStk (HappyAbsSyn ) -> P (HappyAbsSyn )

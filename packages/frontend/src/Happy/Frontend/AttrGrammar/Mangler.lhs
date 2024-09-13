@@ -6,6 +6,7 @@ manipulation and let binding goop
 (c) 1993-2001 Andy Gill, Simon Marlow
 -----------------------------------------------------------------------------
 
+> {-# LANGUAGE PatternSignatures #-}
 > module Happy.Frontend.AttrGrammar.Mangler (rewriteAttributeGrammar) where
 
 > import Happy.Grammar
@@ -20,8 +21,8 @@ manipulation and let binding goop
 
 > import Control.Monad
 
-> rewriteAttributeGrammar :: Int -> [Name] -> [Name] -> String -> [(String,String)] -> M (String,[Int])
-> rewriteAttributeGrammar arity lhs nonterm_names code attrs =
+> rewriteAttributeGrammar :: [Name] -> [Name] -> String -> [(String,String)] -> M (String,[Int])
+> rewriteAttributeGrammar lhs nonterm_names code attrs =
 
    first we need to parse the body of the code block
 
@@ -33,7 +34,10 @@ manipulation and let binding goop
    now we break the rules into three lists, one for synthesized attributes,
    one for inherited attributes, and one for conditionals
 
->            let (selfRules,subRules,conditions) = partitionRules [] [] [] rules
+>            let ( selfRules :: [AgSelfAssign]
+>                  , subRules :: [AgSubAssign]
+>                  , conditions :: [AgConditional]
+>                  ) = partitionRules [] [] [] rules
 >                attrNames = map fst attrs
 >                defaultAttr = head attrNames
 
@@ -53,20 +57,26 @@ manipulation and let binding goop
 >                  return (rulesStr,nub (allSubProductions++prods))
 
 
->    where partitionRules a b c [] = (a,b,c)
->          partitionRules a b c (RightmostAssign attr toks : xs) = partitionRules a (SubAssign (arity,attr) toks : b) c xs
->          partitionRules a b c (x@(SelfAssign _ _ )  : xs) = partitionRules (x:a) b c xs
->          partitionRules a b c (x@(SubAssign _ _)    : xs) = partitionRules a (x:b) c xs
->          partitionRules a b c (x@(Conditional _)    : xs) = partitionRules a b (x:c) xs
+>    where arity = length lhs
+
+>          partitionRules a b c [] = (a,b,c)
+>          partitionRules a b c (RightmostAssign attr toks : xs) = partitionRules
+>             a
+>             (MkAgSubAssign (arity,attr) toks : b)
+>             c
+>             xs
+>          partitionRules a b c (SelfAssign x  : xs) = partitionRules (x:a) b c xs
+>          partitionRules a b c (SubAssign x   : xs) = partitionRules a (x:b) c xs
+>          partitionRules a b c (Conditional x : xs) = partitionRules a b (x:c) xs
 
 >          allSubProductions             = map (+1) (findIndices (`elem` nonterm_names) lhs)
 
 >          mentionedProductions rules    = [ i | (AgTok_SubRef (i,_)) <- concat (map getTokens rules) ]
 
->          getTokens (SelfAssign _ toks)      = toks
->          getTokens (SubAssign _ toks)       = toks
->          getTokens (Conditional toks)       = toks
->          getTokens (RightmostAssign _ toks) = toks
+>          getTokens (SelfAssign (MkAgSelfAssign _ toks)) = toks
+>          getTokens (SubAssign (MkAgSubAssign _ toks))   = toks
+>          getTokens (Conditional (MkAgConditional toks)) = toks
+>          getTokens (RightmostAssign _ toks)             = toks
 >
 >          checkArity x = when (x > arity) $ addErr (show x++" out of range")
 
@@ -76,7 +86,7 @@ manipulation and let binding goop
 --
 
 > formatRules :: Int -> [String] -> String -> [Name]
->             -> [AgRule] -> [AgRule] -> [AgRule]
+>             -> [AgSelfAssign] -> [AgSubAssign] -> [AgConditional]
 >             -> M String
 
 > formatRules arity _attrNames defaultAttr prods selfRules subRules conditions = return $
@@ -89,9 +99,8 @@ manipulation and let binding goop
 >
 >  where formattedSelfRules = case selfRules of [] -> []; _ -> "{ "++formattedSelfRules'++" }"
 >        formattedSelfRules' = concat $ intersperse ", " $ map formatSelfRule selfRules
->        formatSelfRule (SelfAssign [] toks)   = defaultAttr++" = "++(formatTokens toks)
->        formatSelfRule (SelfAssign attr toks) = attr++" = "++(formatTokens toks)
->        formatSelfRule _ = error "formatSelfRule: Not a self rule"
+>        formatSelfRule (MkAgSelfAssign [] toks)   = defaultAttr++" = "++(formatTokens toks)
+>        formatSelfRule (MkAgSelfAssign attr toks) = attr++" = "++(formatTokens toks)
 
 >        subRulesMap :: [(Int,[(String,[AgToken])])]
 >        subRulesMap = map     (\l   -> foldr (\ (_,x) (i,xs) -> (i,x:xs))
@@ -99,7 +108,7 @@ manipulation and let binding goop
 >                                             (tail l) ) .
 >                      groupBy (\x y -> (fst x) == (fst y)) .
 >                      sortBy  (\x y -> compare (fst x) (fst y)) .
->                      map     (\(SubAssign (i,ident) toks) -> (i,(ident,toks))) $ subRules
+>                      map     (\(MkAgSubAssign (i,ident) toks) -> (i,(ident,toks))) $ subRules
 
 >        subProductionRules = concat $ map formatSubRules prods
 
@@ -114,8 +123,7 @@ manipulation and let binding goop
 >
 >        formattedConditions = concat $ intersperse " Prelude.++ " $ localConditions : (map (\i -> "happyConditions_"++(show i)) prods)
 >        localConditions = "["++(concat $ intersperse ", " $ map formatCondition conditions)++"]"
->        formatCondition (Conditional toks) = formatTokens toks
->        formatCondition _ = error "formatCondition: Not a condition"
+>        formatCondition (MkAgConditional toks) = formatTokens toks
 
 >        formatSubRule _ ([],toks)   = defaultAttr++" = "++(formatTokens toks)
 >        formatSubRule _ (attr,toks) = attr++" = "++(formatTokens toks)

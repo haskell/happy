@@ -39,10 +39,10 @@ or a conditional statement.
 >   |                                            { [] }
 
 > rule :: { AgRule }
->   : selfRef  "=" code                          { SelfAssign (selfRefVal $1) $3 }
->   | subRef   "=" code                          { SubAssign (subRefVal $1) $3 }
+>   : selfRef  "=" code                          { SelfAssign $ MkAgSelfAssign (selfRefVal $1) $3 }
+>   | subRef   "=" code                          { SubAssign $ MkAgSubAssign (subRefVal $1) $3 }
 >   | rightRef "=" code                          { RightmostAssign (rightRefVal $1) $3 }
->   | where code                                 { Conditional $2 }
+>   | where code                                 { Conditional $ MkAgConditional $2 }
 
 > code :: { [AgToken] }
 >   : "{" code0 "}" code                         { [$1] ++ $2 ++ [$3] ++ $4 }
