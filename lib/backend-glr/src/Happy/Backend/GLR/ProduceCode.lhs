@@ -17,7 +17,7 @@ This module is designed as an extension to the Haskell parser generator Happy.
 >                       , Options
 >                       ) where
 
-> import Paths_happy_backend_glr ( version )
+> import Paths_happy_lib ( version )
 > import Happy.Grammar
 > import Happy.Tabular.LALR
 > import Data.Array ( Array, (!), array, assocs )

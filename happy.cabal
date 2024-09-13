@@ -31,11 +31,6 @@ tested-with:
         GHC == 8.4.4
         GHC == 8.2.2
         GHC == 8.0.2
---        GHC == 7.10.3
---        GHC == 7.8.4
---        GHC == 7.6.3
---        GHC == 7.4.2
---        GHC == 7.0.4
 
 extra-source-files:
         ChangeLog.md
@@ -137,18 +132,14 @@ source-repository head
   location: https://github.com/haskell/happy.git
 
 executable happy
-  hs-source-dirs: src
+  hs-source-dirs: app
   main-is: Main.lhs
 
   build-depends: base >= 4.9 && < 5,
                  array,
                  containers >= 0.4.2,
                  mtl >= 2.2.1,
-                 happy-grammar == 2.0,
-                 happy-tabular == 2.0,
-                 happy-frontend == 2.0,
-                 happy-backend-lalr == 2.0,
-                 happy-backend-glr == 2.0
+                 happy-lib == 2.0
 
   default-language: Haskell98
   default-extensions: CPP, MagicHash, FlexibleContexts, NamedFieldPuns

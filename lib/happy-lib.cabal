@@ -1,0 +1,168 @@
+cabal-version: 3.0
+name: happy-lib
+version: 2.0
+license: BSD-2-Clause
+copyright: (c) Andy Gill, Simon Marlow
+author: Andy Gill and Simon Marlow
+maintainer: https://github.com/haskell/happy
+bug-reports: https://github.com/haskell/happy/issues
+stability: stable
+homepage: https://www.haskell.org/happy/
+synopsis: Happy is a parser generator for Haskell implemented using this library
+category: Development
+build-type: Simple
+
+Description:
+  Happy is a parser generator for Haskell.  Given a grammar
+  specification in BNF, Happy generates Haskell code to parse the
+  grammar.  Happy works in a similar way to the @yacc@ tool for C.
+
+  This library provides the following functionality:
+
+    * Data type definitions for the Grammar AST type, capturing the information in .y-files (Happy.Grammar)
+
+    * A parser for happy grammar files (.y) to produce a Grammar (Happy.Frontend.*)
+
+    * Implementations of the text book algorithms that compute the LR action and
+      goto tables for the given 'Grammar' (Happy.Tabular.*)
+
+    * An LALR code generator to produce table-driven, deterministic parsing code
+      in Haskell (Happy.Backend.LALR.*)
+
+    * A (less maintained) GLR code generator to produce table-driven,
+      non-deterministic parsing code in Haskell, where ambiguous parses produce
+      multiple parse trees (Happy.Backend.GLR.*)
+
+tested-with:
+        GHC == 9.10.1
+        GHC == 9.8.2
+        GHC == 9.6.5
+        GHC == 9.4.8
+        GHC == 9.2.8
+        GHC == 9.0.2
+        GHC == 8.10.7
+        GHC == 8.8.4
+        GHC == 8.6.5
+        GHC == 8.4.4
+        GHC == 8.2.2
+        GHC == 8.0.2
+
+extra-source-files:
+        ChangeLog.md
+        README.md
+        frontend/bootstrap.sh
+        frontend/boot-src/Parser.ly
+        frontend/boot-src/AttrGrammarParser.ly
+
+data-dir: data
+
+data-files:
+        HappyTemplate.hs
+        GLR_Base.hs
+        GLR_Lib.hs
+
+source-repository head
+  type:     git
+  location: https://github.com/haskell/happy.git
+
+library grammar
+  hs-source-dirs:      grammar/src
+
+  exposed-modules:     Happy.Grammar
+  build-depends:       base < 5, array
+
+  default-language:    Haskell98
+  default-extensions:  CPP, MagicHash, FlexibleContexts
+  ghc-options: -Wall
+  other-modules:
+
+library frontend
+  hs-source-dirs:      frontend/src
+  exposed-modules:     Happy.Frontend,
+                       Happy.Frontend.AbsSyn,
+                       Happy.Frontend.Mangler,
+                       Happy.Frontend.PrettyGrammar
+
+  build-depends:       base < 5, array, transformers, containers, mtl, happy-lib:grammar
+
+  default-language:    Haskell98
+  default-extensions:  CPP, MagicHash, FlexibleContexts
+  ghc-options: -Wall -Wno-incomplete-uni-patterns
+  other-modules:
+        Happy.Frontend.ParseMonad
+        Happy.Frontend.ParseMonad.Class
+        Happy.Frontend.Mangler.Monad
+        Happy.Frontend.Parser
+        Happy.Frontend.Lexer
+        Happy.Frontend.ParamRules
+        Happy.Frontend.AttrGrammar
+        Happy.Frontend.AttrGrammar.Parser
+        Happy.Frontend.AttrGrammar.Mangler
+
+library tabular
+  hs-source-dirs:      tabular/src
+
+  exposed-modules:     Happy.Tabular,
+                       Happy.Tabular.First,
+                       Happy.Tabular.Info,
+                       Happy.Tabular.LALR,
+                       Happy.Tabular.NameSet
+  build-depends:       base < 5, array, containers, happy-lib:grammar
+
+  default-language:    Haskell98
+  default-extensions:  CPP, MagicHash, FlexibleContexts, NamedFieldPuns
+  ghc-options: -Wall
+
+library backend-lalr
+  hs-source-dirs:      backend-lalr/src
+
+  exposed-modules:     Happy.Backend.LALR,
+                       Happy.Backend.LALR.ProduceCode
+  build-depends:       base < 5, array, happy-lib:grammar, happy-lib:tabular
+
+  default-language:    Haskell98
+  default-extensions:  CPP, MagicHash, FlexibleContexts
+  ghc-options:         -Wall -Wno-incomplete-uni-patterns
+  other-modules:       Paths_happy_lib
+  autogen-modules:     Paths_happy_lib
+
+library backend-glr
+  hs-source-dirs:      backend-glr/src
+
+  exposed-modules:     Happy.Backend.GLR,
+                       Happy.Backend.GLR.ProduceCode
+  build-depends:       base < 5, array, happy-lib:grammar, happy-lib:tabular
+
+  default-language:    Haskell98
+  default-extensions:  CPP, MagicHash, FlexibleContexts
+  ghc-options:         -Wall -Wno-incomplete-uni-patterns
+  other-modules:       Paths_happy_lib
+  autogen-modules:     Paths_happy_lib
+
+library
+  reexported-modules:  Happy.Grammar,
+                       Happy.Frontend,
+                       Happy.Frontend.AbsSyn,
+                       Happy.Frontend.Mangler,
+                       Happy.Frontend.PrettyGrammar,
+                       Happy.Tabular,
+                       Happy.Tabular.First,
+                       Happy.Tabular.Info,
+                       Happy.Tabular.LALR,
+                       Happy.Tabular.NameSet,
+                       Happy.Backend.LALR,
+                       Happy.Backend.LALR.ProduceCode,
+                       Happy.Backend.GLR,
+                       Happy.Backend.GLR.ProduceCode
+
+  build-depends: base >= 4.9 && < 5,
+                 array >= 0.5,
+                 containers >= 0.4.2,
+                 transformers >= 0.5.6.2,
+                 mtl >= 2.2.1,
+                 happy-lib:grammar,
+                 happy-lib:tabular,
+                 happy-lib:frontend,
+                 happy-lib:backend-lalr,
+                 happy-lib:backend-glr
+  default-language:    Haskell98
