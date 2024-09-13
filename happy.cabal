@@ -140,7 +140,7 @@ executable happy
   hs-source-dirs: src
   main-is: Main.lhs
 
-  build-depends: base < 5,
+  build-depends: base >= 4.9 && < 5,
                  array,
                  containers >= 0.4.2,
                  mtl >= 2.2.1,
@@ -164,5 +164,5 @@ test-suite tests
   build-tools: happy
   ghc-options: -threaded
 
-  build-depends: base < 5, process < 1.7
+  build-depends: base >= 4.9 && < 5, process < 1.7
   default-language: Haskell98
