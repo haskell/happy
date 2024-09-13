@@ -89,7 +89,7 @@ the driver and data strs (large template).
 >        -> Maybe String  -- Module header
 >        -> Maybe String  -- User-defined stuff (token DT, lexer etc.)
 >        -> (DebugMode,Options)       -- selecting code-gen style
->        -> Grammar       -- Happy Grammar
+>        -> Grammar String -- Happy Grammar
 >        -> Pragmas       -- Pragmas in the .y-file
 >        -> (String       -- data
 >           ,String)      -- parser
@@ -248,7 +248,7 @@ Formats the tables as code.
 >           ,GotoTable)         -- Goto table from Happy
 >        -> SemInfo             -- info about production mapping
 >        -> GhcExts             -- Use unboxed values?
->        -> Grammar             -- Happy Grammar
+>        -> Grammar String      -- Happy Grammar
 >        -> ShowS
 >
 > mkTbls (action,goto) sem_info exts g
@@ -263,7 +263,7 @@ Formats the tables as code.
 Create a mapping of Happy grammar symbol integers to the data representation
 that will be used for them in the GLR parser.
 
-> mkGSymMap :: Grammar -> [(Name,String)]
+> mkGSymMap :: Grammar String -> [(Name,String)]
 > mkGSymMap g
 >  =    [ -- (errorTok, prefix ++ "Error")
 >       ]
@@ -291,7 +291,7 @@ It also shares identical reduction values as CAFs
 
 > writeActionTbl
 >  :: ActionTable -> [(Int,String)] -> (Name->String)
->                                       -> GhcExts -> Grammar -> ShowS
+>                                       -> GhcExts -> Grammar String -> ShowS
 > writeActionTbl acTbl gsMap semfn_map exts g
 >  = interleave "\n"
 >  $ map str
@@ -372,7 +372,7 @@ Do the same with the Happy goto table.
 %-----------------------------------------------------------------------------
 Create the 'GSymbol' ADT for the symbols in the grammar
 
-> mkGSymbols :: Grammar -> Pragmas -> ShowS
+> mkGSymbols :: Grammar String -> Pragmas -> ShowS
 > mkGSymbols g pragmas
 >  = str dec
 >  . str eof
@@ -423,7 +423,7 @@ Creating a type for storing semantic rules
 > type SemInfo
 >  = [(String, String, [Int], [((Int,Int), ([(Int,String)],String), [Int])])]
 
-> mkGSemType :: Options -> Grammar -> Pragmas -> (ShowS, SemInfo)
+> mkGSemType :: Options -> Grammar String -> Pragmas -> (ShowS, SemInfo)
 > mkGSemType (TreeDecode,_,_) g pragmas
 >  = (def, map snd syms)
 >  where
@@ -702,11 +702,11 @@ Util Functions
 ---
 remove Happy-generated start symbols.
 
-> user_non_terminals :: Grammar -> [Name]
+> user_non_terminals :: Grammar String -> [Name]
 > user_non_terminals g
 >  = non_terminals g \\ start_productions g
 
-> start_productions :: Grammar -> [Name]
+> start_productions :: Grammar String -> [Name]
 > start_productions g = [ s | (_,s,_,_) <- starts g ]
 
 

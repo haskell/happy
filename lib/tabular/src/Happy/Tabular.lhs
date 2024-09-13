@@ -29,7 +29,7 @@
 
 > genTables ::
 >     SelectReductions ->     -- for computing used/unused
->     Grammar ->
+>     Grammar e ->
 >     Tables
 > genTables select_reductions g =
 >       let first       = {-# SCC "First" #-} (mkFirst g)
@@ -50,7 +50,7 @@
 Find unused rules and tokens
 
 > find_redundancies
->        :: SelectReductions -> Grammar -> ActionTable -> ([Int], [String])
+>        :: SelectReductions -> Grammar e -> ActionTable -> ([Int], [String])
 > find_redundancies extract_reductions g action_table =
 >       (unused_rules, map (env !) unused_terminals)
 >    where

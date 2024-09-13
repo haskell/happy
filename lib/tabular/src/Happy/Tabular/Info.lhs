@@ -19,7 +19,7 @@ Produce a file of parser information, useful for debugging the parser.
 
 > genInfoFile
 >       :: [Set Lr0Item]
->       -> Grammar
+>       -> Grammar e
 >       -> ActionTable
 >       -> GotoTable
 >       -> [(Int,String)]

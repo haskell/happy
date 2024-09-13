@@ -21,25 +21,25 @@ Here is the abstract syntax of the language we parse.
 > data BookendedAbsSyn
 >     = BookendedAbsSyn
 >         (Maybe String)       -- header
->         AbsSyn
+>         (AbsSyn String)
 >         (Maybe String)       -- footer
 
-> data AbsSyn
+> data AbsSyn e
 >     = AbsSyn
 >         [Directive String]   -- directives
->         [Rule]               -- productions
+>         [Rule e]             -- productions
 
-> data Rule
+> data Rule e
 >     = Rule
 >         String               -- name of the rule
 >         [String]             -- parameters (see parametrized productions)
->         [Prod]               -- productions
+>         [Prod e]             -- productions
 >         (Maybe String)       -- type of the rule
 
-> data Prod
+> data Prod e
 >     = Prod
 >         [Term]               -- terms that make up the rule
->         String               -- code body that runs when the rule reduces
+>         e                    -- code body that runs when the rule reduces
 >         Int                  -- line number
 >         Prec                 -- inline precedence annotation for the rule
 

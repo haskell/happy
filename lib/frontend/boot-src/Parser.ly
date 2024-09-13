@@ -55,14 +55,14 @@ The parser.
 > parser :: { BookendedAbsSyn }
 >       : optCode core_parser optCode   { BookendedAbsSyn $1 $2 $3 }
 
-> core_parser :: { AbsSyn }
+> core_parser :: { AbsSyn String }
 >       : tokInfos "%%" rules           { AbsSyn (reverse $1) (reverse $3) }
 
-> rules :: { [Rule] }
+> rules :: { [Rule String] }
 >       : rules rule    { $2 : $1 }
 >       | rule          { [$1] }
 
-> rule :: { Rule }
+> rule :: { Rule String }
 >       : id params "::" code ":" prods         { Rule $1 $2 $6 (Just $4) }
 >       | id params "::" code id ":" prods      { Rule $1 $2 $7 (Just $4) }
 >       | id params ":" prods                   { Rule $1 $2 $4 Nothing }
@@ -75,11 +75,11 @@ The parser.
 >       : id                            { [$1] }
 >       | comma_ids "," id              { $3 : $1 }
 
-> prods :: { [Prod] }
+> prods :: { [Prod String] }
 >       : prod "|" prods                { $1 : $3 }
 >       | prod                          { [$1] }
 
-> prod :: { Prod }
+> prod :: { Prod String }
 >       : terms prec code ";"           {% lineP >>= \l -> return (Prod $1 $3 l $2) }
 >       | terms prec code               {% lineP >>= \l -> return (Prod $1 $3 l $2) }
 

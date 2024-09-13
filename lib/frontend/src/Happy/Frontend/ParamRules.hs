@@ -13,7 +13,7 @@ import qualified Data.Map as M    -- XXX: Make it work with old GHC.
 -- This transformation is fairly straightforward: we walk through every rule
 -- and collect every possible instantiation of parameterized productions. Then,
 -- we generate a new non-parametrized rule for each of these.
-expand_rules :: [Rule] -> Either String [Rule1]
+expand_rules :: [Rule e] -> Either String [Rule1 e]
 expand_rules rs = do let (funs,rs1) = split_rules rs
                      (as,is) <- runM2 (mapM (`inst_rule` []) rs1)
                      bs <- make_insts funs (S.toList is) S.empty
@@ -22,13 +22,13 @@ expand_rules rs = do let (funs,rs1) = split_rules rs
 type RuleName = String
 
 data Inst     = Inst RuleName [RuleName] deriving (Eq, Ord)
-newtype Funs  = Funs (M.Map RuleName Rule)
+newtype Funs e = Funs (M.Map RuleName (Rule e))
 
 -- | Similar to 'Rule', but `Term`'s have been flattened into `RuleName`'s
-data Rule1    = Rule1 RuleName [Prod1] (Maybe (String, Subst))
+data Rule1 e  = Rule1 RuleName [Prod1 e] (Maybe (String, Subst))
 
 -- | Similar to 'Prod', but `Term`'s have been flattened into `RuleName`'s
-data Prod1    = Prod1 [RuleName] String Int Prec
+data Prod1 e  = Prod1 [RuleName] e Int Prec
 
 inst_name :: Inst -> RuleName
 inst_name (Inst f [])  = f
@@ -57,11 +57,11 @@ from_terms :: Subst -> [Term] -> M1 [RuleName]
 from_terms s ts = mapM (from_term s) ts
 
 -- XXX: perhaps change the line to the line of the instance
-inst_prod :: Subst -> Prod -> M1 Prod1
+inst_prod :: Subst -> Prod e -> M1 (Prod1 e)
 inst_prod s (Prod ts c l p)  = do xs <- from_terms s ts
                                   return (Prod1 xs c l p)
 
-inst_rule :: Rule -> [RuleName] -> M2 Rule1
+inst_rule :: Rule e -> [RuleName] -> M2 (Rule1 e)
 inst_rule (Rule x xs ps t) ts  = do s <- build xs ts []
                                     ps1 <- lift $ mapM (inst_prod s) ps
                                     let y = inst_name (Inst x ts)
@@ -73,7 +73,7 @@ inst_rule (Rule x xs ps t) ts  = do s <- build xs ts []
 
         err m = throwError ("In " ++ inst_name (Inst x ts) ++ ": " ++ m)
 
-make_rule :: Funs -> Inst -> M2 Rule1
+make_rule :: Funs e -> Inst -> M2 (Rule1 e)
 make_rule (Funs funs) (Inst f xs) =
   case M.lookup f funs of
     Just r  -> inst_rule r xs
@@ -84,7 +84,7 @@ runM2 m = case runWriter (runExceptT m) of
             (Left e,_)   -> Left e
             (Right a,xs) -> Right (a,xs)
 
-make_insts :: Funs -> [Inst] -> S.Set Inst -> Either String [Rule1]
+make_insts :: Funs e -> [Inst] -> S.Set Inst -> Either String [Rule1 e]
 make_insts _ [] _ = return []
 make_insts funs is done =
   do (as,ws) <- runM2 (mapM (make_rule funs) is)
@@ -94,7 +94,7 @@ make_insts funs is done =
      return (as++bs)
 
 
-split_rules :: [Rule] -> (Funs,[Rule])
+split_rules :: [Rule e] -> (Funs e,[Rule e])
 split_rules rs = let (xs,ys) = partition has_args rs
                  in (Funs (M.fromList [ (x,r) | r@(Rule x _ _ _) <- xs ]),ys)
   where has_args (Rule _ args _ _) = not (null args)
