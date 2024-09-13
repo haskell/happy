@@ -33,7 +33,7 @@ This will never terminate.
 
 \subsection{Implementation of FIRST}
 
-> mkFirst :: Grammar -> [Name] -> NameSet
+> mkFirst :: Grammar e -> [Name] -> NameSet
 > mkFirst (Grammar { first_term = fst_term
 >                  , lookupProdNo = prodNo
 >                  , lookupProdsOfName = prodsOfName
@@ -44,7 +44,7 @@ This will never terminate.
 >       env = mkClosure (==) (getNext fst_term prodNo prodsOfName)
 >               [ (name,Set.empty) | name <- nts ]
 
-> getNext :: Name -> (a -> Production) -> (Name -> [a])
+> getNext :: Name -> (a -> Production e) -> (Name -> [a])
 >         -> [(Name, IntSet)] -> [(Name, NameSet)]
 > getNext fst_term prodNo prodsOfName env =
 >               [ (nm, next nm) | (nm,_) <- env ]

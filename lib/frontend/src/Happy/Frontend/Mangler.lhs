@@ -6,6 +6,8 @@ The Grammar data type.
 
 Mangler converts AbsSyn to Grammar
 
+> {-# LANGUAGE ScopedTypeVariables #-}
+
 > module Happy.Frontend.Mangler (mangler) where
 
 > import Happy.Grammar
@@ -27,17 +29,17 @@ Mangler converts AbsSyn to Grammar
 
 This bit is a real mess, mainly because of the error message support.
 
-> mangler :: FilePath -> AbsSyn -> Either [ErrMsg] (Grammar, Maybe AttributeGrammarExtras, Pragmas)
+> mangler :: FilePath -> AbsSyn String -> Either [ErrMsg] (Grammar String, Maybe AttributeGrammarExtras, Pragmas)
 > mangler file abssyn@(AbsSyn dirs _)
 >   | null errs = Right (gd, mAg, ps)
 >   | otherwise = Left errs
 >   where mAg = getAttributeGrammarExtras dirs
->         ((gd, ps), errs) = runWriter (manglerM checkCode file abssyn)
+>         ((gd, ps), errs) = runWriter (manglerM "no code" checkCode file abssyn)
 
 If any attribute directives were used, we are in an attribute grammar, so
 go do special processing.  If not, pass on to the regular processing routine
 
->         checkCode :: CodeChecker
+>         checkCode :: CodeChecker String
 >         checkCode = case mAg of
 >             Nothing -> \lhs _             code ->
 >                 doCheckCode (length lhs) code
@@ -45,14 +47,17 @@ go do special processing.  If not, pass on to the regular processing routine
 >                 rewriteAttributeGrammar lhs nonterm_names code a
 
 > -- | Function to check elimination rules
-> type CodeChecker = [Name] -> [Name] -> String -> M (String,[Int])
+> type CodeChecker e = [Name] -> [Name] -> e -> M (e, [Int])
 
 > manglerM
->   :: CodeChecker
+>   :: forall e
+>   .  e
+>   -- ^ Empty elimination rule, used for starting productions. Will never be run.
+>   -> CodeChecker e
 >   -> FilePath
->   -> AbsSyn
->   -> M (Grammar, Pragmas)
-> manglerM checkCode file (AbsSyn dirs rules') =
+>   -> AbsSyn e
+>   -> M (Grammar e, Pragmas)
+> manglerM noCode checkCode file (AbsSyn dirs rules') =
 >   -- add filename to all error messages
 >   mapWriter (\(a,e) -> (a, map (\s -> file ++ ": " ++ s) e)) $ do
 
@@ -116,7 +121,7 @@ Start symbols...
 >   let
 >       parser_names   = [ s | TokenName s _ _ <- starts' ]
 >       start_partials = [ b | TokenName _ _ b <- starts' ]
->       start_prods = zipWith (\nm tok -> Production nm [tok] ("no code",[]) No)
+>       start_prods = zipWith (\nm tok -> Production nm [tok] (noCode,[]) No)
 >                        start_names start_toks
 
 Deal with priorities...
@@ -149,7 +154,7 @@ Translate the rules from string to name-based.
 >       transRule (nt, prods, _ty)
 >         = mapM (finishRule nt) prods
 >
->       finishRule :: Name -> Prod1 -> Writer [ErrMsg] Production
+>       finishRule :: Name -> Prod1 e -> Writer [ErrMsg] (Production e)
 >       finishRule nt (Prod1 lhs code line prec)
 >         = mapWriter (\(a,e) -> (a, map (addLine line) e)) $ do
 >           lhs' <- mapM mapToName lhs

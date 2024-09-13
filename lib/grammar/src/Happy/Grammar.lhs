@@ -24,14 +24,14 @@ The Grammar data type.
 > import Data.Char (isAlphaNum)
 > type Name = Int
 
-> data Production
->       = Production Name [Name] (String,[Int]) Priority
+> data Production eliminator
+>       = Production Name [Name] (eliminator,[Int]) Priority
 >       deriving Show
 
-> data Grammar
+> data Grammar eliminator
 >       = Grammar {
->               productions       :: [Production],
->               lookupProdNo      :: Int -> Production,
+>               productions       :: [Production eliminator],
+>               lookupProdNo      :: Int -> Production eliminator,
 >               lookupProdsOfName :: Name -> [Int],
 >               token_specs       :: [(Name,String)],
 >               terminals         :: [Name],
@@ -51,7 +51,7 @@ The Grammar data type.
 >               attributetype     :: String
 >       }
 
-> instance Show Grammar where
+> instance Show eliminator => Show (Grammar eliminator) where
 >       showsPrec _ (Grammar
 >               { productions           = p
 >               , token_specs           = t

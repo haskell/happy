@@ -28,7 +28,7 @@ The code generator.
 %-----------------------------------------------------------------------------
 Produce the complete output file.
 
-> produceParser :: Grammar                      -- grammar info
+> produceParser :: Grammar String               -- grammar info
 >               -> Maybe AttributeGrammarExtras
 >               -> Pragmas                      -- pragmas supplied in the .y-file
 >               -> ActionTable                  -- action table

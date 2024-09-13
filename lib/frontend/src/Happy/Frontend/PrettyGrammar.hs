@@ -9,7 +9,7 @@ import Happy.Frontend.AbsSyn
 render :: Doc -> String
 render = maybe "" ($ "")
 
-ppAbsSyn :: AbsSyn -> Doc
+ppAbsSyn :: AbsSyn String -> Doc
 ppAbsSyn (AbsSyn ds rs) = vsep (vcat (map ppDirective ds) : map ppRule rs)
 
 ppDirective :: Directive a -> Doc
@@ -22,13 +22,13 @@ ppDirective dir =
   where
   prec x xs = text x <+> hsep (map text xs)
 
-ppRule :: Rule -> Doc
+ppRule :: Rule String -> Doc
 ppRule (Rule name _ prods _) = text name
                             $$ vcat (zipWith (<+>) starts (map ppProd prods))
   where
   starts = text "  :" : repeat (text "  |")
 
-ppProd :: Prod -> Doc
+ppProd :: Prod String -> Doc
 ppProd (Prod ts _ _ p) = psDoc <+> ppPrec p
   where
   psDoc   = if null ts then text "{- empty -}" else hsep (map ppTerm ts)
