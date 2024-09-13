@@ -29,6 +29,7 @@ The code generator.
 Produce the complete output file.
 
 > produceParser :: Grammar                      -- grammar info
+>               -> Maybe AttributeGrammarExtras
 >               -> Pragmas                      -- pragmas supplied in the .y-file
 >               -> ActionTable                  -- action table
 >               -> GotoTable                    -- goto table
@@ -50,9 +51,8 @@ Produce the complete output file.
 >               , token_names = token_names'
 >               , token_specs = token_rep
 >               , starts = starts'
->               , attributetype = attributetype'
->               , attributes = attributes'
 >               })
+>               mAg
 >               (Pragmas
 >               { lexer = lexer'
 >               , imported_identity = imported_identity'
@@ -77,7 +77,10 @@ Produce the complete output file.
 >       . produceMonadStuff
 >       . produceEntries
 >       . produceStrict strict
->       . produceAttributes attributes' attributetype' . nl
+>       . (case mAg of
+>            Nothing -> id
+>            Just ag -> produceAttributes ag)
+>       . nl
 >       . maybestr module_trailer . nl
 >       ) ""
 >  where
@@ -723,11 +726,13 @@ directive determines the API of the provided function.
 
 >    produceEntries
 >       = interleave "\n\n" (map produceEntry (zip starts' [0..]))
->       . if null attributes' then id else produceAttrEntries starts'
+>       . case mAg of
+>           Nothing -> id
+>           Just ag -> produceAttrEntries ag starts'
 
 >    produceEntry :: ((String, t0, Int, t1), Int) -> String -> String
 >    produceEntry ((name, _start_nonterm, accept_nonterm, _partial), no)
->       = (if null attributes' then str name else str "do_" . str name)
+>       = (if isNothing mAg then str name else str "do_" . str name)
 >       . maybe_tks
 >       . str " = "
 >       . str unmonad
@@ -749,7 +754,7 @@ directive determines the API of the provided function.
 >       unmonad | use_monad = ""
 >                 | otherwise = "happyRunIdentity "
 
->    produceAttrEntries starts''
+>    produceAttrEntries ag starts''
 >       = interleave "\n\n" (map f starts'')
 >     where
 >       f = case (use_monad,lexer') of
@@ -758,7 +763,7 @@ directive determines the API of the provided function.
 >             (False,Just _) -> error "attribute grammars not supported for non-monadic parsers with %lexer"
 >             (False,Nothing)-> \(name,_,_,_) -> regularAE name
 >
->       defaultAttr = fst (head attributes')
+>       defaultAttr = fst (head $ attributes ag)
 >
 >       monadAndLexerAE name
 >         = str name . str " = "
@@ -785,9 +790,11 @@ directive determines the API of the provided function.
 ----------------------------------------------------------------------------
 -- Produce attributes declaration for attribute grammars
 
-> produceAttributes :: [(String, String)] -> String -> String -> String
-> produceAttributes [] _ = id
-> produceAttributes attrs attributeType
+> produceAttributes :: AttributeGrammarExtras -> String -> String
+> produceAttributes AttributeGrammarExtras {
+>         attributes = attrs,
+>         attributetype = attributeType
+>     }
 >     = str "data " . attrHeader . str " = HappyAttributes {" . attributes' . str "}" . nl
 >     . str "happyEmptyAttrs = HappyAttributes {" . attrsErrors . str "}" . nl
 

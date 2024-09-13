@@ -18,7 +18,6 @@ Mangler converts AbsSyn to Grammar
 > import Data.Array ( Array, (!), accumArray, array, listArray )
 > import Data.Char  ( isAlphaNum, isDigit, isLower )
 > import Data.List  ( zip4, sortBy )
-> import Data.Maybe ( fromMaybe )
 > import Data.Ord
 
 > import Control.Monad.Writer ( Writer, mapWriter, runWriter )
@@ -28,14 +27,20 @@ Mangler converts AbsSyn to Grammar
 
 This bit is a real mess, mainly because of the error message support.
 
-> mangler :: FilePath -> AbsSyn -> Either [ErrMsg] (Grammar, Pragmas)
-> mangler file abssyn
->   | null errs = Right gd
+> mangler :: FilePath -> AbsSyn -> Either [ErrMsg] (Grammar, Maybe AttributeGrammarExtras, Pragmas)
+> mangler file abssyn@(AbsSyn dirs _)
+>   | null errs = Right (gd, mAg, ps)
 >   | otherwise = Left errs
->   where (gd, errs) = runWriter (manglerM file abssyn)
+>   where mAg = getAttributeGrammarExtras dirs
+>         ((gd, ps), errs) = runWriter (manglerM (checkCode mAg) file abssyn)
 
-> manglerM :: FilePath -> AbsSyn -> M (Grammar, Pragmas)
-> manglerM file (AbsSyn dirs rules') =
+> manglerM
+>   :: ([Name] -> [Name] -> String -> M (String,[Int]))
+>   -- ^ Function to check elimination rules
+>   -> FilePath
+>   -> AbsSyn
+>   -> M (Grammar, Pragmas)
+> manglerM checkCode file (AbsSyn dirs rules') =
 >   -- add filename to all error messages
 >   mapWriter (\(a,e) -> (a, map (\s -> file ++ ": " ++ s) e)) $ do
 
@@ -129,9 +134,6 @@ Translate the rules from string to name-based.
 >         = do nt' <- mapToName nt
 >              return (nt', prods, ty)
 >
->       attrs = getAttributes dirs
->       attrType = fromMaybe "HappyAttrs" (getAttributetype dirs)
->
 >       transRule (nt, prods, _ty)
 >         = mapM (finishRule nt) prods
 >
@@ -139,7 +141,7 @@ Translate the rules from string to name-based.
 >       finishRule nt (Prod1 lhs code line prec)
 >         = mapWriter (\(a,e) -> (a, map (addLine line) e)) $ do
 >           lhs' <- mapM mapToName lhs
->           code' <- checkCode lhs' nonterm_names code attrs
+>           code' <- checkCode lhs' nonterm_names code
 >           case mkPrec lhs' prec of
 >               Left s  -> do addErr ("Undeclared precedence token: " ++ s)
 >                             return (Production nt lhs' code' No)
@@ -234,9 +236,7 @@ Get the token specs in terms of Names.
 >               first_nonterm     = first_nt,
 >               first_term        = first_t,
 >               eof_term          = last terminal_names,
->               priorities        = prios,
->               attributes        = attrs,
->               attributetype     = attrType
+>               priorities        = prios
 >       },
 >       Pragmas {
 >               imported_identity                 = getImportedIdentity dirs,
@@ -284,9 +284,9 @@ So is this.
 -- If any attribute directives were used, we are in an attribute grammar, so
 -- go do special processing.  If not, pass on to the regular processing routine
 
-> checkCode :: [Name] -> [Name] -> String -> [(String,String)] -> M (String,[Int])
-> checkCode lhs _             code []    = doCheckCode (length lhs) code
-> checkCode lhs nonterm_names code attrs = rewriteAttributeGrammar lhs nonterm_names code attrs
+> checkCode :: Maybe AttributeGrammarExtras -> [Name] -> [Name] -> String -> M (String,[Int])
+> checkCode Nothing  lhs _             code = doCheckCode (length lhs) code
+> checkCode (Just a) lhs nonterm_names code = rewriteAttributeGrammar lhs nonterm_names code a
 
 -----------------------------------------------------------------------------
 -- Check for every $i that i is <= the arity of the rule.
