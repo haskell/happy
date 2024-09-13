@@ -50,7 +50,6 @@ library
                        Happy.Backend.LALR.ProduceCode
   build-depends:       base < 5,
                        array,
-                       happy-codegen-common == 2.0,
                        happy-grammar == 2.0,
                        happy-tabular == 2.0
 

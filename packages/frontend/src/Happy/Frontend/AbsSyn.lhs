@@ -16,7 +16,7 @@ Here is the abstract syntax of the language we parse.
 >       Rule(..), Prod(..), Term(..), Prec(..)
 >  ) where
 
-> import Happy.CodeGen.Common.Options (ErrorHandlerType(..))
+> import Happy.Grammar (ErrorHandlerType(..))
 
 > data BookendedAbsSyn
 >     = BookendedAbsSyn
