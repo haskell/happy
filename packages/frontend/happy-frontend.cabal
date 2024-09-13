@@ -56,7 +56,7 @@ library
 
   default-language:    Haskell98
   default-extensions:  CPP, MagicHash, FlexibleContexts
-  ghc-options: -Wall
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wno-incomplete-uni-patterns
   other-modules:
         Happy.Frontend.ParseMonad
         Happy.Frontend.ParseMonad.Class

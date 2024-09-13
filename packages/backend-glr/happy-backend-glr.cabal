@@ -57,5 +57,5 @@ library
 
   default-language:    Haskell98
   default-extensions:  CPP, MagicHash, FlexibleContexts
-  ghc-options:         -Wall
+  ghc-options:         -Wall -Wincomplete-uni-patterns
   other-modules:       Paths_happy_backend_glr
