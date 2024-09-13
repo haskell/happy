@@ -209,10 +209,10 @@ example where this matters.
 
 >     | otherwise
 >       = str "data HappyAbsSyn " . str_tyvars
->       . str "\n\t= HappyTerminal " . token
->       . str "\n\t| HappyErrorToken Prelude.Int\n"
+>       . str "\n  = HappyTerminal " . token
+>       . str "\n  | HappyErrorToken Prelude.Int\n"
 >       . interleave "\n"
->         [ str "\t| " . makeAbsSynCon n . strspace . typeParam n ty
+>         [ str "  | " . makeAbsSynCon n . strspace . typeParam n ty
 >         | (n, ty) <- assocs nt_types,
 >           (nt_types_index ! n) == n]
 
@@ -255,21 +255,21 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 
 >     | is_monad_prod && (use_monad || imported_identity')
 >       = mkReductionHdr (showInt lt) monad_reduce
->       . char '(' . interleave " `HappyStk`\n\t" tokPatterns
->       . str "happyRest) tk\n\t = happyThen ("
+>       . char '(' . interleave " `HappyStk`\n  " tokPatterns
+>       . str "happyRest) tk\n   = happyThen ("
 >       . str "("
 >       . tokLets (char '(' . str code' . char ')')
 >       . str ")"
 >       . (if monad_pass_token then str " tk" else id)
->       . str "\n\t) (\\r -> happyReturn (" . this_absSynCon . str " r))"
+>       . str "\n  ) (\\r -> happyReturn (" . this_absSynCon . str " r))"
 
 >     | specReduceFun lt
 >       = mkReductionHdr id ("happySpecReduce_" ++ show lt)
->       . interleave "\n\t" tokPatterns
+>       . interleave "\n  " tokPatterns
 >       . str " =  "
 >       . tokLets (
->           this_absSynCon . str "\n\t\t "
->           . char '(' . str code' . str "\n\t)"
+>           this_absSynCon . str "\n     "
+>           . char '(' . str code' . str "\n  )"
 >         )
 >       . (if coerce || null toks || null vars_used then
 >                 id
@@ -280,11 +280,11 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 
 >     | otherwise
 >       = mkReductionHdr (showInt lt) "happyReduce"
->       . char '(' . interleave " `HappyStk`\n\t" tokPatterns
->       . str "happyRest)\n\t = "
+>       . char '(' . interleave " `HappyStk`\n  " tokPatterns
+>       . str "happyRest)\n   = "
 >       . tokLets
->          ( this_absSynCon . str "\n\t\t "
->          . char '(' . str code'. str "\n\t) `HappyStk` happyRest"
+>          ( this_absSynCon . str "\n     "
+>          . char '(' . str code'. str "\n  ) `HappyStk` happyRest"
 >          )
 
 >       where
@@ -336,7 +336,7 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >
 >               tokLets code''
 >                  | coerce && not (null cases)
->                       = interleave "\n\t" cases
+>                       = interleave "\n  " cases
 >                       . code'' . str (replicate (length cases) '}')
 >                  | otherwise = code''
 >
@@ -360,14 +360,14 @@ The token conversion function.
 >       = case lexer' of {
 >
 >       Nothing ->
->         str "happyNewToken action sts stk [] =\n\t"
+>         str "happyNewToken action sts stk [] =\n  "
 >       . eofAction "notHappyAtAll"
 >       . str " []\n\n"
->       . str "happyNewToken action sts stk (tk:tks) =\n\t"
->       . str "let cont i = " . doAction . str " sts stk tks in\n\t"
->       . str "case tk of {\n\t"
->       . interleave ";\n\t" (map doToken token_rep)
->       . str "_ -> happyError' ((tk:tks), [])\n\t"
+>       . str "happyNewToken action sts stk (tk:tks) =\n  "
+>       . str "let cont i = " . doAction . str " sts stk tks in\n  "
+>       . str "case tk of {\n  "
+>       . interleave ";\n  " (map doToken token_rep)
+>       . str "_ -> happyError' ((tk:tks), [])\n  "
 >       . str "}\n\n"
 >       . str "happyError_ explist " . eofTok . str " tk tks = happyError' (tks, explist)\n"
 >       . str "happyError_ explist _ tk tks = happyError' ((tk:tks), explist)\n";
@@ -375,17 +375,17 @@ The token conversion function.
 >             -- so we must not pass it to happyError'
 
 >       Just (lexer'',eof') ->
->         str "happyNewToken action sts stk\n\t= "
+>         str "happyNewToken action sts stk\n  = "
 >       . str lexer''
 >       . str "(\\tk -> "
 >       . str "\n\tlet cont i = "
 >       . doAction
->       . str " sts stk in\n\t"
->       . str "case tk of {\n\t"
+>       . str " sts stk in\n  "
+>       . str "case tk of {\n  "
 >       . str (eof' ++ " -> ")
->       . eofAction "tk" . str ";\n\t"
->       . interleave ";\n\t" (map doToken token_rep)
->       . str "_ -> happyError' (tk, [])\n\t"
+>       . eofAction "tk" . str ";\n  "
+>       . interleave ";\n  " (map doToken token_rep)
+>       . str "_ -> happyError' (tk, [])\n  "
 >       . str "})\n\n"
 >       . str "happyError_ explist " . eofTok . str " tk = happyError' (tk, explist)\n"
 >       . str "happyError_ explist _ tk = happyError' (tk, explist)\n";
@@ -560,7 +560,7 @@ action array indexed by (terminal * last_state) + state
 >               . shows n_rules
 >               . str ") [\n"
 >       . interleave' ",\n" (map reduceArrElem [n_starts..n_rules])
->       . str "\n\t]\n\n"
+>       . str "\n  ]\n\n"
 
 >    n_rules = length prods - 1 :: Int
 
@@ -716,7 +716,7 @@ directive determines the API of the provided function.
 >                               Just _  -> str "(\\(tokens, explist) -> happyError)"
 
 >    reduceArrElem n
->      = str "\t(" . shows n . str " , "
+>      = str "  (" . shows n . str " , "
 >      . str "happyReduce_" . shows n . char ')'
 
 -----------------------------------------------------------------------------
