@@ -9,6 +9,7 @@ The Grammar data type.
 >       Name,
 >
 >       Production(..), Grammar(..),
+>       AttributeGrammarExtras(..),
 >       Priority(..),
 >       Assoc(..),
 >       Pragmas(..), ErrorHandlerType(..),
@@ -41,7 +42,11 @@ The Grammar data type.
 >               first_nonterm     :: Name,
 >               first_term        :: Name,
 >               eof_term          :: Name,
->               priorities        :: [(Name,Priority)],
+>               priorities        :: [(Name,Priority)]
+>       }
+
+> data AttributeGrammarExtras
+>       = AttributeGrammarExtras {
 >               attributes        :: [(String,String)],
 >               attributetype     :: String
 >       }

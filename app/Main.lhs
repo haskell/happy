@@ -82,7 +82,7 @@ Parse, using bootstrapping parser.
 
 Mangle the syntax into something useful.
 
->       (g, common_options) <- case {-# SCC "Mangler" #-} mangler fl_name abssyn of
+>       (g, mAg, common_options) <- case {-# SCC "Mangler" #-} mangler fl_name abssyn of
 >               Left  s  -> die (unlines s ++ "\n")
 >               Right gd -> return gd
 
@@ -254,6 +254,7 @@ and generate the code.
 >           let
 >               outfile = produceParser
 >                           g
+>                           mAg
 >                           common_options
 >                           action
 >                           goto

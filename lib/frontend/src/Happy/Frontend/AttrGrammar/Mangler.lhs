@@ -21,8 +21,8 @@ manipulation and let binding goop
 
 > import Control.Monad
 
-> rewriteAttributeGrammar :: [Name] -> [Name] -> String -> [(String,String)] -> M (String,[Int])
-> rewriteAttributeGrammar lhs nonterm_names code attrs =
+> rewriteAttributeGrammar :: [Name] -> [Name] -> String -> AttributeGrammarExtras -> M (String,[Int])
+> rewriteAttributeGrammar lhs nonterm_names code ag =
 
    first we need to parse the body of the code block
 
@@ -38,7 +38,7 @@ manipulation and let binding goop
 >                  , subRules :: [AgSubAssign]
 >                  , conditions :: [AgConditional]
 >                  ) = partitionRules [] [] [] rules
->                attrNames = map fst attrs
+>                attrNames = map fst $ attributes ag
 >                defaultAttr = head attrNames
 
    now check that $i references are in range

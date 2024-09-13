@@ -12,11 +12,11 @@ Here is the abstract syntax of the language we parse.
 >       getTokenType, getTokenSpec, getParserNames, getLexer,
 >       getImportedIdentity, getMonad, getError,
 >       getPrios, getPrioNames, getExpect, getErrorHandlerType,
->       getAttributes, getAttributetype,
+>       getAttributes, getAttributetype, getAttributeGrammarExtras,
 >       Rule(..), Prod(..), Term(..), Prec(..)
 >  ) where
 
-> import Happy.Grammar (ErrorHandlerType(..))
+> import Happy.Grammar (ErrorHandlerType(..), AttributeGrammarExtras(..))
 
 > data BookendedAbsSyn
 >     = BookendedAbsSyn
@@ -161,3 +161,12 @@ generate some error messages.
 >                  [t] -> Just t
 >                  []  -> Nothing
 >                  _   -> error "multiple attributetype directives"
+
+> getAttributeGrammarExtras :: [Directive t] -> Maybe AttributeGrammarExtras
+> getAttributeGrammarExtras ds = case (getAttributes ds, getAttributetype ds) of
+>   ([], Nothing) -> Nothing
+>   (as, Just at) -> Just $ AttributeGrammarExtras {
+>           attributes = as,
+>           attributetype = at
+>       }
+>   (_ : _, Nothing) -> error "attributes found without attribute type directive"
