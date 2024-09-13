@@ -8,7 +8,6 @@ The code generator.
 
 > import Paths_happy_backend_lalr  ( version )
 > import Data.Version              ( showVersion )
-> import Happy.CodeGen.Common.Options
 > import Happy.Grammar
 > import Happy.Tabular.LALR
 
@@ -30,7 +29,7 @@ The code generator.
 Produce the complete output file.
 
 > produceParser :: Grammar                      -- grammar info
->               -> CommonOptions                -- common codegen options
+>               -> Pragmas                      -- pragmas supplied in the .y-file
 >               -> ActionTable                  -- action table
 >               -> GotoTable                    -- goto table
 >               -> [String]                     -- language extensions
@@ -54,7 +53,7 @@ Produce the complete output file.
 >               , attributetype = attributetype'
 >               , attributes = attributes'
 >               })
->               (CommonOptions
+>               (Pragmas
 >               { lexer = lexer'
 >               , imported_identity = imported_identity'
 >               , monad = (use_monad,monad_context,monad_tycon,monad_then,monad_return)

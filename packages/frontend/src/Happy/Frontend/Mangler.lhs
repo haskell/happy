@@ -8,7 +8,6 @@ Mangler converts AbsSyn to Grammar
 
 > module Happy.Frontend.Mangler (mangler) where
 
-> import Happy.CodeGen.Common.Options
 > import Happy.Grammar
 > import Happy.Frontend.AbsSyn
 > import Happy.Frontend.Mangler.Monad
@@ -29,13 +28,13 @@ Mangler converts AbsSyn to Grammar
 
 This bit is a real mess, mainly because of the error message support.
 
-> mangler :: FilePath -> AbsSyn -> Either [ErrMsg] (Grammar, CommonOptions)
+> mangler :: FilePath -> AbsSyn -> Either [ErrMsg] (Grammar, Pragmas)
 > mangler file abssyn
 >   | null errs = Right gd
 >   | otherwise = Left errs
 >   where (gd, errs) = runWriter (manglerM file abssyn)
 
-> manglerM :: FilePath -> AbsSyn -> M (Grammar, CommonOptions)
+> manglerM :: FilePath -> AbsSyn -> M (Grammar, Pragmas)
 > manglerM file (AbsSyn dirs rules') =
 >   -- add filename to all error messages
 >   mapWriter (\(a,e) -> (a, map (\s -> file ++ ": " ++ s) e)) $ do
@@ -239,7 +238,7 @@ Get the token specs in terms of Names.
 >               attributes        = attrs,
 >               attributetype     = attrType
 >       },
->       CommonOptions {
+>       Pragmas {
 >               imported_identity                 = getImportedIdentity dirs,
 >               monad             = getMonad dirs,
 >               lexer             = getLexer dirs,

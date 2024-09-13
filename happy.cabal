@@ -144,7 +144,6 @@ executable happy
                  array,
                  containers >= 0.4.2,
                  mtl >= 2.2.1,
-                 happy-codegen-common == 2.0,
                  happy-grammar == 2.0,
                  happy-tabular == 2.0,
                  happy-frontend == 2.0,

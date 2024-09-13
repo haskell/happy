@@ -4,12 +4,14 @@ The Grammar data type.
 (c) 1993-2001 Andy Gill, Simon Marlow
 -----------------------------------------------------------------------------
 
+> -- | This module exports the 'Grammar' data type, which
 > module Happy.Grammar (
 >       Name,
 >
 >       Production(..), Grammar(..),
 >       Priority(..),
 >       Assoc(..),
+>       Pragmas(..), ErrorHandlerType(..),
 >
 >       errorName, errorTok, startName, dummyName, firstStartTok, dummyTok,
 >       eofName, epsilonTok,
@@ -79,6 +81,22 @@ The Grammar data type.
 >   No == No = True
 >   Prio _ i == Prio _ j = i == j
 >   _ == _ = False
+
+> data ErrorHandlerType
+>   = ErrorHandlerTypeDefault
+>   | ErrorHandlerTypeExpList
+
+> -- | Stuff like `\%monad`, `\%expect`
+> data Pragmas
+>       = Pragmas {
+>               token_type        :: String,
+>               imported_identity :: Bool,
+>               monad             :: (Bool,String,String,String,String),
+>               expect            :: Maybe Int,
+>               lexer             :: Maybe (String,String),
+>               error_handler     :: Maybe String,
+>               error_sig         :: ErrorHandlerType
+>       }
 
 -----------------------------------------------------------------------------
 -- Magic name values
