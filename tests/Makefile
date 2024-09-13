@@ -44,16 +44,16 @@ ERROR_TESTS = error001.y
 
 # NOTE: `cabal` will set the `happy_datadir` env-var accordingly before invoking the test-suite
 #TEST_HAPPY_OPTS = --strict --template=..
-TEST_HAPPY_OPTS = --strict
+TEST_HAPPY_OPTS = --strict -g
 
 %.n.hs : %.y
 	$(HAPPY) $(TEST_HAPPY_OPTS) $< -o $@
 
 %.n.hs : %.ly
-	$(HAPPY) $(TEST_HAPPY_OPTS) -c $< -o $@
+	$(HAPPY) $(TEST_HAPPY_OPTS) $< -o $@
 
 %.c.hs : %.y
-	$(HAPPY) $(TEST_HAPPY_OPTS) $< -o $@
+	$(HAPPY) $(TEST_HAPPY_OPTS) -c $< -o $@
 
 %.c.hs : %.ly
 	$(HAPPY) $(TEST_HAPPY_OPTS) -c $< -o $@
@@ -80,7 +80,7 @@ path.run : # simply a test to output the path of the built happy executable, use
 
 check.%.y : %.y
 	@echo "--> Checking $<..."
-	$(HAPPY) $(TEST_HAPPY_OPTS) $< 1>$*.run.stdout 2>$*.run.stderr || true
+	$(HAPPY) $(TEST_HAPPY_OPTS) -g $< 1>$*.run.stdout 2>$*.run.stderr || true
 	sed -i '/^Up to date$$/d' $*.run.stdout $*.run.stderr
 	@diff -u --ignore-all-space $*.stdout $*.run.stdout
 	@diff -u --ignore-all-space $*.stderr $*.run.stderr
