@@ -4,6 +4,10 @@
 
 The main focus of this release was modularizing Happy.
 
+* Generated parsers now activate the language extension `-XNoStrictData` without
+  which every use of a happy parser would lead to an immediate crash (#273).
+  This causes us to drop support for GHC < 8.0.
+
 * Break up into libraries:
 
   - `happy-backend-glr`

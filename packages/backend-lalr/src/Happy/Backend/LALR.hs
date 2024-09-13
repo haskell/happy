@@ -35,7 +35,7 @@ importsToInject debug = concat ["\n", import_array, import_bits, import_glaexts,
                            "import Control.Monad (ap)\n"
 
 langExtsToInject :: [String]
-langExtsToInject = ["MagicHash", "BangPatterns", "TypeSynonymInstances", "FlexibleInstances"]
+langExtsToInject = ["MagicHash", "BangPatterns", "TypeSynonymInstances", "FlexibleInstances", "NoStrictData"]
 
 defines :: Bool -> Bool -> String
 defines debug coerce = unlines [ "#define " ++ d ++ " 1" | d <- vars_to_define ]
