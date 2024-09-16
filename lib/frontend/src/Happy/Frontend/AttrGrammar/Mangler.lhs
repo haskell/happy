@@ -60,11 +60,8 @@ manipulation and let binding goop
 >    where arity = length lhs
 
 >          partitionRules a b c [] = (a,b,c)
->          partitionRules a b c (RightmostAssign attr toks : xs) = partitionRules
->             a
->             (MkAgSubAssign (arity,attr) toks : b)
->             c
->             xs
+>          partitionRules a b c (RightmostAssign attr toks : xs) = partitionRules a (x:b) c xs
+>             where x = MkAgSubAssign (arity,attr) toks
 >          partitionRules a b c (SelfAssign x  : xs) = partitionRules (x:a) b c xs
 >          partitionRules a b c (SubAssign x   : xs) = partitionRules a (x:b) c xs
 >          partitionRules a b c (Conditional x : xs) = partitionRules a b (x:c) xs

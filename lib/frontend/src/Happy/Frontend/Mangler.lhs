@@ -285,7 +285,7 @@ So is this.
 -- go do special processing.  If not, pass on to the regular processing routine
 
 > checkCode :: [Name] -> [Name] -> String -> [(String,String)] -> M (String,[Int])
-> checkCode lhs   _             code []    = doCheckCode (length lhs) code
+> checkCode lhs _             code []    = doCheckCode (length lhs) code
 > checkCode lhs nonterm_names code attrs = rewriteAttributeGrammar lhs nonterm_names code attrs
 
 -----------------------------------------------------------------------------
