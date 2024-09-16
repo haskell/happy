@@ -7,3 +7,4 @@ cabal.sandbox.config
 .*.swp
 .*.swo
 /.vscode/
+tests/*.hs
