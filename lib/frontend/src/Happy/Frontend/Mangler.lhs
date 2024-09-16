@@ -32,11 +32,23 @@ This bit is a real mess, mainly because of the error message support.
 >   | null errs = Right (gd, mAg, ps)
 >   | otherwise = Left errs
 >   where mAg = getAttributeGrammarExtras dirs
->         ((gd, ps), errs) = runWriter (manglerM (checkCode mAg) file abssyn)
+>         ((gd, ps), errs) = runWriter (manglerM checkCode file abssyn)
+
+If any attribute directives were used, we are in an attribute grammar, so
+go do special processing.  If not, pass on to the regular processing routine
+
+>         checkCode :: CodeChecker
+>         checkCode = case mAg of
+>             Nothing -> \lhs _             code ->
+>                 doCheckCode (length lhs) code
+>             Just a  -> \lhs nonterm_names code ->
+>                 rewriteAttributeGrammar lhs nonterm_names code a
+
+> -- | Function to check elimination rules
+> type CodeChecker = [Name] -> [Name] -> String -> M (String,[Int])
 
 > manglerM
->   :: ([Name] -> [Name] -> String -> M (String,[Int]))
->   -- ^ Function to check elimination rules
+>   :: CodeChecker
 >   -> FilePath
 >   -> AbsSyn
 >   -> M (Grammar, Pragmas)
@@ -279,14 +291,6 @@ So is this.
 >       | otherwise = checkRules rest name (name : nonterms)
 
 > checkRules [] _ nonterms = return (reverse nonterms)
-
------------------------------------------------------------------------------
--- If any attribute directives were used, we are in an attribute grammar, so
--- go do special processing.  If not, pass on to the regular processing routine
-
-> checkCode :: Maybe AttributeGrammarExtras -> [Name] -> [Name] -> String -> M (String,[Int])
-> checkCode Nothing  lhs _             code = doCheckCode (length lhs) code
-> checkCode (Just a) lhs nonterm_names code = rewriteAttributeGrammar lhs nonterm_names code a
 
 -----------------------------------------------------------------------------
 -- Check for every $i that i is <= the arity of the rule.
