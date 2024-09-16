@@ -153,6 +153,8 @@ Current Maintainers
 
 - John Ericson (@Ericson2314)
 
+- Sebastian Graf (@sgraf812)
+
 - Simon Marlow (@simonmar)
 
 Other contributors

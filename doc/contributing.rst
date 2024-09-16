@@ -16,9 +16,11 @@ feel free to submit them!
 Repo Layout
 -----------
 
-- ``src``: The source code for the Happy executable itself
+- ``app``: The source code for the Happy executable itself
 
-- ``packages/*``: The various packages that make up Happy behind the scenes, and are available for reuse for other purposes.
+- ``lib/*``: The various internal libraries that make up the ``happy-lib``
+  package. This library is used to implement the ``happy`` executable behind the
+  scenes, and is available for reuse for other purposes.
 
 - ``doc``: The documentation
 
@@ -34,20 +36,20 @@ Happy is mostly a normal Cabal-packaged Haskell executable::
 
     $ cabal build
 
-The only wrinkle is that developing Happy's own parser (i.e. the frontend
+The only wrinkle is that changing Happy's own parser (i.e. the frontend
 component that parses ``.y`` files) requires an existing Happy executable on
-the PATH.
+the PATH to run ``lib/frontend/boostrap.sh``.
 
 Do *not* modify these files by hand::
 
-    packages/frontend/src/Happy/Frontend/Parser.hs
-    packages/frontend/src/Happy/Frontend/AttrGrammar/Parser.hs
+    lib/frontend/src/Happy/Frontend/Parser.hs
+    lib/frontend/src/Happy/Frontend/AttrGrammar/Parser.hs
 
 Instead, edit these files::
 
-    packages/frontend/boot-src/Parser.ly
-    packages/frontend/boot-src/AttrGrammarParser.ly
+    lib/frontend/boot-src/Parser.ly
+    lib/frontend/boot-src/AttrGrammarParser.ly
 
 and regenerate the ``.hs``-files with::
 
-    $ packages/frontend/bootstrap.sh
+    $ lib/frontend/bootstrap.sh

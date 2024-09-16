@@ -2,21 +2,35 @@
 
 ## 2.0
 
-The main focus of this release was modularizing Happy.
+There are two main breaking changes in this release:
 
-* Generated parsers now activate the language extension `-XNoStrictData` without
-  which every use of a happy parser would lead to an immediate crash (#273).
-  This causes us to drop support for GHC < 8.0.
+1. Removal non-array, non-GHC modes, so flags `-ag` are the default now and
+   become no-ops.
+2. Generated parsers now activate the language extension `-XNoStrictData` without
+   which every use of a happy parser would lead to an immediate crash (#273).
+   This causes us to drop support for GHC < 8.0.
 
-* Break up into libraries:
+Furthermore, the project structure was modularized and a library `happy-lib`
+containing the implmentation of the `happy` executable was extracted.
 
-  - `happy-backend-glr`
-  - `happy-backend-lalr`
-  - `happy-frontend`
-  - `happy-grammar`
-  - `happy-tabular`
+Quite similar to the situation with GHC vs. the GHC API, we expect that `happy`
+will continue to be a stable CLI tool with solid (if occasionally out of date)
+documentation, while the design, documentation and implementation of `happy-lib`
+is still in flux and use is only recommended to expert users.
 
-* Revert the new bootstrapping system of 1.21.0 to mitigate build issues.
+Other, more minor changes:
+
+* Revert the new bootstrapping system of 1.21.0 to mitigate build issues (#255, #274).
+
+* Encode action table offsets in 32 bit instead of 16 bit (#93, #199, #266).
+  This increases the size of generated parsers a bit (about 250KB for GHC's
+  parser), but also manages to generate parsers for grammars that were
+  previously running into the size limit (#199).
+
+* The documentation has been converted to ReStructuredText,
+  hosted at https://haskell-happy.readthedocs.io/en/latest/ (#226)
+
+* A few internal refactorings to the structure of generated code.
 
 ## 1.21.0
 
