@@ -139,7 +139,7 @@ Translate the rules from string to name-based.
 >       finishRule nt (Prod1 lhs code line prec)
 >         = mapWriter (\(a,e) -> (a, map (addLine line) e)) $ do
 >           lhs' <- mapM mapToName lhs
->           code' <- checkCode (length lhs) lhs' nonterm_names code attrs
+>           code' <- checkCode lhs' nonterm_names code attrs
 >           case mkPrec lhs' prec of
 >               Left s  -> do addErr ("Undeclared precedence token: " ++ s)
 >                             return (Production nt lhs' code' No)
@@ -284,9 +284,9 @@ So is this.
 -- If any attribute directives were used, we are in an attribute grammar, so
 -- go do special processing.  If not, pass on to the regular processing routine
 
-> checkCode :: Int -> [Name] -> [Name] -> String -> [(String,String)] -> M (String,[Int])
-> checkCode arity _   _             code []    = doCheckCode arity code
-> checkCode arity lhs nonterm_names code attrs = rewriteAttributeGrammar arity lhs nonterm_names code attrs
+> checkCode :: [Name] -> [Name] -> String -> [(String,String)] -> M (String,[Int])
+> checkCode lhs _             code []    = doCheckCode (length lhs) code
+> checkCode lhs nonterm_names code attrs = rewriteAttributeGrammar lhs nonterm_names code attrs
 
 -----------------------------------------------------------------------------
 -- Check for every $i that i is <= the arity of the rule.

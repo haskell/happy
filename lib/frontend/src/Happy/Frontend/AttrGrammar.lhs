@@ -1,6 +1,12 @@
 > module Happy.Frontend.AttrGrammar
 > ( AgToken (..)
+
 > , AgRule (..)
+
+> , AgSelfAssign(..)
+> , AgSubAssign(..)
+> , AgConditional(..)
+
 > , HasLexer (..)
 > , agLexAll
 > , subRefVal
@@ -35,10 +41,24 @@
 > rightRefVal _ = error "rightRefVal: Bad value"
 
 > data AgRule
->   = SelfAssign String [AgToken]
->   | SubAssign (Int,String) [AgToken]
+>   = SelfAssign AgSelfAssign
+>   | SubAssign AgSubAssign
 >   | RightmostAssign String [AgToken]
->   | Conditional [AgToken]
+>     -- ^ Syntactic sugar
+>   | Conditional AgConditional
+>  deriving (Show,Eq,Ord)
+
+We will partition the rule types and handle them separately, so we want
+a separate data type for each core rule type. We don't need one for
+`RightmostAssign` because it is syntactic sugar.
+
+> data AgSelfAssign = MkAgSelfAssign String [AgToken]
+>  deriving (Show,Eq,Ord)
+
+> data AgSubAssign = MkAgSubAssign (Int, String) [AgToken]
+>  deriving (Show,Eq,Ord)
+
+> data AgConditional = MkAgConditional [AgToken]
 >  deriving (Show,Eq,Ord)
 
 -----------------------------------------------------------------
