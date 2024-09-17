@@ -6,7 +6,7 @@ manipulation and let binding goop
 (c) 1993-2001 Andy Gill, Simon Marlow
 -----------------------------------------------------------------------------
 
-> {-# LANGUAGE PatternSignatures #-}
+> {-# LANGUAGE ScopedTypeVariables #-}
 > module Happy.Frontend.AttrGrammar.Mangler (rewriteAttributeGrammar) where
 
 > import Happy.Grammar

@@ -65,29 +65,25 @@ source-repository head
   type:     git
   location: https://github.com/haskell/happy.git
 
-library grammar
-  hs-source-dirs:      grammar/src
+common common-stanza
+  default-language:    Haskell98
+  default-extensions:  CPP, MagicHash, FlexibleContexts, NamedFieldPuns
+  ghc-options: -Wall -Wno-incomplete-uni-patterns
 
+library grammar
+  import: common-stanza
+  hs-source-dirs:      grammar/src
   exposed-modules:     Happy.Grammar
   build-depends:       base < 5, array
 
-  default-language:    Haskell98
-  default-extensions:  CPP, MagicHash, FlexibleContexts
-  ghc-options: -Wall
-  other-modules:
-
 library frontend
+  import: common-stanza
   hs-source-dirs:      frontend/src
   exposed-modules:     Happy.Frontend,
                        Happy.Frontend.AbsSyn,
                        Happy.Frontend.Mangler,
                        Happy.Frontend.PrettyGrammar
-
   build-depends:       base < 5, array, transformers, containers, mtl, happy-lib:grammar
-
-  default-language:    Haskell98
-  default-extensions:  CPP, MagicHash, FlexibleContexts
-  ghc-options: -Wall -Wno-incomplete-uni-patterns
   other-modules:
         Happy.Frontend.ParseMonad
         Happy.Frontend.ParseMonad.Class
@@ -100,8 +96,8 @@ library frontend
         Happy.Frontend.AttrGrammar.Mangler
 
 library tabular
+  import: common-stanza
   hs-source-dirs:      tabular/src
-
   exposed-modules:     Happy.Tabular,
                        Happy.Tabular.First,
                        Happy.Tabular.Info,
@@ -109,37 +105,27 @@ library tabular
                        Happy.Tabular.NameSet
   build-depends:       base < 5, array, containers, happy-lib:grammar
 
-  default-language:    Haskell98
-  default-extensions:  CPP, MagicHash, FlexibleContexts, NamedFieldPuns
-  ghc-options: -Wall
 
 library backend-lalr
+  import: common-stanza
   hs-source-dirs:      backend-lalr/src
-
   exposed-modules:     Happy.Backend.LALR,
                        Happy.Backend.LALR.ProduceCode
   build-depends:       base < 5, array, happy-lib:grammar, happy-lib:tabular
-
-  default-language:    Haskell98
-  default-extensions:  CPP, MagicHash, FlexibleContexts
-  ghc-options:         -Wall -Wno-incomplete-uni-patterns
   other-modules:       Paths_happy_lib
   autogen-modules:     Paths_happy_lib
 
 library backend-glr
+  import: common-stanza
   hs-source-dirs:      backend-glr/src
-
   exposed-modules:     Happy.Backend.GLR,
                        Happy.Backend.GLR.ProduceCode
   build-depends:       base < 5, array, happy-lib:grammar, happy-lib:tabular
-
-  default-language:    Haskell98
-  default-extensions:  CPP, MagicHash, FlexibleContexts
-  ghc-options:         -Wall -Wno-incomplete-uni-patterns
   other-modules:       Paths_happy_lib
   autogen-modules:     Paths_happy_lib
 
 library
+  import: common-stanza
   reexported-modules:  Happy.Grammar,
                        Happy.Frontend,
                        Happy.Frontend.AbsSyn,
@@ -154,7 +140,6 @@ library
                        Happy.Backend.LALR.ProduceCode,
                        Happy.Backend.GLR,
                        Happy.Backend.GLR.ProduceCode
-
   build-depends: base >= 4.9 && < 5,
                  array >= 0.5,
                  containers >= 0.4.2,
@@ -165,4 +150,3 @@ library
                  happy-lib:frontend,
                  happy-lib:backend-lalr,
                  happy-lib:backend-glr
-  default-language:    Haskell98
