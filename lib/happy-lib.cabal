@@ -47,9 +47,11 @@ tested-with:
         GHC == 8.2.2
         GHC == 8.0.2
 
-extra-source-files:
+extra-doc-files:
         ChangeLog.md
         README.md
+
+extra-source-files:
         frontend/bootstrap.sh
         frontend/boot-src/Parser.ly
         frontend/boot-src/AttrGrammarParser.ly
