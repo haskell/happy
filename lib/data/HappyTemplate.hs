@@ -251,7 +251,7 @@ happyFail explist i tk action sts stk =
 -- Internal happy errors:
 
 notHappyAtAll :: a
-notHappyAtAll = Prelude.error "Internal Happy error\n"
+notHappyAtAll = Prelude.error "Internal Happy parser panic. This is not supposed to happen! Please open a bug report at https://github.com/haskell/happy/issues.\n"
 
 -----------------------------------------------------------------------------
 -- Hack to get the typechecker to accept our action functions
