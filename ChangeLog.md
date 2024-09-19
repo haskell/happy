@@ -4,7 +4,7 @@
 
 There are two main breaking changes in this release:
 
-1. Removal non-array, non-GHC modes, so flags `-ag` are the default now and
+1. Removed non-array, non-GHC modes, so flags `-ag` are the default now and
    become no-ops.
 2. Generated parsers now activate the language extension `-XNoStrictData` without
    which every use of a happy parser would lead to an immediate crash (#273).
