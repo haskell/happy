@@ -150,7 +150,11 @@ For array-based parsers, see the note in Tabular/LALR.lhs.
 Replace $$ with an arbitrary string, being careful to avoid ".." and '.'.
 
 > mapDollarDollar :: String -> Maybe (String -> String)
-> mapDollarDollar code0 = go code0 ""
+> mapDollarDollar = fmap (\(l, r) repr -> l ++ repr ++ r) . mapDollarDollar'
+>
+
+> mapDollarDollar' :: String -> Maybe (String, String)
+> mapDollarDollar' code0 = go code0 ""
 >   where go code acc =
 >           case code of
 >               [] -> Nothing
@@ -163,5 +167,5 @@ Replace $$ with an arbitrary string, being careful to avoid ".." and '.'.
 >                                []       -> go r ('\'':acc)
 >                                (c,r'):_ -> go r' (reverse (show c) ++ acc)
 >               '\\':'$':r -> go r ('$':acc)
->               '$':'$':r  -> Just (\repl -> reverse acc ++ repl ++ r)
+>               '$':'$':r  -> Just (reverse acc, r)
 >               c:r  -> go r (c:acc)
