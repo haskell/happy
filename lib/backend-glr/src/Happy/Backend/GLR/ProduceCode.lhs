@@ -19,6 +19,7 @@ This module is designed as an extension to the Haskell parser generator Happy.
 
 > import Paths_happy_lib ( version )
 > import Happy.Grammar
+> import Happy.Grammar.ExpressionWithHole ( substExpressionWithHole )
 > import Happy.Tabular.LALR
 > import Data.Array ( Array, (!), array, assocs )
 > import Data.Char ( isSpace, isAlphaNum )
@@ -273,9 +274,9 @@ that will be used for them in the GLR parser.
 >       | (i,tok) <- token_specs g ]    -- Tokens (terminals)
 >    ++ [(eof_term g,"HappyEOF")]       -- EOF symbol (internal terminal)
 >  where
->   mkMatch tok = case mapDollarDollar tok of
->                   Nothing -> tok
->                   Just fn -> fn "_"
+>   mkMatch tok = case tok of
+>                   TokenFixed t -> t
+>                   TokenWithValue e -> substExpressionWithHole e "_"
 
 > toGSym :: [(Int, String)] -> Int -> String
 > toGSym gsMap i
@@ -314,10 +315,7 @@ It also shares identical reduction values as CAFs
 >    where
 >     startLine
 >      = unwords [ name , show_st exts state, "(" , getTok , ") =" ]
->     getTok = let tok = toGSym gsMap symInt
->              in case mapDollarDollar tok of
->                   Nothing -> tok
->                   Just f  -> f "_"
+>     getTok = toGSym gsMap symInt
 >   mkAct act
 >    = case act of
 >       LR'Shift newSt _ -> "Shift " ++ show newSt ++ " []"
@@ -421,7 +419,7 @@ Creating a type for storing semantic rules
    use in later stages.
 
 > type SemInfo
->  = [(String, String, [Int], [((Int,Int), ([(Int,String)],String), [Int])])]
+>  = [(String, String, [Int], [((Int, Int), ([(Int, TokenSpec)], String), [Int])])]
 
 > mkGSemType :: Options -> Grammar String -> Pragmas -> (ShowS, SemInfo)
 > mkGSemType (TreeDecode,_,_) g pragmas
@@ -566,17 +564,17 @@ Creates the appropriate semantic values.
 >          nodes UseFiltering = "(" ++ foldr (\l -> mkHappyVar (l+1) . showChar ':') "[])" mask
 >    ]
 
-> mk_lambda :: [(Int, String)] -> Int -> String -> String
+> mk_lambda :: [(Int, TokenSpec)] -> Int -> String -> String
 > mk_lambda pats v
 >  = (\s -> "\\" ++ s ++ " -> ") . mk_binder id pats v
 
-> mk_binder :: (String -> String) -> [(Int, String)] -> Int -> String -> String
+> mk_binder :: (String -> String) -> [(Int, TokenSpec)] -> Int -> String -> String
 > mk_binder wrap pats v
 >  = case lookup v pats of
 >       Nothing -> mkHappyVar v
->       Just p  -> case mapDollarDollar p of
->                     Nothing -> wrap . mkHappyVar v . showChar '@' . brack p
->                     Just fn -> wrap . brack' (fn . mkHappyVar v)
+>       Just p  -> case p of
+>                     TokenFixed p' -> wrap . mkHappyVar v . showChar '@' . brack p'
+>                     TokenWithValue e -> wrap . brack' (substExpressionWithHole e . mkHappyVar v)
 
 
 ---

@@ -13,10 +13,18 @@ Here is the abstract syntax of the language we parse.
 >       getImportedIdentity, getMonad, getError,
 >       getPrios, getPrioNames, getExpect, getErrorHandlerType,
 >       getAttributes, getAttributetype, getAttributeGrammarExtras,
->       Rule(..), Prod(..), Term(..), Prec(..)
+>       parseTokenSpec,
+>       Rule(..), Prod(..), Term(..), Prec(..),
+>       TokenSpec(..) -- reexport
 >  ) where
 
-> import Happy.Grammar (ErrorHandlerType(..), AttributeGrammarExtras(..))
+> import Data.Char (isAlphaNum)
+> import Happy.Grammar
+>   ( ErrorHandlerType(..)
+>   , TokenSpec(..)
+>   , AttributeGrammarExtras(..)
+>   )
+> import Happy.Grammar.ExpressionWithHole
 
 > data BookendedAbsSyn
 >     = BookendedAbsSyn
@@ -63,7 +71,7 @@ generate some error messages.
 >
 > data Directive a
 >       = TokenType     String                  -- %tokentype
->       | TokenSpec     [(a,String)]            -- %token
+>       | TokenSpec     [(a, TokenSpec)]        -- %token
 >       | TokenName     String (Maybe String) Bool -- %name/%partial (True <=> %partial)
 >       | TokenLexer    String String           -- %lexer
 >       | TokenErrorHandlerType String          -- %errorhandlertype
@@ -109,7 +117,7 @@ generate some error messages.
 >               []  -> (False,"()","HappyIdentity","Prelude.>>=","Prelude.return")
 >               _   -> error "multiple monad directives"
 
-> getTokenSpec :: [Directive t] -> [(t, String)]
+> getTokenSpec :: [Directive t] -> [(t, TokenSpec)]
 > getTokenSpec ds = concat [ t | (TokenSpec t) <- ds ]
 
 > getPrios :: [Directive t] -> [Directive t]
@@ -170,3 +178,25 @@ generate some error messages.
 >           attributetype = at
 >       }
 >   (_ : _, Nothing) -> error "attributes found without attribute type directive"
+
+> -- | Parse a token spec.
+> --
+> -- The first occurence of '$$' indicates an expression in which the '$$'
+> -- will be substituted for the actual lexed token. '$$' in string or char
+> -- literals ('".."' and '\'.\'') however does not count.
+> parseTokenSpec :: String -> TokenSpec
+> parseTokenSpec code0 = go code0 ""
+>   where go code acc =
+>           case code of
+>               [] -> TokenFixed code0
+>
+>               '"'  :r    -> case reads code :: [(String,String)] of
+>                                []       -> go r ('"':acc)
+>                                (s,r'):_ -> go r' (reverse (show s) ++ acc)
+>               a:'\'' :r | isAlphaNum a -> go r ('\'':a:acc)
+>               '\'' :r    -> case reads code :: [(Char,String)] of
+>                                []       -> go r ('\'':acc)
+>                                (c,r'):_ -> go r' (reverse (show c) ++ acc)
+>               '\\':'$':r -> go r ('$':acc)
+>               '$':'$':r  -> TokenWithValue $ ExpressionWithHole (reverse acc) r
+>               c:r  -> go r (c:acc)

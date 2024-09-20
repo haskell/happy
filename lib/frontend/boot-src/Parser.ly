@@ -132,12 +132,12 @@ The parser.
 >       : id                            { Just $1 }
 >       | {- nothing -}                 { Nothing }
 
-> tokenSpecs :: { [(String,String)] }
+> tokenSpecs :: { [(String, TokenSpec)] }
 >       : tokenSpec tokenSpecs          { $1:$2 }
 >       | tokenSpec                     { [$1] }
 
-> tokenSpec :: { (String,String) }
->       : id code                       { ($1,$2) }
+> tokenSpec :: { (String, TokenSpec) }
+>       : id code                       { ($1, parseTokenSpec $2) }
 
 > ids   :: { [String] }
 >       : id ids                        { $1 : $2 }

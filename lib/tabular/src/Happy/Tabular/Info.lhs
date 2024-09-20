@@ -9,6 +9,7 @@ Generating info files.
 > import Data.Set ( Set )
 > import qualified Data.Set as Set hiding ( Set )
 > import Happy.Grammar
+> import Happy.Grammar.ExpressionWithHole ( substExpressionWithHole )
 > import Happy.Tabular.LALR   ( Lr0Item(..), LRAction(..), Goto(..), GotoTable, ActionTable )
 
 > import Data.Array
@@ -182,7 +183,10 @@ Produce a file of parser information, useful for debugging the parser.
 >   showTerminal (t,s)
 >       = str "\t"
 >       . showJName 15 t
->       . str "{ " . str s . str " }"
+>       . str "{ " . showToken s . str " }"
+
+>   showToken (TokenFixed s) = str s
+>   showToken (TokenWithValue e) = str $ substExpressionWithHole e "$$"
 
 >   showNonTerminals
 >       = banner "Non-terminals"

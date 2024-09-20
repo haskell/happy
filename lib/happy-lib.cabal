@@ -75,7 +75,9 @@ common common-stanza
 library grammar
   import: common-stanza
   hs-source-dirs:      grammar/src
-  exposed-modules:     Happy.Grammar
+  exposed-modules:
+       Happy.Grammar
+       Happy.Grammar.ExpressionWithHole
   build-depends:       base < 5, array
 
 library frontend
@@ -129,6 +131,7 @@ library backend-glr
 library
   import: common-stanza
   reexported-modules:  Happy.Grammar,
+                       Happy.Grammar.ExpressionWithHole,
                        Happy.Frontend,
                        Happy.Frontend.AbsSyn,
                        Happy.Frontend.Mangler,

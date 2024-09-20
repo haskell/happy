@@ -135,15 +135,15 @@ happyIn19 x = Happy_GHC_Exts.unsafeCoerce# (HappyWrap19 x)
 happyOut19 :: (HappyAbsSyn ) -> HappyWrap19
 happyOut19 x = Happy_GHC_Exts.unsafeCoerce# x
 {-# INLINE happyOut19 #-}
-newtype HappyWrap20 = HappyWrap20 ([(String,String)])
-happyIn20 :: ([(String,String)]) -> (HappyAbsSyn )
+newtype HappyWrap20 = HappyWrap20 ([(String, TokenSpec)])
+happyIn20 :: ([(String, TokenSpec)]) -> (HappyAbsSyn )
 happyIn20 x = Happy_GHC_Exts.unsafeCoerce# (HappyWrap20 x)
 {-# INLINE happyIn20 #-}
 happyOut20 :: (HappyAbsSyn ) -> HappyWrap20
 happyOut20 x = Happy_GHC_Exts.unsafeCoerce# x
 {-# INLINE happyOut20 #-}
-newtype HappyWrap21 = HappyWrap21 ((String,String))
-happyIn21 :: ((String,String)) -> (HappyAbsSyn )
+newtype HappyWrap21 = HappyWrap21 ((String, TokenSpec))
+happyIn21 :: ((String, TokenSpec)) -> (HappyAbsSyn )
 happyIn21 x = Happy_GHC_Exts.unsafeCoerce# (HappyWrap21 x)
 {-# INLINE happyIn21 #-}
 happyOut21 :: (HappyAbsSyn ) -> HappyWrap21
@@ -768,7 +768,7 @@ happyReduction_51 happy_x_2
 	 =  case happyOutTok happy_x_1 of { (TokenInfo happy_var_1 TokId) -> 
 	case happyOutTok happy_x_2 of { (TokenInfo happy_var_2 TokCodeQuote) -> 
 	happyIn21
-		 ((happy_var_1,happy_var_2)
+		 ((happy_var_1, parseTokenSpec happy_var_2)
 	)}}
 
 happyReduce_52 :: () => Happy_GHC_Exts.Int# -> Token -> Happy_GHC_Exts.Int# -> Happy_IntList -> HappyStk (HappyAbsSyn ) -> P (HappyAbsSyn )
