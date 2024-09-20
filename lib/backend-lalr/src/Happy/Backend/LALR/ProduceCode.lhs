@@ -9,6 +9,7 @@ The code generator.
 > import Paths_happy_lib  ( version )
 > import Data.Version              ( showVersion )
 > import Happy.Grammar
+> import Happy.Grammar.ExpressionWithHole ( substExpressionWithHole )
 > import Happy.Tabular.LALR
 
 > import Data.Maybe                ( isNothing, fromMaybe )
@@ -417,19 +418,17 @@ The token conversion function.
 Use a variable rather than '_' to replace '$$', so we can use it on
 the left hand side of '@'.
 
->         removeDollarDollar xs = case mapDollarDollar xs of
->                                  Nothing -> xs
->                                  Just fn -> fn "happy_dollar_dollar"
+>         removeDollarDollar tok = case tok of
+>              TokenFixed t -> t
+>              TokenWithValue e -> substExpressionWithHole e "happy_dollar_dollar"
 
 >    mkHappyTerminalVar :: Int -> Int -> String -> String
 >    mkHappyTerminalVar i t =
->     case tok_str_fn of
+>     case lookup t token_rep of
 >       Nothing -> pat
->       Just fn -> brack (fn (pat []))
+>       Just (TokenFixed _) -> pat
+>       Just (TokenWithValue e) -> brack $ substExpressionWithHole e $ pat []
 >     where
->         tok_str_fn = case lookup t token_rep of
->                     Nothing -> Nothing
->                     Just str' -> mapDollarDollar str'
 >         pat = mkHappyVar i
 
 >    tokIndex i = i - n_nonterminals - n_starts - 2
