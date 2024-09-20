@@ -22,7 +22,6 @@ Produce a file of parser information, useful for debugging the parser.
 >       -> Grammar e
 >       -> ActionTable
 >       -> GotoTable
->       -> [(Int,String)]
 >       -> Array Int (Int,Int)
 >       -> String
 >       -> [Int]                        -- unused rules
@@ -36,8 +35,9 @@ Produce a file of parser information, useful for debugging the parser.
 >                , lookupProdsOfName = lookupProdNos
 >                , non_terminals = nonterms
 >                , token_names = env
+>                , token_specs = tokens
 >                })
->        action goto tokens conflictArray filename unused_rules unused_terminals version
+>        action goto conflictArray filename unused_rules unused_terminals version
 >       = (showHeader
 >       . showConflicts
 >       . showUnused
