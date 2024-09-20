@@ -91,6 +91,11 @@ Produce the complete output file.
 >
 >    partTySigs_opts = ifGeGhc710 (str "{-# LANGUAGE PartialTypeSignatures #-}" . nl)
 
+We used to emit tabs for indentation, but since 2.0.0.1 we use 8 spaces for back-compat (#303):
+
+>    indentStr = "        "
+>    indent = str indentStr
+
 >    intMaybeHash    = str "Happy_GHC_Exts.Int#"
 
 >    -- Parsing monad and its constraints
@@ -208,10 +213,10 @@ example where this matters.
 
 >     | otherwise
 >       = str "data HappyAbsSyn " . str_tyvars
->       . str "\n  = HappyTerminal " . token
->       . str "\n  | HappyErrorToken Prelude.Int\n"
+>       . str "\n" . indent . str "= HappyTerminal " . token
+>       . str "\n" . indent . str "| HappyErrorToken Prelude.Int\n"
 >       . interleave "\n"
->         [ str "  | " . makeAbsSynCon n . strspace . typeParam n ty
+>         [ str "" . indent . str "| " . makeAbsSynCon n . strspace . typeParam n ty
 >         | (n, ty) <- assocs nt_types,
 >           (nt_types_index ! n) == n]
 
@@ -254,21 +259,21 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 
 >     | is_monad_prod && (use_monad || imported_identity')
 >       = mkReductionHdr (showInt lt) monad_reduce
->       . char '(' . interleave " `HappyStk`\n  " tokPatterns
->       . str "happyRest) tk\n   = happyThen ("
+>       . char '(' . interleave (" `HappyStk`\n" ++ indentStr) tokPatterns
+>       . str "happyRest) tk\n" . indent . str " = happyThen ("
 >       . str "("
 >       . tokLets (char '(' . str code' . char ')')
 >       . str ")"
 >       . (if monad_pass_token then str " tk" else id)
->       . str "\n  ) (\\r -> happyReturn (" . this_absSynCon . str " r))"
+>       . str "\n" . indent . str ") (\\r -> happyReturn (" . this_absSynCon . str " r))"
 
 >     | specReduceFun lt
 >       = mkReductionHdr id ("happySpecReduce_" ++ show lt)
->       . interleave "\n  " tokPatterns
+>       . interleave ("\n" ++ indentStr) tokPatterns
 >       . str " =  "
 >       . tokLets (
->           this_absSynCon . str "\n     "
->           . char '(' . str code' . str "\n  )"
+>           this_absSynCon . str "\n" . indent . indent . str " "
+>           . char '(' . str code' . str "\n" . indent . str ")"
 >         )
 >       . (if coerce || null toks || null vars_used then
 >                 id
@@ -279,11 +284,11 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 
 >     | otherwise
 >       = mkReductionHdr (showInt lt) "happyReduce"
->       . char '(' . interleave " `HappyStk`\n  " tokPatterns
->       . str "happyRest)\n   = "
+>       . char '(' . interleave (" `HappyStk`\n" ++ indentStr) tokPatterns
+>       . str "happyRest)\n" . indent . str " = "
 >       . tokLets
->          ( this_absSynCon . str "\n     "
->          . char '(' . str code'. str "\n  ) `HappyStk` happyRest"
+>          ( this_absSynCon . str "\n" . indent . indent . str " "
+>          . char '(' . str code'. str "\n" . indent . str ") `HappyStk` happyRest"
 >          )
 
 >       where
@@ -335,7 +340,7 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >
 >               tokLets code''
 >                  | coerce && not (null cases)
->                       = interleave "\n  " cases
+>                       = interleave ("\n"++indentStr) cases
 >                       . code'' . str (replicate (length cases) '}')
 >                  | otherwise = code''
 >
@@ -359,14 +364,14 @@ The token conversion function.
 >       = case lexer' of {
 >
 >       Nothing ->
->         str "happyNewToken action sts stk [] =\n  "
+>         str "happyNewToken action sts stk [] =\n" . indent
 >       . eofAction "notHappyAtAll"
 >       . str " []\n\n"
->       . str "happyNewToken action sts stk (tk:tks) =\n  "
->       . str "let cont i = " . doAction . str " sts stk tks in\n  "
->       . str "case tk of {\n  "
->       . interleave ";\n  " (map doToken token_rep)
->       . str "_ -> happyError' ((tk:tks), [])\n  "
+>       . str "happyNewToken action sts stk (tk:tks) =\n" . indent
+>       . str "let cont i = " . doAction . str " sts stk tks in\n" . indent
+>       . str "case tk of {\n" . indent
+>       . interleave (";\n" ++ indentStr) (map doToken token_rep)
+>       . str "_ -> happyError' ((tk:tks), [])\n" . indent
 >       . str "}\n\n"
 >       . str "happyError_ explist " . eofTok . str " tk tks = happyError' (tks, explist)\n"
 >       . str "happyError_ explist _ tk tks = happyError' ((tk:tks), explist)\n";
@@ -374,17 +379,17 @@ The token conversion function.
 >             -- so we must not pass it to happyError'
 
 >       Just (lexer'',eof') ->
->         str "happyNewToken action sts stk\n  = "
+>         str "happyNewToken action sts stk\n" . indent . str "= "
 >       . str lexer''
 >       . str "(\\tk -> "
 >       . str "\n\tlet cont i = "
 >       . doAction
->       . str " sts stk in\n  "
->       . str "case tk of {\n  "
+>       . str " sts stk in\n" . indent
+>       . str "case tk of {\n" . indent
 >       . str (eof' ++ " -> ")
->       . eofAction "tk" . str ";\n  "
->       . interleave ";\n  " (map doToken token_rep)
->       . str "_ -> happyError' (tk, [])\n  "
+>       . eofAction "tk" . str ";\n" . indent
+>       . interleave (";\n" ++ indentStr) (map doToken token_rep)
+>       . str "_ -> happyError' (tk, [])\n" . indent
 >       . str "})\n\n"
 >       . str "happyError_ explist " . eofTok . str " tk = happyError' (tk, explist)\n"
 >       . str "happyError_ explist _ tk = happyError' (tk, explist)\n";
@@ -559,7 +564,7 @@ action array indexed by (terminal * last_state) + state
 >               . shows n_rules
 >               . str ") [\n"
 >       . interleave' ",\n" (map reduceArrElem [n_starts..n_rules])
->       . str "\n  ]\n\n"
+>       . str "\n" . indent . str "]\n\n"
 
 >    n_rules = length prods - 1 :: Int
 
@@ -715,7 +720,7 @@ directive determines the API of the provided function.
 >                               Just _  -> str "(\\(tokens, explist) -> happyError)"
 
 >    reduceArrElem n
->      = str "  (" . shows n . str " , "
+>      = str "" . indent . str "(" . shows n . str " , "
 >      . str "happyReduce_" . shows n . char ')'
 
 -----------------------------------------------------------------------------
