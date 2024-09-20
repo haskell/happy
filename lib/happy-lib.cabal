@@ -1,6 +1,6 @@
 cabal-version: 3.0
 name: happy-lib
-version: 2.0
+version: 2.0.1
 license: BSD-2-Clause
 copyright: (c) Andy Gill, Simon Marlow
 author: Andy Gill and Simon Marlow

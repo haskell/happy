@@ -1,5 +1,11 @@
 # Revision history for Happy
 
+## 2.0.1
+
+The 2.0 changed the indentation character from tabs to two spaces, triggering an
+unforced breaking change in GHC (#303).
+This release provides the fix by using eight spaces for indentation.
+
 ## 2.0
 
 There are two main breaking changes in this release:
