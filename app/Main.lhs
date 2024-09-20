@@ -123,7 +123,6 @@ Print out the info file.
 >                       g
 >                       action
 >                       goto
->                       (token_specs g)
 >                       conflictArray
 >                       fl_name
 >                       unused_rules
