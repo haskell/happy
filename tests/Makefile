@@ -5,7 +5,7 @@
 # [2021-07-14, PR #196](https://github.com/haskell/happy/pull/196)
 #
 HC ?= ghc
-HC_OPTS=-package array -Wall -Werror
+HC_OPTS=-package array -Wall -Werror -XHaskell98
 
 # NOTE: `cabal test` will take care to build the local `happy`
 # executable and place it into $PATH for us to pick up.
