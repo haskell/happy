@@ -85,7 +85,7 @@ library frontend
                        Happy.Frontend.AbsSyn,
                        Happy.Frontend.Mangler,
                        Happy.Frontend.PrettyGrammar
-  build-depends:       base < 5, array, transformers, containers, mtl, happy-lib:grammar
+  build-depends:       base < 5, array, transformers, containers, mtl, grammar
   other-modules:
         Happy.Frontend.ParseMonad
         Happy.Frontend.ParseMonad.Class
@@ -105,7 +105,7 @@ library tabular
                        Happy.Tabular.Info,
                        Happy.Tabular.LALR,
                        Happy.Tabular.NameSet
-  build-depends:       base < 5, array, containers, happy-lib:grammar
+  build-depends:       base < 5, array, containers, grammar
 
 
 library backend-lalr
@@ -113,7 +113,7 @@ library backend-lalr
   hs-source-dirs:      backend-lalr/src
   exposed-modules:     Happy.Backend.LALR,
                        Happy.Backend.LALR.ProduceCode
-  build-depends:       base < 5, array, happy-lib:grammar, happy-lib:tabular
+  build-depends:       base < 5, array, grammar, tabular
   other-modules:       Paths_happy_lib
   autogen-modules:     Paths_happy_lib
 
@@ -122,7 +122,7 @@ library backend-glr
   hs-source-dirs:      backend-glr/src
   exposed-modules:     Happy.Backend.GLR,
                        Happy.Backend.GLR.ProduceCode
-  build-depends:       base < 5, array, happy-lib:grammar, happy-lib:tabular
+  build-depends:       base < 5, array, grammar, tabular
   other-modules:       Paths_happy_lib
   autogen-modules:     Paths_happy_lib
 
@@ -147,8 +147,10 @@ library
                  containers >= 0.4.2,
                  transformers >= 0.5.6.2,
                  mtl >= 2.2.1,
-                 happy-lib:grammar,
-                 happy-lib:tabular,
-                 happy-lib:frontend,
-                 happy-lib:backend-lalr,
-                 happy-lib:backend-glr
+                 -- NB: omit the `happy-lib:` prefix in happy-lib:grammar.
+                 -- Otherwise we unnecessarily break Cabal < 3.4
+                 grammar,
+                 tabular,
+                 frontend,
+                 backend-lalr,
+                 backend-glr
