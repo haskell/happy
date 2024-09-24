@@ -1,8 +1,18 @@
 # Revision history for Happy
 
+## 2.0.2
+
+The 2.0.1 release in turn exposed two more regressions:
+
+* Generated code uses PatternGuards without declaring it (#309)
+* Use of `happy-lib:*` syntax to depend on private library components triggered
+  a bug in Cabal versions 3.0 and 3.2 (#311)
+
+This release fixes both.
+
 ## 2.0.1
 
-The 2.0 changed the indentation character from tabs to two spaces, triggering an
+The 2.0 release changed the indentation character from tabs to two spaces, triggering an
 unforced breaking change in GHC (#303).
 This release provides the fix by using eight spaces for indentation.
 
