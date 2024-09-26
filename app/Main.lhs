@@ -48,6 +48,8 @@ Read and parse the CLI arguments.
 >       case getOpt Permute argInfo (constArgs ++ args) of
 >               (cli,_,[]) | DumpVersion `elem` cli ->
 >                  bye copyright
+>               (cli,_,[]) | DumpNumericVersion `elem` cli ->
+>                  bye projectVersion
 >               (cli,_,[]) | DumpHelp `elem` cli -> do
 >                  prog <- getProgramName
 >                  bye (usageInfo (usageHeader prog) argInfo)
@@ -307,6 +309,7 @@ The command line arguments.
 >               | DumpGoto
 >               | DumpLA
 >               | DumpVersion
+>               | DumpNumericVersion
 >               | DumpHelp
 >               | OptInfoFile (Maybe String)
 >               | OptPrettyFile (Maybe String)
@@ -355,11 +358,12 @@ The command line arguments.
 >    Option ['?'] ["help"] (NoArg DumpHelp)
 >       "display this help and exit",
 >    Option ['V','v'] ["version"] (NoArg DumpVersion)   -- ToDo: -v is deprecated
->       "output version information and exit"
+>       "output version information and exit",
+>    Option [] ["numeric-version"] (NoArg DumpNumericVersion)   -- ToDo: -v is deprecated
+>       "output the version number and exit",
 
 Various debugging/dumping options...
 
->    ,
 >    Option [] ["ddump-mangle"] (NoArg DumpMangle)
 >       "Dump mangled input",
 >    Option [] ["ddump-lr0"] (NoArg DumpLR0)
@@ -423,6 +427,9 @@ Extract various command-line options.
 > getDebug cli = return (OptDebugParser `elem` cli)
 
 ------------------------------------------------------------------------------
+
+> projectVersion :: String
+> projectVersion = showVersion version
 
 > copyright :: String
 > copyright = unlines [

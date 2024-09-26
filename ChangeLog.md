@@ -1,5 +1,9 @@
 # Revision history for Happy
 
+## 2.1
+
+* Added `--numeric-version` CLI flag.
+
 ## 2.0.2
 
 The 2.0.1 release in turn exposed two more regressions:
