@@ -16,9 +16,11 @@ The Grammar data type.
 >       AttributeGrammarExtras(..),
 >       Priority(..),
 >       Assoc(..),
->       Pragmas(..), ErrorHandlerType(..),
+>       ErrorHandlerInfo(..),
+>       Pragmas(..),
 >
->       errorName, errorTok, startName, dummyName, firstStartTok, dummyTok,
+>       errorName, errorTok, catchName, catchTok,
+>       startName, dummyName, firstStartTok, dummyTok,
 >       eofName, epsilonTok,
 >       ) where
 
@@ -98,9 +100,16 @@ The Grammar data type.
 >   Prio _ i == Prio _ j = i == j
 >   _ == _ = False
 
-> data ErrorHandlerType
->   = ErrorHandlerTypeDefault
->   | ErrorHandlerTypeExpList
+> data ErrorHandlerInfo
+>   = DefaultErrorHandler
+>   -- ^ Default handler `happyError`
+>   | CustomErrorHandler String
+>   -- ^ Call this handler on error.
+>   | ResumptiveErrorHandler String String
+>   -- ^ `ResumptiveErrorHandler abort report`:
+>   -- Upon encountering a parse error, call non-fatal function `report`.
+>   -- Then try to resume parsing by finding a catch production.
+>   -- If that ultimately fails, call `abort`.
 
 > -- | Stuff like `\%monad`, `\%expect`
 > data Pragmas
@@ -110,8 +119,10 @@ The Grammar data type.
 >               monad             :: (Bool,String,String,String,String),
 >               expect            :: Maybe Int,
 >               lexer             :: Maybe (String,String),
->               error_handler     :: Maybe String,
->               error_sig         :: ErrorHandlerType
+>               error_handler     :: ErrorHandlerInfo,
+>               error_expected    :: Bool
+>                 -- ^ Error handler specified in `error_handler` takes
+>                 -- a `[String]` carrying the pretty-printed expected tokens
 >       }
 
 -----------------------------------------------------------------------------
@@ -150,14 +161,16 @@ In normal and GHC-based parsers, these numbers are also used in the
 generated grammar itself, except that the error token is mapped to -1.
 For array-based parsers, see the note in Tabular/LALR.lhs.
 
-> startName, eofName, errorName, dummyName :: String
+> startName, eofName, errorName, catchName, dummyName :: String
 > startName = "%start" -- with a suffix, like %start_1, %start_2 etc.
 > eofName   = "%eof"
 > errorName = "error"
+> catchName = "catch"
 > dummyName = "%dummy"  -- shouldn't occur in the grammar anywhere
 
-> firstStartTok, dummyTok, errorTok, epsilonTok :: Name
-> firstStartTok   = MkName 3
-> dummyTok        = MkName 2
+> firstStartTok, dummyTok, errorTok, catchTok, epsilonTok :: Name
+> firstStartTok   = MkName 4
+> dummyTok        = MkName 3
+> catchTok        = MkName 2
 > errorTok        = MkName 1
 > epsilonTok      = MkName 0

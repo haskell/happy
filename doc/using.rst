@@ -991,11 +991,187 @@ and the occurrence of the ``in`` symbol generates a parse error, which is interp
 
 .. index:: yacc
 
-Note for ``yacc`` users: this form of error recovery is strictly more limited than that provided by ``yacc``.
-During a parse error condition, ``yacc`` attempts to discard states and tokens in order to get back into a state where parsing may continue; Happy doesn't do this.
-The reason is that normal ``yacc`` error recovery is notoriously hard to describe, and the semantics depend heavily on the workings of a shift-reduce parser.
-Furthermore, different implementations of ``yacc`` appear to implement error recovery differently.
-Happy's limited error recovery on the other hand is well-defined, as is just sufficient to implement the Haskell layout rule (which is why it was added in the first place).
+Note for ``yacc``/``bison``/``menhir`` users: this form of error recovery is
+quite different to the one provided by other parser generators.
+If you are looking for ``yacc``-style error recovery, have a look at :ref:`The ``catch`` token <sec-catch>`.
+For historic reasons, the main reason for happy's ``error`` token has been to
+implement the Haskell 2010 layout rule, which has
+:ref:`its own set of drawbacks <https://gitlab.haskell.org/ghc/ghc/-/issues/25322>`.
+
+.. _sec-catch:
+
+Resumptive parsing with ``catch``
+---------------------------------
+
+.. index:: catch token
+
+Since version 2.1, happy supports a form of error recovery that is less-limited
+(but perhaps more fickle) than ``error``.
+This form of error handling is enabled by the special ``catch``
+token, which works quite similar to the ``error`` token in :ref:`bison
+<https://www.gnu.org/software/bison/manual/html_node/Error-Recovery.html>`.
+
+The main motivation for ``catch`` is that one wants to resume parsing after
+encountering a syntax error.
+It is quite hard for a parser generator to determine where to resume parsing
+all by itself; hence the user must guide the resumption process via judicious
+use of ``catch``.
+
+Here is an example (adapted from test case ``monaderror-resume``, featuring a
+simple non-threaded lexer):
+
+.. code-block:: none
+
+  %monad { ParseM } { (>>=) } { return }
+  %error { abort } { report }
+
+  %token ...
+  ...
+
+  %%
+
+  Stmts :: { [String] }
+  Stmts : {- empty -}           { [] }
+        | Exp                   { [$1] }
+        | Stmts ';' Exp         { $1 ++ [$3] }
+
+  Exp :: { String }
+  Exp : '1'         { "1" }
+      | catch       { "catch" }
+      | Exp '+' Exp { $1 ++ " + " ++ $3 }
+      | '(' Exp ')' { "(" ++ $2 ++ ")" }
+
+  %%
+
+  type ParseM = ...
+  report :: [LToken] -> ([LToken] -> ParseM a) -> ParseM a
+  report tks resume = do { ...; resume tks }
+
+  abort :: [LToken] -> ParseM a
+  abort = ... -- throw exception or call `error`
+
+  ...
+
+Note the use of ``catch`` in the second ``Exp`` rule and
+the use of the binary form of the ``%error`` directive.
+The directive specifies a pair of functions ``abort`` and ``report``
+which are necessary to handle multiple parse errors.
+
+The generated parser parses errorneous input such as ``1+;+1;(1+;1`` as
+``["1 + catch", "catch + 1", "catch", "1"]``, with one list element per parsed
+statement.
+To a first approximation, one can think of ``catch`` as standing in for the
+smallest syntax tree containing the error site.
+A different analogy is that of a ``catch`` handler in exceptional control flow
+in, e.g., Java, where the innermost catch frame handles the exception.
+For ``happy``, the "exception handlers" are parser states "in the past" that can
+shift the ``catch`` token, but it is not *always* the innermost handler that
+resumes.
+
+Precisely, upon encountering a syntax error, function ``report`` is called for
+the user to print or collect the error message.
+As its last argument, ``report`` takes a resumption action, which when called
+enters **error resumption mode**. This mode proceeds as follows:
+
+ 1. Collect prefixes of the state stack that can shifts the ``catch`` token and
+    shift it. The resulting stacks are called **catch frames**.
+ 2. To resume parsing, discard input tokens until one of the catch frames
+    ultimately shifts the input token.
+     *  When there are multiple catch frames that can resume at the current token,
+        pick the innermost catch frame.
+     *  When the end of input is reached before any catch frame resumes, call
+        the ``abort`` function.
+
+A couple of notes:
+
+  * When parsing the expression ``1+``, both ``"1 + catch"`` and ``"catch"`` would
+    be valid resumptive parses, expecting to shift the end-of-input token.
+    However, the first parse is preferable because it provides the "smaller
+    cover" of the error site.
+    This is ensured by "pick the innermost catch frame".
+
+  * Why bother with multiple catch frames? Why not deterministically pick the
+    innermost one? After all, that is how ``bison`` does it.
+
+    Answer: Consider the input ``(1+;1``, which errors when it sees ``;``
+    because it expects to find an ``Exp``.
+    Now, ``Exp -> . catch`` is an item of the topmost state, and shifting the
+    ``catch`` token corresponds to the prefix of a parse ``(1+catch``.
+    This prefix can only resume when seeing ``+`` or ``)``, so the parser
+    will discard both ``;`` and ``1``, hitting the end of input.
+    Thus, trying to resume with the innermost frame will ultimately call
+    ``abort`` and thus failing to produce any syntax tree *at all*.
+    By contrast, picking the start state (which shifted ``(``) for resumption
+    means to stop discarding when we encounter the next ``;``.
+    This leads to the preferred parse ``["catch","1"]``.
+
+  * After ``report`` has noted the parse error, its type leaves it no choice but
+    to call ``resume`` (or to throw an exception).
+    Similarly, ``abort`` must always throw an exception and cannot return a
+    syntax tree at all. It should *not* report a parse error as well.
+
+    To illustrate how the new binary ``%error`` decomposition corresponds to
+    the regular unary one, consider the definition
+    ``myError tks = report tks abort``.
+    This definition could be used in ``%error { myError }``; in this case, the
+    parser would always abort after the first error.
+
+  * Whether or not the ``abort`` and ``report`` functions get passed the
+    list of tokens is subject to the :ref:`same decision logic as for ``parseError`` <sec-monad-summary>`.
+    When using :ref:`the ``%error.expected`` directive <sec-expected-list>`,
+    the list of expected tokens is passed to ``report`` only, between ``tks``
+    and ``resume``.
+
+Note that defining a good AST representation for syntax errors is entirely up
+to the user of happy; the example above simply emitted the string ``catch``
+whenever it stands-in an for an errorneous AST node.
+A more reasonable implementation would be similar to typed holes in GHC.
+
+.. _sec-expected-list:
+
+Reporting expected tokens
+-------------------------
+
+.. index:: expected tokens
+
+Often, it is useful to present users with suggestions as to which kind of tokens
+where expected at the site of a syntax error.
+To this end, when ``%error.expected`` directive is specified, happy assumes that
+the error handling function (resp. ``report`` function when using the binary
+form of the ``%error`` directive) takes a ``[String]`` argument (the argument
+*after* the token stream, in case of a non-threaded lexer) listing all the
+stringified tokens that were expected at the site of the syntax error.
+The strings in this list are derived from the ``%token`` directive.
+
+Here is an example, inspired by test case ``monaderror-explist``:
+
+.. code-block:: none
+
+  %tokentype { Token }
+  %error { handleErrorExpList }
+  %error.expected
+
+  %monad { ParseM } { (>>=) } { return }
+
+  %token
+          'S'             { TokenSucc }
+          'Z'             { TokenZero }
+          'T'             { TokenTest }
+
+  %%
+
+  Exp         :       'Z'           { 0 }
+              |       'T' 'Z' Exp   { $3 + 1 }
+              |       'S' Exp       { $2 + 1 }
+
+  %%
+
+  type ParseM = ...
+
+  handleErrorExpList :: [Token] -> [String] -> ParseM a
+  handleErrorExpList ts explist = throwError $ ParseError $ explist
+
+  ...
 
 .. _sec-multiple-parsers:
 

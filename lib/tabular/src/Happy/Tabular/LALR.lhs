@@ -523,7 +523,7 @@ Generate the action table
 
 >       possAction goto _set (Lr1 rule pos la) =
 >          case findRule g rule pos of
->               Just t | t >= fst_term || t == errorTok ->
+>               Just t | t >= fst_term || t == errorTok || t == catchTok ->
 >                       let f j = (t,LR'Shift j p)
 >                           p = maybe No id (lookup t prios)
 >                       in map f $ maybeToList (lookup t goto)

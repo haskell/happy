@@ -85,25 +85,31 @@ go do special processing.  If not, pass on to the regular processing routine
 >       starts'     = case getParserNames dirs of
 >                       [] -> [TokenName "happyParse" Nothing False]
 >                       ns -> ns
+>       error_resumptive | ResumptiveErrorHandler{} <- getError dirs = True
+>                        | otherwise                                 = False
 >
 >       start_strs  = [ startName++'_':p  | (TokenName p _ _) <- starts' ]
 
 Build up a mapping from name values to strings.
 
 >       name_env = (errorTok, errorName) :
+>                  (catchTok, catchName) :
 >                  (dummyTok, dummyName) :
 >                  zip start_names    start_strs ++
 >                  zip nonterm_names  nonterm_strs ++
 >                  zip terminal_names terminal_strs
 
 >       lookupName :: String -> [Name]
->       lookupName n = [ t | (t,r) <- name_env, r == n ]
+>       lookupName n = [ t | (t,r) <- name_env, r == n
+>                          , t /= catchTok || error_resumptive ]
+>                            -- hide catchName unless %errorresumptive is active
+>                            -- issue93.y uses catch as a nonterminal, we should not steal it
 
 >       mapToName str' =
 >             case lookupName str' of
 >                [a]   -> return a
 >                []    -> do addErr ("unknown identifier '" ++ str' ++ "'")
->                            return errorTok
+>                            return errorTok -- SG: What a confusing use of errorTok.. Use dummyTok?
 >                (a:_) -> do addErr ("multiple use of '" ++ str' ++ "'")
 >                            return a
 
@@ -242,7 +248,7 @@ Get the token specs in terms of Names.
 >               lookupProdNo      = (prod_array !),
 >               lookupProdsOfName = lookup_prods,
 >               token_specs       = tokspec,
->               terminals         = errorTok : terminal_names,
+>               terminals         = errorTok : catchTok : terminal_names,
 >               non_terminals     = start_names ++ nonterm_names,
 >                                       -- INCLUDES the %start tokens
 >               starts            = zip4 parser_names start_names start_toks
@@ -259,7 +265,7 @@ Get the token specs in terms of Names.
 >               monad             = getMonad dirs,
 >               lexer             = getLexer dirs,
 >               error_handler     = getError dirs,
->               error_sig         = getErrorHandlerType dirs,
+>               error_expected    = getErrorHandlerExpectedList dirs,
 >               token_type        = getTokenType dirs,
 >               expect            = getExpect dirs
 >       })
