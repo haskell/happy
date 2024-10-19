@@ -33,10 +33,10 @@ data Happy_IntList = HappyCons Happy_Int Happy_IntList
 #endif
 
 #if defined(HAPPY_DEBUG)
-#  define DEBUG_TRACE(s)    (happyTrace (s)) $
-happyTrace string expr = Happy_System_IO_Unsafe.unsafePerformIO $ do
+#  define DEBUG_TRACE(s)    (happyTrace (s)) Prelude.$
+happyTrace string expr = Happy_System_IO_Unsafe.unsafePerformIO Prelude.$ do
     Happy_System_IO.hPutStr Happy_System_IO.stderr string
-    return expr
+    Prelude.return expr
 #else
 #  define DEBUG_TRACE(s)    {- nothing -}
 #endif
@@ -64,23 +64,23 @@ happyAccept j tk st sts (HappyStk ans _) =
 -- Arrays only: do the next action
 
 happyDoAction i tk st =
-  DEBUG_TRACE("state: " ++ show (Happy_GHC_Exts.I# st) ++
-              ",\ttoken: " ++ show (Happy_GHC_Exts.I# i) ++
+  DEBUG_TRACE("state: " Prelude.++ Prelude.show (Happy_GHC_Exts.I# st) Prelude.++
+              ",\ttoken: " Prelude.++ Prelude.show (Happy_GHC_Exts.I# i) Prelude.++
               ",\taction: ")
   case happyDecodeAction (happyNextAction i st) of
     HappyFail             -> DEBUG_TRACE("failing.\n")
                              happyFail i tk st
     HappyAccept           -> DEBUG_TRACE("accept.\n")
                              happyAccept i tk st
-    HappyReduce rule      -> DEBUG_TRACE("reduce (rule " ++ show (Happy_GHC_Exts.I# rule) ++ ")")
+    HappyReduce rule      -> DEBUG_TRACE("reduce (rule " Prelude.++ Prelude.show (Happy_GHC_Exts.I# rule) Prelude.++ ")")
                              (happyReduceArr Happy_Data_Array.! (Happy_GHC_Exts.I# rule)) i tk st
-    HappyShift  new_state -> DEBUG_TRACE("shift, enter state " ++ show (Happy_GHC_Exts.I# new_state) ++ "\n")
+    HappyShift  new_state -> DEBUG_TRACE("shift, enter state " Prelude.++ Prelude.show (Happy_GHC_Exts.I# new_state) Prelude.++ "\n")
                              happyShift new_state i tk st
 
 {-# INLINE happyNextAction #-}
 happyNextAction i st = case happyIndexActionTable i st of
-  Just (Happy_GHC_Exts.I# act) -> act
-  Nothing                      -> happyIndexOffAddr happyDefActions st
+  Prelude.Just (Happy_GHC_Exts.I# act) -> act
+  Prelude.Nothing                      -> happyIndexOffAddr happyDefActions st
 
 {-# INLINE happyIndexActionTable #-}
 happyIndexActionTable i st
@@ -89,7 +89,7 @@ happyIndexActionTable i st
   -- off >= 0: Otherwise it's a default action
   -- equality check: Ensure that the entry in the compressed array is owned by st
   = Prelude.Just (Happy_GHC_Exts.I# (happyIndexOffAddr happyTable off))
-  | otherwise
+  | Prelude.otherwise
   = Prelude.Nothing
   where
     off = PLUS(happyIndexOffAddr happyActOffsets st, i)
@@ -99,14 +99,14 @@ data HappyAction
   | HappyAccept
   | HappyReduce Happy_Int -- rule number
   | HappyShift Happy_Int  -- new state
-  deriving Show
+  deriving Prelude.Show
 
 {-# INLINE happyDecodeAction #-}
 happyDecodeAction :: Happy_Int -> HappyAction
 happyDecodeAction  0#                        = HappyFail
 happyDecodeAction -1#                        = HappyAccept
 happyDecodeAction action | LT(action, 0#)    = HappyReduce NEGATE(PLUS(action, 1#))
-                         | otherwise         = HappyShift MINUS(action, 1#)
+                         | Prelude.otherwise = HappyShift MINUS(action, 1#)
 
 {-# INLINE happyIndexGotoTable #-}
 happyIndexGotoTable nt st = happyIndexOffAddr happyTable off
@@ -205,7 +205,7 @@ happyDropStk n  (x `HappyStk` xs) = happyDropStk MINUS(n,(1#::Happy_Int)) xs
 -- Moving to a new state after a reduction
 
 happyGoto nt j tk st =
-   DEBUG_TRACE(", goto state " ++ show (Happy_GHC_Exts.I# new_state) ++ "\n")
+   DEBUG_TRACE(", goto state " Prelude.++ Prelude.show (Happy_GHC_Exts.I# new_state) Prelude.++ "\n")
    happyDoAction j tk new_state
   where new_state = happyIndexGotoTable nt st
 
@@ -255,8 +255,8 @@ It is best understood by example. Consider
 Exp :: { String }
 Exp : '1'                { "1" }
     | catch              { "catch" }
-    | Exp '+' Exp %shift { $1 ++ " + " ++ $3 } -- %shift: associate 1 + 1 + 1 to the right
-    | '(' Exp ')'        { "(" ++ $2 ++ ")" }
+    | Exp '+' Exp %shift { $1 Prelude.++ " + " Prelude.++ $3 } -- %shift: associate 1 + 1 + 1 to the right
+    | '(' Exp ')'        { "(" Prelude.++ $2 Prelude.++ ")" }
 
 The idea of the use of `catch` here is that upon encountering a parse error
 during expression parsing, we can gracefully degrade using the `catch` rule,
@@ -333,7 +333,7 @@ In general, we pick the catch frame for resumption that discards the least
 amount of input for a successful shift, preferring the topmost such catch frame.
 -}
 
--- happyFail :: Happy_Int -> _ -> Happy_Int -> _
+-- happyFail :: Happy_Int -> Token -> Happy_Int -> _
 -- This function triggers Note [Error recovery].
 -- If the current token is ERROR_TOK, phase (1) has failed and we might try
 -- phase (2).
@@ -359,72 +359,72 @@ happyFixupFailed tk st sts (x `HappyStk` stk) =
       expected = happyExpectedTokens st sts in
   happyReport i tk expected resume
 
--- happyResume :: Happy_Int -> _ -> Happy_Int -> _
+-- happyResume :: Happy_Int -> Token -> Happy_Int -> _
 -- See Note [happyResume]
 happyResume i tk st sts stk = pop_items [] st sts stk
   where
     !(Happy_GHC_Exts.I# n_starts) = happy_n_starts   -- this is to test whether we have a start token
-    !(Happy_GHC_Exts.I# eof_i) = happy_n_terms - 1   -- this is the token number of the EOF token
-    happy_list_to_list :: Happy_IntList -> [Int]
+    !(Happy_GHC_Exts.I# eof_i) = happy_n_terms Prelude.- 1   -- this is the token number of the EOF token
+    happy_list_to_list :: Happy_IntList -> [Prelude.Int]
     happy_list_to_list (HappyCons st sts)
       | LT(st, n_starts)
       = [(Happy_GHC_Exts.I# st)]
-      | otherwise
+      | Prelude.otherwise
       = (Happy_GHC_Exts.I# st) : happy_list_to_list sts
 
     -- See (1) of Note [happyResume]
     pop_items catch_frames st sts stk
       | LT(st, n_starts)
-      = DEBUG_TRACE("reached start state " ++ show (Happy_GHC_Exts.I# st) ++ ", ")
-        if null catch_frames_new
+      = DEBUG_TRACE("reached start state " Prelude.++ Prelude.show (Happy_GHC_Exts.I# st) Prelude.++ ", ")
+        if Prelude.null catch_frames_new
           then DEBUG_TRACE("no resumption.\n")
                happyAbort
-          else DEBUG_TRACE("now discard input, trying to anchor in states (reverse " ++ show (map (happy_list_to_list . fst) catch_frames_new) ++ ").\n")
-               discard_input_until_exp i tk (reverse catch_frames_new)
+          else DEBUG_TRACE("now discard input, trying to anchor in states " Prelude.++ Prelude.show (Prelude.map (happy_list_to_list . Prelude.fst) (Prelude.reverse catch_frames_new)) Prelude.++ ".\n")
+               discard_input_until_exp i tk (Prelude.reverse catch_frames_new)
       | (HappyCons st1 sts1) <- sts, _ `HappyStk` stk1 <- stk
       = pop_items catch_frames_new st1 sts1 stk1
       where
         !catch_frames_new
           | HappyShift new_state <- happyDecodeAction (happyNextAction CATCH_TOK st)
-          , DEBUG_TRACE("can shift catch token in state " ++ show (Happy_GHC_Exts.I# st) ++ ", into state " ++ show (Happy_GHC_Exts.I# new_state) ++ "\n")
-            null (filter (\(HappyCons _ (HappyCons h _),_) -> EQ(st,h)) catch_frames)
+          , DEBUG_TRACE("can shift catch token in state " Prelude.++ Prelude.show (Happy_GHC_Exts.I# st) Prelude.++ ", into state " Prelude.++ Prelude.show (Happy_GHC_Exts.I# new_state) Prelude.++ "\n")
+            Prelude.null (Prelude.filter (\(HappyCons _ (HappyCons h _),_) -> EQ(st,h)) catch_frames)
           = (HappyCons new_state (HappyCons st sts), MK_ERROR_TOKEN(i) `HappyStk` stk):catch_frames -- MK_ERROR_TOKEN(i) is just some dummy that should not be accessed by user code
-          | otherwise
-          = DEBUG_TRACE("already shifted or can't shift catch in " ++ show (Happy_GHC_Exts.I# st) ++ "\n")
+          | Prelude.otherwise
+          = DEBUG_TRACE("already shifted or can't shift catch in " Prelude.++ Prelude.show (Happy_GHC_Exts.I# st) Prelude.++ "\n")
             catch_frames
 
     -- See (2) of Note [happyResume]
     discard_input_until_exp i tk catch_frames
-      | Just (HappyCons st (HappyCons catch_st sts), catch_frame) <- some_catch_state_shifts i catch_frames
-      = DEBUG_TRACE("found expected token in state " ++ show (Happy_GHC_Exts.I# st) ++ " after shifting from " ++ show (Happy_GHC_Exts.I# catch_st) ++ ": " ++ show (Happy_GHC_Exts.I# i) ++ "\n")
+      | Prelude.Just (HappyCons st (HappyCons catch_st sts), catch_frame) <- some_catch_state_shifts i catch_frames
+      = DEBUG_TRACE("found expected token in state " Prelude.++ Prelude.show (Happy_GHC_Exts.I# st) Prelude.++ " after shifting from " Prelude.++ Prelude.show (Happy_GHC_Exts.I# catch_st) Prelude.++ ": " Prelude.++ Prelude.show (Happy_GHC_Exts.I# i) Prelude.++ "\n")
         happyDoAction i tk st (HappyCons catch_st sts) catch_frame
       | EQ(i,eof_i) -- is i EOF?
       = DEBUG_TRACE("reached EOF, cannot resume. abort parse :(\n")
         happyAbort
-      | otherwise
-      = DEBUG_TRACE("discard token " ++ show (Happy_GHC_Exts.I# i) ++ "\n")
+      | Prelude.otherwise
+      = DEBUG_TRACE("discard token " Prelude.++ Prelude.show (Happy_GHC_Exts.I# i) Prelude.++ "\n")
         happyLex (\eof_tk -> discard_input_until_exp eof_i eof_tk catch_frames) -- eof
                  (\i tk   -> discard_input_until_exp i tk catch_frames)         -- not eof
 
-    some_catch_state_shifts _ [] = DEBUG_TRACE("no catch state could shift.\n") Nothing
+    some_catch_state_shifts _ [] = DEBUG_TRACE("no catch state could shift.\n") Prelude.Nothing
     some_catch_state_shifts i catch_frames@(((HappyCons st sts),_):_) = try_head i st sts catch_frames
       where
         try_head i st sts catch_frames = -- PRECONDITION: head catch_frames = (HappyCons st sts)
-          DEBUG_TRACE("trying token " ++ show (Happy_GHC_Exts.I# i) ++ " in state " ++ show (Happy_GHC_Exts.I# st) ++ ": ")
+          DEBUG_TRACE("trying token " Prelude.++ Prelude.show (Happy_GHC_Exts.I# i) Prelude.++ " in state " Prelude.++ Prelude.show (Happy_GHC_Exts.I# st) Prelude.++ ": ")
           case happyDecodeAction (happyNextAction i st) of
-            HappyFail     -> DEBUG_TRACE("fail.\n")   some_catch_state_shifts i (tail catch_frames)
-            HappyAccept   -> DEBUG_TRACE("accept.\n") Just (head catch_frames)
-            HappyShift _  -> DEBUG_TRACE("shift.\n")  Just (head catch_frames)
+            HappyFail     -> DEBUG_TRACE("fail.\n")   some_catch_state_shifts i (Prelude.tail catch_frames)
+            HappyAccept   -> DEBUG_TRACE("accept.\n") Prelude.Just (Prelude.head catch_frames)
+            HappyShift _  -> DEBUG_TRACE("shift.\n")  Prelude.Just (Prelude.head catch_frames)
             HappyReduce r -> case happySimulateReduce r st sts of
               (HappyCons st1 sts1) -> try_head i st1 sts1 catch_frames
 
 happySimulateReduce r st sts =
-  DEBUG_TRACE("simulate reduction of rule " ++ show (Happy_GHC_Exts.I# r) ++ ", ")
+  DEBUG_TRACE("simulate reduction of rule " Prelude.++ Prelude.show (Happy_GHC_Exts.I# r) Prelude.++ ", ")
   let (# nt, len #) = happyIndexRuleArr r in
-  DEBUG_TRACE("nt " ++ show (Happy_GHC_Exts.I# nt) ++ ", len: " ++ show (Happy_GHC_Exts.I# len) ++ ", new_st ")
+  DEBUG_TRACE("nt " Prelude.++ Prelude.show (Happy_GHC_Exts.I# nt) Prelude.++ ", len: " Prelude.++ Prelude.show (Happy_GHC_Exts.I# len) Prelude.++ ", new_st ")
   let !(sts1@(HappyCons st1 _)) = happyDrop len (HappyCons st sts)
       new_st = happyIndexGotoTable nt st1 in
-  DEBUG_TRACE(show (Happy_GHC_Exts.I# new_st) ++ ".\n")
+  DEBUG_TRACE(Prelude.show (Happy_GHC_Exts.I# new_st) Prelude.++ ".\n")
   (HappyCons new_st sts1)
 
 happyTokenToString :: Prelude.Int -> Prelude.String
@@ -441,11 +441,11 @@ happyExpectedTokens :: Happy_Int -> Happy_IntList -> [Prelude.String]
 -- returned.
 happyExpectedTokens st sts =
   DEBUG_TRACE("constructing expected tokens.\n")
-  map happyTokenToString $ search_shifts st sts []
+  Prelude.map happyTokenToString (search_shifts st sts [])
   where
-    search_shifts st sts shifts = foldr (add_action st sts) shifts (distinct_actions st)
+    search_shifts st sts shifts = Prelude.foldr (add_action st sts) shifts (distinct_actions st)
     add_action st sts (Happy_GHC_Exts.I# i, Happy_GHC_Exts.I# act) shifts =
-      DEBUG_TRACE("found action in state " ++ show (Happy_GHC_Exts.I# st) ++ ", input " ++ show (Happy_GHC_Exts.I# i) ++ ", " ++ show (happyDecodeAction act) ++ "\n")
+      DEBUG_TRACE("found action in state " Prelude.++ Prelude.show (Happy_GHC_Exts.I# st) Prelude.++ ", input " Prelude.++ Prelude.show (Happy_GHC_Exts.I# i) Prelude.++ ", " Prelude.++ Prelude.show (happyDecodeAction act) Prelude.++ "\n")
       case happyDecodeAction act of
         HappyFail     -> shifts
         HappyAccept   -> shifts -- This would always be %eof or error... Not helpful
@@ -464,7 +464,7 @@ happyExpectedTokens st sts =
       , GTE(off_i,0#)
       , EQ(happyIndexOffAddr happyCheck off_i,i)
       = [(Happy_GHC_Exts.I# (happyIndexOffAddr happyTable off_i))]
-      | otherwise
+      | Prelude.otherwise
       = []
 
 -- Internal happy errors:
@@ -482,7 +482,7 @@ happyTcHack x y = y
 -----------------------------------------------------------------------------
 -- Seq-ing.  If the --strict flag is given, then Happy emits
 --      happySeq = happyDoSeq
--- otherwise it emits
+-- Prelude.otherwise it emits
 --      happySeq = happyDontSeq
 
 happyDoSeq, happyDontSeq :: a -> b -> b

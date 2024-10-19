@@ -66,6 +66,9 @@ This section is optional, but if included takes the following form:
 
 The Haskell module header contains the module name, exports, and imports.
 No other code is allowed in the header—this is because Happy may need to include its own ``import`` statements directly after the user defined header.
+Do note that Happy relies on ``Prelude`` from ``base`` being in scope qualified.
+Users who hide functions from ``Prelude`` or redefine it to use a custom prelude
+must also ``import qualified "base" Prelude`` for Happy.
 
 .. _sec-directives:
 
