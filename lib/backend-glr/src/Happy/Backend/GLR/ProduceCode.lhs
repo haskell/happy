@@ -91,7 +91,7 @@ the driver and data strs (large template).
 >        -> Maybe String  -- User-defined stuff (token DT, lexer etc.)
 >        -> (DebugMode,Options)       -- selecting code-gen style
 >        -> Grammar String -- Happy Grammar
->        -> Pragmas       -- Pragmas in the .y-file
+>        -> Directives       -- Directives in the .y-file
 >        -> (String       -- data
 >           ,String)      -- parser
 >
@@ -372,7 +372,7 @@ Do the same with the Happy goto table.
 %-----------------------------------------------------------------------------
 Create the 'GSymbol' ADT for the symbols in the grammar
 
-> mkGSymbols :: Grammar String -> Pragmas -> ShowS
+> mkGSymbols :: Grammar String -> Directives -> ShowS
 > mkGSymbols g pragmas
 >  = str dec
 >  . str eof
@@ -423,7 +423,7 @@ Creating a type for storing semantic rules
 > type SemInfo
 >  = [(String, String, [Int], [((Int, Int), ([(Int, TokenSpec)], String), [Int])])]
 
-> mkGSemType :: Options -> Grammar String -> Pragmas -> (ShowS, SemInfo)
+> mkGSemType :: Options -> Grammar String -> Directives -> (ShowS, SemInfo)
 > mkGSemType (TreeDecode,_,_) g pragmas
 >  = (def, map snd syms)
 >  where
@@ -673,7 +673,7 @@ only unpacked when needed. Using classes here to manage the unpacking.
 This selects the info used for monadic parser generation
 
 > type MonadInfo = Maybe (String,String,String)
-> monad_sub :: Pragmas -> MonadInfo
+> monad_sub :: Directives -> MonadInfo
 > monad_sub pragmas
 >  = case monad pragmas of
 >      (True, _, ty,bd,ret) -> Just (ty,bd,ret)

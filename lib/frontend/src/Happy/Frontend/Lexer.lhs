@@ -48,6 +48,7 @@ The lexer.
 >       | TokSpecId_Expect      -- %expect
 >       | TokSpecId_Error       -- %error
 >       | TokSpecId_ErrorExpected -- %error.expected
+>       | TokSpecId_ErrorHandlerType -- %errorhandlertype
 >       | TokSpecId_Attributetype -- %attributetype
 >       | TokSpecId_Attribute   -- %attribute
 >       | TokCodeQuote          -- stuff inside { .. }
@@ -131,6 +132,8 @@ followed by a special identifier.
 >               cont (TokenKW TokSpecId_Expect) rest
 >       'e':'r':'r':'o':'r':'.':'e':'x':'p':'e':'c':'t':'e':'d':rest | end_of_id rest ->
 >               cont (TokenKW TokSpecId_ErrorExpected) rest
+>       'e':'r':'r':'o':'r':'h':'a':'n':'d':'l':'e':'r':'t':'y':'p':'e':rest | end_of_id rest ->
+>               cont (TokenKW TokSpecId_ErrorHandlerType) rest
 >       'e':'r':'r':'o':'r':rest | end_of_id rest ->
 >               cont (TokenKW TokSpecId_Error) rest
 >       'a':'t':'t':'r':'i':'b':'u':'t':'e':'t':'y':'p':'e':rest | end_of_id rest ->
