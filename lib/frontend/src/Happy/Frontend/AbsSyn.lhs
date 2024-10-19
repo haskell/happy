@@ -11,7 +11,7 @@ Here is the abstract syntax of the language we parse.
 >       AbsSyn(..), Directive(..),
 >       getTokenType, getTokenSpec, getParserNames, getLexer,
 >       getImportedIdentity, getMonad, ErrorHandlerInfo(..), getError,
->       getPrios, getPrioNames, getExpect, getErrorHandlerExpectedList,
+>       getPrios, getPrioNames, getExpect, getErrorExpectedMode,
 >       getAttributes, getAttributetype, getAttributeGrammarExtras,
 >       parseTokenSpec,
 >       Rule(..), Prod(..), Term(..), Prec(..),
@@ -20,10 +20,6 @@ Here is the abstract syntax of the language we parse.
 
 > import Data.Char (isAlphaNum)
 > import Happy.Grammar
->   ( ErrorHandlerInfo(..)
->   , TokenSpec(..)
->   , AttributeGrammarExtras(..)
->   )
 > import Happy.Grammar.ExpressionWithHole
 
 > data BookendedAbsSyn
@@ -82,6 +78,7 @@ generate some error messages.
 >       | TokenExpect   Int                     -- %expect
 >       | TokenError    String (Maybe String)   -- %error
 >       | TokenErrorExpected                    -- %error.expected
+>       | TokenErrorHandlerType String          -- %errorhandlertype
 >       | TokenAttributetype String             -- %attributetype
 >       | TokenAttribute String String          -- %attribute
 >   deriving (Eq, Show)
@@ -150,9 +147,19 @@ generate some error messages.
 >               [(abort,Just addMessage)] -> ResumptiveErrorHandler abort addMessage
 >               _   -> error "multiple error directives"
 
-> getErrorHandlerExpectedList :: Eq t => [Directive t] -> Bool
-> getErrorHandlerExpectedList ds
->       = TokenErrorExpected `elem` ds
+
+> getErrorExpectedMode :: Eq t => [Directive t] -> ErrorExpectedMode
+> getErrorExpectedMode ds
+>   | ["explist"] <- old_directive
+>   = OldExpected
+>   | TokenErrorExpected `elem` ds
+>   = NewExpected
+>   | length old_directive > 1
+>   = error "multiple errorhandlertype directives"
+>   | otherwise
+>   = NoExpected
+>   where
+>     old_directive = [ a | (TokenErrorHandlerType a) <- ds ]
 
 > getAttributes :: [Directive t] -> [(String, String)]
 > getAttributes ds

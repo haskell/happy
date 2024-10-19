@@ -1,10 +1,20 @@
 # Revision history for Happy
 
+## 2.1.1
+
+This release fixes two breaking changes:
+
+* Properly qualify all uses of Prelude functions, fixing #131
+* Bring back the old `%errorhandlertype` directive, the use of which is
+  discouraged in favour of the "Reporting expected tokens" mechanism
+  in Happy 2.1, accesible via `%error.expected`.
+
 ## 2.1
 
 * Added `--numeric-version` CLI flag.
 * Documented and implemented the new feature "Resumptive parsing with ``catch``"
 * Documented (and reimplemented) the "Reporting expected tokens" feature
+  (which turned to cause a breaking change in this release: #320)
 
 ## 2.0.2
 

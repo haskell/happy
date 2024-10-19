@@ -19,6 +19,7 @@
 type Happy_Int = Happy_GHC_Exts.Int#
 data Happy_IntList = HappyCons Happy_Int Happy_IntList
 
+#define INVALID_TOK -1#
 #define ERROR_TOK 0#
 #define CATCH_TOK 1#
 

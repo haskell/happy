@@ -1053,7 +1053,8 @@ simple non-threaded lexer):
   ...
 
 Note the use of ``catch`` in the second ``Exp`` rule and
-the use of the binary form of the ``%error`` directive.
+the use of the two-action form of the ``%error`` directive
+(see :ref:`the documentation for ``%error`` <sec-error-directive>`).
 The directive specifies a pair of functions ``abort`` and ``report``
 which are necessary to handle multiple parse errors.
 
@@ -1110,15 +1111,9 @@ A couple of notes:
     Similarly, ``abort`` must always throw an exception and cannot return a
     syntax tree at all. It should *not* report a parse error as well.
 
-    To illustrate how the new binary ``%error`` decomposition corresponds to
-    the regular unary one, consider the definition
-    ``myError tks = report tks abort``.
-    This definition could be used in ``%error { myError }``; in this case, the
-    parser would always abort after the first error.
-
   * Whether or not the ``abort`` and ``report`` functions get passed the
     list of tokens is subject to the :ref:`same decision logic as for ``parseError`` <sec-monad-summary>`.
-    When using :ref:`the ``%error.expected`` directive <sec-expected-list>`,
+    When using :ref:`the ``%error.expected`` directive <sec-error-expected-directive>`,
     the list of expected tokens is passed to ``report`` only, between ``tks``
     and ``resume``.
 
@@ -1126,52 +1121,6 @@ Note that defining a good AST representation for syntax errors is entirely up
 to the user of happy; the example above simply emitted the string ``catch``
 whenever it stands-in an for an errorneous AST node.
 A more reasonable implementation would be similar to typed holes in GHC.
-
-.. _sec-expected-list:
-
-Reporting expected tokens
--------------------------
-
-.. index:: expected tokens
-
-Often, it is useful to present users with suggestions as to which kind of tokens
-where expected at the site of a syntax error.
-To this end, when ``%error.expected`` directive is specified, happy assumes that
-the error handling function (resp. ``report`` function when using the binary
-form of the ``%error`` directive) takes a ``[String]`` argument (the argument
-*after* the token stream, in case of a non-threaded lexer) listing all the
-stringified tokens that were expected at the site of the syntax error.
-The strings in this list are derived from the ``%token`` directive.
-
-Here is an example, inspired by test case ``monaderror-explist``:
-
-.. code-block:: none
-
-  %tokentype { Token }
-  %error { handleErrorExpList }
-  %error.expected
-
-  %monad { ParseM } { (>>=) } { return }
-
-  %token
-          'S'             { TokenSucc }
-          'Z'             { TokenZero }
-          'T'             { TokenTest }
-
-  %%
-
-  Exp         :       'Z'           { 0 }
-              |       'T' 'Z' Exp   { $3 + 1 }
-              |       'S' Exp       { $2 + 1 }
-
-  %%
-
-  type ParseM = ...
-
-  handleErrorExpList :: [Token] -> [String] -> ParseM a
-  handleErrorExpList ts explist = throwError $ ParseError $ explist
-
-  ...
 
 .. _sec-multiple-parsers:
 

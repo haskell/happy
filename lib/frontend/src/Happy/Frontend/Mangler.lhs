@@ -29,7 +29,7 @@ Mangler converts AbsSyn to Grammar
 
 This bit is a real mess, mainly because of the error message support.
 
-> mangler :: FilePath -> AbsSyn String -> Either [ErrMsg] (Grammar String, Maybe AttributeGrammarExtras, Pragmas)
+> mangler :: FilePath -> AbsSyn String -> Either [ErrMsg] (Grammar String, Maybe AttributeGrammarExtras, Directives)
 > mangler file abssyn@(AbsSyn dirs _)
 >   | null errs = Right (gd, mAg, ps)
 >   | otherwise = Left errs
@@ -56,7 +56,7 @@ go do special processing.  If not, pass on to the regular processing routine
 >   -> CodeChecker e
 >   -> FilePath
 >   -> AbsSyn e
->   -> M (Grammar e, Pragmas)
+>   -> M (Grammar e, Directives)
 > manglerM noCode checkCode file (AbsSyn dirs rules') =
 >   -- add filename to all error messages
 >   mapWriter (\(a,e) -> (a, map (\s -> file ++ ": " ++ s) e)) $ do
@@ -241,7 +241,6 @@ Get the token specs in terms of Names.
 >
 >      productions' = start_prods ++ concat rules2
 >      prod_array  = listArray (0,length productions' - 1) productions'
->   -- in
 
 >   return  (Grammar {
 >               productions       = productions',
@@ -260,12 +259,12 @@ Get the token specs in terms of Names.
 >               eof_term          = last terminal_names,
 >               priorities        = prios
 >       },
->       Pragmas {
+>       Directives {
 >               imported_identity                 = getImportedIdentity dirs,
 >               monad             = getMonad dirs,
 >               lexer             = getLexer dirs,
 >               error_handler     = getError dirs,
->               error_expected    = getErrorHandlerExpectedList dirs,
+>               error_expected    = getErrorExpectedMode dirs,
 >               token_type        = getTokenType dirs,
 >               expect            = getExpect dirs
 >       })
