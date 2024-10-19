@@ -376,7 +376,7 @@ The token conversion function.
 >       . str "happyLex kend  _kmore []       = kend notHappyAtAll []\n"
 >       . str "happyLex _kend kmore  (tk:tks)\n"
 >       . str "  | Happy_GHC_Exts.tagToEnum# (i Happy_GHC_Exts.==# -1#) = happyReport' (tk:tks) [] happyAbort\n" -- invalid token (-1#); lexer error.
->       . str "  | otherwise                                            = kmore i tk tks\n"
+>       . str "  | Prelude.otherwise                                    = kmore i tk tks\n"
 >       . str "  where i = happyTerminalToTok tk\n"
 >       . str "{-# INLINE happyLex #-}\n"
 >       . str "\n"
@@ -384,7 +384,7 @@ The token conversion function.
 >             . str "\\i tk -> " . doAction . str " sts stk)\n"
 >       . str "\n"
 >       . str "happyReport " . eofTok . str " tk explist resume tks = happyReport' tks explist resume\n"
->       . str "happyReport _ tk explist resume tks = happyReport' (tk:tks) explist (\\tks -> resume (tail tks))\n"
+>       . str "happyReport _ tk explist resume tks = happyReport' (tk:tks) explist (\\tks -> resume (Prelude.tail tks))\n"
 >             -- when the token is EOF, tk == _|_ (notHappyAtAll)
 >             -- so we must not pass it to happyReport'
 >       . str "\n";
@@ -393,7 +393,7 @@ The token conversion function.
 >         str "happyTerminalToTok term = case term of {\n" . indent
 >       . str eof' . str " -> " . eofTok . str ";\n" . indent
 >       . interleave (";\n" ++ indentStr) (map doToken token_rep)
->       . str "_ -> error \"Encountered a token that was not declared to happy\"\n" . indent . str "}\n"
+>       . str "_ -> Prelude.error \"Encountered a token that was not declared to happy\"\n" . indent . str "}\n"
 >       . str "{-# NOINLINE happyTerminalToTok #-}\n"
 >       . str "\n"
 >       . str "happyLex kend kmore = " . str lexer'' . str " (\\tk -> case tk of {\n" . indent
@@ -562,7 +562,7 @@ action array indexed by (terminal * last_state) + state
 >    n_rules = length prods - 1 :: Int
 >
 >    produceCatchStates
->       = str "happyCatchStates :: [Int]\n"
+>       = str "happyCatchStates :: [Prelude.Int]\n"
 >       . str "happyCatchStates = " . shows catch_states . str "\n\n"
 
 >    showInt i = shows i . showChar '#'
@@ -748,7 +748,7 @@ in the presence of the two-argument form of the %error directive.
 >       ResumptiveErrorHandler _abort report -> brack report
 >    abort_handler = case error_handler' of
 >       ResumptiveErrorHandler abort _report -> abort
->       _                                    -> "error \"Called abort handler in non-resumptive parser\""
+>       _                                    -> "Prelude.error \"Called abort handler in non-resumptive parser\""
 
 >    reduceArrElem n
 >      = str "" . indent . str "(" . shows n . str " , "
