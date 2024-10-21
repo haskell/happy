@@ -30,7 +30,7 @@ Produce the complete output file.
 
 > produceParser :: Grammar String               -- grammar info
 >               -> Maybe AttributeGrammarExtras
->               -> Pragmas                      -- pragmas supplied in the .y-file
+>               -> Directives                   -- directives supplied in the .y-file
 >               -> ActionTable                  -- action table
 >               -> GotoTable                    -- goto table
 >               -> [String]                     -- language extensions
@@ -53,7 +53,7 @@ Produce the complete output file.
 >               , starts = starts'
 >               })
 >               mAg
->               (Pragmas
+>               (Directives
 >               { lexer = lexer'
 >               , imported_identity = imported_identity'
 >               , monad = (use_monad,monad_context,monad_tycon,monad_then,monad_return)
@@ -365,19 +365,16 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 The token conversion function.
 
 >    produceTokenConverter
->       = case lexer' of {
->
->       Nothing ->
->         str "happyTerminalToTok term = case term of {\n" . indent
+>       = str "happyTerminalToTok term = case term of {\n" . indent
+>       . (case lexer' of Just (_, eof') -> str eof' . str " -> " . eofTok . str ";\n" . indent; _ -> id)
 >       . interleave (";\n" ++ indentStr) (map doToken token_rep)
->       . str "_ -> -1#;\n" . indent . str "}\n" -- -1# signals an invalid token
+>       . str "_ -> -1#;\n" . indent . str "}\n" -- token number -1# (INVALID_TOK) signals an invalid token
 >       . str "{-# NOINLINE happyTerminalToTok #-}\n"
->       . str "\n"
->       . str "happyLex kend  _kmore []       = kend notHappyAtAll []\n"
->       . str "happyLex _kend kmore  (tk:tks)\n"
->       . str "  | Happy_GHC_Exts.tagToEnum# (i Happy_GHC_Exts.==# -1#) = happyReport' (tk:tks) [] happyAbort\n" -- invalid token (-1#); lexer error.
->       . str "  | Prelude.otherwise                                    = kmore i tk tks\n"
->       . str "  where i = happyTerminalToTok tk\n"
+>       . str "\n" .
+>       (case lexer' of {
+>       Nothing ->
+>         str "happyLex kend  _kmore []       = kend notHappyAtAll []\n"
+>       . str "happyLex _kend kmore  (tk:tks) = kmore (happyTerminalToTok tk) tk tks\n"
 >       . str "{-# INLINE happyLex #-}\n"
 >       . str "\n"
 >       . str "happyNewToken action sts stk = happyLex (\\tk -> " . eofAction "notHappyAtAll" . str ") ("
@@ -390,13 +387,7 @@ The token conversion function.
 >       . str "\n";
 
 >       Just (lexer'',eof') ->
->         str "happyTerminalToTok term = case term of {\n" . indent
->       . str eof' . str " -> " . eofTok . str ";\n" . indent
->       . interleave (";\n" ++ indentStr) (map doToken token_rep)
->       . str "_ -> Prelude.error \"Encountered a token that was not declared to happy\"\n" . indent . str "}\n"
->       . str "{-# NOINLINE happyTerminalToTok #-}\n"
->       . str "\n"
->       . str "happyLex kend kmore = " . str lexer'' . str " (\\tk -> case tk of {\n" . indent
+>         str "happyLex kend kmore = " . str lexer'' . str " (\\tk -> case tk of {\n" . indent
 >       . str eof' . str " -> kend tk;\n" . indent
 >       . str "_ -> kmore (happyTerminalToTok tk) tk })\n"
 >       . str "{-# INLINE happyLex #-}\n"
@@ -409,7 +400,7 @@ The token conversion function.
 >             -- superfluous pattern match needed to force happyReport to
 >             -- have the correct type.
 >       . str "\n";
->       }
+>       })
 
 >       where
 
@@ -729,16 +720,21 @@ in the presence of the %error.expected directive.
 The last argument is the "resumption", a continuation that tries to find
 an item on the stack taking a @catch@ terminal where parsing may resume,
 in the presence of the two-argument form of the %error directive.
+In order to support the legacy %errorhandlertype directive, we retain
+have a special code path for `OldExpected`.
 
 >    callReportError = -- this one wraps around report_error_handler to expose a unified interface
 >       str "(\\tokens expected resume -> " .
 >       (if use_monad then str ""
 >                     else str "HappyIdentity Prelude.$ ") .
 >       report_error_handler .
->       (case (error_handler', lexer') of (DefaultErrorHandler, Just _) -> id
->                                         _                             -> str " tokens") .
->       (if error_expected' then str " expected"
->                           else id) .
+>       (case error_expected' of
+>          OldExpected -> str " (tokens, expected)"  -- back-compat for %errorhandlertype
+>          _ ->
+>            (case (error_handler', lexer') of (DefaultErrorHandler, Just _) -> id
+>                                              _                             -> str " tokens") .
+>            (case error_expected' of NewExpected -> str " expected"
+>                                     NoExpected  -> id)) .
 >       (case error_handler' of ResumptiveErrorHandler{} -> str " resume"
 >                               _                        -> id) .
 >       str ")"

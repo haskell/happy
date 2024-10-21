@@ -273,10 +273,34 @@ Error declaration
 
    %error { <identifier> }
 
+   %error { <identifier> } { <identifier> }
+
 .. index:: ``%error``
 
-Specifies the function to be called in the event of a parse error.
-The type of ``<identifier>`` varies depending on the presence of ``%lexer`` (see :ref:`Summary <sec-monad-summary>`) and ``%errorhandlertype`` (see the following).
+(optional)
+Specifies the functions to be called in the event of a parse error.
+
+The first, one-action form specifies a single function (often referred to as
+``parseError``) that reports the error and aborts the parse (in the sense of
+early return).
+When ``%error`` is not specified, the function is assumed to be called ``happyError``.
+
+The type of ``parseError`` varies depending on the presence of ``%lexer``
+(see :ref:`Summary <sec-monad-summary>`) and
+the :ref:``presence of `%error.expected`` <sec-error-expected-directive>`.
+
+The second, two-action form specifies a pair of functions ``abort`` and
+``report`` which are necessary to handle multiple parse errors during
+:ref:`resumptive parsing using the ``catch`` mechanism <sec-catch>`.
+In this case, ``report`` is called for every parse error and additionally
+receives a continuation for resuming the parse as the last argument.
+When Happy is unable to resume the parse after a parse error, it calls
+``abort``, which is *not* supposed to report an error as well.
+
+To illustrate the correspondence between the two forms:
+In a non-resumptive parser (i.e. one that does not use ``catch``),
+the one-action form ``%error { \\ tks -> report tks abort }`` is equivalent to
+the two-action form ``%error { abort } { report }``.
 
 .. _sec-errorhandlertype-directive:
 
@@ -288,6 +312,69 @@ Additional error information
    %errorhandlertype (explist | default)
 
 .. index:: ``%errorhandlertype``
+
+(deprecated)
+Happy 2.1 overhauled and superseded this directive in favour of the simple,
+optional flag directive ``%error.expected``. See <sec-error-expected-directive>.
+
+.. _sec-error-expected-directive:
+
+Reporting expected tokens
+-------------------------
+
+.. index:: ``%error.expected``
+
+(optional)
+Often, it is useful to present users with suggestions as to which kind of tokens
+where expected at the site of a syntax error.
+To this end, when the ``%error.expected`` directive is specified, happy assumes that
+the error handling function (resp. ``report`` function when using the binary
+form of the ``%error`` directive) takes a ``[String]`` argument (the argument
+*after* the token stream, in case of a non-threaded lexer) listing all the
+stringified tokens that could be shifted at the site of the syntax error.
+The strings in this list are derived from the ``%token`` directive.
+
+Here is an example, inspired by test case ``monaderror-explist``:
+
+.. code-block:: none
+
+  %tokentype { Token }
+  %error { handleErrorExpList }
+  %error.expected
+
+  %monad { ParseM } { (>>=) } { return }
+
+  %token
+          'S'             { TokenSucc }
+          'Z'             { TokenZero }
+          'T'             { TokenTest }
+
+  %%
+
+  Exp         :       'Z'           { 0 }
+              |       'T' 'Z' Exp   { $3 + 1 }
+              |       'S' Exp       { $2 + 1 }
+
+  %%
+
+  type ParseM = ...
+
+  handleErrorExpList :: [Token] -> [String] -> ParseM a
+  handleErrorExpList ts explist = throwError $ ParseError $ explist
+
+  ...
+
+
+Additional error information
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+::
+
+   %error.expected
+
+.. index:: ``%error.expected``
+
+Deprecated in favour of the simple, optional flag directive ``%error.expected``.
 
 (optional)
 The expected type of the user-supplied error handling can be applied with additional information.

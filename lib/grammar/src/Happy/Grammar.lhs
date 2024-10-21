@@ -17,7 +17,8 @@ The Grammar data type.
 >       Priority(..),
 >       Assoc(..),
 >       ErrorHandlerInfo(..),
->       Pragmas(..),
+>       ErrorExpectedMode(..),
+>       Directives(..),
 >
 >       errorName, errorTok, catchName, catchTok,
 >       startName, dummyName, firstStartTok, dummyTok,
@@ -111,16 +112,22 @@ The Grammar data type.
 >   -- Then try to resume parsing by finding a catch production.
 >   -- If that ultimately fails, call `abort`.
 
+> data ErrorExpectedMode
+>   = NoExpected   -- ^ Neither `%errorhandertype explist` nor `%error.expected`
+>   | OldExpected  -- ^ `%errorhandertype explist`. The error handler takes a pair `(Token, [String])`
+>   | NewExpected  -- ^ `%error.expected`. The error handler takes two (or more) args `Token -> [String] -> ...`.
+>   deriving Eq
+
 > -- | Stuff like `\%monad`, `\%expect`
-> data Pragmas
->       = Pragmas {
+> data Directives
+>       = Directives {
 >               token_type        :: String,
 >               imported_identity :: Bool,
 >               monad             :: (Bool,String,String,String,String),
 >               expect            :: Maybe Int,
 >               lexer             :: Maybe (String,String),
 >               error_handler     :: ErrorHandlerInfo,
->               error_expected    :: Bool
+>               error_expected    :: ErrorExpectedMode
 >                 -- ^ Error handler specified in `error_handler` takes
 >                 -- a `[String]` carrying the pretty-printed expected tokens
 >       }
