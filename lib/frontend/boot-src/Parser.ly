@@ -116,8 +116,8 @@ The parser.
 >       | spec_partial id optStart      { TokenName $2 $3 True  }
 >       | spec_imported_identity        { TokenImportedIdentity }
 >       | spec_lexer code code          { TokenLexer $2 $3 }
->       | spec_monad code               { TokenMonad "()" $2 "Prelude.>>=" "Prelude.return" }
->       | spec_monad code code          { TokenMonad $2 $3 "Prelude.>>=" "Prelude.return" }
+>       | spec_monad code               { TokenMonad "()" $2 "Happy_Prelude.>>=" "Happy_Prelude.return" }
+>       | spec_monad code code          { TokenMonad $2 $3 "Happy_Prelude.>>=" "Happy_Prelude.return" }
 >       | spec_monad code code code     { TokenMonad "()" $2 $3 $4 }
 >       | spec_monad code code code code        { TokenMonad $2 $3 $4 $5 }
 >       | spec_nonassoc ids             { TokenNonassoc $2 }

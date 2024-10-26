@@ -218,7 +218,7 @@ example where this matters.
 >     | otherwise
 >       = str "data HappyAbsSyn " . str_tyvars
 >       . str "\n" . indent . str "= HappyTerminal " . token
->       . str "\n" . indent . str "| HappyErrorToken Prelude.Int\n"
+>       . str "\n" . indent . str "| HappyErrorToken Happy_Prelude.Int\n"
 >       . interleave "\n"
 >         [ str "" . indent . str "| " . makeAbsSynCon n . strspace . typeParam n ty
 >         | (n, ty) <- assocs nt_types,
@@ -381,7 +381,7 @@ The token conversion function.
 >             . str "\\i tk -> " . doAction . str " sts stk)\n"
 >       . str "\n"
 >       . str "happyReport " . eofTok . str " tk explist resume tks = happyReport' tks explist resume\n"
->       . str "happyReport _ tk explist resume tks = happyReport' (tk:tks) explist (\\tks -> resume (Prelude.tail tks))\n"
+>       . str "happyReport _ tk explist resume tks = happyReport' (tk:tks) explist (\\tks -> resume (Happy_Prelude.tail tks))\n"
 >             -- when the token is EOF, tk == _|_ (notHappyAtAll)
 >             -- so we must not pass it to happyReport'
 >       . str "\n";
@@ -488,9 +488,9 @@ machinery to discard states in the parser...
 >       . produceReduceArray
 >       . produceRuleArray
 >       . produceCatchStates
->       . str "happy_n_terms = " . shows n_terminals . str " :: Prelude.Int\n"
->       . str "happy_n_nonterms = " . shows n_nonterminals . str " :: Prelude.Int\n\n"
->       . str "happy_n_starts = " . shows n_starts . str " :: Prelude.Int\n\n"
+>       . str "happy_n_terms = " . shows n_terminals . str " :: Happy_Prelude.Int\n"
+>       . str "happy_n_nonterms = " . shows n_nonterminals . str " :: Happy_Prelude.Int\n\n"
+>       . str "happy_n_starts = " . shows n_starts . str " :: Happy_Prelude.Int\n\n"
 >
 >    produceTokToStringList
 >       = str "{-# NOINLINE happyTokenStrings #-}\n"
@@ -553,7 +553,7 @@ action array indexed by (terminal * last_state) + state
 >    n_rules = length prods - 1 :: Int
 >
 >    produceCatchStates
->       = str "happyCatchStates :: [Prelude.Int]\n"
+>       = str "happyCatchStates :: [Happy_Prelude.Int]\n"
 >       . str "happyCatchStates = " . shows catch_states . str "\n\n"
 
 >    showInt i = shows i . showChar '#'
@@ -599,12 +599,12 @@ outlaw them inside { }
 >            str "newtype HappyIdentity a = HappyIdentity a\n"
 >          . str "happyIdentity = HappyIdentity\n"
 >          . str "happyRunIdentity (HappyIdentity a) = a\n\n"
->          . str "instance Prelude.Functor HappyIdentity where\n"
+>          . str "instance Happy_Prelude.Functor HappyIdentity where\n"
 >          . str "    fmap f (HappyIdentity a) = HappyIdentity (f a)\n\n"
 >          . str "instance Applicative HappyIdentity where\n"
 >          . str "    pure  = HappyIdentity\n"
 >          . str "    (<*>) = ap\n"
->          . str "instance Prelude.Monad HappyIdentity where\n"
+>          . str "instance Happy_Prelude.Monad HappyIdentity where\n"
 >          . str "    return = pure\n"
 >          . str "    (HappyIdentity p) >>= q = q p\n\n"
 
@@ -652,7 +652,7 @@ MonadStuff:
 >                . str " a\n"
 >                . str "happyReport' :: " . pcont . str " => "
 >                . str "[" . token . str "] -> "
->                . str "[Prelude.String] -> ("
+>                . str "[Happy_Prelude.String] -> ("
 >                . str "[" . token . str "] -> "
 >                . ptyAt (str "a") . str ") -> "
 >                . ptyAt (str "a")
@@ -684,7 +684,7 @@ MonadStuff:
 >                      . str "\n"
 >                  reduceArrSig =
 >                        str "happyReduceArr :: " . pcont
->                      . str " => Happy_Data_Array.Array Prelude.Int (" . intMaybeHash
+>                      . str " => Happy_Data_Array.Array Happy_Prelude.Int (" . intMaybeHash
 >                      . str " -> " . str token_type' . str " -> " . intMaybeHash
 >                      . str " -> Happy_IntList -> HappyStk " . happyAbsSyn
 >                      . str " -> " . ptyAt happyAbsSyn . str ")\n"
@@ -699,7 +699,7 @@ MonadStuff:
 >                . str "happyReturn1 = happyReturn\n"
 >                . str "happyReport' :: " . pcont . str " => "
 >                . token . str " -> "
->                . str "[Prelude.String] -> "
+>                . str "[Happy_Prelude.String] -> "
 >                . ptyAt (str "a") . str " -> "
 >                . ptyAt (str "a")
 >                . str "\n"
@@ -726,7 +726,7 @@ have a special code path for `OldExpected`.
 >    callReportError = -- this one wraps around report_error_handler to expose a unified interface
 >       str "(\\tokens expected resume -> " .
 >       (if use_monad then str ""
->                     else str "HappyIdentity Prelude.$ ") .
+>                     else str "HappyIdentity Happy_Prelude.$ ") .
 >       report_error_handler .
 >       (case error_expected' of
 >          OldExpected -> str " (tokens, expected)"  -- back-compat for %errorhandlertype
@@ -744,7 +744,7 @@ have a special code path for `OldExpected`.
 >       ResumptiveErrorHandler _abort report -> brack report
 >    abort_handler = case error_handler' of
 >       ResumptiveErrorHandler abort _report -> abort
->       _                                    -> "Prelude.error \"Called abort handler in non-resumptive parser\""
+>       _                                    -> "Happy_Prelude.error \"Called abort handler in non-resumptive parser\""
 
 >    reduceArrElem n
 >      = str "" . indent . str "(" . shows n . str " , "
@@ -799,21 +799,21 @@ have a special code path for `OldExpected`.
 >         . str "do { "
 >         . str "f <- do_" . str name . str "; "
 >         . str "let { (conds,attrs) = f happyEmptyAttrs } in do { "
->         . str "Prelude.sequence_ conds; "
->         . str "Prelude.return (". str defaultAttr . str " attrs) }}"
+>         . str "Happy_Prelude.sequence_ conds; "
+>         . str "Happy_Prelude.return (". str defaultAttr . str " attrs) }}"
 >       monadAE name
 >         = str name . str " toks = "
 >         . str "do { "
 >         . str "f <- do_" . str name . str " toks; "
 >         . str "let { (conds,attrs) = f happyEmptyAttrs } in do { "
->         . str "Prelude.sequence_ conds; "
->         . str "Prelude.return (". str defaultAttr . str " attrs) }}"
+>         . str "Happy_Prelude.sequence_ conds; "
+>         . str "Happy_Prelude.return (". str defaultAttr . str " attrs) }}"
 >       regularAE name
 >         = str name . str " toks = "
 >         . str "let { "
 >         . str "f = do_" . str name . str " toks; "
 >         . str "(conds,attrs) = f happyEmptyAttrs; "
->         . str "x = Prelude.foldr Prelude.seq attrs conds; "
+>         . str "x = Happy_Prelude.foldr Happy_GHC_Exts.seq attrs conds; "
 >         . str "} in (". str defaultAttr . str " x)"
 
 ----------------------------------------------------------------------------
@@ -830,7 +830,7 @@ have a special code path for `OldExpected`.
 >   where attributes'  = foldl1 (\x y -> x . str ", " . y) $ map formatAttribute attrs
 >         formatAttribute (ident,typ) = str ident . str " :: " . str typ
 >         attrsErrors = foldl1 (\x y -> x . str ", " . y) $ map attrError attrs
->         attrError (ident,_) = str ident . str " = Prelude.error \"invalid reference to attribute '" . str ident . str "'\""
+>         attrError (ident,_) = str ident . str " = Happy_Prelude.error \"invalid reference to attribute '" . str ident . str "'\""
 >         attrHeader =
 >             case attributeType of
 >             [] -> str "HappyAttributes"
