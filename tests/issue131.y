@@ -1,18 +1,18 @@
 {
 module Main where
 import Prelude ()
-import qualified Prelude
+import qualified Prelude as Pre
 }
 
 %name parser
 %token foo { 1 }
-%tokentype { Prelude.Int }
+%tokentype { Pre.Int }
 
 %%
 
 Foo : foo { () }
 
 {
-main = Prelude.putStrLn "Test works"
-happyError = Prelude.undefined
+main = Pre.putStrLn "Test works"
+happyError = Pre.undefined
 }

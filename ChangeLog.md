@@ -1,5 +1,10 @@
 # Revision history for Happy
 
+## 2.1.2
+
+Fix a breaking change (#325) introduced by the previous fix for #131.
+Prelude is no longer used by Happy.
+
 ## 2.1.1
 
 This release fixes two breaking changes:
