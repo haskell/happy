@@ -125,12 +125,12 @@ using a memo table so that no work is repeated.
 > closure0 :: Grammar e -> (Name -> RuleList) -> Set Lr0Item -> Set Lr0Item
 > closure0 g closureOfNT set = Set.foldr addRules Set.empty set
 >    where
->       fst_term = first_term g
+>       last_nonterm = MkName $ getName (first_term g) - 1
 >       addRules rule set' = Set.union (Set.fromList (rule : closureOfRule rule)) set'
 >
 >       closureOfRule (Lr0 rule dot) =
 >           case findRule g rule dot of
->               (Just nt) | nt >= firstStartTok && nt < fst_term
+>               (Just nt) | nt >= firstStartTok && nt <= last_nonterm
 >                  -> closureOfNT nt
 >               _  -> []
 
@@ -141,7 +141,7 @@ Generating the closure of a set of LR(1) items
 > closure1 g first set
 >       = fst (mkClosure (\(_,new) _ -> null new) addItems ([],set))
 >       where
->       fst_term = first_term g
+>       last_nonterm = MkName $ getName (first_term g) - 1
 
 >       addItems :: ([Lr1Item],[Lr1Item]) -> ([Lr1Item],[Lr1Item])
 >       addItems (old_items, new_items) = (new_old_items, new_new_items)
@@ -153,11 +153,11 @@ Generating the closure of a set of LR(1) items
 
 >               fn :: Lr1Item -> [Lr1Item]
 >               fn (Lr1 rule dot as) = case drop dot lhs of
->                       (b:beta) | b >= firstStartTok && b < fst_term ->
->                           let terms = unionNameMap
->                                               (\a -> first (beta ++ [a])) as
+>                       (nt:beta) | nt >= firstStartTok && nt <= last_nonterm ->
+>                           let terms = NameSet.delete catchTok $ -- the catch token is always shifted and never reduced (see pop_items)
+>                                       unionNameMap (\a -> first (beta ++ [a])) as
 >                           in
->                           [ (Lr1 rule' 0 terms) | rule' <- lookupProdsOfName g b ]
+>                           [ (Lr1 rule' 0 terms) | rule' <- lookupProdsOfName g nt ]
 >                       _ -> []
 >                   where Production _name lhs _ _ = lookupProdNo g rule
 
