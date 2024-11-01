@@ -175,6 +175,10 @@ For array-based parsers, see the note in Tabular/LALR.lhs.
 > catchName = "catch"
 > dummyName = "%dummy"  -- shouldn't occur in the grammar anywhere
 
+TODO: Should rename firstStartTok to firstStartName!
+It denotes the *Name* of the first start non-terminal and semantically has
+nothing to do with Tokens at all.
+
 > firstStartTok, dummyTok, errorTok, catchTok, epsilonTok :: Name
 > firstStartTok   = MkName 4
 > dummyTok        = MkName 3
