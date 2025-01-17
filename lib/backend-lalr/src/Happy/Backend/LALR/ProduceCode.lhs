@@ -6,7 +6,7 @@ The code generator.
 
 > module Happy.Backend.LALR.ProduceCode (produceParser) where
 
-> import Paths_happy_lib  ( version )
+> import Happy.Paths  ( version )
 > import Data.Version              ( showVersion )
 > import Happy.Grammar
 > import Happy.Grammar.ExpressionWithHole ( substExpressionWithHole )

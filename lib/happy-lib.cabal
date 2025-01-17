@@ -106,7 +106,23 @@ library tabular
                        Happy.Tabular.First,
                        Happy.Tabular.Info,
                        Happy.Tabular.LALR,
-                       Happy.Tabular.NameSet
+                       Happy.Tabular.NameSet,
+  -- The following 3 lines constitute a workaround for cabal#10687, triggered by #328.
+  -- The setup in #328 triggers a clashing use of Paths_happy_lib between
+  -- `backend-lalr` and `backend-glr` in the presence of --libsubdir.
+  -- The workaround moves Paths_happy_lib into `tabular` where it can be shared.
+  -- However, in order to really refer to the Paths_happy_lib from `tabular`,
+  -- we have to reexport it under a different name, because otherwise we get
+  --
+  --    These modules are needed for compilation but not listed in your .cabal file's other-modules for ‘happy-lib-2.1.3-inplace-backend-lalr’ :
+  --        Paths_happy_libsuppress
+  --
+                       Paths_happy_lib
+  reexported-modules:  Paths_happy_lib as Happy.Paths
+  autogen-modules:     Paths_happy_lib
+  -- end of workaround. Delete the workaround and use the bash script posted at
+  -- https://github.com/haskell/happy/issues/328#issuecomment-2597598320
+  -- to test whether the workaround is still needed.
   build-depends:       base < 5, array, containers, grammar
 
 
@@ -116,8 +132,6 @@ library backend-lalr
   exposed-modules:     Happy.Backend.LALR,
                        Happy.Backend.LALR.ProduceCode
   build-depends:       base < 5, array, grammar, tabular
-  other-modules:       Paths_happy_lib
-  autogen-modules:     Paths_happy_lib
 
 library backend-glr
   import: common-stanza
@@ -125,8 +139,6 @@ library backend-glr
   exposed-modules:     Happy.Backend.GLR,
                        Happy.Backend.GLR.ProduceCode
   build-depends:       base < 5, array, grammar, tabular
-  other-modules:       Paths_happy_lib
-  autogen-modules:     Paths_happy_lib
 
 library
   import: common-stanza
