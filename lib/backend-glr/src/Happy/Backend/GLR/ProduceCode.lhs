@@ -17,7 +17,7 @@ This module is designed as an extension to the Haskell parser generator Happy.
 >                       , Options
 >                       ) where
 
-> import Paths_happy_lib ( version )
+> import Happy.Paths ( version )
 > import Happy.Grammar
 > import Happy.Grammar.ExpressionWithHole ( substExpressionWithHole )
 > import Happy.Tabular.LALR

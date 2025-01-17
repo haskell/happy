@@ -1,6 +1,6 @@
 module Happy.Backend.LALR where
 
-import Paths_happy_lib
+import Happy.Paths
 import Data.Char
 
 lalrBackendDataDir :: IO String
