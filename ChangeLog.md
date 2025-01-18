@@ -1,5 +1,16 @@
 # Revision history for Happy
 
+## 2.1.4
+
+Move `Paths_happy_lib` into `tabular` to prevent a Cabal bug concerning
+--libsubdir (#328). It is likely that this release fixes
+`cabal v1-install happy` as well, which was broken since happy-2.0 (#315).
+
+## 2.1.3
+
+Auto-resolve shift/reduce conflicts involving the catch token.
+This was to support on going work in GHC to utilise the catch token.
+
 ## 2.1.2
 
 Fix a breaking change (#325) introduced by the previous fix for #131.
