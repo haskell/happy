@@ -1,5 +1,9 @@
 # Revision history for Happy
 
+## 2.1.5
+
+Add `Data.Tuple` to `Happy_Prelude` in order to fix the `--debug` build (#330).
+
 ## 2.1.4
 
 Move `Paths_happy_lib` into `tabular` to prevent a Cabal bug concerning
