@@ -41,6 +41,7 @@ importsToInject debug = concat ["\n", import_prelude, import_array, import_bits,
         , "Data.Maybe"
         , "Data.Int"
         , "Data.String"
+        , "Data.Tuple"
         , "Data.List"
         , "Control.Monad"
         , "Text.Show"

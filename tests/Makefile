@@ -58,11 +58,19 @@ TEST_HAPPY_OPTS = --strict -g
 %.c.hs : %.ly
 	$(HAPPY) $(TEST_HAPPY_OPTS) -c $< -o $@
 
+%.d.hs : %.y
+	$(HAPPY) $(TEST_HAPPY_OPTS) -d $< -o $@
+
+%.d.hs : %.ly
+	$(HAPPY) $(TEST_HAPPY_OPTS) -d $< -o $@
+
 CLEAN_FILES += *.n.hs *.c.hs *.info *.hi *.bin *.exe *.o *.run.stdout *.run.stderr
 
 ALL_TEST_HS = $(shell echo $(TESTS) | sed -e 's/\([^\. ]*\)\.\(l\)\{0,1\}y/\1.n.hs \1.c.hs/g')
 
 ALL_TESTS = $(patsubst %.hs, %.run, $(ALL_TEST_HS))
+
+DEBUG_TESTS = Test.d$(HS_PROG_EXT) # Compile a single file with -d to ensure that it works
 
 CHECK_ERROR_TESTS = $(patsubst %, check.%, $(ERROR_TESTS))
 
@@ -88,7 +96,7 @@ check.%.y : %.y
 %$(HS_PROG_EXT) : %.hs
 	$(HC) $(HC_OPTS) $($*_LD_OPTS) $< -o $@
 
-all :: path.run $(CHECK_ERROR_TESTS) $(ALL_TESTS)
+all :: path.run $(CHECK_ERROR_TESTS) $(DEBUG_TESTS) $(ALL_TESTS)
 
 check-todo::
 	$(HAPPY) $(TEST_HAPPY_OPTS) -d Test.ly
