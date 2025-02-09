@@ -993,7 +993,7 @@ and the occurrence of the ``in`` symbol generates a parse error, which is interp
 
 Note for ``yacc``/``bison``/``menhir`` users: this form of error recovery is
 quite different to the one provided by other parser generators.
-If you are looking for ``yacc``-style error recovery, have a look at :ref:`The ``catch`` token <sec-catch>`.
+If you are looking for ``yacc``-style error recovery, have a look at :ref:`sec-catch`.
 For historic reasons, the main reason for happy's ``error`` token has been to
 implement the Haskell 2010 layout rule, which has
 :ref:`its own set of drawbacks <https://gitlab.haskell.org/ghc/ghc/-/issues/25322>`.
@@ -1008,8 +1008,8 @@ Resumptive parsing with ``catch``
 Since version 2.1, happy supports a form of error recovery that is less-limited
 (but perhaps more fickle) than ``error``.
 This form of error handling is enabled by the special ``catch``
-token, which works quite similar to the ``error`` token in :ref:`bison
-<https://www.gnu.org/software/bison/manual/html_node/Error-Recovery.html>`.
+token, which works quite similar to the ``error`` token in
+`bison <https://www.gnu.org/software/bison/manual/html_node/Error-Recovery.html>`_.
 
 The main motivation for ``catch`` is that one wants to resume parsing after
 encountering a syntax error.

@@ -283,12 +283,12 @@ early return).
 When ``%error`` is not specified, the function is assumed to be called ``happyError``.
 
 The type of ``parseError`` varies depending on the presence of ``%lexer``
-(see :ref:`Summary <sec-monad-summary>`) and
-the :ref:``presence of `%error.expected`` <sec-error-expected-directive>`.
+(see :ref:`sec-monad-summary`) and
+the :ref:`presence of %error.expected <sec-error-expected-directive>`.
 
 The second, two-action form specifies a pair of functions ``abort`` and
 ``report`` which are necessary to handle multiple parse errors during
-:ref:`resumptive parsing using the ``catch`` mechanism <sec-catch>`.
+:ref:`resumptive parsing using the catch mechanism <sec-catch>`.
 In this case, ``report`` is called for every parse error and additionally
 receives a continuation for resuming the parse as the last argument.
 When Happy is unable to resume the parse after a parse error, it calls
@@ -312,7 +312,7 @@ Additional error information
 
 (deprecated)
 Happy 2.1 overhauled and superseded this directive in favour of the simple,
-optional flag directive ``%error.expected``. See <sec-error-expected-directive>.
+optional flag directive ``%error.expected``. See :ref:`sec-error-expected-directive`.
 
 .. _sec-error-expected-directive:
 
