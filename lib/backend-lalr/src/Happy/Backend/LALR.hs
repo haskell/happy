@@ -35,19 +35,21 @@ importsToInject debug = concat ["\n", import_prelude, import_array, import_bits,
       import_applicative = "import Control.Applicative(Applicative(..))\n" ++
                            "import Control.Monad (ap)\n"
       import_prelude     = unlines $ map (\ x -> unwords ["import qualified", x, "as Happy_Prelude"]) $
-        [ "Data.Function"
-        , "Data.Bool"
-        , "Data.Function"
-        , "Data.Maybe"
-        , "Data.Int"
-        , "Data.String"
-        , "Data.Tuple"
-        , "Data.List"
-        , "Control.Monad"
-        , "Text.Show"
-        , "GHC.Num"
-        , "GHC.Err"
-        ]
+        -- Keep this list alphabetically ordered!
+        -- The style of list notation here has been chosen so that these lines can be sorted mechanically,
+        -- e.g. in Emacs with M-x sort-lines.
+        "Control.Monad" :
+        "Data.Bool" :
+        "Data.Function" :
+        "Data.Int" :
+        "Data.List" :
+        "Data.Maybe" :
+        "Data.String" :
+        "Data.Tuple" :
+        "GHC.Err" :
+        "GHC.Num" :
+        "Text.Show" :
+        []
 
 langExtsToInject :: [String]
 langExtsToInject = ["MagicHash", "BangPatterns", "TypeSynonymInstances", "FlexibleInstances", "PatternGuards", "NoStrictData", "UnboxedTuples", "PartialTypeSignatures"]

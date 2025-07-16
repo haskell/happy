@@ -2,8 +2,11 @@
 
 ## Unreleased
 
-No longer emit `{-# LANGUAGE PartialTypeSignatures #-}` twice
-([#339](https://github.com/haskell/happy/issues/339)).
+- No longer emit `{-# LANGUAGE PartialTypeSignatures #-}` twice
+  ([#339](https://github.com/haskell/happy/issues/339)).
+
+- No longer emit `import Data.Function` twice
+  ([#341](https://github.com/haskell/happy/issues/341)).
 
 ## 2.1.5
 
