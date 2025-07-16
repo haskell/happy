@@ -8,31 +8,29 @@
 {-# LANGUAGE NoStrictData #-}
 {-# LANGUAGE UnboxedTuples #-}
 {-# LANGUAGE PartialTypeSignatures #-}
-#if __GLASGOW_HASKELL__ >= 710
-{-# LANGUAGE PartialTypeSignatures #-}
-#endif
 {-# OPTIONS_GHC -w #-}
 module Happy.Frontend.AttrGrammar.Parser (agParser) where
 import Happy.Frontend.ParseMonad.Class
 import Happy.Frontend.ParseMonad
 import Happy.Frontend.AttrGrammar
+import qualified Control.Monad as Happy_Prelude
 import qualified Data.Bool as Happy_Prelude
 import qualified Data.Function as Happy_Prelude
-import qualified Data.Maybe as Happy_Prelude
 import qualified Data.Int as Happy_Prelude
-import qualified Data.String as Happy_Prelude
 import qualified Data.List as Happy_Prelude
-import qualified Control.Monad as Happy_Prelude
-import qualified Text.Show as Happy_Prelude
-import qualified GHC.Num as Happy_Prelude
+import qualified Data.Maybe as Happy_Prelude
+import qualified Data.String as Happy_Prelude
+import qualified Data.Tuple as Happy_Prelude
 import qualified GHC.Err as Happy_Prelude
+import qualified GHC.Num as Happy_Prelude
+import qualified Text.Show as Happy_Prelude
 import qualified Data.Array as Happy_Data_Array
 import qualified Data.Bits as Bits
 import qualified GHC.Exts as Happy_GHC_Exts
 import Control.Applicative(Applicative(..))
 import Control.Monad (ap)
 
--- parser produced by Happy Version 2.1.1
+-- parser produced by Happy Version 2.1.6
 
 newtype HappyAbsSyn  = HappyAbsSyn HappyAny
 #if __GLASGOW_HASKELL__ >= 607
@@ -141,7 +139,7 @@ happy_n_starts = 1 :: Happy_Prelude.Int
 happyReduce_1 :: () => Happy_GHC_Exts.Int# -> AgToken -> Happy_GHC_Exts.Int# -> Happy_IntList -> HappyStk (HappyAbsSyn ) -> P (HappyAbsSyn )
 happyReduce_1 = happySpecReduce_1  0# happyReduction_1
 happyReduction_1 happy_x_1
-         =  case happyOut6 happy_x_1 of { (HappyWrap6 happy_var_1) -> 
+         =  case happyOut6 happy_x_1 of { (HappyWrap6 happy_var_1) ->
         happyIn5
                  (happy_var_1
         )}
@@ -151,8 +149,8 @@ happyReduce_2 = happySpecReduce_3  1# happyReduction_2
 happyReduction_2 happy_x_3
         happy_x_2
         happy_x_1
-         =  case happyOut7 happy_x_1 of { (HappyWrap7 happy_var_1) -> 
-        case happyOut6 happy_x_3 of { (HappyWrap6 happy_var_3) -> 
+         =  case happyOut7 happy_x_1 of { (HappyWrap7 happy_var_1) ->
+        case happyOut6 happy_x_3 of { (HappyWrap6 happy_var_3) ->
         happyIn6
                  (happy_var_1 : happy_var_3
         )}}
@@ -160,7 +158,7 @@ happyReduction_2 happy_x_3
 happyReduce_3 :: () => Happy_GHC_Exts.Int# -> AgToken -> Happy_GHC_Exts.Int# -> Happy_IntList -> HappyStk (HappyAbsSyn ) -> P (HappyAbsSyn )
 happyReduce_3 = happySpecReduce_1  1# happyReduction_3
 happyReduction_3 happy_x_1
-         =  case happyOut7 happy_x_1 of { (HappyWrap7 happy_var_1) -> 
+         =  case happyOut7 happy_x_1 of { (HappyWrap7 happy_var_1) ->
         happyIn6
                  (happy_var_1 : []
         )}
@@ -176,8 +174,8 @@ happyReduce_5 = happySpecReduce_3  2# happyReduction_5
 happyReduction_5 happy_x_3
         happy_x_2
         happy_x_1
-         =  case happyOutTok happy_x_1 of { happy_var_1 -> 
-        case happyOut8 happy_x_3 of { (HappyWrap8 happy_var_3) -> 
+         =  case happyOutTok happy_x_1 of { happy_var_1 ->
+        case happyOut8 happy_x_3 of { (HappyWrap8 happy_var_3) ->
         happyIn7
                  (SelfAssign $ MkAgSelfAssign (selfRefVal happy_var_1) happy_var_3
         )}}
@@ -187,8 +185,8 @@ happyReduce_6 = happySpecReduce_3  2# happyReduction_6
 happyReduction_6 happy_x_3
         happy_x_2
         happy_x_1
-         =  case happyOutTok happy_x_1 of { happy_var_1 -> 
-        case happyOut8 happy_x_3 of { (HappyWrap8 happy_var_3) -> 
+         =  case happyOutTok happy_x_1 of { happy_var_1 ->
+        case happyOut8 happy_x_3 of { (HappyWrap8 happy_var_3) ->
         happyIn7
                  (SubAssign $ MkAgSubAssign (subRefVal happy_var_1) happy_var_3
         )}}
@@ -198,8 +196,8 @@ happyReduce_7 = happySpecReduce_3  2# happyReduction_7
 happyReduction_7 happy_x_3
         happy_x_2
         happy_x_1
-         =  case happyOutTok happy_x_1 of { happy_var_1 -> 
-        case happyOut8 happy_x_3 of { (HappyWrap8 happy_var_3) -> 
+         =  case happyOutTok happy_x_1 of { happy_var_1 ->
+        case happyOut8 happy_x_3 of { (HappyWrap8 happy_var_3) ->
         happyIn7
                  (RightmostAssign (rightRefVal happy_var_1) happy_var_3
         )}}
@@ -208,7 +206,7 @@ happyReduce_8 :: () => Happy_GHC_Exts.Int# -> AgToken -> Happy_GHC_Exts.Int# -> 
 happyReduce_8 = happySpecReduce_2  2# happyReduction_8
 happyReduction_8 happy_x_2
         happy_x_1
-         =  case happyOut8 happy_x_2 of { (HappyWrap8 happy_var_2) -> 
+         =  case happyOut8 happy_x_2 of { (HappyWrap8 happy_var_2) ->
         happyIn7
                  (Conditional $ MkAgConditional happy_var_2
         )}
@@ -220,10 +218,10 @@ happyReduction_9 (happy_x_4 `HappyStk`
         happy_x_2 `HappyStk`
         happy_x_1 `HappyStk`
         happyRest)
-         = case happyOutTok happy_x_1 of { happy_var_1 -> 
-        case happyOut9 happy_x_2 of { (HappyWrap9 happy_var_2) -> 
-        case happyOutTok happy_x_3 of { happy_var_3 -> 
-        case happyOut8 happy_x_4 of { (HappyWrap8 happy_var_4) -> 
+         = case happyOutTok happy_x_1 of { happy_var_1 ->
+        case happyOut9 happy_x_2 of { (HappyWrap9 happy_var_2) ->
+        case happyOutTok happy_x_3 of { happy_var_3 ->
+        case happyOut8 happy_x_4 of { (HappyWrap8 happy_var_4) ->
         happyIn8
                  ([happy_var_1] ++ happy_var_2 ++ [happy_var_3] ++ happy_var_4
         ) `HappyStk` happyRest}}}}
@@ -232,8 +230,8 @@ happyReduce_10 :: () => Happy_GHC_Exts.Int# -> AgToken -> Happy_GHC_Exts.Int# ->
 happyReduce_10 = happySpecReduce_2  3# happyReduction_10
 happyReduction_10 happy_x_2
         happy_x_1
-         =  case happyOutTok happy_x_1 of { happy_var_1 -> 
-        case happyOut8 happy_x_2 of { (HappyWrap8 happy_var_2) -> 
+         =  case happyOutTok happy_x_1 of { happy_var_1 ->
+        case happyOut8 happy_x_2 of { (HappyWrap8 happy_var_2) ->
         happyIn8
                  (happy_var_1 : happy_var_2
         )}}
@@ -242,8 +240,8 @@ happyReduce_11 :: () => Happy_GHC_Exts.Int# -> AgToken -> Happy_GHC_Exts.Int# ->
 happyReduce_11 = happySpecReduce_2  3# happyReduction_11
 happyReduction_11 happy_x_2
         happy_x_1
-         =  case happyOutTok happy_x_1 of { happy_var_1 -> 
-        case happyOut8 happy_x_2 of { (HappyWrap8 happy_var_2) -> 
+         =  case happyOutTok happy_x_1 of { happy_var_1 ->
+        case happyOut8 happy_x_2 of { (HappyWrap8 happy_var_2) ->
         happyIn8
                  (happy_var_1 : happy_var_2
         )}}
@@ -252,8 +250,8 @@ happyReduce_12 :: () => Happy_GHC_Exts.Int# -> AgToken -> Happy_GHC_Exts.Int# ->
 happyReduce_12 = happySpecReduce_2  3# happyReduction_12
 happyReduction_12 happy_x_2
         happy_x_1
-         =  case happyOutTok happy_x_1 of { happy_var_1 -> 
-        case happyOut8 happy_x_2 of { (HappyWrap8 happy_var_2) -> 
+         =  case happyOutTok happy_x_1 of { happy_var_1 ->
+        case happyOut8 happy_x_2 of { (HappyWrap8 happy_var_2) ->
         happyIn8
                  (happy_var_1 : happy_var_2
         )}}
@@ -262,8 +260,8 @@ happyReduce_13 :: () => Happy_GHC_Exts.Int# -> AgToken -> Happy_GHC_Exts.Int# ->
 happyReduce_13 = happySpecReduce_2  3# happyReduction_13
 happyReduction_13 happy_x_2
         happy_x_1
-         =  case happyOutTok happy_x_1 of { happy_var_1 -> 
-        case happyOut8 happy_x_2 of { (HappyWrap8 happy_var_2) -> 
+         =  case happyOutTok happy_x_1 of { happy_var_1 ->
+        case happyOut8 happy_x_2 of { (HappyWrap8 happy_var_2) ->
         happyIn8
                  (happy_var_1 : happy_var_2
         )}}
@@ -272,8 +270,8 @@ happyReduce_14 :: () => Happy_GHC_Exts.Int# -> AgToken -> Happy_GHC_Exts.Int# ->
 happyReduce_14 = happySpecReduce_2  3# happyReduction_14
 happyReduction_14 happy_x_2
         happy_x_1
-         =  case happyOutTok happy_x_1 of { happy_var_1 -> 
-        case happyOut8 happy_x_2 of { (HappyWrap8 happy_var_2) -> 
+         =  case happyOutTok happy_x_1 of { happy_var_1 ->
+        case happyOut8 happy_x_2 of { (HappyWrap8 happy_var_2) ->
         happyIn8
                  (happy_var_1 : happy_var_2
         )}}
@@ -291,10 +289,10 @@ happyReduction_16 (happy_x_4 `HappyStk`
         happy_x_2 `HappyStk`
         happy_x_1 `HappyStk`
         happyRest)
-         = case happyOutTok happy_x_1 of { happy_var_1 -> 
-        case happyOut9 happy_x_2 of { (HappyWrap9 happy_var_2) -> 
-        case happyOutTok happy_x_3 of { happy_var_3 -> 
-        case happyOut9 happy_x_4 of { (HappyWrap9 happy_var_4) -> 
+         = case happyOutTok happy_x_1 of { happy_var_1 ->
+        case happyOut9 happy_x_2 of { (HappyWrap9 happy_var_2) ->
+        case happyOutTok happy_x_3 of { happy_var_3 ->
+        case happyOut9 happy_x_4 of { (HappyWrap9 happy_var_4) ->
         happyIn9
                  ([happy_var_1] ++ happy_var_2 ++ [happy_var_3] ++ happy_var_4
         ) `HappyStk` happyRest}}}}
@@ -303,8 +301,8 @@ happyReduce_17 :: () => Happy_GHC_Exts.Int# -> AgToken -> Happy_GHC_Exts.Int# ->
 happyReduce_17 = happySpecReduce_2  4# happyReduction_17
 happyReduction_17 happy_x_2
         happy_x_1
-         =  case happyOutTok happy_x_1 of { happy_var_1 -> 
-        case happyOut9 happy_x_2 of { (HappyWrap9 happy_var_2) -> 
+         =  case happyOutTok happy_x_1 of { happy_var_1 ->
+        case happyOut9 happy_x_2 of { (HappyWrap9 happy_var_2) ->
         happyIn9
                  (happy_var_1 : happy_var_2
         )}}
@@ -313,8 +311,8 @@ happyReduce_18 :: () => Happy_GHC_Exts.Int# -> AgToken -> Happy_GHC_Exts.Int# ->
 happyReduce_18 = happySpecReduce_2  4# happyReduction_18
 happyReduction_18 happy_x_2
         happy_x_1
-         =  case happyOutTok happy_x_1 of { happy_var_1 -> 
-        case happyOut9 happy_x_2 of { (HappyWrap9 happy_var_2) -> 
+         =  case happyOutTok happy_x_1 of { happy_var_1 ->
+        case happyOut9 happy_x_2 of { (HappyWrap9 happy_var_2) ->
         happyIn9
                  (happy_var_1 : happy_var_2
         )}}
@@ -323,8 +321,8 @@ happyReduce_19 :: () => Happy_GHC_Exts.Int# -> AgToken -> Happy_GHC_Exts.Int# ->
 happyReduce_19 = happySpecReduce_2  4# happyReduction_19
 happyReduction_19 happy_x_2
         happy_x_1
-         =  case happyOutTok happy_x_1 of { happy_var_1 -> 
-        case happyOut9 happy_x_2 of { (HappyWrap9 happy_var_2) -> 
+         =  case happyOutTok happy_x_1 of { happy_var_1 ->
+        case happyOut9 happy_x_2 of { (HappyWrap9 happy_var_2) ->
         happyIn9
                  (happy_var_1 : happy_var_2
         )}}
@@ -333,8 +331,8 @@ happyReduce_20 :: () => Happy_GHC_Exts.Int# -> AgToken -> Happy_GHC_Exts.Int# ->
 happyReduce_20 = happySpecReduce_2  4# happyReduction_20
 happyReduction_20 happy_x_2
         happy_x_1
-         =  case happyOutTok happy_x_1 of { happy_var_1 -> 
-        case happyOut9 happy_x_2 of { (HappyWrap9 happy_var_2) -> 
+         =  case happyOutTok happy_x_1 of { happy_var_1 ->
+        case happyOut9 happy_x_2 of { (HappyWrap9 happy_var_2) ->
         happyIn9
                  (happy_var_1 : happy_var_2
         )}}
@@ -343,8 +341,8 @@ happyReduce_21 :: () => Happy_GHC_Exts.Int# -> AgToken -> Happy_GHC_Exts.Int# ->
 happyReduce_21 = happySpecReduce_2  4# happyReduction_21
 happyReduction_21 happy_x_2
         happy_x_1
-         =  case happyOutTok happy_x_1 of { happy_var_1 -> 
-        case happyOut8 happy_x_2 of { (HappyWrap8 happy_var_2) -> 
+         =  case happyOutTok happy_x_1 of { happy_var_1 ->
+        case happyOut8 happy_x_2 of { (HappyWrap8 happy_var_2) ->
         happyIn9
                  (happy_var_1 : happy_var_2
         )}}
@@ -353,8 +351,8 @@ happyReduce_22 :: () => Happy_GHC_Exts.Int# -> AgToken -> Happy_GHC_Exts.Int# ->
 happyReduce_22 = happySpecReduce_2  4# happyReduction_22
 happyReduction_22 happy_x_2
         happy_x_1
-         =  case happyOutTok happy_x_1 of { happy_var_1 -> 
-        case happyOut9 happy_x_2 of { (HappyWrap9 happy_var_2) -> 
+         =  case happyOutTok happy_x_1 of { happy_var_1 ->
+        case happyOut9 happy_x_2 of { (HappyWrap9 happy_var_2) ->
         happyIn9
                  (happy_var_1 : happy_var_2
         )}}
