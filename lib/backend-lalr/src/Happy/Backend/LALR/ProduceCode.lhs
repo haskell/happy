@@ -91,8 +91,6 @@ Produce the complete output file.
 >       -- XXX Happy-generated code is full of warnings.  Some are easy to
 >       -- fix, others not so easy, and others would require GHC version
 >       -- #ifdefs.  For now I'm just disabling all of them.
->
->    partTySigs_opts = ifGeGhc710 (str "{-# LANGUAGE PartialTypeSignatures #-}" . nl)
 
 We used to emit tabs for indentation, but since 2.0.0.1 we use 8 spaces for back-compat (#303):
 
@@ -105,29 +103,15 @@ We used to emit tabs for indentation, but since 2.0.0.1 we use 8 spaces for back
 >    pty = str monad_tycon                     -- str "P"
 >    ptyAt a = brack' (pty . str " " . a)      -- \(str "a") -> str "(P a)"
 >    pcont = str monad_context                 -- str "Read a", some constraint for "P" to be a monad
->
->    -- If GHC is enabled, wrap the content in a CPP ifdef that includes the
->    -- content and tests whether the GHC version is >= 7.10.3
->    ifGeGhc710 :: (String -> String) -> String -> String
->    ifGeGhc710 content  = str "#if __GLASGOW_HASKELL__ >= 710" . nl
->                        . content
->                        . str "#endif" . nl
 
 >    n_missing_types = length (filter isNothing (elems nt_types))
 >    happyAbsSyn = str "(HappyAbsSyn " . str wild_tyvars . str ")"
 >      where wild_tyvars = unwords (replicate n_missing_types "_")
 >
->    -- This decides how to include (if at all) a type signature
->    -- See <https://github.com/haskell/happy/issues/94>
->    filterTypeSig :: (String -> String) -> String -> String
->    filterTypeSig content | n_missing_types == 0 = content
->                          | otherwise = ifGeGhc710 content
->
 >    top_opts =
 >        nowarn_opts
 >      . (str $ unlines
 >           [ unwords [ "{-# LANGUAGE", l, "#-}" ] | l <- lang_exts ])
->      . partTySigs_opts
 
 %-----------------------------------------------------------------------------
 Make the abstract syntax type declaration, of the form:
@@ -317,7 +301,7 @@ happyMonadReduce to get polymorphic recursion.  Sigh.
 >                                      . str " -> Happy_IntList -> HappyStk "
 >                                      . happyAbsSyn . str " -> "
 >                                      . pty . str " " . happyAbsSyn . str "\n"
->                       in filterTypeSig tysig . mkReduceFun i . str " = "
+>                       in tysig . mkReduceFun i . str " = "
 >                       . str s . strspace . lt' . strspace . showInt adjusted_nt
 >                       . strspace . reductionFun . nl
 >                       . reductionFun . strspace
@@ -689,7 +673,7 @@ MonadStuff:
 >                      . str " -> Happy_IntList -> HappyStk " . happyAbsSyn
 >                      . str " -> " . ptyAt happyAbsSyn . str ")\n"
 >                      . str "\n"
->                  in filterTypeSig (happyParseSig . newTokenSig . doActionSig . reduceArrSig)
+>                  in happyParseSig . newTokenSig . doActionSig . reduceArrSig
 >                . str "happyThen1 :: " . pcont . str " => " . pty
 >                . str " a -> (a -> "  . pty
 >                . str " b) -> " . pty . str " b\n"

@@ -1,5 +1,10 @@
 # Revision history for Happy
 
+## Unreleased
+
+No longer emit `{-# LANGUAGE PartialTypeSignatures #-}` twice
+([#339](https://github.com/haskell/happy/issues/339)).
+
 ## 2.1.5
 
 Add `Data.Tuple` to `Happy_Prelude` in order to fix the `--debug` build (#330).
