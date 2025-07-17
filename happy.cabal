@@ -1,5 +1,5 @@
 name: happy
-version: 2.1.5
+version: 2.1.6
 license: BSD2
 license-file: LICENSE
 copyright: (c) Andy Gill, Simon Marlow
@@ -140,7 +140,7 @@ executable happy
                  array,
                  containers >= 0.4.2,
                  mtl >= 2.2.1,
-                 happy-lib == 2.1.5
+                 happy-lib == 2.1.6
 
   default-language: Haskell98
   default-extensions: CPP, MagicHash, FlexibleContexts, NamedFieldPuns
