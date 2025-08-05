@@ -51,6 +51,7 @@ The lexer.
 >       | TokSpecId_ErrorHandlerType -- %errorhandlertype
 >       | TokSpecId_Attributetype -- %attributetype
 >       | TokSpecId_Attribute   -- %attribute
+>       | TokPragmaQuote        -- stuff inside {-# .. #-}
 >       | TokCodeQuote          -- stuff inside { .. }
 >       | TokColon              -- :
 >       | TokSemiColon          -- ;
@@ -72,6 +73,7 @@ ToDo: proper text instance here, for use in parser error messages.
 > lexer cont = lexer'
 >   where lexer' "" = cont TokenEOF ""
 >         lexer' ('-':'-':r) = lexer' (dropWhile (/= '\n') r)
+>         lexer' ('{':'-':'#':r) = lexPragma cont r
 >         lexer' ('{':'-':r) = \line -> lexNestedComment line lexer' r line
 >         lexer' (c:rest) = nextLex cont c rest
 
@@ -165,6 +167,8 @@ followed by a special identifier.
 > lexCode :: (Token -> Pfunc a) -> String -> Int -> ParseResult a
 > lexCode cont rest = lexReadCode rest (0 :: Integer) "" cont
 
+ lexBracket cont rest = lexReadCode rest (0 :: Integer) "" cont
+
 > lexNum :: (Token -> Pfunc a) -> Char -> String -> Int -> ParseResult a
 > lexNum cont c rest =
 >        readNum rest (\ num rest' ->
@@ -183,25 +187,50 @@ here is a bit tricky, but should work in most cases.
 >             -> ParseResult b
 > lexReadCode s n c = case s of
 >       '\n':r -> \cont l ->  lexReadCode r n ('\n':c) cont (l+1)
->
+
 >       '{' :r -> lexReadCode r (n+1) ('{':c)
->
+
 >       '}' :r
 >               | n == 0    -> \cont -> cont (TokenInfo (
 >                               cleanupCode (reverse c)) TokCodeQuote) r
 >               | otherwise -> lexReadCode r (n-1) ('}':c)
->
+
 >       '"'{-"-}:r -> lexReadString r (\ str r' ->
 >                     lexReadCode r' n ('"' : (reverse str) ++ '"' : c))
->
+
 >       a: '\'':r | isAlphaNum a -> lexReadCode r n ('\'':a:c)
->
+
 >       '\'' :r -> lexReadSingleChar r (\ str r' ->
 >                  lexReadCode r' n ((reverse str) ++ '\'' : c))
->
+
 >       ch:r -> lexReadCode r n (ch:c)
->
+
 >       [] -> \_cont -> lexError "No closing '}' in code segment" []
+
+We need to take similar care when parsing pragmas.
+
+> lexPragma :: (Token -> Pfunc a) -> String -> Int -> ParseResult a
+> lexPragma cont s = lexReadPragma s "" cont
+
+> lexReadPragma :: String -> String -> (Token -> Pfunc a) -> Int -> ParseResult a
+> lexReadPragma s c =  case s of
+>       '\n':r -> \cont l -> lexReadPragma r ('\n':c) cont (l+1)
+>       '#':r  -> \cont l -> lexReadClosingPragma r c cont l
+>       '"'{-"-}:r -> lexReadString r (\ str r' ->
+>                     lexReadPragma r' ('"' : (reverse str) ++ '"' : c))
+>       a: '\'':r | isAlphaNum a -> lexReadPragma r ('\'':a:c)
+>       '\'' :r -> lexReadSingleChar r (\ str r' ->
+>                  lexReadPragma r' ((reverse str) ++ '\'' : c))
+>       ch:r -> lexReadPragma r (ch:c)
+>       [] -> \_cont -> lexError "No closing '#-}' in code segment" []
+
+
+> lexReadClosingPragma :: String -> String -> (Token -> Pfunc a) -> Int -> ParseResult a
+> lexReadClosingPragma s c = case s of
+>       '-':'}':r -> \cont -> cont (TokenInfo (cleanupCode (reverse c)) TokPragmaQuote) r
+>       '-':ch:r -> lexReadPragma r (ch:'-':'#':c)
+>       ch:r -> lexReadPragma r (ch:'#':c)
+>       [] -> \_cont -> lexError "No closing '#-}' in options pragma" []
 
 ----------------------------------------------------------------------------
 Utilities that read the rest of a token.
