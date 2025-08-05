@@ -37,6 +37,7 @@ The parser.
 >       spec_errorhandlertype  { TokenKW      TokSpecId_ErrorHandlerType }
 >       spec_attribute  { TokenKW      TokSpecId_Attribute }
 >       spec_attributetype      { TokenKW      TokSpecId_Attributetype }
+>       pragma          { TokenInfo $$ TokPragmaQuote }
 >       code            { TokenInfo $$ TokCodeQuote }
 >       int             { TokenNum $$  TokNum }
 >       ":"             { TokenKW      TokColon }
@@ -54,7 +55,7 @@ The parser.
 > %%
 
 > parser :: { BookendedAbsSyn }
->       : optCode core_parser optCode   { BookendedAbsSyn $1 $2 $3 }
+>       : optPragma optCode core_parser optCode   { BookendedAbsSyn $1 $2 $3 $4 }
 
 > core_parser :: { AbsSyn String }
 >       : tokInfos "%%" rules           { AbsSyn (reverse $1) (reverse $3) }
@@ -147,6 +148,10 @@ The parser.
 
 > optCode :: { Maybe String }
 >       : code                          { Just $1 }
+>       | {- nothing -}                 { Nothing }
+
+> optPragma :: { Maybe String }
+>       : pragma                        { Just $1 }
 >       | {- nothing -}                 { Nothing }
 
 > {

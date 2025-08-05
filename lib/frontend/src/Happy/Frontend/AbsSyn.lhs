@@ -24,6 +24,7 @@ Here is the abstract syntax of the language we parse.
 
 > data BookendedAbsSyn
 >     = BookendedAbsSyn
+>         (Maybe String)       -- options
 >         (Maybe String)       -- header
 >         (AbsSyn String)
 >         (Maybe String)       -- footer
@@ -64,7 +65,7 @@ Parser Generator Directives.
 ToDo: find a consistent way to analyse all the directives together and
 generate some error messages.
 
->
+
 > data Directive a
 >       = TokenType     String                  -- %tokentype
 >       | TokenSpec     [(a, TokenSpec)]        -- %token
@@ -191,7 +192,7 @@ generate some error messages.
 >   where go code acc =
 >           case code of
 >               [] -> TokenFixed code0
->
+
 >               '"'  :r    -> case reads code :: [(String,String)] of
 >                                []       -> go r ('"':acc)
 >                                (s,r'):_ -> go r' (reverse (show s) ++ acc)
