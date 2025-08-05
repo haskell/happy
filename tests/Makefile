@@ -38,7 +38,8 @@ TESTS = Test.ly TestMulti.ly TestPrecedence.ly bug001.ly \
 	test_rules.y monaderror.y monaderror-explist.y \
 	typeclass_monad001.y typeclass_monad002.ly typeclass_monad_lexer.y \
 	rank2.y shift01.y \
-	AttrGrammar001.y AttrGrammar002.y
+	AttrGrammar001.y AttrGrammar002.y \
+        Pragma.y
 
 ERROR_TESTS = error001.y
 
