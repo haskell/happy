@@ -167,8 +167,6 @@ followed by a special identifier.
 > lexCode :: (Token -> Pfunc a) -> String -> Int -> ParseResult a
 > lexCode cont rest = lexReadCode rest (0 :: Integer) "" cont
 
- lexBracket cont rest = lexReadCode rest (0 :: Integer) "" cont
-
 > lexNum :: (Token -> Pfunc a) -> Char -> String -> Int -> ParseResult a
 > lexNum cont c rest =
 >        readNum rest (\ num rest' ->
@@ -214,8 +212,8 @@ We need to take similar care when parsing pragmas.
 
 > lexReadPragma :: String -> String -> (Token -> Pfunc a) -> Int -> ParseResult a
 > lexReadPragma s c =  case s of
+>       '#':'-':'}':r -> \cont -> cont (TokenInfo (cleanupCode (reverse c)) TokPragmaQuote) r
 >       '\n':r -> \cont l -> lexReadPragma r ('\n':c) cont (l+1)
->       '#':r  -> \cont l -> lexReadClosingPragma r c cont l
 >       '"'{-"-}:r -> lexReadString r (\ str r' ->
 >                     lexReadPragma r' ('"' : (reverse str) ++ '"' : c))
 >       a: '\'':r | isAlphaNum a -> lexReadPragma r ('\'':a:c)
@@ -223,14 +221,6 @@ We need to take similar care when parsing pragmas.
 >                  lexReadPragma r' ((reverse str) ++ '\'' : c))
 >       ch:r -> lexReadPragma r (ch:c)
 >       [] -> \_cont -> lexError "No closing '#-}' in code segment" []
-
-
-> lexReadClosingPragma :: String -> String -> (Token -> Pfunc a) -> Int -> ParseResult a
-> lexReadClosingPragma s c = case s of
->       '-':'}':r -> \cont -> cont (TokenInfo (cleanupCode (reverse c)) TokPragmaQuote) r
->       '-':ch:r -> lexReadPragma r (ch:'-':'#':c)
->       ch:r -> lexReadPragma r (ch:'#':c)
->       [] -> \_cont -> lexError "No closing '#-}' in options pragma" []
 
 ----------------------------------------------------------------------------
 Utilities that read the rest of a token.
