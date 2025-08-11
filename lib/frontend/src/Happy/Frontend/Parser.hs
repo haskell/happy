@@ -8,33 +8,30 @@
 {-# LANGUAGE NoStrictData #-}
 {-# LANGUAGE UnboxedTuples #-}
 {-# LANGUAGE PartialTypeSignatures #-}
-#if __GLASGOW_HASKELL__ >= 710
-{-# LANGUAGE PartialTypeSignatures #-}
-#endif
 {-# OPTIONS_GHC -w #-}
 module Happy.Frontend.Parser (ourParser) where
 import Happy.Frontend.ParseMonad.Class
 import Happy.Frontend.ParseMonad
 import Happy.Frontend.AbsSyn
 import Happy.Frontend.Lexer
-import qualified Data.Function as Happy_Prelude
+import qualified Control.Monad as Happy_Prelude
 import qualified Data.Bool as Happy_Prelude
 import qualified Data.Function as Happy_Prelude
-import qualified Data.Maybe as Happy_Prelude
 import qualified Data.Int as Happy_Prelude
-import qualified Data.String as Happy_Prelude
 import qualified Data.List as Happy_Prelude
-import qualified Control.Monad as Happy_Prelude
-import qualified Text.Show as Happy_Prelude
-import qualified GHC.Num as Happy_Prelude
+import qualified Data.Maybe as Happy_Prelude
+import qualified Data.String as Happy_Prelude
+import qualified Data.Tuple as Happy_Prelude
 import qualified GHC.Err as Happy_Prelude
+import qualified GHC.Num as Happy_Prelude
+import qualified Text.Show as Happy_Prelude
 import qualified Data.Array as Happy_Data_Array
 import qualified Data.Bits as Bits
 import qualified GHC.Exts as Happy_GHC_Exts
 import Control.Applicative(Applicative(..))
 import Control.Monad (ap)
 
--- parser produced by Happy Version 2.1.3
+-- parser produced by Happy Version 2.1.6
 
 newtype HappyAbsSyn  = HappyAbsSyn HappyAny
 #if __GLASGOW_HASKELL__ >= 607
