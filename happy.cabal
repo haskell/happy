@@ -114,6 +114,7 @@ extra-source-files:
         tests/monad001.y
         tests/monad002.ly
         tests/monaderror.y
+        tests/Pragma.y
         tests/precedence001.ly
         tests/precedence002.y
         tests/test_rules.y
