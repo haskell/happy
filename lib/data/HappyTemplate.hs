@@ -48,7 +48,7 @@ data HappyStk a = HappyStk a (HappyStk a)
 -----------------------------------------------------------------------------
 -- starting the parse
 
-happyParse start_state = happyNewToken start_state notHappyAtAll notHappyAtAll
+happyDoParse start_state = happyNewToken start_state notHappyAtAll notHappyAtAll
 
 -----------------------------------------------------------------------------
 -- Accepting the parse

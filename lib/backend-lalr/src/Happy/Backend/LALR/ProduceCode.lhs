@@ -651,8 +651,8 @@ MonadStuff:
 >                . str "\n"
 >               _ ->
 >                let
->                  happyParseSig =
->                        str "happyParse :: " . pcont . str " => " . intMaybeHash
+>                  happyDoParseSig =
+>                        str "happyDoParse :: " . pcont . str " => " . intMaybeHash
 >                      . str " -> " . pty . str " " . happyAbsSyn . str "\n"
 >                      . str "\n"
 >                  newTokenSig =
@@ -673,7 +673,7 @@ MonadStuff:
 >                      . str " -> Happy_IntList -> HappyStk " . happyAbsSyn
 >                      . str " -> " . ptyAt happyAbsSyn . str ")\n"
 >                      . str "\n"
->                  in happyParseSig . newTokenSig . doActionSig . reduceArrSig
+>                  in happyDoParseSig . newTokenSig . doActionSig . reduceArrSig
 >                . str "happyThen1 :: " . pcont . str " => " . pty
 >                . str " a -> (a -> "  . pty
 >                . str " b) -> " . pty . str " b\n"
@@ -750,7 +750,7 @@ have a special code path for `OldExpected`.
 >       . str " = "
 >       . str unmonad
 >       . str "happySomeParser where\n"
->       . str " happySomeParser = happyThen (happyParse "
+>       . str " happySomeParser = happyThen (happyDoParse "
 >       . shows no . str "#"
 >       . maybe_tks
 >       . str ") "
