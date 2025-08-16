@@ -2,12 +2,9 @@
 
 {
 import Data.Char
-import Tree
 }
 
 %tokentype { Token }
-
-%lexer { lexer } { TokenEOF }
 
 %token
 	'*' 	{ Sym '*' }
@@ -19,7 +16,7 @@ import Tree
 
 %%
 
-E :: {Tree ForestId Int}
+E :: {Tree}
  : E '+' E	{ Plus  $1 $3 }
  | E '*' E	{ Times $1 $3 }
  | E '-' E     	{ Minus $1 $3 }
@@ -36,6 +33,13 @@ data Token
 	| AnInt {getInt :: Int}
   deriving (Show,Eq, Ord)
 
+data Tree
+	= Plus Tree Tree
+	| Times Tree Tree
+	| Minus Tree Tree
+	| Pars Tree
+	| Const Int
+  deriving Show
 
 lexer :: String -> [Token]
 lexer [] = []
@@ -46,4 +50,9 @@ lexer (c:cs) | c `elem` "+*-()"
 
 lexer (c:cs) | isDigit c
  = let (yes,no) = span isDigit cs in AnInt (read $ c:yes) : lexer no
+
+happyError _ = error "Parse error"
+
+main :: IO ()
+main = print $ happyParse $ lexer "1+3"
 }
