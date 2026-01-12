@@ -8,14 +8,21 @@
 #
 # For more information, see https://github.com/haskell-CI/haskell-ci
 #
-# version: 0.19.20250506
+# version: 0.19.20260104
 #
-# REGENDATA ("0.19.20250506",["github","cabal.project","--config","cabal.haskell-ci","--project"])
+# REGENDATA ("0.19.20260104",["github","cabal.project","--config","cabal.haskell-ci","--project"])
 #
 name: Haskell-CI
 on:
-  - push
-  - pull_request
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  merge_group:
+    branches:
+      - master
 jobs:
   linux:
     name: Haskell-CI - Linux - ${{ matrix.compiler }}
@@ -28,14 +35,19 @@ jobs:
     strategy:
       matrix:
         include:
+          - compiler: ghc-9.14.1
+            compilerKind: ghc
+            compilerVersion: 9.14.1
+            setup-method: ghcup
+            allow-failure: false
           - compiler: ghc-9.12.2
             compilerKind: ghc
             compilerVersion: 9.12.2
             setup-method: ghcup
             allow-failure: false
-          - compiler: ghc-9.10.2
+          - compiler: ghc-9.10.3
             compilerKind: ghc
-            compilerVersion: 9.10.2
+            compilerVersion: 9.10.3
             setup-method: ghcup
             allow-failure: false
           - compiler: ghc-9.8.4
@@ -106,8 +118,8 @@ jobs:
           chmod a+x "$HOME/.ghcup/bin/ghcup"
       - name: Install cabal-install
         run: |
-          "$HOME/.ghcup/bin/ghcup" install cabal 3.14.2.0 || (cat "$HOME"/.ghcup/logs/*.* && false)
-          echo "CABAL=$HOME/.ghcup/bin/cabal-3.14.2.0 -vnormal+nowrap" >> "$GITHUB_ENV"
+          "$HOME/.ghcup/bin/ghcup" install cabal 3.16.0.0 || (cat "$HOME"/.ghcup/logs/*.* && false)
+          echo "CABAL=$HOME/.ghcup/bin/cabal-3.16.0.0 -vnormal+nowrap" >> "$GITHUB_ENV"
       - name: Install GHC (GHCup)
         if: matrix.setup-method == 'ghcup'
         run: |
@@ -183,7 +195,7 @@ jobs:
           chmod a+x $HOME/.cabal/bin/cabal-plan
           cabal-plan --version
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: source
       - name: initial cabal.project for sdist
@@ -212,12 +224,12 @@ jobs:
           echo "packages: ${PKGDIR_happy_lib}" >> cabal.project
           echo "packages: ${PKGDIR_happy}" >> cabal.project
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package happy-lib" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
+          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods -Werror=missing-fields" >> cabal.project ; fi
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package happy" >> cabal.project ; fi
-          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods" >> cabal.project ; fi
+          if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods -Werror=missing-fields" >> cabal.project ; fi
           cat >> cabal.project <<EOF
           EOF
-          $HCPKG list --simple-output --names-only | perl -ne 'for (split /\s+/) { print "constraints: any.$_ installed\n" unless /^(containers|happy|happy-lib|mtl|transformers)$/; }' >> cabal.project.local
+          $HCPKG list --simple-output --names-only | perl -ne 'for (split /\s+/) { print "constraints: any.$_ installed\n" unless /^(happy|happy-lib|mtl|transformers)$/; }' >> cabal.project.local
           cat cabal.project
           cat cabal.project.local
       - name: dump install plan

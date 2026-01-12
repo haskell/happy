@@ -1,2 +1,11 @@
+branches: master
+error-incomplete-patterns: False
+error-unused-packages: False
+
 -- Specify 'constraint: ... installed' packages
-installed: +all -containers -mtl -transformers
+installed: +all -transformers -mtl
+-- * mtl is for GHC 8.4:
+-- > rejecting: happy-lib-2.1.7 (conflict: mtl => transformers==0.5.5.0/installed-0.5.5.0, happy-lib => transformers>=0.5.6.2)
+-- * transformers is for GHCs 8.0 and 8.2:
+-- > rejecting: transformers-0.5.2.0/installed-0.5.2.0 (conflict: mtl => transformers>=0.5.6 && <0.7)
+
