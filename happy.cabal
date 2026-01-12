@@ -1,3 +1,4 @@
+cabal-version: 1.18
 name: happy
 version: 2.1.7
 license: BSD2
@@ -10,7 +11,6 @@ stability: stable
 homepage: https://www.haskell.org/happy/
 synopsis: Happy is a parser generator for Haskell
 category: Development
-cabal-version: >= 1.10
 build-type: Simple
 
 Description:
@@ -34,10 +34,12 @@ tested-with:
         GHC == 8.2.2
         GHC == 8.0.2
 
-extra-source-files:
+extra-doc-files:
         ChangeLog.md
-        Makefile
         README.md
+
+extra-source-files:
+        Makefile
         examples/glr/nlp/Main.lhs
         examples/glr/nlp/Makefile
         examples/glr/nlp/README
