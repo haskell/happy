@@ -227,6 +227,10 @@ jobs:
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods -Werror=missing-fields" >> cabal.project ; fi
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "package happy" >> cabal.project ; fi
           if [ $((HCNUMVER >= 80200)) -ne 0 ] ; then echo "    ghc-options: -Werror=missing-methods -Werror=missing-fields" >> cabal.project ; fi
+          if [ $((HCNUMVER >= 81000)) -ne 0 ] ; then echo "package happy-lib" >> cabal.project ; fi
+          if [ $((HCNUMVER >= 81000)) -ne 0 ] ; then echo "    ghc-options: -Werror=unused-packages" >> cabal.project ; fi
+          if [ $((HCNUMVER >= 81000)) -ne 0 ] ; then echo "package happy" >> cabal.project ; fi
+          if [ $((HCNUMVER >= 81000)) -ne 0 ] ; then echo "    ghc-options: -Werror=unused-packages" >> cabal.project ; fi
           cat >> cabal.project <<EOF
           EOF
           $HCPKG list --simple-output --names-only | perl -ne 'for (split /\s+/) { print "constraints: any.$_ installed\n" unless /^(happy|happy-lib|mtl|transformers)$/; }' >> cabal.project.local

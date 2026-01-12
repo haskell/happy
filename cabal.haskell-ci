@@ -1,6 +1,6 @@
 branches: master
 error-incomplete-patterns: False
-error-unused-packages: False
+error-unused-packages: True
 
 -- Specify 'constraint: ... installed' packages
 installed: +all -transformers -mtl
