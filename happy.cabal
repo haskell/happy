@@ -114,6 +114,9 @@ extra-source-files:
         tests/error001.stderr
         tests/error001.stdout
         tests/error001.y
+        tests/issue335.stderr
+        tests/issue335.stdout
+        tests/issue335.y
         tests/monad001.y
         tests/monad002.ly
         tests/monaderror.y

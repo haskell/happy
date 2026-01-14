@@ -8,3 +8,4 @@ cabal.sandbox.config
 .*.swo
 /.vscode/
 tests/*.hs
+*~

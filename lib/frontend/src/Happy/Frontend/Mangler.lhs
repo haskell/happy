@@ -87,7 +87,7 @@ go do special processing.  If not, pass on to the regular processing routine
 >                       ns -> ns
 >       error_resumptive | ResumptiveErrorHandler{} <- getError dirs = True
 >                        | otherwise                                 = False
->
+
 >       start_strs  = [ startName++'_':p  | (TokenName p _ _) <- starts' ]
 
 Build up a mapping from name values to strings.
@@ -132,7 +132,7 @@ Start symbols...
 Deal with priorities...
 
 >       priodir = zip [1..] (getPrios dirs)
->
+
 >       mkPrio :: Int -> Directive a -> Priority
 >       mkPrio i (TokenNonassoc _) = Prio None i
 >       mkPrio i (TokenRight _) = Prio RightAssoc i
@@ -155,10 +155,10 @@ Translate the rules from string to name-based.
 >       convNT (Rule1 nt prods ty)
 >         = do nt' <- mapToName nt
 >              return (nt', prods, ty)
->
+
 >       transRule (nt, prods, _ty)
 >         = mapM (finishRule nt) prods
->
+
 >       finishRule :: Name -> Prod1 e -> Writer [ErrMsg] (Production e)
 >       finishRule nt (Prod1 lhs code line prec)
 >         = mapWriter (\(a,e) -> (a, map (addLine line) e)) $ do
@@ -168,7 +168,7 @@ Translate the rules from string to name-based.
 >               Left s  -> do addErr ("Undeclared precedence token: " ++ s)
 >                             return (Production nt lhs' code' No)
 >               Right p -> return (Production nt lhs' code' p)
->
+
 >       mkPrec :: [Name] -> Prec -> Either String Priority
 >       mkPrec lhs PrecNone =
 >         case filter (flip elem terminal_names) lhs of
@@ -180,9 +180,9 @@ Translate the rules from string to name-based.
 >         case lookup s prioByString of
 >                           Nothing -> Left s
 >                           Just p -> Right p
->
+
 >       mkPrec _ PrecShift = Right PrioLowest
->
+
 >   -- in
 
 >   rules1 <- mapM convNT rules
@@ -191,7 +191,7 @@ Translate the rules from string to name-based.
 >   let
 >       type_env = [(nt, t) | Rule1 nt _ (Just (t,[])) <- rules] ++
 >                  [(nt, getTokenType dirs) | nt <- terminal_strs] -- XXX: Doesn't handle $$ type!
->
+
 >       fixType (ty,s) = go "" ty
 >         where go acc [] = return (reverse acc)
 >               go acc (c:r) | isLower c = -- look for a run of alphanumerics starting with a lower case letter
@@ -205,14 +205,14 @@ Translate the rules from string to name-based.
 >                                            go1 (c:cs)
 >                                          Just t -> go1 $ "(" ++ t ++ ")"
 >                            | otherwise = go (c:acc) r
->
+
 >       convType (nm, t)
 >         = do t' <- fixType t
 >              return (nm, t')
->
+
 >   -- in
 >   tys <- mapM convType [ (nm, t) | (nm, _, Just t) <- rules1 ]
->
+
 
 >   let
 >       type_array :: Array Name (Maybe String)
@@ -238,7 +238,7 @@ Get the token specs in terms of Names.
 >      lookup_prods :: Name -> [Int]
 >      lookup_prods x | x >= firstStartTok && x < first_t = arr ! x
 >      lookup_prods _ = error "lookup_prods"
->
+
 >      productions' = start_prods ++ concat rules2
 >      prod_array  = listArray (0,length productions' - 1) productions'
 
@@ -278,7 +278,7 @@ Gofer-like stuff:
 >       combine [] = []
 >       combine ((a,b):(c,d):r) | a == c = combine ((a,b++d) : r)
 >       combine (a:r) = a : combine r
->
+
 
 For combining actions with possible error messages.
 
@@ -307,12 +307,15 @@ So is this.
 -- At the same time, we collect a list of the variables actually used in this
 -- code, which is used by the backend.
 
-> doCheckCode :: Int -> String -> M (String, [Int])
+> doCheckCode ::
+>      Int                -- ^ Arity of the rule, i.e., maximal number of a variable.
+>   -> String             -- ^ Haskell code for the semantic action of the rule.
+>   -> M (String, [Int])  -- ^ The translated code and the variable occurrences (in reverse order).
 > doCheckCode arity code0 = go code0 "" []
 >   where go code acc used =
 >           case code of
 >               [] -> return (reverse acc, used)
->
+
 >               '"'  :r    -> case reads code :: [(String,String)] of
 >                                []       -> go r ('"':acc) used
 >                                (s,r'):_ -> go r' (reverse (show s) ++ acc) used
@@ -321,13 +324,24 @@ So is this.
 >                                []       -> go r  ('\'':acc) used
 >                                (c,r'):_ -> go r' (reverse (show c) ++ acc) used
 >               '\\':'$':r -> go r ('$':acc) used
->
+
+
+Issue #335 (Andreas Abel, 2026-01-14):
+Users often write '<$>' to mean '`fmap`', but Happy interprets it as '< $>' where '$>'
+denotes the maximal variable (rightmost item).
+Thus, reject '<$>' in semantic action code and suggest to either escape the '$'
+or put a space after '<'.
+
+>               c@'<':r@('$':'>':_) -> do
+>                 addErr "Found '<$>' in semantic action code; either write '<\\$>' (for what usually is fmap) or '< $>' (for \"less than rightmost item\")"
+>                 go r (c:acc) used
+
 >               '$':'>':r -- the "rightmost token"
 >                       | arity == 0 -> do addErr "$> in empty rule"
 >                                          go r acc used
 >                       | otherwise  -> go r (reverse (mkHappyVar arity) ++ acc)
 >                                        (arity : used)
->
+
 >               '$':r@(i:_) | isDigit i ->
 >                       case reads r :: [(Int,String)] of
 >                         (j,r'):_ ->

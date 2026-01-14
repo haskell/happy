@@ -5,3 +5,5 @@
 *.n.hs
 *.stderr
 *.stdout
+!issue335.stderr
+!issue335.stdout
