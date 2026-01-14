@@ -144,7 +144,7 @@ executable happy
   main-is: Main.lhs
 
   build-depends: base >= 4.9 && < 5,
-                 happy-lib == 2.1.7
+                 happy-lib == 2.2
 
   default-language: Haskell98
   default-extensions: CPP, MagicHash, FlexibleContexts, NamedFieldPuns
