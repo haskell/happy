@@ -1,0 +1,2 @@
+issue335.y: 7: Found '<$>' in semantic action code; either write '<\$>' (for what usually is fmap) or '< $>' (for "less than rightmost item")
+

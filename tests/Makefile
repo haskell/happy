@@ -41,7 +41,7 @@ TESTS = Test.ly TestMulti.ly TestPrecedence.ly bug001.ly \
 	AttrGrammar001.y AttrGrammar002.y \
 	Pragma.y
 
-ERROR_TESTS = error001.y
+ERROR_TESTS = error001.y issue335.y
 
 # NOTE: `cabal` will set the `happy_datadir` env-var accordingly before invoking the test-suite
 #TEST_HAPPY_OPTS = --strict --template=..
