@@ -9,3 +9,4 @@ cabal.sandbox.config
 /.vscode/
 tests/*.hs
 *~
+TAGS
