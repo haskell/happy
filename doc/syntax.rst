@@ -445,6 +445,9 @@ It is an error to refer to ``$i`` when ``i`` is larger than the number of symbol
 The symbol ``$`` may be inserted literally in the Haskell expression using the sequence ``\$`` (this isn't necessary inside a string or character literal).
 
 Additionally, the sequence ``$>`` can be used to represent the value of the rightmost symbol.
+Since version 2.2, Happy throws an error when ``<$>`` appears in the Haskell expression;
+Happy interprets this as ``< $>`` but users often mean the operator version of ``fmap``.
+(Observe that the latter is available as ``<\$>``.)
 
 A semantic value of the form ``{% ... }`` is a *monadic action*, and is only valid when the grammar file contains a ``%monad`` directive (:ref:`Monad Directive <sec-monad-decl>`).
 Monadic actions are discussed in :ref:`Monadic Parsers <sec-monads>`.

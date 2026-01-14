@@ -1,6 +1,6 @@
 cabal-version: 1.18
 name: happy
-version: 2.1.7
+version: 2.2
 license: BSD2
 license-file: LICENSE
 copyright: (c) Andy Gill, Simon Marlow
