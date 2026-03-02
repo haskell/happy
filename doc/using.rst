@@ -30,7 +30,7 @@ In a grammar file, Haskell code is always contained between curly braces to dist
 
 In this case, the parser will be a standalone program so we'll call the module ``Main``.
 
-Next comes a couple of declarations:
+Next come a couple of declarations:
 
 .. code-block:: none
 
@@ -341,7 +341,7 @@ Sequences with separators
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A common type of sequence is one with a *separator*:
-for instance function bodies in C consist of statements separated by semicolons.
+for instance, function bodies in C consist of statements separated by semicolons.
 To parse this kind of sequence we use a production like this:
 
 .. code-block:: none
@@ -1058,7 +1058,7 @@ the use of the two-action form of the ``%error`` directive
 The directive specifies a pair of functions ``abort`` and ``report``
 which are necessary to handle multiple parse errors.
 
-The generated parser parses errorneous input such as ``1+;+1;(1+;1`` as
+The generated parser parses erroneous input such as ``1+;+1;(1+;1`` as
 ``["1 + catch", "catch + 1", "catch", "1"]``, with one list element per parsed
 statement.
 To a first approximation, one can think of ``catch`` as standing in for the
@@ -1119,7 +1119,7 @@ A couple of notes:
 
 Note that defining a good AST representation for syntax errors is entirely up
 to the user of happy; the example above simply emitted the string ``catch``
-whenever it stands-in an for an errorneous AST node.
+whenever it stands-in an for an erroneous AST node.
 A more reasonable implementation would be similar to typed holes in GHC.
 
 .. _sec-multiple-parsers:
