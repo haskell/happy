@@ -1,5 +1,12 @@
 # Revision history for Happy
 
+## 2.2.1
+
+* Omit some useless productions due to an off-by-one error and
+  thus generate a smaller automaton (#352, #353).
+
+* Documentation fixes (#351).
+
 ## 2.2
 
 * Error out when `<$>` appears in semantic action code
