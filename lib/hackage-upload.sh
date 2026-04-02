@@ -2,6 +2,8 @@
 set -e
 TOP=$(readlink -f $(dirname $0))
 
+cd $TOP
+
 # Some sanity checking for version
 CABAL_FILE=$(ls *.cabal)
 VERSION=$(grep -E '^version:' "$CABAL_FILE" | awk '{print $2}')
@@ -25,8 +27,10 @@ trap 'rm -rf "$sdist"' EXIT
 cabal sdist --builddir=$sdist
 cabal upload $1 $sdist/sdist/*.tar.gz
 
-cabal haddock --builddir="$sdist" --haddock-for-hackage --enable-doc --haddock-options=--quickjump
+# Sigh. Cabal 3.16 with --haddock-for-hackage appears to produce filenames like
+# happy-lib:backend-lalr.txt that are invalid on Windows.
+# cabal haddock --builddir="$sdist" --haddock-for-hackage --enable-doc --haddock-options=--quickjump
 
-cabal upload -d $1 $sdist/*-docs.tar.gz
+# cabal upload -d $1 $sdist/*-docs.tar.gz
 
 echo "✅ happy-lib uploaded"
