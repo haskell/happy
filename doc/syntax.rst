@@ -255,11 +255,14 @@ These conflicts generate warnings.
 But when you have checked the warnings and made sure that Happy handles them correctly these warnings are just annoying.
 The ``%expect`` directive gives a way of avoiding them.
 Declaring ``%expect n`` is a way of telling Happy
-“There are exactly <n> shift/reduce conflicts and zero reduce/reduce conflicts in this grammar.
+“There are at most <n> shift/reduce conflicts and zero reduce/reduce conflicts in this grammar.
 I promise I have checked them and they are resolved correctly”.
-When processing the grammar, Happy will check the actual number of conflicts against the ``%expect`` declaration if any, and if there is a discrepancy then an error will be reported.
+When processing the grammar, Happy will check the actual number of conflicts against the ``%expect`` declaration if any, and if the number exceeds ``n`` then an error will be reported.
+If the number if below ``n``, a non-fatal warnings will be emitted instead.
 
-Happy's ``%expect`` directive works exactly like that of yacc.
+Happy's ``%expect`` directive works like that of yacc, but relaxes the check to
+“at most <n> conflicts” instead of “exactly <n> conflicts” to allow for
+backward compatible improvements of the state machine.
 
 .. _sec-error-directive:
 

@@ -165,15 +165,19 @@ Pretty print the AbsSyn.
 Report any conflicts in the grammar.
 
 >       case expect common_options of
->         Just n | n == sr && rr == 0 -> return ()
 >         Just _ | rr > 0 ->
 >                 die ("The grammar has reduce/reduce conflicts.\n" ++
 >                      "This is not allowed when an expect directive is given\n")
->         Just _ ->
+>         Just n | sr > n ->
 >                die ("The grammar has " ++ show sr ++
 >                     " shift/reduce conflicts.\n" ++
->                     "This is different from the number given in the " ++
->                     "expect directive\n")
+>                     "This is more than the " ++ show n ++
+>                     " given in the %expect directive\n")
+>         Just n | sr < n ->
+>                do hPutStrLn stderr ("shift/reduce conflicts:  " ++ show sr)
+>                   hPutStrLn stderr ("(the %expect directive permits up to " ++
+>                                     show n ++ ")")
+>         Just _ -> return ()
 >         _ -> do
 
 >          (if sr /= 0

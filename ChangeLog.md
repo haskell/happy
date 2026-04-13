@@ -1,5 +1,12 @@
 # Revision history for Happy
 
+## 2.2.2
+
+* #353 broke some programs using `expect% <n>` declarations.
+  This release changes `%expect` semantics to interpret `n` as
+  an upper bound instead to allow for backward compatibility.
+  A non-fatal warning is emitted when `n` is not matched exactly.
+
 ## 2.2.1
 
 * Omit some useless productions due to an off-by-one error and
